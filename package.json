@@ -4,10 +4,15 @@
   "description": "Pixel Art Office - Real-time Claude Code Agent Visualizer",
   "main": "server.js",
   "scripts": {
+    "build": "npm run build:css",
+    "build:css": "node scripts/build-css.js",
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "npm run build:css && node server.js"
   },
   "dependencies": {
     "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
   }
 }

@@ -633,6 +633,8 @@ function drawAgent(agent, v) {
     ctx.fillStyle = PAL.shadow;
     ctx.beginPath(); ctx.ellipse(x, y + 7, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
 
+    drawAgentAura(agent, v, x, y, t, status);
+
     // Selection ring — warm pink
     if (sel) {
         ctx.strokeStyle = "rgba(249,168,212,0.6)";
@@ -700,6 +702,15 @@ function drawAgent(agent, v) {
         ctx.stroke();
         ctx.fillStyle = "rgba(37,99,235,0.3)";
         ctx.fillRect(x + 8.5, by - 2, 1, 2.5);
+    }
+
+    if (agent.needsReview && !offline) {
+        ctx.fillStyle = "rgba(245,158,11,0.92)";
+        roundRect(ctx, x + 7, by - 18, 8, 8, 2);
+        ctx.fill();
+        ctx.fillStyle = "#fff7ed";
+        ctx.fillRect(x + 10.5, by - 16, 1, 4);
+        ctx.fillRect(x + 10.5, by - 11, 1, 1);
     }
 
     // Head (Korean skin tone)
@@ -887,6 +898,45 @@ function drawAgent(agent, v) {
     ctx.restore();
 }
 
+function drawAgentAura(agent, v, x, y, t, status) {
+    if (!agent.isRunning || status === "idle" || status === "coffee") return;
+
+    const ctx = S.ctx;
+    const meta = STATUS_META[status] || STATUS_META.coding;
+    const pulse = 0.5 + Math.sin(t * 0.08) * 0.5;
+    const radius = 12 + pulse * 3;
+
+    ctx.save();
+    ctx.strokeStyle = hexToRgba(meta.color, 0.16 + pulse * 0.12);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(x, y + 6, radius, 5 + pulse * 1.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    if (["coding", "reviewing", "searching", "thinking"].includes(status)) {
+        for (let i = 0; i < 3; i++) {
+            const a = t * 0.045 + i * 2.1;
+            const px = x + Math.cos(a) * (11 + i);
+            const py = y - 7 + Math.sin(a) * 6;
+            ctx.fillStyle = hexToRgba(meta.color, 0.35 + pulse * 0.25);
+            roundRect(ctx, px - 1.2, py - 1.2, 2.4, 2.4, 0.8);
+            ctx.fill();
+        }
+    }
+
+    if (agent.currentWork?.prompt) {
+        const bx = x - 16;
+        const by = y - 22;
+        ctx.fillStyle = "rgba(15,23,42,0.58)";
+        roundRect(ctx, bx, by, 12, 9, 2);
+        ctx.fill();
+        ctx.fillStyle = hexToRgba(meta.color, 0.9);
+        ctx.fillRect(bx + 2, by + 2, 4 + (t % 18) * 0.18, 1);
+        ctx.fillRect(bx + 2, by + 5, 7 - (t % 12) * 0.16, 1);
+    }
+    ctx.restore();
+}
+
 // ── Sub-Agent Rendering (compact dots lined up beside parent) ──
 function drawSubAgents() {
     const ctx = S.ctx;
@@ -928,6 +978,17 @@ function drawSubAgents() {
 
             // Gentle bob (very subtle)
             const bob = isActive ? Math.sin(t * 0.06 + sub.bobPhase) * 0.8 : 0;
+
+            if (isActive) {
+                ctx.strokeStyle = hexToRgba(sub.color, 0.26);
+                ctx.lineWidth = 0.5;
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath();
+                ctx.moveTo(parent.x + 7, parent.y + 2);
+                ctx.quadraticCurveTo(parent.x + 14, parent.y - 4, sx, sy + bob);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
 
             if (isDone) ctx.globalAlpha = 0.3;
 
@@ -1061,6 +1122,14 @@ export function roundRect(ctx, x, y, w, h, r) {
     ctx.closePath();
 }
 
+function hexToRgba(hex, alpha) {
+    if (!hex || !hex.startsWith("#") || hex.length < 7) return `rgba(16,185,129,${alpha})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
 function drawParticles() {
     const ctx = S.ctx;
     S.particles.forEach(p => {
@@ -1090,6 +1159,17 @@ function drawEmptyState() {
     if (S.liveAgents.length > 0) return;
     const ctx = S.ctx;
     const cx = (COLS * TILE) / 2, cy = (ROWS * TILE) / 2;
+    const diagnostics = S.serverState?.diagnostics || {};
+    const sessionCount = Number.isFinite(Number(diagnostics.sessionCount))
+        ? Number(diagnostics.sessionCount)
+        : Number(S.serverState?.totalSessions || 0);
+    const externalSignals = Number(diagnostics.externalCount || 0)
+        + Number(diagnostics.codexSessionCount || 0)
+        + Number(diagnostics.cursorWorkspaceCount || 0);
+    const mainText = S.connected ? "작업실 준비 완료" : "서버 연결 대기";
+    const subText = S.connected
+        ? `${sessionCount}개 세션 · ${externalSignals}개 AI 신호`
+        : "실시간 탐지 신호를 기다리는 중";
     ctx.save();
     ctx.textAlign = "center";
     // Icon
@@ -1099,10 +1179,10 @@ function drawEmptyState() {
     // Main text
     ctx.font = "bold 8px Pretendard, sans-serif";
     ctx.fillStyle = PAL.emptyText;
-    ctx.fillText("에이전트가 없습니다", cx, cy + 5);
+    ctx.fillText(mainText, cx, cy + 5);
     ctx.font = "5px Pretendard, sans-serif";
     ctx.fillStyle = PAL.emptySub;
-    ctx.fillText("Claude Code를 실행하면 자동으로 나타납니다", cx, cy + 16);
+    ctx.fillText(subText, cx, cy + 16);
     if (!S.connected) {
         ctx.fillStyle = "rgba(220,38,38,0.3)";
         ctx.fillText("서버 연결 대기 중...", cx, cy + 26);

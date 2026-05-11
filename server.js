@@ -41,12 +41,14 @@ let polling = false; // guard against overlapping polls
 let lastStateJSON = ""; // diff baseline for broadcast gating
 let lastGoodProcesses = []; // cache: last successful process detection result
 let lastGoodExternalAIs = []; // cache: last successful external AI detection
+let lastDiagnostics = null; // lightweight detector health shared through heartbeat
 
 // ── Per-session sticky state (prevents oscillation) ──
 // sessionId → { role, roleVotes: {role: count}, status, statusHoldUntil }
 const stickyState = {};
 const ROLE_HOLD_VOTES = 3; // need 3 prompts of same role to switch
 const STATUS_HOLD_MS = 10000; // hold status for at least 10s before downgrade
+const CODEX_VISIBLE_MS = 3 * 60 * 60 * 1000; // show recent Codex sessions as separate agents
 
 // ── External AI previous state cache ──
 // pid → { status, windowTitle, lastActiveAt }
@@ -57,14 +59,59 @@ const MIME = {
     ".html": "text/html",
     ".css":  "text/css",
     ".js":   "application/javascript",
-    ".json": "application/json",
-    ".png":  "image/png",
     ".ico":  "image/x-icon",
 };
 
+const PUBLIC_FILES = new Set([
+    "/index.html",
+    "/style.css",
+    "/css/tailwind.generated.css",
+]);
+
+function resolvePublicFile(requestUrl) {
+    let pathname;
+    try {
+        pathname = decodeURIComponent((requestUrl || "/").split("?")[0]);
+    } catch (e) {
+        return null;
+    }
+
+    pathname = pathname.replace(/\\/g, "/");
+    if (pathname === "/") pathname = "/index.html";
+    if (!pathname.startsWith("/")) return null;
+    if (pathname.includes("\0")) return null;
+
+    const segments = pathname.split("/").filter(Boolean);
+    if (segments.some(segment => segment === ".." || segment.startsWith("."))) return null;
+
+    const normalized = path.posix.normalize(pathname);
+    const allowed = PUBLIC_FILES.has(normalized)
+        || /^\/js\/[A-Za-z0-9_-]+\.js$/.test(normalized);
+    if (!allowed) return null;
+
+    const resolved = path.resolve(__dirname, `.${normalized}`);
+    if (!resolved.startsWith(`${__dirname}${path.sep}`) && resolved !== path.join(__dirname, "index.html")) {
+        return null;
+    }
+    return resolved;
+}
+
 const httpServer = http.createServer((req, res) => {
-    let filePath = req.url === "/" ? "/index.html" : req.url.split("?")[0];
-    filePath = path.join(__dirname, filePath);
+    const urlPath = req.url.split("?")[0];
+    if (urlPath === "/favicon.ico") {
+        res.writeHead(204, {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+        });
+        res.end();
+        return;
+    }
+
+    const filePath = resolvePublicFile(req.url);
+    if (!filePath) {
+        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+        res.end("Not found");
+        return;
+    }
 
     const ext = path.extname(filePath);
     const contentType = MIME[ext] || "text/plain";
@@ -118,7 +165,11 @@ function broadcast(msg) {
 /** Heartbeat — lets client detect stale connections */
 function startHeartbeat() {
     setInterval(() => {
-        const msg = JSON.stringify({ type: "heartbeat", ts: Date.now() });
+        const msg = JSON.stringify({
+            type: "heartbeat",
+            ts: Date.now(),
+            diagnostics: lastDiagnostics,
+        });
         clients.forEach(ws => safeSend(ws, msg));
     }, HEARTBEAT_INTERVAL);
 }
@@ -370,15 +421,22 @@ const AI_PLATFORMS = {
 /** Read Codex session index for thread names + today's sessions for cwd */
 async function readCodexContext() {
     const result = { threads: [], activeSessions: [] };
+
     try {
-        // Read session_index.jsonl for thread names (last 10)
+        // Read session_index.jsonl for thread names (last 80)
         const indexData = await fsp.readFile(CODEX_SESSION_INDEX, "utf8");
         const lines = indexData.trim().split("\n").filter(Boolean);
-        const start = Math.max(0, lines.length - 10);
+        const start = Math.max(0, lines.length - 80);
         for (let i = start; i < lines.length; i++) {
-            try { result.threads.push(JSON.parse(lines[i])); } catch (e) {}
+            try {
+                const thread = JSON.parse(lines[i]);
+                thread._updatedAtMs = Date.parse(thread.updated_at || thread.updatedAt || "");
+                result.threads.push(thread);
+            } catch (e) {}
         }
+    } catch (e) {}
 
+    try {
         // Read today's session files for cwd
         const now = new Date();
         const y = now.getFullYear(), m = String(now.getMonth() + 1).padStart(2, "0"), d = String(now.getDate()).padStart(2, "0");
@@ -400,6 +458,9 @@ async function readCodexContext() {
                             id: meta.payload.id,
                             cwd: meta.payload.cwd,
                             model: meta.payload.model_provider,
+                            agentNickname: meta.payload.agent_nickname,
+                            agentRole: meta.payload.agent_role,
+                            originator: meta.payload.originator,
                             mtime: stat.mtimeMs,
                         });
                     }
@@ -596,12 +657,15 @@ async function pollAndBroadcast() {
         const withTimeout = (promise, ms) =>
             Promise.race([promise, new Promise(r => setTimeout(() => r(null), ms))]);
 
-        const [processResult, externalResult, codexCtx, cursorFolders] = await Promise.all([
+        const [processResult, externalResult, codexCtxResult, cursorFoldersResult] = await Promise.all([
             withTimeout(readProcesses(sessionPids), 5000),
             withTimeout(readExternalAIs(), 5000),
             withTimeout(readCodexContext(), 3000),
             withTimeout(readCursorWorkspaces(), 1000),
         ]);
+
+        const codexCtx = codexCtxResult || { threads: [], activeSessions: [] };
+        const cursorFolders = Array.isArray(cursorFoldersResult) ? cursorFoldersResult : [];
 
         // Use fresh result if available, otherwise fall back to cached
         const processes = processResult ?? lastGoodProcesses;
@@ -719,6 +783,18 @@ async function pollAndBroadcast() {
             const currentTask = sessionTasks.find(t => t.status === "in_progress");
             const completedCount = sessionTasks.filter(t => t.status === "completed").length;
             const totalCount = sessionTasks.length;
+            const signalSources = [
+                { key: "session", label: "session", ts: session._mtime },
+                { key: "process", label: "process", ts: proc ? Date.now() : 0 },
+                { key: "history", label: "history", ts: latestPrompt?.timestamp },
+                { key: "task", label: "task", ts: sessionTasks.length > 0 ? session._mtime : 0 },
+            ].filter(source => Number.isFinite(Number(source.ts)) && Number(source.ts) > 0);
+            const lastActivityAt = Math.max(
+                0,
+                Number(session._mtime) || 0,
+                Number(latestPrompt?.timestamp) || 0
+            );
+            const lastSeenAt = Math.max(0, ...signalSources.map(source => Number(source.ts) || 0));
 
             return {
                 pid: session._pid,
@@ -755,6 +831,11 @@ async function pollAndBroadcast() {
                 completedTasks: completedCount,
                 totalTasks: totalCount,
                 startTime: session.startedAt || session.startTime,
+                signals: {
+                    sources: signalSources.map(source => source.key),
+                    lastSeenAt,
+                    lastActivityAt,
+                },
             };
         });
 
@@ -778,7 +859,78 @@ async function pollAndBroadcast() {
 
         // Convert external AIs into agent format with stabilized activity detection
         const EXT_ACTIVE_HOLD_MS = 15000; // hold "coding" for 15s after last activity signal
-        const externalAgents = externalAIs.map(ext => {
+        const externalAgents = externalAIs.flatMap(ext => {
+            if (ext.platform === "codex" && codexCtx.activeSessions.length > 0) {
+                const nowMs = Date.now();
+                const sessionsForCodex = [...codexCtx.activeSessions]
+                    .filter(session => nowMs - (Number(session.mtime) || 0) < CODEX_VISIBLE_MS)
+                    .sort((a, b) => b.mtime - a.mtime);
+                if (sessionsForCodex.length === 0) return [];
+                const threadById = new Map(codexCtx.threads.filter(t => t.id).map(t => [t.id, t]));
+                const perSessionMemKB = Math.max(0, Math.round((ext.memoryKB || 0) / Math.max(1, sessionsForCodex.length)));
+
+                return sessionsForCodex.map((session, index) => {
+                    const pid = `ext-codex-${session.id || index}`;
+                    if (!extPrevState[pid]) extPrevState[pid] = { status: "idle", windowTitle: "", lastActiveAt: 0 };
+                    const prev = extPrevState[pid];
+
+                    const prevMem = prevMemory[pid] || 0;
+                    const memChanged = prevMem > 0 && Math.abs(perSessionMemKB - prevMem) > 5000;
+                    prevMemory[pid] = perSessionMemKB;
+
+                    const thread = threadById.get(session.id) || null;
+                    const threadUpdatedAt = Number(thread?._updatedAtMs) || 0;
+                    const latestSignalAt = Math.max(Number(session.mtime) || 0, threadUpdatedAt);
+                    if ((latestSignalAt && nowMs - latestSignalAt < 60000) || memChanged) {
+                        prev.lastActiveAt = nowMs;
+                    }
+
+                    const isRecentlyActive = (nowMs - prev.lastActiveAt) < EXT_ACTIVE_HOLD_MS;
+                    const status = isRecentlyActive ? "coding" : (prev.status === "coding" ? "idle" : prev.status || "idle");
+                    prev.status = status;
+
+                    const cwd = session.cwd || "";
+                    const projectName = cwd.split(/[/\\]/).filter(Boolean).pop() || session.agentNickname || ext.platformName;
+                    const currentWorkText = thread?.thread_name || session.agentNickname || projectName;
+                    const signalSources = [
+                        { key: "process", ts: nowMs },
+                        { key: "codex", ts: session.mtime },
+                        { key: "thread", ts: threadUpdatedAt },
+                        { key: "memory", ts: memChanged ? nowMs : 0 },
+                    ].filter(source => Number.isFinite(Number(source.ts)) && Number(source.ts) > 0);
+                    const lastActivityAt = Math.max(0, Number(prev.lastActiveAt) || 0, latestSignalAt || 0);
+                    const lastSeenAt = Math.max(0, ...signalSources.map(source => Number(source.ts) || 0));
+
+                    return {
+                        pid,
+                        sessionId: session.id,
+                        platform: "codex",
+                        platformName: "OpenAI Codex",
+                        platformIcon: ext.icon,
+                        role: session.agentRole || "developer",
+                        projectName,
+                        cwd,
+                        isRunning: true,
+                        memoryMB: Math.round(perSessionMemKB / 1024 / 10) * 10,
+                        status,
+                        currentTask: null,
+                        currentWork: currentWorkText ? {
+                            prompt: currentWorkText,
+                            timestamp: threadUpdatedAt || session.mtime || 0,
+                        } : null,
+                        tasks: [],
+                        completedTasks: 0,
+                        totalTasks: 0,
+                        processCount: ext.processCount,
+                        signals: {
+                            sources: signalSources.map(source => source.key),
+                            lastSeenAt,
+                            lastActivityAt,
+                        },
+                    };
+                });
+            }
+
             const pid = ext.pid;
             if (!extPrevState[pid]) extPrevState[pid] = { status: "idle", windowTitle: "", lastActiveAt: 0 };
             const prev = extPrevState[pid];
@@ -849,6 +1001,18 @@ async function pollAndBroadcast() {
             prev.status = status;
 
             const memMB = Math.round(memKB / 1024 / 10) * 10;
+            const currentWorkAt = ext.platform === "codex" && codexCtx.activeSessions.length
+                ? codexCtx.activeSessions[0].mtime
+                : 0;
+            const signalSources = [
+                { key: "process", ts: Date.now() },
+                { key: "window", ts: ext.windowTitle ? Date.now() : 0 },
+                { key: "codex", ts: ext.platform === "codex" ? currentWorkAt : 0 },
+                { key: "cursor", ts: ext.platform === "cursor" && cursorFolders.length > 0 ? Date.now() : 0 },
+                { key: "memory", ts: memChanged ? Date.now() : 0 },
+            ].filter(source => Number.isFinite(Number(source.ts)) && Number(source.ts) > 0);
+            const lastActivityAt = Math.max(0, Number(prev.lastActiveAt) || 0, Number(currentWorkAt) || 0);
+            const lastSeenAt = Math.max(0, ...signalSources.map(source => Number(source.ts) || 0));
 
             return {
                 pid,
@@ -863,18 +1027,42 @@ async function pollAndBroadcast() {
                 currentTask: null,
                 currentWork: currentWorkText ? {
                     prompt: currentWorkText,
-                    timestamp: ext.platform === "codex" && codexCtx.activeSessions.length
-                        ? codexCtx.activeSessions[0].mtime : 0,
+                    timestamp: currentWorkAt,
                 } : null,
                 tasks: [],
                 completedTasks: 0,
                 totalTasks: 0,
                 processCount: ext.processCount,
+                signals: {
+                    sources: signalSources.map(source => source.key),
+                    lastSeenAt,
+                    lastActivityAt,
+                },
             };
         });
 
         // Merge Claude + external agents
         const allAgents = [...filteredAgents, ...externalAgents];
+
+        const diagnostics = {
+            lastPollAt: Date.now(),
+            pollInterval: POLL_INTERVAL,
+            claudeDirExists,
+            sessionCount: sessions.length,
+            visibleClaudeCount: filteredAgents.length,
+            processCount: processes.length,
+            externalCount: externalAIs.length,
+            codexSessionCount: codexCtx.activeSessions.length,
+            codexThreadCount: codexCtx.threads.length,
+            cursorWorkspaceCount: cursorFolders.length,
+            detectorStatus: {
+                processes: processResult === null ? "cached" : "fresh",
+                external: externalResult === null ? "cached" : "fresh",
+                codex: codexCtxResult === null ? "timeout" : "fresh",
+                cursor: cursorFoldersResult === null ? "timeout" : "fresh",
+            },
+        };
+        lastDiagnostics = diagnostics;
 
         // Debug log: show detected agents
         const prevCount = lastState?.agents?.length ?? -1;
@@ -890,6 +1078,7 @@ async function pollAndBroadcast() {
             totalProcesses: processes.length,
             totalSessions: sessions.length,
             claudeDirExists,
+            diagnostics,
             config: config ? {
                 numStartups: config.numStartups,
                 projectCount: Object.keys(config.projects || {}).length,
@@ -897,8 +1086,11 @@ async function pollAndBroadcast() {
         };
 
         // Diff: only broadcast when meaningful state changed.
-        // Compare a stable fingerprint that excludes volatile fields (ageMs, timestamp).
-        const stateJSON = JSON.stringify(state);
+        // Compare a stable fingerprint that excludes volatile heartbeat fields.
+        const stateJSON = JSON.stringify({
+            ...state,
+            diagnostics: { ...diagnostics, lastPollAt: 0 },
+        });
         if (stateJSON !== lastStateJSON) {
             lastState = state;
             lastStateJSON = stateJSON;

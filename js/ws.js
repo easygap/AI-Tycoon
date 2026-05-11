@@ -2,13 +2,13 @@
 //  AI TYCOON — WebSocket Connection & State Handling
 // ============================================================
 
-import { S, addLog, spawnParticles, spawnHearts } from "./state.js";
+import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts } from "./state.js";
 import {
     WS_URL, RECONNECT_BASE, RECONNECT_MAX,
-    AGENT_THEMES, TILE, SUB_COLORS, SUB_SPEECH,
+    AGENT_THEMES, TILE, SUB_COLORS, SUB_SPEECH, STATUS_META,
     generateDeskSpots,
 } from "./constants.js";
-import { updatePanel, updateStats, updateDetailPanel } from "./panel.js";
+import { updatePanel, updateStats, updateDetailPanel, updateLiveHud } from "./panel.js";
 
 // ── WebSocket ──
 export function connectWS() {
@@ -24,7 +24,13 @@ export function connectWS() {
         try {
             const msg = JSON.parse(e.data);
             if (msg.type === "full_state") handleState(msg.data);
-            else if (msg.type === "heartbeat") S.lastHeartbeat = Date.now();
+            else if (msg.type === "heartbeat") {
+                S.lastHeartbeat = Date.now();
+                if (msg.diagnostics && S.serverState) {
+                    S.serverState.diagnostics = msg.diagnostics;
+                    updateLiveHud();
+                }
+            }
         } catch (err) { console.error("[AI Tycoon] State error:", err); }
     };
     S.ws.onclose = () => {
@@ -58,12 +64,141 @@ export function setConn(ok) {
         txt.textContent = "연결 중";
         badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-xs text-zinc-500";
     }
+
+    const hudText = document.getElementById("hud-conn-text");
+    const hudDot = document.getElementById("hud-live-dot");
+    if (hudText) hudText.textContent = ok ? "라이브 연결" : "연결 대기";
+    if (hudDot) hudDot.classList.toggle("is-on", ok);
+    updateLiveHud();
+}
+
+function pidKey(pid) {
+    return String(pid);
+}
+
+function statusOf(agent) {
+    return agent?.isRunning ? agent.status : "offline";
+}
+
+function firstLine(text, max = 72) {
+    const cleaned = String(text || "").replace(/\[Pasted text[^\]]*\]/g, "").trim();
+    const line = cleaned.split("\n")[0].trim();
+    return line.length > max ? `${line.substring(0, max - 1)}...` : line;
+}
+
+function workSignature(agent) {
+    const prompt = agent?.currentWork?.prompt || "";
+    const task = agent?.currentTask?.subject || "";
+    const ts = agent?.currentWork?.timestamp || "";
+    return `${prompt}|${task}|${ts}`;
+}
+
+function themeForAgent(agent) {
+    const idx = S.liveAgents.findIndex(a => pidKey(a.pid) === pidKey(agent.pid));
+    return AGENT_THEMES[(idx >= 0 ? idx : 0) % AGENT_THEMES.length];
+}
+
+function addAgentEvent(agent, type, overrides = {}) {
+    const theme = overrides.theme || themeForAgent(agent);
+    const status = overrides.status || statusOf(agent);
+    const meta = STATUS_META[status] || STATUS_META.idle;
+    addWorkEvent({
+        type,
+        pid: pidKey(agent.pid),
+        agentName: theme.name,
+        projectName: agent.projectName || agent.platformName || "Agent",
+        platform: agent.platform,
+        status,
+        color: theme.body,
+        statusColor: meta.color,
+        text: getWorkText(agent) || firstLine(agent.currentWork?.prompt || agent.currentTask?.subject || overrides.text || "", 72),
+        ...overrides,
+        theme: undefined,
+    });
+}
+
+function collectWorkEvents(prevAgentsByPid) {
+    const previousExists = prevAgentsByPid.size > 0;
+    S.liveAgents.forEach(agent => {
+        const prev = prevAgentsByPid.get(pidKey(agent.pid));
+        if (!prev || !previousExists) return;
+
+        const prevStatus = statusOf(prev);
+        const currentStatus = statusOf(agent);
+        if (currentStatus !== prevStatus) {
+            const activeStatuses = ["coding", "thinking", "searching", "reviewing", "meeting"];
+            if (activeStatuses.includes(currentStatus)) {
+                addAgentEvent(agent, "status", {
+                    label: STATUS_META[currentStatus]?.label || currentStatus,
+                    key: `status|${agent.pid}|${currentStatus}`,
+                });
+            } else if (currentStatus === "offline") {
+                addAgentEvent(agent, "leave", {
+                    label: "연결 종료",
+                    text: "작업실에서 나갔어요",
+                    key: `offline|${agent.pid}`,
+                });
+            }
+        }
+
+        if (!prev.needsReview && agent.needsReview) {
+            addAgentEvent(agent, "review", {
+                label: "검토 요청",
+                text: getWorkText(agent) || firstLine(agent.currentWork?.prompt || agent.currentTask?.subject || "확인이 필요해요", 72),
+                key: `review|${agent.pid}|${workSignature(agent)}`,
+            });
+        }
+
+        if (agent.currentWork?.prompt && workSignature(agent) !== workSignature(prev)) {
+            const work = firstLine(agent.currentWork.prompt, 78);
+            addAgentEvent(agent, "work", {
+                label: "새 작업",
+                text: work,
+                key: `work|${agent.pid}|${work}`,
+            });
+        }
+
+        const prevTasks = new Map((prev.tasks || []).map(task => [pidKey(task.id), task]));
+        (agent.tasks || []).forEach(task => {
+            const prevTask = prevTasks.get(pidKey(task.id));
+            if (!prevTask) {
+                if (task.status === "in_progress") {
+                    addAgentEvent(agent, "task-start", {
+                        taskId: task.id,
+                        label: "태스크 시작",
+                        text: firstLine(task.activeForm || task.subject || `Task ${task.id}`, 72),
+                        key: `task-start|${agent.pid}|${task.id}`,
+                    });
+                }
+                return;
+            }
+
+            if (task.status === prevTask.status) return;
+            if (task.status === "in_progress") {
+                addAgentEvent(agent, "task-start", {
+                    taskId: task.id,
+                    label: "태스크 시작",
+                    text: firstLine(task.activeForm || task.subject || `Task ${task.id}`, 72),
+                    key: `task-start|${agent.pid}|${task.id}|${task.status}`,
+                });
+            } else if (task.status === "completed" && prevTask.status !== "completed") {
+                addAgentEvent(agent, "task-done", {
+                    taskId: task.id,
+                    label: "완료",
+                    text: firstLine(task.subject || task.activeForm || `Task ${task.id}`, 72),
+                    key: `task-done|${agent.pid}|${task.id}`,
+                });
+            }
+        });
+    });
 }
 
 // ── Handle live data ──
 export function handleState(state) {
     S.serverState = state;
-    const prevPids = new Set(S.liveAgents.map(a => a.pid));
+    S.lastStateAt = Date.now();
+    const prevAgentsByPid = new Map(S.liveAgents.map(a => [pidKey(a.pid), a]));
+    const prevPids = new Set(S.liveAgents.map(a => pidKey(a.pid)));
     S.liveAgents = state.agents || [];
 
     // Re-generate desk grid if agent count changed
@@ -87,19 +222,36 @@ export function handleState(state) {
                 behaviorTimer: 80 + Math.floor(Math.random() * 200),
                 chatPartner: null,
             };
-            if (!prevPids.has(agent.pid)) {
+            if (!prevPids.has(pidKey(agent.pid))) {
                 addLog(`${theme.name} (${agent.projectName}) 출근했어요!`, "join");
+                addAgentEvent(agent, "join", {
+                    theme,
+                    label: "출근",
+                    text: "작업실에 합류했어요",
+                    key: `join|${agent.pid}`,
+                });
                 spawnParticles(dx, dy, theme.body, 12);
                 spawnHearts(dx, dy - 16, 3);
             }
         }
     });
 
-    const curPids = new Set(S.liveAgents.map(a => a.pid));
+    collectWorkEvents(prevAgentsByPid);
+
+    const curPids = new Set(S.liveAgents.map(a => pidKey(a.pid)));
     Object.keys(S.visualAgents).forEach(pid => {
         if (!curPids.has(pid)) {
             const theme = S.visualAgents[pid].theme;
             addLog(`${theme.name} 퇴근! 수고했어요~`, "leave");
+            const prevAgent = prevAgentsByPid.get(pid);
+            if (prevAgent) {
+                addAgentEvent(prevAgent, "leave", {
+                    theme,
+                    label: "퇴근",
+                    text: "작업실에서 나갔어요",
+                    key: `leave|${pid}`,
+                });
+            }
             delete S.visualAgents[pid];
             // Fix: clear selectedPid if agent left
             if (S.selectedPid === pid) S.selectedPid = null;

@@ -4,31 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Tycoon</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23F0E8D0' rx='20' width='100' height='100'/><text x='50' y='72' font-size='56' text-anchor='middle'>🏢</text></svg>">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23141715' rx='20' width='100' height='100'/%3E%3Crect x='24' y='30' width='52' height='48' rx='8' fill='%23F7FAF7'/%3E%3Crect x='34' y='42' width='9' height='9' rx='2' fill='%2310B981'/%3E%3Crect x='48' y='42' width='9' height='9' rx='2' fill='%23FF6B4A'/%3E%3Crect x='62' y='42' width='9' height='9' rx='2' fill='%232F80ED'/%3E%3Crect x='42' y='58' width='16' height='20' rx='3' fill='%23141715'/%3E%3C/svg%3E">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
     <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Pretendard', 'system-ui', 'sans-serif'],
-                    },
-                },
-            },
-        }
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.18.1/dist/pixi.min.js"></script>
+    <link rel="stylesheet" href="css/tailwind.generated.css">
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-[#FBF8F4] text-zinc-700 font-sans overflow-hidden h-[100dvh] h-[100vh]">
+<body class="text-zinc-700 font-sans overflow-hidden h-[100dvh] h-[100vh]">
 
     <div id="app" class="flex flex-col h-full">
 
         <!-- ── Nav Bar ── -->
-        <header class="flex items-center gap-2 md:gap-4 px-3 md:px-5 py-2.5 border-b border-amber-200/60 bg-white/70 backdrop-blur-2xl z-10 shrink-0">
+        <header class="app-header flex items-center gap-2 md:gap-4 px-3 md:px-5 py-2.5 z-10 shrink-0">
             <div class="flex items-center gap-2 shrink-0">
-                <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-300"></div>
+                <div class="brand-mark" aria-hidden="true">
+                    <span></span><span></span><span></span>
+                </div>
                 <span class="text-[15px] font-bold text-zinc-800 tracking-tight">AI Tycoon</span>
             </div>
 
@@ -62,13 +54,48 @@
                 </div>
             </div>
 
+            <!-- Visual Density Menu -->
+            <div class="visual-density-control relative shrink-0">
+                <button id="pixi-density-toggle" onclick="togglePixiDensityMenu(event)" class="toolbar-icon pixi-density-toggle h-8 min-w-8 px-2 rounded-lg flex items-center justify-center gap-1.5 shrink-0" title="Pixi 표시 밀도" aria-label="Pixi 표시 밀도" aria-haspopup="menu" aria-expanded="false" aria-controls="pixi-density-menu">
+                    <iconify-icon id="pixi-density-icon" icon="solar:layers-minimalistic-linear" class="text-zinc-500 text-sm"></iconify-icon>
+                    <span id="pixi-density-label" class="density-label hidden sm:inline">자동</span>
+                </button>
+                <div id="pixi-density-menu" class="visual-density-menu" role="menu" aria-label="시각 효과" hidden>
+                    <button type="button" class="visual-density-option" data-density-option="auto" role="menuitemradio" aria-checked="true" onclick="setPixiDensityFromMenu('auto')" aria-label="시각 효과 자동">
+                        <iconify-icon icon="solar:layers-minimalistic-linear" aria-hidden="true"></iconify-icon>
+                        <span>자동</span>
+                        <iconify-icon class="density-option-check" icon="solar:check-circle-bold" aria-hidden="true"></iconify-icon>
+                    </button>
+                    <button type="button" class="visual-density-option" data-density-option="minimal" role="menuitemradio" aria-checked="false" onclick="setPixiDensityFromMenu('minimal')" aria-label="시각 효과 저자극">
+                        <iconify-icon icon="solar:eye-closed-linear" aria-hidden="true"></iconify-icon>
+                        <span>저자극</span>
+                        <iconify-icon class="density-option-check" icon="solar:check-circle-bold" aria-hidden="true"></iconify-icon>
+                    </button>
+                    <button type="button" class="visual-density-option" data-density-option="focus" role="menuitemradio" aria-checked="false" onclick="setPixiDensityFromMenu('focus')" aria-label="시각 효과 집중">
+                        <iconify-icon icon="solar:focus-linear" aria-hidden="true"></iconify-icon>
+                        <span>집중</span>
+                        <iconify-icon class="density-option-check" icon="solar:check-circle-bold" aria-hidden="true"></iconify-icon>
+                    </button>
+                    <button type="button" class="visual-density-option" data-density-option="balanced" role="menuitemradio" aria-checked="false" onclick="setPixiDensityFromMenu('balanced')" aria-label="시각 효과 균형">
+                        <iconify-icon icon="solar:tuning-square-linear" aria-hidden="true"></iconify-icon>
+                        <span>균형</span>
+                        <iconify-icon class="density-option-check" icon="solar:check-circle-bold" aria-hidden="true"></iconify-icon>
+                    </button>
+                    <button type="button" class="visual-density-option" data-density-option="rich" role="menuitemradio" aria-checked="false" onclick="setPixiDensityFromMenu('rich')" aria-label="시각 효과 풍부">
+                        <iconify-icon icon="solar:magic-stick-3-linear" aria-hidden="true"></iconify-icon>
+                        <span>풍부</span>
+                        <iconify-icon class="density-option-check" icon="solar:check-circle-bold" aria-hidden="true"></iconify-icon>
+                    </button>
+                </div>
+            </div>
+
             <!-- Dark Mode Toggle -->
-            <button id="dark-toggle" onclick="toggleDarkMode()" class="w-7 h-7 rounded-lg flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 active:scale-95 transition-all shrink-0" title="다크모드 전환" aria-label="다크모드 전환">
+            <button id="dark-toggle" onclick="toggleDarkMode()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" title="다크모드 전환" aria-label="다크모드 전환">
                 <iconify-icon id="dark-icon" icon="solar:moon-linear" class="text-zinc-500 text-sm"></iconify-icon>
             </button>
 
             <!-- Side Panel Toggle -->
-            <button id="panel-toggle" onclick="toggleSidePanel()" class="w-7 h-7 rounded-lg flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 active:scale-95 transition-all shrink-0 md:hidden" title="패널 토글" aria-label="사이드 패널 토글">
+            <button id="panel-toggle" onclick="toggleSidePanel()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0 md:hidden" title="패널 토글" aria-label="사이드 패널 토글" aria-controls="side-panel" aria-expanded="true">
                 <iconify-icon icon="solar:sidebar-minimalistic-linear" class="text-zinc-500 text-sm"></iconify-icon>
             </button>
         </header>
@@ -77,26 +104,99 @@
         <div id="main-content" class="flex flex-1 overflow-hidden">
 
             <!-- Canvas -->
-            <div class="flex-1 relative">
-                <canvas id="office-canvas" class="block w-full h-full"></canvas>
+            <div class="stage-shell flex-1 relative">
+                <canvas id="office-canvas" class="block w-full h-full" tabindex="0" role="application" aria-roledescription="실시간 작업실" aria-label="AI Tycoon 실시간 작업실" aria-describedby="office-a11y-status"></canvas>
+                <div id="office-a11y-status" class="sr-only" role="status" aria-live="polite">에이전트 상태 수집 중</div>
+                <div id="pixi-layer" class="pixi-layer" aria-hidden="true"></div>
+                <div id="live-hud" class="live-hud" aria-live="off">
+                    <section class="hud-panel hud-summary">
+                        <div class="hud-kicker">
+                            <span id="hud-live-dot" class="live-dot"></span>
+                            <span id="hud-conn-text">연결 중</span>
+                        </div>
+                        <div class="hud-title">실시간 작업실</div>
+                        <div class="hud-metrics">
+                            <div>
+                                <span id="hud-active">0</span>
+                                <label>활성</label>
+                            </div>
+                            <div>
+                                <span id="hud-working">0</span>
+                                <label>작업</label>
+                            </div>
+                            <div>
+                                <span id="hud-review">0</span>
+                                <label>검토</label>
+                            </div>
+                        </div>
+                        <div id="hud-diagnostics" class="hud-diagnostics" aria-live="polite"></div>
+                    </section>
+
+                    <section class="hud-panel hud-focus">
+                        <div class="hud-kicker">포커스</div>
+                        <div id="hud-focus-name" class="focus-name">대기 중</div>
+                        <div id="hud-focus-work" class="focus-work">에이전트 상태 수집 중</div>
+                        <div class="focus-progress" aria-hidden="true">
+                            <span id="hud-focus-progress"></span>
+                        </div>
+                        <div class="hud-actions">
+                            <button id="director-toggle" type="button" onclick="toggleDirectorMode()" class="hud-action" aria-pressed="false" title="가장 중요한 직원 자동 추적">
+                                <iconify-icon icon="solar:target-linear"></iconify-icon>
+                                <span>디렉터</span>
+                            </button>
+                            <button type="button" onclick="focusActiveAgent()" class="hud-action" title="가장 활발한 직원 보기">
+                                <iconify-icon icon="solar:focus-linear"></iconify-icon>
+                                <span>포커스</span>
+                            </button>
+                            <button type="button" onclick="resetCameraView()" class="hud-action icon-only" aria-label="전체 보기" title="전체 보기">
+                                <iconify-icon icon="solar:home-angle-linear"></iconify-icon>
+                            </button>
+                        </div>
+                    </section>
+
+                    <section id="team-radar" class="hud-panel team-radar" aria-labelledby="team-radar-title"></section>
+                </div>
+                <div id="work-stream" class="work-stream" role="status" aria-live="polite" aria-atomic="false"></div>
+                <nav id="agent-focus-rail" class="agent-focus-rail" aria-label="실시간 직원 포커스"></nav>
+                <section id="mobile-priority-dock" class="mobile-priority-dock" aria-label="모바일 우선 작업"></section>
             </div>
 
             <!-- ── Side Panel ── -->
-            <aside id="side-panel" class="side-panel w-[300px] shrink-0 border-l border-amber-200/40 bg-white/50 backdrop-blur-xl flex flex-col overflow-hidden">
+            <button id="panel-backdrop" type="button" class="panel-backdrop md:hidden" onclick="closeSidePanel()" aria-label="사이드 패널 닫기" hidden></button>
+            <aside id="side-panel" class="side-panel w-[340px] shrink-0 border-l border-amber-200/40 bg-white/50 backdrop-blur-xl flex flex-col overflow-hidden" aria-label="에이전트 사이드 패널">
+                <button id="panel-close" type="button" onclick="closeSidePanel()" class="panel-close md:hidden" aria-label="사이드 패널 닫기">
+                    <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
+                    <span>닫기</span>
+                </button>
 
                 <!-- Boss Review Queue Panel -->
                 <div id="boss-queue-panel" class="hidden shrink-0 border-b border-amber-200/40 p-3 overflow-y-auto max-h-[40%]"></div>
 
+                <!-- System Health Panel -->
+                <section id="system-health-panel" class="system-health-panel shrink-0 border-b border-amber-200/40 p-3" aria-label="시스템 진단" aria-live="polite"></section>
+
+                <!-- Operator Brief Panel -->
+                <section id="operator-brief-panel" class="operator-brief-panel shrink-0 border-b border-amber-200/40 p-3" aria-label="운영 브리핑" aria-live="polite"></section>
+
                 <!-- Agent Detail Panel (shown when agent clicked) -->
-                <div id="detail-panel" class="hidden shrink-0 border-b border-amber-200/40 p-3 overflow-y-auto max-h-[50%]"></div>
+                <div id="detail-panel" class="hidden shrink-0 border-b border-amber-200/40 p-3 overflow-y-auto max-h-[50%]" tabindex="-1"></div>
 
                 <!-- Agents Section -->
                 <div class="flex-1 overflow-y-auto p-3">
                     <div class="flex items-center gap-2 mb-2">
                         <iconify-icon icon="solar:users-group-rounded-linear" class="text-amber-500 text-sm"></iconify-icon>
-                        <h3 class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">에이전트</h3>
+                        <h3 id="agents-heading" class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">에이전트</h3>
                         <span id="agent-count" class="text-[10px] text-zinc-400 tabular-nums ml-auto"></span>
                     </div>
+                    <div class="agent-search-shell mb-2">
+                        <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon>
+                        <input id="agent-search" class="agent-search-input" type="search" placeholder="직원, 프로젝트, 작업 검색" aria-label="에이전트 검색" autocomplete="off" oninput="setAgentSearch(this.value)" onkeydown="if(event.key==='Escape'&&this.value){clearAgentSearch();event.stopPropagation();}">
+                        <button id="agent-search-clear" type="button" class="agent-search-clear" onclick="clearAgentSearch()" aria-label="검색어 지우기" hidden>
+                            <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
+                        </button>
+                    </div>
+                    <div id="agent-visibility-summary" class="agent-visibility-summary mb-2" aria-live="polite"></div>
+                    <div id="action-filter" class="action-filter-bar mb-2" aria-label="다음 행동 필터"></div>
                     <!-- Filter & Sort -->
                     <div id="filter-bar" class="flex flex-wrap gap-1 mb-2">
                         <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">전체</button>
@@ -117,13 +217,15 @@
                     <div id="agents-list" class="flex flex-col gap-2"></div>
                 </div>
 
-                <!-- Chat Log -->
-                <div class="h-[180px] shrink-0 border-t border-amber-200/40 p-3 overflow-hidden flex flex-col">
+                <!-- Activity Timeline -->
+                <div class="activity-panel h-[240px] shrink-0 border-t border-amber-200/40 p-3 overflow-hidden flex flex-col">
                     <div class="flex items-center gap-2 mb-2">
-                        <iconify-icon icon="solar:chat-round-dots-linear" class="text-rose-400 text-sm"></iconify-icon>
-                        <h3 class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">대화</h3>
+                        <iconify-icon icon="solar:history-2-linear" class="text-rose-400 text-sm"></iconify-icon>
+                        <h3 class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">최근 활동</h3>
+                        <span id="activity-count" class="text-[10px] text-zinc-400 tabular-nums ml-auto"></span>
                     </div>
-                    <div id="activity-log" class="flex-1 overflow-y-auto flex flex-col gap-1"></div>
+                    <div id="activity-timeline" class="activity-timeline flex-1 overflow-y-auto"></div>
+                    <div id="activity-log" class="activity-log-mini overflow-y-auto flex flex-col gap-1" aria-label="시스템 로그"></div>
                 </div>
             </aside>
         </div>
@@ -151,9 +253,26 @@
     }
     function toggleSidePanel() {
         const panel = document.getElementById("side-panel");
+        if (!panel) return;
+        panel.dataset.userToggled = "true";
         panel.classList.toggle("panel-hidden");
+        if (window.syncSidePanelState) window.syncSidePanelState();
         setTimeout(() => window.dispatchEvent(new Event("resize")), 350);
     }
+    function closeSidePanel() {
+        const panel = document.getElementById("side-panel");
+        if (!panel) return;
+        panel.dataset.userToggled = "true";
+        panel.classList.add("panel-hidden");
+        if (window.syncSidePanelState) window.syncSidePanelState();
+        setTimeout(() => window.dispatchEvent(new Event("resize")), 350);
+    }
+    document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        const panel = document.getElementById("side-panel");
+        if (!panel || panel.classList.contains("panel-hidden")) return;
+        closeSidePanel();
+    });
     // Resolve initial dark mode: explicit choice → system preference
     (function() {
         const stored = localStorage.getItem("ai-tycoon-dark");

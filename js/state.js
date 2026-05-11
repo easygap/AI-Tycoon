@@ -4,6 +4,17 @@
 
 import { generateDeskSpots, MAX_PARTICLES, MAX_HEARTS } from "./constants.js";
 
+function readStoredStringArray(key) {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(key) || "[]");
+        return Array.isArray(parsed)
+            ? [...new Set(parsed.map(item => String(item)).filter(Boolean))].slice(0, 40)
+            : [];
+    } catch {
+        return [];
+    }
+}
+
 export const S = {
     canvas: null,
     ctx: null,
@@ -25,15 +36,29 @@ export const S = {
     selectedPid: null,
     detailPid: null,
     serverState: null,
+    lastStateAt: 0,
+    inspectedEventKey: null,
     activityLog: [],
+    workEvents: [],
     chatTimer: 180,
     activeFilter: localStorage.getItem("ai-tycoon-filter") || "all",
     activePlatformFilter: localStorage.getItem("ai-tycoon-platform") || "all",
+    activeActionFilter: localStorage.getItem("ai-tycoon-action-filter") || "all",
+    agentSearchQuery: localStorage.getItem("ai-tycoon-agent-search") || "",
     sortOrder: localStorage.getItem("ai-tycoon-sort") || "status",
+    pinnedAgentKeys: [
+        ...new Set([
+            ...readStoredStringArray("ai-tycoon-pinned-agents"),
+            ...readStoredStringArray("ai-tycoon-pinned-pids"),
+        ]),
+    ],
     memoryHistory: {},
     zoomLevel: 1.0,
     panX: 0,
     panY: 0,
+    pixiDensity: localStorage.getItem("ai-tycoon-pixi-density") || "auto",
+    directorMode: localStorage.getItem("ai-tycoon-director") === "true",
+    directorFocusPid: null,
     isPanning: false,
     panStartX: 0,
     panStartY: 0,
@@ -49,7 +74,7 @@ export const S = {
 
 /** Escape HTML special characters */
 export function esc(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
 /** Get display text for what agent is currently working on */
@@ -87,12 +112,41 @@ export function addLog(msg, type, color) {
     if (S.activityLog.length > 50) S.activityLog.pop();
 
     const el = document.getElementById("activity-log");
+    if (!el) return;
     el.innerHTML = S.activityLog.slice(0, 25).map(e => {
         const isChat = e.type === "chat";
         const cssClass = isChat ? "log-entry chat-entry" : "log-entry";
-        const icon = isChat ? "💬" : e.type === "join" ? "👋" : e.type === "leave" ? "🏠" : "📋";
-        return `<div class="${cssClass}"><span class="log-time">${e.time}</span> ${icon} ${esc(e.message)}</div>`;
+        const icon = isChat ? "solar:chat-round-dots-linear"
+            : e.type === "join" ? "solar:login-2-linear"
+            : e.type === "leave" ? "solar:logout-2-linear"
+            : "solar:clipboard-list-linear";
+        return `<div class="${cssClass}"><span class="log-time">${e.time}</span><iconify-icon icon="${icon}" class="log-icon"></iconify-icon><span>${esc(e.message)}</span></div>`;
     }).join("");
+}
+
+// ── Live Work Event Stream ──
+export function addWorkEvent(event) {
+    const now = Date.now();
+    const key = event.key || [
+        event.type,
+        event.pid,
+        event.status,
+        event.taskId,
+        event.text,
+    ].filter(Boolean).join("|");
+
+    const latest = S.workEvents[0];
+    if (latest && latest.key === key && now - latest.ts < 2500) {
+        latest.ts = now;
+        return;
+    }
+
+    S.workEvents.unshift({
+        ...event,
+        key,
+        ts: event.ts || now,
+    });
+    if (S.workEvents.length > 28) S.workEvents.length = 28;
 }
 
 // ── Boss Review Queue helpers ──

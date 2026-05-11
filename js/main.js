@@ -2,11 +2,11 @@
 //  AI TYCOON — Entry Point (init, loop, input, visual AI)
 // ============================================================
 
-import { S, addLog, getWorkText, spawnParticles, spawnHearts, bossQueueEntry, bossQueueAdd, bossQueueRemove, bossQueueResolve } from "./state.js";
+import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts, bossQueueEntry, bossQueueAdd, bossQueueRemove, bossQueueResolve } from "./state.js";
 import {
     TILE, COLS, ROWS,
     ZOOM_MIN, ZOOM_MAX, ZOOM_STEP,
-    AGENT_THEMES, SPEECH, MOVE_SPEECH, ROLE_META, ROLE_CHAT,
+    AGENT_THEMES, SPEECH, MOVE_SPEECH, ROLE_META, ROLE_CHAT, STATUS_META,
     CHAT_TEMPLATES, POI, REPORT_SPEECH,
     BOSS_ACTIVE_SPOT, BOSS_WAIT_SPOTS, BOSS_WAIT_SPEECH,
     BOSS_YES_REACTIONS, BOSS_NO_REACTIONS,
@@ -14,20 +14,202 @@ import {
 } from "./constants.js";
 import { connectWS, setConn } from "./ws.js";
 import { render } from "./renderer.js";
-import { updatePanel, updateDetailPanel, updateBossQueueUI, onMouseMove } from "./panel.js";
+import { updatePanel, updateDetailPanel, updateBossQueueUI, updateLiveHud, onMouseMove } from "./panel.js";
+import { initPixiOverlay, resizePixiOverlay, renderPixiOverlay, getPixiOverlayDebug } from "./pixiOverlay.js";
+import { compareAgentPriority } from "./agentPriority.js";
+
+const PANEL_FOCUSABLE = [
+    "a[href]",
+    "button:not([disabled])",
+    "select:not([disabled])",
+    "textarea:not([disabled])",
+    "input:not([disabled])",
+    "[tabindex]:not([tabindex='-1'])",
+].join(",");
+const PIXI_DENSITY_MODES = ["auto", "minimal", "focus", "balanced", "rich"];
+let lastCanvasA11yText = "";
+
+function syncSidePanelState() {
+    const panel = document.getElementById("side-panel");
+    const toggle = document.getElementById("panel-toggle");
+    const backdrop = document.getElementById("panel-backdrop");
+    const closeButton = document.getElementById("panel-close");
+    if (!panel) return;
+
+    const hidden = panel.classList.contains("panel-hidden");
+    const overlayOpen = !hidden && window.innerWidth <= 480;
+    panel.toggleAttribute("inert", hidden);
+    panel.inert = hidden;
+    panel.setAttribute("aria-hidden", hidden ? "true" : "false");
+    panel.setAttribute("role", overlayOpen ? "dialog" : "complementary");
+    panel.setAttribute("aria-modal", overlayOpen ? "true" : "false");
+
+    if (backdrop) {
+        backdrop.hidden = !overlayOpen;
+        backdrop.classList.toggle("is-visible", overlayOpen);
+    }
+
+    if (toggle) {
+        toggle.setAttribute("aria-controls", "side-panel");
+        toggle.setAttribute("aria-expanded", hidden ? "false" : "true");
+    }
+
+    if (hidden && panel.contains(document.activeElement) && toggle) {
+        toggle.focus({ preventScroll: true });
+    }
+
+    if (overlayOpen && !panel.contains(document.activeElement)) {
+        closeButton?.focus({ preventScroll: true });
+    }
+}
+
+function panelFocusableItems() {
+    const panel = document.getElementById("side-panel");
+    if (!panel || panel.classList.contains("panel-hidden") || panel.inert) return [];
+    return [...panel.querySelectorAll(PANEL_FOCUSABLE)]
+        .filter(el => !el.hasAttribute("disabled") && el.getAttribute("aria-hidden") !== "true" && el.offsetParent !== null);
+}
+
+function trapSidePanelFocus(event) {
+    if (event.key !== "Tab" || window.innerWidth > 480) return;
+    const panel = document.getElementById("side-panel");
+    if (!panel || panel.classList.contains("panel-hidden")) return;
+
+    const items = panelFocusableItems();
+    if (items.length === 0) return;
+
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (!panel.contains(document.activeElement)) {
+        event.preventDefault();
+        first.focus({ preventScroll: true });
+        return;
+    }
+
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus({ preventScroll: true });
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus({ preventScroll: true });
+    }
+}
+
+function isTypingTarget(target) {
+    if (!(target instanceof HTMLElement)) return false;
+    return target.matches("input, textarea, select") || target.isContentEditable;
+}
+
+function handleGlobalShortcuts(event) {
+    const key = event.key;
+    const typing = isTypingTarget(event.target);
+    if ((key === "/" && !typing) || ((event.ctrlKey || event.metaKey) && key.toLowerCase() === "k")) {
+        event.preventDefault();
+        window.focusAgentSearch?.();
+        return;
+    }
+    if (key === "Escape" && event.target?.id === "agent-search" && S.agentSearchQuery) {
+        event.preventDefault();
+        event.stopPropagation();
+        window.clearAgentSearch?.();
+    }
+}
+
+function pixiDensityMenu() {
+    return document.getElementById("pixi-density-menu");
+}
+
+function pixiDensityToggle() {
+    return document.getElementById("pixi-density-toggle");
+}
+
+function pixiDensityMenuItems() {
+    const menu = pixiDensityMenu();
+    if (!menu) return [];
+    return [...menu.querySelectorAll("[data-density-option]")];
+}
+
+function closePixiDensityMenu({ restoreFocus = false } = {}) {
+    const menu = pixiDensityMenu();
+    const toggle = pixiDensityToggle();
+    if (!menu) return;
+    const wasOpen = !menu.hidden;
+    menu.hidden = true;
+    toggle?.setAttribute("aria-expanded", "false");
+    if (restoreFocus && wasOpen) toggle?.focus({ preventScroll: true });
+}
+
+function openPixiDensityMenu() {
+    const menu = pixiDensityMenu();
+    const toggle = pixiDensityToggle();
+    if (!menu || !toggle) return;
+    updatePanel();
+    menu.hidden = false;
+    toggle.setAttribute("aria-expanded", "true");
+    const activeItem = menu.querySelector('[data-active="true"]') || pixiDensityMenuItems()[0];
+    requestAnimationFrame(() => activeItem?.focus({ preventScroll: true }));
+}
+
+function togglePixiDensityMenu(event) {
+    event?.preventDefault();
+    event?.stopPropagation();
+    const menu = pixiDensityMenu();
+    if (!menu) {
+        window.togglePixiDensity?.();
+        return;
+    }
+    if (menu.hidden) openPixiDensityMenu();
+    else closePixiDensityMenu({ restoreFocus: true });
+}
+
+function onPixiDensityDocumentClick(event) {
+    if (event.target?.closest?.(".visual-density-control")) return;
+    closePixiDensityMenu();
+}
+
+function onPixiDensityMenuKeydown(event) {
+    const menu = pixiDensityMenu();
+    if (!menu || menu.hidden || !event.target?.closest?.(".visual-density-control")) return;
+
+    const items = pixiDensityMenuItems();
+    if (items.length === 0) return;
+    const currentIndex = Math.max(0, items.indexOf(document.activeElement));
+
+    if (event.key === "Escape") {
+        event.preventDefault();
+        closePixiDensityMenu({ restoreFocus: true });
+        return;
+    }
+
+    const nextIndex = {
+        ArrowDown: (currentIndex + 1) % items.length,
+        ArrowUp: (currentIndex - 1 + items.length) % items.length,
+        Home: 0,
+        End: items.length - 1,
+    }[event.key];
+
+    if (nextIndex !== undefined) {
+        event.preventDefault();
+        items[nextIndex]?.focus({ preventScroll: true });
+    }
+}
 
 // ── Init ──
 function init() {
     S.canvas = document.getElementById("office-canvas");
     S.ctx = S.canvas.getContext("2d");
     S.ctx.imageSmoothingEnabled = false;
+    initPixiOverlay();
+    window.syncSidePanelState = syncSidePanelState;
 
     window.addEventListener("resize", () => {
         if (S.resizeTimer) clearTimeout(S.resizeTimer);
+        closePixiDensityMenu();
         S.resizeTimer = setTimeout(resize, 150);
     });
     S.canvas.addEventListener("mousemove", onMouseMove);
     S.canvas.addEventListener("click", onCanvasClick);
+    S.canvas.addEventListener("keydown", onCanvasKeyDown);
     // Touch support (tap + one-finger pan + two-finger pinch zoom)
     S.canvas.addEventListener("touchstart", onTouchStart, { passive: false });
     S.canvas.addEventListener("touchmove", onTouchMove, { passive: false });
@@ -42,9 +224,19 @@ function init() {
     S.canvas.addEventListener("mouseleave", onPanEnd);
     S.canvas.addEventListener("contextmenu", e => e.preventDefault());
     S.canvas.addEventListener("dblclick", () => { S.zoomLevel = 1.0; S.panX = 0; S.panY = 0; resize(); });
+    document.addEventListener("keydown", trapSidePanelFocus);
+    document.addEventListener("keydown", handleGlobalShortcuts, true);
+    document.addEventListener("keydown", onPixiDensityMenuKeydown);
+    document.addEventListener("click", onPixiDensityDocumentClick);
 
     // Expose closeDetail state bridge for index.html
     window.__clearDetailPid = () => { S.detailPid = null; S.selectedPid = null; };
+    if (["localhost", "127.0.0.1", "::1"].includes(location.hostname)) {
+        window.__aiTycoonDebug = {
+            addWorkEvent,
+            pixi: getPixiOverlayDebug,
+        };
+    }
 
     // Expose filter/sort for index.html onclick handlers
     // Boss review queue actions
@@ -74,13 +266,134 @@ function init() {
         updateBossQueueUI();
     };
 
-    window.setFilter = (f) => { S.activeFilter = f; localStorage.setItem("ai-tycoon-filter", f); updatePanel(); };
-    window.setPlatformFilter = (f) => { S.activePlatformFilter = f; localStorage.setItem("ai-tycoon-platform", f); updatePanel(); };
+    window.setFilter = (f) => { S.activeFilter = f; localStorage.setItem("ai-tycoon-filter", f); updatePanel(); updateLiveHud(); };
+    window.setPlatformFilter = (f) => { S.activePlatformFilter = f; localStorage.setItem("ai-tycoon-platform", f); updatePanel(); updateLiveHud(); };
+    window.setActionFilter = (f) => {
+        S.activeActionFilter = f || "all";
+        localStorage.setItem("ai-tycoon-action-filter", S.activeActionFilter);
+        updatePanel();
+        updateLiveHud();
+    };
+    window.setAgentSearch = (value) => {
+        S.agentSearchQuery = String(value || "");
+        localStorage.setItem("ai-tycoon-agent-search", S.agentSearchQuery);
+        updatePanel();
+        updateLiveHud();
+    };
+    window.clearAgentSearch = () => {
+        S.agentSearchQuery = "";
+        localStorage.removeItem("ai-tycoon-agent-search");
+        const input = document.getElementById("agent-search");
+        if (input) {
+            input.value = "";
+            input.focus({ preventScroll: true });
+        }
+        updatePanel();
+        updateLiveHud();
+    };
+    window.focusAgentSearch = () => {
+        const panel = document.getElementById("side-panel");
+        if (panel?.classList.contains("panel-hidden")) {
+            panel.dataset.userToggled = "true";
+            panel.classList.remove("panel-hidden");
+            syncSidePanelState();
+            resize();
+        }
+        const focusInput = () => {
+            const input = document.getElementById("agent-search");
+            input?.focus({ preventScroll: true });
+            input?.select?.();
+        };
+        focusInput();
+        requestAnimationFrame(focusInput);
+    };
     window.setSortOrder = (s) => { S.sortOrder = s; localStorage.setItem("ai-tycoon-sort", s); updatePanel(); };
+    window.setPixiDensity = (mode = "auto") => {
+        if (!PIXI_DENSITY_MODES.includes(mode)) return;
+        S.pixiDensity = mode;
+        if (mode === "auto") {
+            localStorage.removeItem("ai-tycoon-pixi-density");
+        } else {
+            localStorage.setItem("ai-tycoon-pixi-density", mode);
+        }
+        updatePanel();
+        updateLiveHud();
+    };
+    window.setPixiDensityFromMenu = (mode = "auto") => {
+        window.setPixiDensity(mode);
+        closePixiDensityMenu({ restoreFocus: true });
+    };
+    window.togglePixiDensityMenu = togglePixiDensityMenu;
+    window.togglePixiDensity = () => {
+        const current = PIXI_DENSITY_MODES.includes(S.pixiDensity) ? S.pixiDensity : "auto";
+        window.setPixiDensity(PIXI_DENSITY_MODES[(PIXI_DENSITY_MODES.indexOf(current) + 1) % PIXI_DENSITY_MODES.length]);
+    };
+    window.focusActiveAgent = () => {
+        const agent = getDirectorFocusAgent();
+        if (!agent) return;
+        S.selectedPid = agent.pid;
+        S.detailPid = agent.pid;
+        S.directorFocusPid = agent.pid;
+        focusAgent(agent.pid, true);
+        updatePanel();
+        updateDetailPanel();
+        updateLiveHud();
+        updateCanvasAccessibility(true);
+    };
+    window.focusAgentByPid = (pid) => {
+        const agent = S.liveAgents.find(a => String(a.pid) === String(pid));
+        if (!agent) return;
+        S.directorMode = false;
+        localStorage.setItem("ai-tycoon-director", "false");
+        S.selectedPid = agent.pid;
+        S.detailPid = agent.pid;
+        S.directorFocusPid = agent.pid;
+        focusAgent(agent.pid, true);
+        updatePanel();
+        updateDetailPanel();
+        updateLiveHud();
+        updateCanvasAccessibility(true);
+    };
+    window.toggleDirectorMode = () => {
+        S.directorMode = !S.directorMode;
+        localStorage.setItem("ai-tycoon-director", String(S.directorMode));
+        if (S.directorMode) {
+            const agent = getDirectorFocusAgent();
+            if (agent) {
+                S.selectedPid = agent.pid;
+                S.detailPid = agent.pid;
+                S.directorFocusPid = agent.pid;
+            }
+        }
+        updatePanel();
+        updateDetailPanel();
+        updateLiveHud();
+        updateCanvasAccessibility(true);
+    };
+    window.resetCameraView = () => {
+        S.directorMode = false;
+        S.directorFocusPid = null;
+        localStorage.setItem("ai-tycoon-director", "false");
+        S.zoomLevel = 1.0;
+        S.panX = 0;
+        S.panY = 0;
+        resize();
+        updatePanel();
+        updateLiveHud();
+        updateCanvasAccessibility(true);
+    };
 
     // Restore saved sort order in dropdown
     const sortEl = document.getElementById("sort-select");
     if (sortEl) sortEl.value = S.sortOrder;
+    const searchEl = document.getElementById("agent-search");
+    if (searchEl) searchEl.value = S.agentSearchQuery;
+
+    // Small screens should open on the live office first; the panel remains one tap away.
+    const panel = document.getElementById("side-panel");
+    if (panel && window.innerWidth <= 480) panel.classList.add("panel-hidden");
+    syncSidePanelState();
+    updateCanvasAccessibility(true);
 
     // Delay first resize to let layout settle
     requestAnimationFrame(() => { resize(); connectWS(); loop(); });
@@ -91,24 +404,48 @@ function resize() {
     const side = document.getElementById("side-panel");
     // On mobile (<480px) the panel is an overlay, don't subtract its width
     const isMobileOverlay = window.innerWidth <= 480;
+    if (isMobileOverlay && side.dataset.userToggled !== "true") {
+        side.classList.add("panel-hidden");
+    } else if (!isMobileOverlay && side.classList.contains("panel-hidden")) {
+        side.classList.remove("panel-hidden");
+        delete side.dataset.userToggled;
+    }
+    syncSidePanelState();
     S.canvasW = isMobileOverlay ? main.clientWidth : main.clientWidth - side.offsetWidth;
     S.canvasH = main.clientHeight;
     S.canvas.width = S.canvasW;
     S.canvas.height = S.canvasH;
     S.ctx.imageSmoothingEnabled = false;
+    resizePixiOverlay();
 
     const sx = S.canvasW / (COLS * TILE);
     const sy = S.canvasH / (ROWS * TILE);
     const baseScale = Math.min(sx, sy);
     S.scale = baseScale * S.zoomLevel;
-    S.offsetX = (S.canvasW - COLS * TILE * S.scale) / 2 + S.panX;
-    S.offsetY = (S.canvasH - ROWS * TILE * S.scale) / 2 + S.panY;
+    recalcOffsets();
+}
+
+function recalcOffsets() {
+    S.offsetX = getBaseOffsetX() + S.panX;
+    S.offsetY = getBaseOffsetY() + S.panY;
+}
+
+function getBaseOffsetX() {
+    return (S.canvasW - COLS * TILE * S.scale) / 2;
+}
+
+function getBaseOffsetY() {
+    const extraY = S.canvasH - ROWS * TILE * S.scale;
+    const verticalBias = extraY > 160 ? 0.35 : 0.5;
+    return Math.max(0, extraY * verticalBias);
 }
 
 // ── Game Loop ──
 function loop() {
     S.animFrame++;
     if (S.animFrame % 30 === 0) updatePalette(); // check dark mode every ~0.5s
+    if (S.animFrame % 120 === 0) updateLiveHud();
+    if (S.animFrame % 120 === 0) updateCanvasAccessibility(false);
     // Heartbeat stale detection: if no message in 15s, mark disconnected
     if (S.connected && Date.now() - S.lastHeartbeat > 15000) {
         S.connected = false;
@@ -116,9 +453,160 @@ function loop() {
         addLog("서버 응답 없음 — 재연결 대기", "system");
     }
     updateVisuals();
+    updateDirectorCamera();
     updateParticles();
     render();
+    renderPixiOverlay();
     requestAnimationFrame(loop);
+}
+
+function activeCanvasAgents() {
+    return S.liveAgents.filter(agent => agent.isRunning);
+}
+
+function pidEquals(a, b) {
+    return a != null && b != null && String(a) === String(b);
+}
+
+function agentPriorityContext() {
+    return {
+        selectedPid: S.selectedPid,
+        directorFocusPid: S.directorFocusPid,
+        pinnedKeys: Array.isArray(S.pinnedAgentKeys) ? S.pinnedAgentKeys : [],
+    };
+}
+
+function describeAgent(agent) {
+    if (!agent) return "선택된 직원 없음";
+    const theme = AGENT_THEMES[S.liveAgents.indexOf(agent) % AGENT_THEMES.length] || AGENT_THEMES[0];
+    const status = agent.isRunning ? agent.status : "offline";
+    const label = STATUS_META[status]?.label || status;
+    const work = getWorkText(agent) || agent.currentWork?.prompt || agent.currentTask?.subject || "대기 중";
+    return `${theme.name}, ${agent.projectName || agent.platformName || "Agent"}, ${label}, ${String(work).split("\n")[0].slice(0, 80)}`;
+}
+
+function updateCanvasAccessibility(announce = false, message = "") {
+    if (!S.canvas) return;
+    const active = activeCanvasAgents();
+    const working = active.filter(agent => ["coding", "thinking", "searching", "reviewing", "meeting"].includes(agent.status));
+    const review = S.liveAgents.filter(agent => agent.needsReview || agent.status === "reviewing");
+    const selected = S.liveAgents.find(agent => pidEquals(agent.pid, S.selectedPid || S.directorFocusPid));
+    const summary = active.length > 0
+        ? `AI Tycoon 실시간 작업실. 활성 ${active.length}명, 작업 ${working.length}명, 검토 ${review.length}명. 현재 ${describeAgent(selected || getDirectorFocusAgent())}.`
+        : `AI Tycoon 실시간 작업실. ${S.connected ? "탐지기는 연결됐고 에이전트 활동을 기다리는 중입니다." : "서버 연결 대기 중입니다."}`;
+
+    S.canvas.setAttribute("aria-label", summary);
+    const status = document.getElementById("office-a11y-status");
+    if (!status) return;
+    const text = message || summary;
+    if (!announce) {
+        const staleConnectionText = status.textContent.includes("서버 연결 대기") && S.connected;
+        if (!lastCanvasA11yText || staleConnectionText) {
+            status.textContent = summary;
+            lastCanvasA11yText = summary;
+        }
+        return;
+    }
+    if (announce && text !== lastCanvasA11yText) {
+        status.textContent = text;
+        lastCanvasA11yText = text;
+    }
+}
+
+function getDirectorFocusAgent() {
+    const priority = { reviewing: 0, coding: 1, searching: 2, thinking: 3, meeting: 4, idle: 5, offline: 6 };
+    const agents = S.liveAgents
+        .filter(a => a.isRunning)
+        .sort((a, b) => {
+            const priorityCompare = compareAgentPriority(a, b, agentPriorityContext());
+            if (priorityCompare !== 0) return priorityCompare;
+            const sa = priority[a.status] ?? 9;
+            const sb = priority[b.status] ?? 9;
+            if (sa !== sb) return sa - sb;
+            return timestampValue(b) - timestampValue(a);
+        });
+    return agents[0] || null;
+}
+
+function timestampValue(agent) {
+    const ts = agent.currentWork?.timestamp;
+    const numericTs = typeof ts === "string" ? Date.parse(ts) : ts;
+    return Number.isFinite(numericTs) ? numericTs : 0;
+}
+
+function focusAgent(pid, instant = false) {
+    const v = S.visualAgents[pid];
+    if (!v) return false;
+
+    const targetPanX = S.canvasW * 0.5 - v.x * S.scale - getBaseOffsetX();
+    const targetPanY = S.canvasH * 0.46 - v.y * S.scale - getBaseOffsetY();
+    if (instant) {
+        S.panX = targetPanX;
+        S.panY = targetPanY;
+    } else {
+        S.panX += (targetPanX - S.panX) * 0.08;
+        S.panY += (targetPanY - S.panY) * 0.08;
+    }
+    recalcOffsets();
+    return true;
+}
+
+function selectCanvasAgent(agent, options = {}) {
+    if (!agent) return;
+    const { toggle = false, moveCamera = false, burst = false, announce = true } = options;
+    const wasSelected = pidEquals(S.selectedPid, agent.pid);
+    if (toggle && wasSelected) {
+        S.selectedPid = null;
+        S.detailPid = null;
+        updatePanel();
+        updateDetailPanel();
+        updateLiveHud();
+        updateCanvasAccessibility(announce, "직원 선택을 해제했습니다.");
+        return;
+    }
+
+    if (S.directorMode) {
+        S.directorMode = false;
+        S.directorFocusPid = null;
+        localStorage.setItem("ai-tycoon-director", "false");
+    }
+    S.selectedPid = agent.pid;
+    S.detailPid = agent.pid;
+    S.directorFocusPid = agent.pid;
+    if (moveCamera) focusAgent(agent.pid, true);
+    const v = S.visualAgents[agent.pid];
+    if (v && burst) {
+        const theme = AGENT_THEMES[S.liveAgents.indexOf(agent) % AGENT_THEMES.length] || AGENT_THEMES[0];
+        spawnParticles(v.x, v.y - 8, theme.body, 8);
+        spawnHearts(v.x, v.y - 16, 2);
+    }
+    updatePanel();
+    updateDetailPanel();
+    updateLiveHud();
+    updateCanvasAccessibility(announce, `${describeAgent(agent)} 선택됨.`);
+}
+
+function cycleCanvasAgent(direction) {
+    const agents = activeCanvasAgents();
+    if (agents.length === 0) {
+        updateCanvasAccessibility(true, "선택 가능한 실행 중 직원이 없습니다.");
+        return;
+    }
+    const currentPid = S.selectedPid || S.directorFocusPid;
+    const currentIndex = agents.findIndex(agent => pidEquals(agent.pid, currentPid));
+    const nextIndex = currentIndex === -1
+        ? (direction > 0 ? 0 : agents.length - 1)
+        : (currentIndex + direction + agents.length) % agents.length;
+    selectCanvasAgent(agents[nextIndex], { moveCamera: true, announce: true });
+}
+
+function updateDirectorCamera() {
+    if (!S.directorMode || S.isPanning) return;
+    const agent = getDirectorFocusAgent();
+    if (!agent) return;
+    S.directorFocusPid = agent.pid;
+    S.selectedPid = agent.pid;
+    focusAgent(agent.pid, false);
 }
 
 // ── Visual agent AI ──
@@ -551,20 +1039,55 @@ function onCanvasClick(e) {
     });
 
     if (clicked) {
-        const wasSelected = S.selectedPid === clicked.pid;
-        S.selectedPid = wasSelected ? null : clicked.pid;
-        S.detailPid = wasSelected ? null : clicked.pid;
-        const v = S.visualAgents[clicked.pid];
-        if (v && !wasSelected) {
-            spawnParticles(v.x, v.y - 8, AGENT_THEMES[S.liveAgents.indexOf(clicked) % AGENT_THEMES.length].body, 8);
-            spawnHearts(v.x, v.y - 16, 2);
-        }
+        selectCanvasAgent(clicked, { toggle: true, burst: true, announce: true });
+        return;
     } else {
         S.selectedPid = null;
         S.detailPid = null;
     }
     updatePanel();
     updateDetailPanel();
+    updateLiveHud();
+    updateCanvasAccessibility(true, "직원 선택을 해제했습니다.");
+}
+
+function onCanvasKeyDown(e) {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const key = e.key;
+    if (key === "ArrowRight" || key === "ArrowDown") {
+        e.preventDefault();
+        cycleCanvasAgent(1);
+    } else if (key === "ArrowLeft" || key === "ArrowUp") {
+        e.preventDefault();
+        cycleCanvasAgent(-1);
+    } else if (key === "Enter" || key === " ") {
+        e.preventDefault();
+        const agent = S.liveAgents.find(item => pidEquals(item.pid, S.selectedPid)) || getDirectorFocusAgent();
+        selectCanvasAgent(agent, { moveCamera: true, announce: true });
+    } else if (key === "Home" || key === "0") {
+        e.preventDefault();
+        window.resetCameraView?.();
+    } else if (key === "+" || key === "=") {
+        e.preventDefault();
+        S.zoomLevel = Math.min(ZOOM_MAX, S.zoomLevel + ZOOM_STEP);
+        resize();
+        updateCanvasAccessibility(true, `작업실 확대 ${Math.round(S.zoomLevel * 100)}%.`);
+    } else if (key === "-" || key === "_") {
+        e.preventDefault();
+        S.zoomLevel = Math.max(ZOOM_MIN, S.zoomLevel - ZOOM_STEP);
+        resize();
+        updateCanvasAccessibility(true, `작업실 축소 ${Math.round(S.zoomLevel * 100)}%.`);
+    } else if (key === "Escape") {
+        if (!S.selectedPid && !S.detailPid) return;
+        e.preventDefault();
+        S.selectedPid = null;
+        S.detailPid = null;
+        S.directorFocusPid = null;
+        updatePanel();
+        updateDetailPanel();
+        updateLiveHud();
+        updateCanvasAccessibility(true, "직원 선택을 해제했습니다.");
+    }
 }
 
 // ── Zoom ──
@@ -588,6 +1111,12 @@ function onWheel(e) {
 // ── Pan (right-drag or middle-drag) ──
 function onPanStart(e) {
     if (e.button === 2 || e.button === 1) {
+        if (S.directorMode) {
+            S.directorMode = false;
+            S.directorFocusPid = null;
+            localStorage.setItem("ai-tycoon-director", "false");
+            updatePanel();
+        }
         S.isPanning = true;
         S.panStartX = e.clientX - S.panX;
         S.panStartY = e.clientY - S.panY;
@@ -673,6 +1202,12 @@ function onTouchMove(e) {
 
         // Start panning after 8px movement threshold
         if (!touchState.panning && Math.hypot(dx, dy) > 8) {
+            if (S.directorMode) {
+                S.directorMode = false;
+                S.directorFocusPid = null;
+                localStorage.setItem("ai-tycoon-director", "false");
+                updatePanel();
+            }
             touchState.panning = true;
             touchState.moved = true;
             // Record pan offset at start of gesture

@@ -53,10 +53,12 @@ Claude Code, Cursor, Codex 같은 AI 에이전트가 지금 어떤 작업을 하
 ## 기술 스택
 
 - **백엔드**: Node.js, WebSocket (`ws`)
-- **프론트엔드**: HTML / CSS / JavaScript (Canvas)
-- **CDN**: Tailwind CSS, Pretendard, Iconify
+- **프론트엔드**: HTML / CSS / JavaScript (Canvas + PixiJS)
+- **스타일**: Tailwind CSS 로컬 빌드 + 커스텀 CSS
+- **CDN**: Pretendard, Iconify, PixiJS
 
 프론트는 별도 빌드 도구 없이 브라우저 네이티브 ES Module로 구성했습니다.
+Tailwind 유틸리티 CSS는 `npm run build:css`로 `css/tailwind.generated.css`에 생성해 둡니다.
 
 ---
 
@@ -79,22 +81,33 @@ http://localhost:3777
 PORT=8080 POLL_INTERVAL=3000 npm start
 ```
 
+스타일을 수정한 뒤 Tailwind 유틸리티를 다시 생성하려면:
+
+```bash
+npm run build
+```
+
 ---
 
 ## 프로젝트 구조
 
 ```
 pixel-AI-Agents/
+├── css/
+│   ├── tailwind.input.css      # Tailwind 입력 파일
+│   └── tailwind.generated.css  # 로컬 생성 유틸리티 CSS
 ├── js/
 │   ├── constants.js   # 팔레트, 캐릭터 테마, 대사 템플릿, 오피스 맵
 │   ├── state.js       # 공유 상태, 유틸 함수, 보스 큐 헬퍼
 │   ├── ws.js          # WebSocket 연결/재연결, 상태 핸들러
 │   ├── renderer.js    # 캔버스 렌더링 (오피스, 가구, 에이전트, 파티클)
 │   ├── panel.js       # 사이드 패널, 필터/정렬, 보스 리뷰 큐 UI
+│   ├── pixiOverlay.js # PixiJS 실시간 그래픽 오버레이
 │   └── main.js        # 진입점, 게임 루프, 입력 처리, 채팅 시스템
 ├── server.js          # AI 세션 감지, 상태 수집, WebSocket 서버
 ├── index.html         # 전체 레이아웃
 ├── style.css          # 테마 및 UI 스타일
+├── tailwind.config.js # Tailwind 로컬 빌드 설정
 ├── package.json
 └── README.md
 ```
@@ -132,4 +145,3 @@ pixel-AI-Agents/
 이 프로젝트는 "AI가 실제로 일하고 있는 느낌"을 조금 더 직관적으로 보고 싶어서 시작했습니다.
 
 단순히 로그를 보는 방식보다, 작업 중 / 대기 중 / 리뷰 중 같은 흐름이 시각적으로 보이니까 여러 세션을 동시에 관리할 때 훨씬 편했습니다.
-
