@@ -238,6 +238,12 @@ export function renderPixiOverlay() {
     drawWeather();
 }
 
+/** Return the live Pixi <canvas> element so it can be composited into a snapshot. */
+export function getPixiCanvas() {
+    if (!ready || !app) return null;
+    return app.canvas || app.view || null;
+}
+
 export function getPixiOverlayDebug() {
     return {
         ready,

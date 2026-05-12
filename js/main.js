@@ -22,6 +22,7 @@ import { applyToDom as applyI18nToDom, onLangChange, getLang, t } from "./i18n.j
 import "./achievements.js";
 import "./notifications.js";
 import "./demoMode.js";
+import "./snapshot.js";
 
 const PANEL_FOCUSABLE = [
     "a[href]",
