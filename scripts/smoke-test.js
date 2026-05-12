@@ -39,6 +39,8 @@ const SHELL = [
     { url: "/js/tour.js", contains: "startTour", label: "tour.js" },
     { url: "/js/demoMode.js", contains: "startDemo", label: "demoMode.js" },
     { url: "/js/crossTab.js", contains: "BroadcastChannel", label: "crossTab.js" },
+    { url: "/js/konami.js", contains: "SEQUENCE", label: "konami.js" },
+    { url: "/nope-404-test", contains: "Not found", label: "custom 404", expectStatus: 404 },
 ];
 
 function request(urlPath) {
@@ -90,7 +92,8 @@ async function main() {
     for (const c of SHELL) {
         try {
             const res = await request(c.url);
-            const ok = res.status === 200 && (c.contains ? res.body.includes(c.contains) : true);
+            const expectStatus = c.expectStatus || 200;
+            const ok = res.status === expectStatus && (c.contains ? res.body.includes(c.contains) : true);
             process.stdout.write(`${ok ? "✔" : "✘"}  [${res.status}] ${c.label.padEnd(28)} ${c.url}\n`);
             if (!ok) failed++;
         } catch (err) {

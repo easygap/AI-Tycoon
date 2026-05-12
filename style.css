@@ -6095,6 +6095,20 @@ body.dark .toast-close:hover { background: rgba(255,255,255,0.06); color: #f4f4f
     .toast-card { width: auto; }
 }
 
+/* Konami code easter egg — subtle screen flash */
+body.konami-flash {
+    animation: konami-flash 1.2s ease-out;
+}
+@keyframes konami-flash {
+    0%   { filter: hue-rotate(0deg) saturate(1); }
+    20%  { filter: hue-rotate(45deg) saturate(1.6); }
+    50%  { filter: hue-rotate(-30deg) saturate(1.3); }
+    100% { filter: hue-rotate(0deg) saturate(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.konami-flash { animation: none; }
+}
+
 /* Confetti for achievement unlocks */
 .confetti-layer {
     position: fixed;

@@ -30,6 +30,19 @@ import "./backup.js";
 import "./toasts.js";
 import "./tour.js";
 import "./crossTab.js";
+import "./konami.js";
+
+// ── Console branding (devtools welcome) ──
+if (typeof console !== "undefined") {
+    const big = "color:#d97757;font-weight:800;font-size:14px";
+    const dim = "color:#7a5a48;font-size:11px";
+    const ok  = "color:#10b981;font-weight:700";
+    try {
+        console.log("%c\n  ▄▄▄▄▄  AI Tycoon\n  █ █ █  pixel-art office for AI agents\n", big);
+        console.log("%cTry %caiTycoonDemo.toggle()%c, %caiTycoonAchievements.list()%c, %caiTycoonSnapshot.download()", dim, ok, dim, ok, dim, ok);
+        console.log("%cHotkeys: ? help · I insights · , settings · P snapshot · D dark · Ctrl+Shift+P perf", dim);
+    } catch { /* ignore */ }
+}
 
 // Expose Pixi overlay debug for the perf HUD
 if (typeof window !== "undefined") {
