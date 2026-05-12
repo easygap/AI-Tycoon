@@ -13,6 +13,24 @@
 </head>
 <body class="text-zinc-700 font-sans overflow-hidden h-[100dvh] h-[100vh]">
 
+    <!-- ── Splash Screen (visible until main.js finishes booting) ── -->
+    <div id="splash" class="splash-overlay" aria-hidden="true">
+        <div class="splash-card">
+            <div class="splash-mark">
+                <span class="splash-mark-window">
+                    <span class="splash-mark-sky"></span>
+                    <span class="splash-mark-sun"></span>
+                </span>
+                <span class="splash-mark-desk">
+                    <span class="splash-mark-monitor"></span>
+                </span>
+            </div>
+            <div class="splash-name">AI Tycoon</div>
+            <div class="splash-sub" id="splash-sub">작업실 준비 중…</div>
+            <div class="splash-progress"><span></span></div>
+        </div>
+    </div>
+
     <div id="app" class="flex flex-col h-full">
 
         <!-- ── Nav Bar ── -->
@@ -335,6 +353,14 @@
                         <span data-i18n="insights.history">최근 7일 추이</span>
                     </h3>
                     <div id="insights-history" class="insights-history"></div>
+                </section>
+
+                <section class="insights-section">
+                    <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:clock-circle-linear" aria-hidden="true"></iconify-icon>
+                        <span data-i18n="insights.hourly">시간대별 활동</span>
+                    </h3>
+                    <div id="insights-hourly" class="insights-hourly"></div>
                 </section>
 
                 <section class="insights-section">
@@ -888,6 +914,30 @@
         }
     });
     document.addEventListener("DOMContentLoaded", showWelcomeIfNeeded);
+
+    // ── Splash screen lifecycle ──
+    // Hide once main.js has registered helpers (about 1-2 frames after DOMContentLoaded).
+    function hideSplash() {
+        const splash = document.getElementById("splash");
+        if (!splash || splash.dataset.hidden) return;
+        splash.dataset.hidden = "true";
+        splash.classList.add("is-leaving");
+        setTimeout(() => { splash.style.display = "none"; }, 480);
+    }
+    function waitForBoot() {
+        // Boot is considered ready when main.js has exposed its helpers
+        // (focusActiveAgent / resetCameraView) or after a 4-second safety timeout.
+        const deadline = Date.now() + 4000;
+        function check() {
+            if (typeof window.focusActiveAgent === "function" || Date.now() > deadline) {
+                hideSplash();
+                return;
+            }
+            requestAnimationFrame(check);
+        }
+        check();
+    }
+    document.addEventListener("DOMContentLoaded", () => requestAnimationFrame(waitForBoot));
 
     // Resolve initial dark mode: explicit choice → system preference
     (function() {

@@ -264,11 +264,48 @@ function showBadgePopup(achievement) {
     container.appendChild(popup);
     popup.querySelector(".badge-popup-close").addEventListener("click", () => popup.remove());
     requestAnimationFrame(() => popup.classList.add("is-shown"));
+    spawnConfetti(popup);
     // Auto-dismiss after 8 seconds
     setTimeout(() => {
         popup.classList.remove("is-shown");
         setTimeout(() => popup.remove(), 400);
     }, 8000);
+}
+
+/** Burst of CSS-animated confetti particles around the popup card. */
+function spawnConfetti(anchorEl) {
+    // Respect prefers-reduced-motion
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) return;
+    const layer = document.getElementById("confetti-layer") || (() => {
+        const el = document.createElement("div");
+        el.id = "confetti-layer";
+        el.className = "confetti-layer";
+        document.body.appendChild(el);
+        return el;
+    })();
+    const colors = ["#ff8a4c", "#10b981", "#3b82f6", "#facc15", "#ec4899", "#a855f7"];
+    const rect = anchorEl?.getBoundingClientRect?.();
+    const originX = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+    const originY = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+    const count = 28;
+    for (let i = 0; i < count; i++) {
+        const piece = document.createElement("span");
+        piece.className = "confetti-piece";
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+        const dist = 70 + Math.random() * 90;
+        const tx = Math.cos(angle) * dist;
+        const ty = Math.sin(angle) * dist + 40; // bias slightly down (gravity feel)
+        piece.style.left = `${originX}px`;
+        piece.style.top = `${originY}px`;
+        piece.style.background = colors[i % colors.length];
+        piece.style.setProperty("--tx", `${tx}px`);
+        piece.style.setProperty("--ty", `${ty}px`);
+        piece.style.setProperty("--rot", `${(Math.random() - 0.5) * 720}deg`);
+        piece.style.setProperty("--dur", `${0.9 + Math.random() * 0.5}s`);
+        piece.style.animationDelay = `${i * 8}ms`;
+        layer.appendChild(piece);
+        setTimeout(() => piece.remove(), 1700);
+    }
 }
 
 if (typeof window !== "undefined") {
