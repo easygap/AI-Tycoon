@@ -436,6 +436,30 @@
                             <option value="rich" data-i18n="density.rich">풍부</option>
                         </select>
                     </div>
+                    <div class="settings-row settings-row-vertical">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:palette-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.officeTheme">오피스 테마</span>
+                        </div>
+                        <div class="theme-picker" role="radiogroup" aria-label="Office theme">
+                            <button type="button" class="theme-swatch" data-theme="classic" onclick="settingsPickTheme('classic')" aria-checked="false" role="radio">
+                                <span class="theme-swatch-preview theme-preview-classic"></span>
+                                <span class="theme-swatch-label" data-i18n="settings.themeClassic">클래식</span>
+                            </button>
+                            <button type="button" class="theme-swatch" data-theme="cafe" onclick="settingsPickTheme('cafe')" aria-checked="false" role="radio">
+                                <span class="theme-swatch-preview theme-preview-cafe"></span>
+                                <span class="theme-swatch-label" data-i18n="settings.themeCafe">카페</span>
+                            </button>
+                            <button type="button" class="theme-swatch" data-theme="forest" onclick="settingsPickTheme('forest')" aria-checked="false" role="radio">
+                                <span class="theme-swatch-preview theme-preview-forest"></span>
+                                <span class="theme-swatch-label" data-i18n="settings.themeForest">숲속</span>
+                            </button>
+                            <button type="button" class="theme-swatch" data-theme="midnight" onclick="settingsPickTheme('midnight')" aria-checked="false" role="radio">
+                                <span class="theme-swatch-preview theme-preview-midnight"></span>
+                                <span class="theme-swatch-label" data-i18n="settings.themeMidnight">심야</span>
+                            </button>
+                        </div>
+                    </div>
                 </section>
 
                 <section class="settings-section">
@@ -500,6 +524,19 @@
                         </div>
                     </div>
                     <p class="settings-help" data-i18n="settings.timeOverrideHelp">데모/스크린샷용으로 창밖 하늘과 분위기를 특정 시각으로 고정합니다.</p>
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:snowflake-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.seasonOverride">시즌 장식</span>
+                        </div>
+                        <select id="settings-season" class="settings-select" onchange="settingsPickSeason(this.value)">
+                            <option value="auto" data-i18n="settings.seasonAuto">자동 (월 기준)</option>
+                            <option value="normal" data-i18n="settings.seasonNone">장식 없음</option>
+                            <option value="spring" data-i18n="settings.seasonSpring">봄 벚꽃</option>
+                            <option value="halloween" data-i18n="settings.seasonHalloween">할로윈</option>
+                            <option value="winter" data-i18n="settings.seasonWinter">크리스마스</option>
+                        </select>
+                    </div>
                 </section>
 
                 <section class="settings-section">
@@ -785,6 +822,17 @@
         const demoOn = window.aiTycoonDemo?.isEnabled() || false;
         const demoChk = document.getElementById("settings-demo");
         if (demoChk) demoChk.checked = demoOn;
+        // Office theme
+        const themeNow = localStorage.getItem("ai-tycoon-theme") || "classic";
+        document.querySelectorAll(".theme-swatch").forEach(s => {
+            const active = s.dataset.theme === themeNow;
+            s.setAttribute("aria-checked", active ? "true" : "false");
+            s.classList.toggle("is-active", active);
+        });
+        // Season
+        const seasonNow = localStorage.getItem("ai-tycoon-season") || "auto";
+        const seasonSel = document.getElementById("settings-season");
+        if (seasonSel) seasonSel.value = seasonNow;
 
         openModalOverlay(overlay);
     }
@@ -801,6 +849,18 @@
     function settingsPickDensity(v) {
         if (window.setPixiDensityFromMenu) window.setPixiDensityFromMenu(v);
         else localStorage.setItem("ai-tycoon-pixi-density", v);
+    }
+    function settingsPickTheme(theme) {
+        localStorage.setItem("ai-tycoon-theme", theme);
+        document.querySelectorAll(".theme-swatch").forEach(s => {
+            const active = s.dataset.theme === theme;
+            s.setAttribute("aria-checked", active ? "true" : "false");
+            s.classList.toggle("is-active", active);
+        });
+        if (window.aiTycoonForceRepaint) window.aiTycoonForceRepaint();
+    }
+    function settingsPickSeason(v) {
+        if (window.aiTycoonSeason) window.aiTycoonSeason.override(v === "auto" ? null : v);
     }
     function settingsToggleSound(on) {
         if (!window.aiTycoonSound) return;

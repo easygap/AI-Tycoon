@@ -10,6 +10,7 @@ import {
 import { getSkyPalette, sunWindowX, indoorLightBoost } from "./timeOfDay.js";
 import { drawNPCs } from "./npcs.js";
 import { t } from "./i18n.js";
+import { drawSeasonal } from "./seasons.js";
 
 // Stable per-window pseudo-random seed used for star fields & cloud drift.
 function winHash(x) { return ((x * 2654435761) >>> 0) / 4294967295; }
@@ -23,6 +24,7 @@ export function render() {
     drawOffice();
     drawFurniture();
     drawDecorations();
+    drawSeasonal(S.ctx, S.animFrame);
     drawNPCs(S.ctx, S.animFrame);
     drawAgents();
     drawSubAgents();
