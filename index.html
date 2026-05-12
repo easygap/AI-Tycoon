@@ -751,9 +751,15 @@
         const overlay = document.getElementById("welcome-overlay");
         if (!overlay) return;
         overlay.classList.remove("is-visible");
+        const isFirstRun = localStorage.getItem(WELCOME_KEY) !== "true";
         localStorage.setItem(WELCOME_KEY, "true");
-        setTimeout(() => { overlay.hidden = true; }, 280);
-        void rememberStart;
+        setTimeout(() => {
+            overlay.hidden = true;
+            // Trigger the onboarding tour once the welcome card has slid away
+            if (isFirstRun && rememberStart && window.aiTycoonTour && !window.aiTycoonTour.isDone()) {
+                setTimeout(() => window.aiTycoonTour.start(), 200);
+            }
+        }, 280);
     }
     // Language toggle (KO ⇄ EN) — wired by i18n module, declared here for inline onclick
     function toggleLanguage() {

@@ -14,6 +14,7 @@ import { t } from "./i18n.js";
 import { sfxJoin, sfxLeave, sfxTaskDone, sfxReview } from "./sound.js";
 import { checkAll as checkAchievements } from "./achievements.js";
 import { notify } from "./notifications.js";
+import { showToast } from "./toasts.js";
 
 // ── WebSocket ──
 export function connectWS() {
@@ -176,6 +177,11 @@ function collectWorkEvents(prevAgentsByPid) {
             });
             try { sfxReview(); } catch { /* ignore */ }
             try { notify("review", `${theme.name} · ${agent.projectName}`, `검토 요청: ${reviewText}`, { tag: `review-${agent.pid}` }); } catch { /* ignore */ }
+            try {
+                const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                const title = lang === "en" ? `${theme.name} needs review` : `${theme.name} 검토 요청`;
+                showToast("review", title, reviewText);
+            } catch { /* ignore */ }
         }
 
         if (agent.currentWork?.prompt && workSignature(agent) !== workSignature(prev)) {
@@ -221,6 +227,11 @@ function collectWorkEvents(prevAgentsByPid) {
                 });
                 try { sfxTaskDone(); } catch { /* ignore */ }
                 try { notify("task-done", `${theme.name} 완료!`, taskText, { tag: `done-${task.id}` }); } catch { /* ignore */ }
+                try {
+                    const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                    const title = lang === "en" ? `${theme.name} finished a task` : `${theme.name} 태스크 완료`;
+                    showToast("task-done", title, taskText);
+                } catch { /* ignore */ }
             }
         });
     });
@@ -266,6 +277,13 @@ export function handleState(state) {
                 spawnParticles(dx, dy, theme.body, 12);
                 spawnHearts(dx, dy - 16, 3);
                 try { sfxJoin(); } catch { /* ignore */ }
+                try {
+                    const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                    const title = lang === "en"
+                        ? `${theme.name} joined`
+                        : `${theme.name} 출근!`;
+                    showToast("join", title, agent.projectName || "");
+                } catch { /* ignore */ }
             }
         }
     });
@@ -286,6 +304,11 @@ export function handleState(state) {
                     key: `leave|${pid}`,
                 });
                 try { sfxLeave(); } catch { /* ignore */ }
+                try {
+                    const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                    const title = lang === "en" ? `${theme.name} left` : `${theme.name} 퇴근`;
+                    showToast("leave", title, prevAgent.projectName || "");
+                } catch { /* ignore */ }
             }
             delete S.visualAgents[pid];
             // Fix: clear selectedPid if agent left
