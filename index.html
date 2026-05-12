@@ -90,6 +90,11 @@
                 </div>
             </div>
 
+            <!-- Settings -->
+            <button id="settings-toggle" onclick="openSettings()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" data-i18n-attr="title:header.settings,aria-label:header.settings" title="설정" aria-label="설정 열기">
+                <iconify-icon icon="solar:settings-linear" class="text-zinc-500 text-sm"></iconify-icon>
+            </button>
+
             <!-- Insights Modal -->
             <button id="insights-toggle" onclick="openInsights()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" data-i18n-attr="title:header.insights,aria-label:header.insights" title="작업실 인사이트" aria-label="작업실 인사이트 열기">
                 <iconify-icon icon="solar:chart-2-linear" class="text-zinc-500 text-sm"></iconify-icon>
@@ -352,6 +357,126 @@
         </div>
     </div>
 
+    <!-- ── Settings Modal ── -->
+    <div id="settings-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+        <div class="modal-card settings-card">
+            <header class="modal-header">
+                <div>
+                    <div class="modal-kicker" data-i18n="settings.kicker">설정</div>
+                    <h2 id="settings-title" class="modal-title" data-i18n="settings.title">취향대로 작업실 꾸미기</h2>
+                </div>
+                <button type="button" class="modal-close" onclick="closeSettings()" data-i18n-attr="aria-label:panel.close" aria-label="닫기">
+                    <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
+                </button>
+            </header>
+            <div class="modal-body">
+                <section class="settings-section">
+                    <h3 class="settings-section-title" data-i18n="settings.appearance">모양</h3>
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:moon-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.darkMode">다크 모드</span>
+                        </div>
+                        <label class="settings-switch">
+                            <input id="settings-dark" type="checkbox" onchange="settingsToggleDark(this.checked)">
+                            <span></span>
+                        </label>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:global-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.language">언어</span>
+                        </div>
+                        <div class="settings-segmented" role="group" aria-label="Language">
+                            <button type="button" data-lang-pick="ko" onclick="settingsPickLang('ko')">한국어</button>
+                            <button type="button" data-lang-pick="en" onclick="settingsPickLang('en')">English</button>
+                        </div>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:layers-minimalistic-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.visualDensity">시각 밀도</span>
+                        </div>
+                        <select id="settings-density" class="settings-select" onchange="settingsPickDensity(this.value)">
+                            <option value="auto" data-i18n="density.auto">자동</option>
+                            <option value="minimal" data-i18n="density.minimal">저자극</option>
+                            <option value="focus" data-i18n="density.focus">집중</option>
+                            <option value="balanced" data-i18n="density.balanced">균형</option>
+                            <option value="rich" data-i18n="density.rich">풍부</option>
+                        </select>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3 class="settings-section-title" data-i18n="settings.audio">소리</h3>
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:volume-loud-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.soundFx">효과음</span>
+                        </div>
+                        <label class="settings-switch">
+                            <input id="settings-sound" type="checkbox" onchange="settingsToggleSound(this.checked)">
+                            <span></span>
+                        </label>
+                    </div>
+                    <div class="settings-row settings-row-slider">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:volume-knob-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.volume">볼륨</span>
+                        </div>
+                        <input id="settings-volume" type="range" min="0" max="100" step="5" oninput="settingsSetVolume(this.value)" class="settings-slider">
+                        <span id="settings-volume-num" class="settings-volume-num tabular-nums">60%</span>
+                    </div>
+                </section>
+
+                <section class="settings-section">
+                    <h3 class="settings-section-title" data-i18n="settings.notifications">알림</h3>
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:bell-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.desktopNotify">데스크탑 알림</span>
+                            <span id="settings-notify-perm" class="settings-hint"></span>
+                        </div>
+                        <label class="settings-switch">
+                            <input id="settings-notify" type="checkbox" onchange="settingsToggleNotify(this.checked)">
+                            <span></span>
+                        </label>
+                    </div>
+                    <p class="settings-help" data-i18n="settings.notifyHelp">태스크 완료 / 검토 요청이 생기면 탭이 백그라운드일 때 OS 알림으로 알려드려요.</p>
+                </section>
+
+                <section class="settings-section">
+                    <h3 class="settings-section-title" data-i18n="settings.demo">데모</h3>
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:sun-2-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.timeOverride">시간대 강제</span>
+                        </div>
+                        <div class="settings-time-controls">
+                            <input id="settings-time-input" type="time" class="settings-time-input" oninput="settingsSetTimeOverride(this.value)">
+                            <button type="button" class="settings-time-clear" onclick="settingsClearTimeOverride()" data-i18n="settings.timeClear">실시간</button>
+                        </div>
+                    </div>
+                    <p class="settings-help" data-i18n="settings.timeOverrideHelp">데모/스크린샷용으로 창밖 하늘과 분위기를 특정 시각으로 고정합니다.</p>
+                </section>
+
+                <section class="settings-section">
+                    <h3 class="settings-section-title" data-i18n="settings.data">데이터</h3>
+                    <div class="settings-row settings-row-vertical">
+                        <button type="button" class="settings-danger" onclick="settingsResetStats()">
+                            <iconify-icon icon="solar:database-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.resetStats">통계 초기화</span>
+                        </button>
+                        <button type="button" class="settings-danger" onclick="settingsResetAchievements()">
+                            <iconify-icon icon="solar:medal-ribbons-star-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.resetAchievements">업적 초기화</span>
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Keyboard Shortcuts Modal ── -->
     <div id="shortcuts-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title" hidden>
         <div class="modal-card shortcuts-card">
@@ -381,6 +506,7 @@
                         <li><span class="shortcuts-keys"><kbd>H</kbd></span><span data-i18n="shortcuts.resetView">전체 보기로 리셋</span></li>
                         <li><span class="shortcuts-keys"><kbd>?</kbd></span><span data-i18n="shortcuts.help">이 도움말 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>I</kbd></span><span data-i18n="shortcuts.insights">인사이트 열기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>,</kbd></span><span data-i18n="shortcuts.settings">설정 열기</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
@@ -566,6 +692,119 @@
         overlay.classList.remove("is-visible");
         setTimeout(() => { overlay.hidden = true; }, 240);
     }
+    // ── Settings modal ──
+    function openSettings() {
+        const overlay = document.getElementById("settings-overlay");
+        // Snapshot current values into the controls
+        const dark = document.body.classList.contains("dark");
+        const chkDark = document.getElementById("settings-dark");
+        if (chkDark) chkDark.checked = dark;
+        // Lang segmented
+        const lang = window.aiTycoonI18n?.getLang() || "ko";
+        document.querySelectorAll("[data-lang-pick]").forEach(b => {
+            b.setAttribute("aria-pressed", b.getAttribute("data-lang-pick") === lang ? "true" : "false");
+            b.classList.toggle("is-active", b.getAttribute("data-lang-pick") === lang);
+        });
+        // Density
+        const dens = localStorage.getItem("ai-tycoon-pixi-density") || "auto";
+        const densSel = document.getElementById("settings-density");
+        if (densSel) densSel.value = dens;
+        // Sound
+        const sndOn = window.aiTycoonSound?.isEnabled() || false;
+        const sndChk = document.getElementById("settings-sound");
+        if (sndChk) sndChk.checked = sndOn;
+        const vol = Math.round((window.aiTycoonSound?.getVolume() ?? 0.6) * 100);
+        const volRange = document.getElementById("settings-volume");
+        if (volRange) volRange.value = vol;
+        const volNum = document.getElementById("settings-volume-num");
+        if (volNum) volNum.textContent = `${vol}%`;
+        // Notify
+        const notifyOn = window.aiTycoonNotify?.isEnabled() || false;
+        const notifyChk = document.getElementById("settings-notify");
+        if (notifyChk) notifyChk.checked = notifyOn;
+        const permEl = document.getElementById("settings-notify-perm");
+        if (permEl) {
+            const p = window.aiTycoonNotify?.permission() || "unsupported";
+            const labels = {
+                granted:    { ko: "허용됨",   en: "Allowed" },
+                denied:     { ko: "차단됨",   en: "Blocked" },
+                default:    { ko: "권한 필요", en: "Permission needed" },
+                unsupported:{ ko: "지원 안 됨", en: "Unsupported" },
+            };
+            permEl.textContent = labels[p]?.[lang] || "";
+            permEl.dataset.perm = p;
+        }
+        // Time override
+        const tov = localStorage.getItem("ai-tycoon-time-override") || "";
+        const tovInput = document.getElementById("settings-time-input");
+        if (tovInput) tovInput.value = tov;
+
+        openModalOverlay(overlay);
+    }
+    function closeSettings() { closeModalOverlay(document.getElementById("settings-overlay")); }
+    function settingsToggleDark(on) {
+        const isDark = document.body.classList.contains("dark");
+        if (isDark !== on) toggleDarkMode();
+    }
+    function settingsPickLang(lang) {
+        if (!window.aiTycoonI18n) return;
+        if (window.aiTycoonI18n.getLang() === lang) return;
+        toggleLanguage(); // Currently this just swaps KO ⇄ EN; OK since we only have two langs
+    }
+    function settingsPickDensity(v) {
+        if (window.setPixiDensityFromMenu) window.setPixiDensityFromMenu(v);
+        else localStorage.setItem("ai-tycoon-pixi-density", v);
+    }
+    function settingsToggleSound(on) {
+        if (!window.aiTycoonSound) return;
+        window.aiTycoonSound.setEnabled(on);
+        if (typeof syncSoundIcon === "function") syncSoundIcon();
+    }
+    function settingsSetVolume(v) {
+        const f = Math.max(0, Math.min(1, Number(v) / 100));
+        window.aiTycoonSound?.setVolume(f);
+        const numEl = document.getElementById("settings-volume-num");
+        if (numEl) numEl.textContent = `${Math.round(f * 100)}%`;
+    }
+    async function settingsToggleNotify(on) {
+        if (!window.aiTycoonNotify) return;
+        const result = await window.aiTycoonNotify.setEnabled(on);
+        const chk = document.getElementById("settings-notify");
+        if (chk) chk.checked = result;
+        const permEl = document.getElementById("settings-notify-perm");
+        if (permEl) {
+            const lang = window.aiTycoonI18n?.getLang() || "ko";
+            const p = window.aiTycoonNotify?.permission() || "unsupported";
+            const labels = {
+                granted:    { ko: "허용됨",   en: "Allowed" },
+                denied:     { ko: "차단됨",   en: "Blocked" },
+                default:    { ko: "권한 필요", en: "Permission needed" },
+                unsupported:{ ko: "지원 안 됨", en: "Unsupported" },
+            };
+            permEl.textContent = labels[p]?.[lang] || "";
+            permEl.dataset.perm = p;
+        }
+    }
+    function settingsSetTimeOverride(v) {
+        if (v) localStorage.setItem("ai-tycoon-time-override", v);
+        else localStorage.removeItem("ai-tycoon-time-override");
+    }
+    function settingsClearTimeOverride() {
+        localStorage.removeItem("ai-tycoon-time-override");
+        const input = document.getElementById("settings-time-input");
+        if (input) input.value = "";
+    }
+    function settingsResetStats() {
+        if (!confirm("정말 모든 통계를 초기화할까요? / Reset all stats?")) return;
+        localStorage.removeItem("ai-tycoon-daily-stats-v1");
+        if (window.refreshInsights) window.refreshInsights();
+    }
+    function settingsResetAchievements() {
+        if (!confirm("정말 업적 해제 기록을 초기화할까요? / Reset achievement unlocks?")) return;
+        if (window.aiTycoonAchievements?.reset) window.aiTycoonAchievements.reset();
+        if (window.refreshInsights) window.refreshInsights();
+    }
+
     function openInsights() {
         const overlay = document.getElementById("insights-overlay");
         if (window.refreshInsights) window.refreshInsights();
@@ -586,7 +825,7 @@
     function closeShortcuts() { closeModalOverlay(document.getElementById("shortcuts-overlay")); }
 
     // Click outside to close
-    ["insights-overlay", "shortcuts-overlay"].forEach(id => {
+    ["insights-overlay", "shortcuts-overlay", "settings-overlay"].forEach(id => {
         document.addEventListener("click", (e) => {
             const overlay = document.getElementById(id);
             if (!overlay || overlay.hidden) return;
@@ -596,9 +835,10 @@
 
     document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
-        // Priority: welcome > shortcuts > insights > side panel
         const welcome = document.getElementById("welcome-overlay");
         if (welcome && !welcome.hidden) { dismissWelcome(false); event.stopPropagation(); return; }
+        const settings = document.getElementById("settings-overlay");
+        if (settings && !settings.hidden) { closeSettings(); event.stopPropagation(); return; }
         const shortcuts = document.getElementById("shortcuts-overlay");
         if (shortcuts && !shortcuts.hidden) { closeShortcuts(); event.stopPropagation(); return; }
         const insights = document.getElementById("insights-overlay");
@@ -613,6 +853,7 @@
         if (typing || event.ctrlKey || event.metaKey || event.altKey) return;
         const k = event.key;
         if (k === "?" || (event.shiftKey && k === "/")) { event.preventDefault(); openShortcuts(); }
+        else if (k === "," || k === "S" || k === "s") { event.preventDefault(); openSettings(); }
         else if (k === "i" || k === "I") { event.preventDefault(); openInsights(); }
         else if (k === "d" || k === "D") { event.preventDefault(); toggleDarkMode(); }
         else if (k === "h" || k === "H") {

@@ -13,6 +13,7 @@ import { recordStateSnapshot } from "./stats.js";
 import { t } from "./i18n.js";
 import { sfxJoin, sfxLeave, sfxTaskDone, sfxReview } from "./sound.js";
 import { checkAll as checkAchievements } from "./achievements.js";
+import { notify } from "./notifications.js";
 
 // ── WebSocket ──
 export function connectWS() {
@@ -166,12 +167,15 @@ function collectWorkEvents(prevAgentsByPid) {
         }
 
         if (!prev.needsReview && agent.needsReview) {
+            const theme = themeForAgent(agent);
+            const reviewText = getWorkText(agent) || firstLine(agent.currentWork?.prompt || agent.currentTask?.subject || "확인이 필요해요", 72);
             addAgentEvent(agent, "review", {
                 label: "검토 요청",
-                text: getWorkText(agent) || firstLine(agent.currentWork?.prompt || agent.currentTask?.subject || "확인이 필요해요", 72),
+                text: reviewText,
                 key: `review|${agent.pid}|${workSignature(agent)}`,
             });
             try { sfxReview(); } catch { /* ignore */ }
+            try { notify("review", `${theme.name} · ${agent.projectName}`, `검토 요청: ${reviewText}`, { tag: `review-${agent.pid}` }); } catch { /* ignore */ }
         }
 
         if (agent.currentWork?.prompt && workSignature(agent) !== workSignature(prev)) {
@@ -207,13 +211,16 @@ function collectWorkEvents(prevAgentsByPid) {
                     key: `task-start|${agent.pid}|${task.id}|${task.status}`,
                 });
             } else if (task.status === "completed" && prevTask.status !== "completed") {
+                const theme = themeForAgent(agent);
+                const taskText = firstLine(task.subject || task.activeForm || `Task ${task.id}`, 72);
                 addAgentEvent(agent, "task-done", {
                     taskId: task.id,
                     label: "완료",
-                    text: firstLine(task.subject || task.activeForm || `Task ${task.id}`, 72),
+                    text: taskText,
                     key: `task-done|${agent.pid}|${task.id}`,
                 });
                 try { sfxTaskDone(); } catch { /* ignore */ }
+                try { notify("task-done", `${theme.name} 완료!`, taskText, { tag: `done-${task.id}` }); } catch { /* ignore */ }
             }
         });
     });
