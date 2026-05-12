@@ -13,6 +13,11 @@ import {
     AGENT_THEMES, PLATFORM_META, ROLE_META, STATUS_META,
     SUB_COLORS,
 } from "./constants.js";
+import { timeOfDayLabel, getSkyPalette } from "./timeOfDay.js";
+import { recentDays, todayStats, yesterdayStats, hourActivityToday, hourActivityWindow } from "./stats.js";
+import { avgHeartbeatGap, connQuality } from "./ws.js";
+import { t as i18n } from "./i18n.js";
+import { listAchievements, progressCount } from "./achievements.js";
 
 const PIN_STORAGE_KEY = "ai-tycoon-pinned-agents";
 const PIN_LEGACY_STORAGE_KEY = "ai-tycoon-pinned-pids";
@@ -1249,10 +1254,27 @@ function renderTeamRadar() {
     });
 }
 
+function updateConnQualityIndicator() {
+    if (!S.connected) return;
+    const badge = document.getElementById("conn-badge");
+    const txt = document.getElementById("conn-text");
+    if (!badge || !txt) return;
+    const ms = avgHeartbeatGap();
+    if (ms == null) return;
+    const quality = connQuality();
+    const lang = (window.aiTycoonI18n?.getLang?.()) || "ko";
+    const live = lang === "en" ? "Live" : "실시간";
+    txt.textContent = `${live} · ${Math.round(ms)}ms`;
+    badge.dataset.connQuality = quality;
+}
+
 // ── Live HUD ──
 export function updateLiveHud() {
     const activeEl = document.getElementById("hud-active");
     if (!activeEl) return;
+
+    // Connection quality dot on the badge
+    updateConnQualityIndicator();
 
     const active = S.liveAgents.filter(a => a.isRunning);
     const working = S.liveAgents.filter(a =>
@@ -1363,8 +1385,18 @@ export function updateLiveHud() {
 }
 
 // ── Side Panel ──
+// Show/hide the empty-state CTA based on agents + demo state
+function refreshEmptyCta() {
+    const cta = document.getElementById("empty-cta");
+    if (!cta) return;
+    const demoOn = window.aiTycoonDemo?.isEnabled?.() === true;
+    const hasAgents = (S.liveAgents || []).length > 0;
+    cta.hidden = demoOn || hasAgents;
+}
+
 export function updatePanel() {
     updateFilterChips();
+    refreshEmptyCta();
 
     const list = document.getElementById("agents-list");
     list.innerHTML = "";
@@ -1527,11 +1559,35 @@ export function updatePanel() {
     });
 }
 
+function timeOfDayIcon(hour) {
+    if (hour < 5) return "solar:moon-stars-linear";
+    if (hour < 7) return "solar:cloudy-sun-linear";
+    if (hour < 11) return "solar:sun-2-linear";
+    if (hour < 15) return "solar:sun-linear";
+    if (hour < 17.5) return "solar:cloudy-sun-linear";
+    if (hour < 19.5) return "solar:sunset-linear";
+    if (hour < 22) return "solar:moon-linear";
+    return "solar:moon-stars-linear";
+}
+
+function updateTimeOfDayBand(now) {
+    const band = document.getElementById("tod-band");
+    const icon = document.getElementById("game-time-icon");
+    if (!band) return;
+    const sky = getSkyPalette(now);
+    band.textContent = timeOfDayLabel(now);
+    band.style.color = sky.warmth > 0.4 ? "#d97757"
+        : sky.starDensity > 0.4 ? "#7a85b8"
+        : "#71717a";
+    if (icon) icon.setAttribute("icon", timeOfDayIcon(sky.hour));
+}
+
 export function updateStats() {
     if (!S.serverState) return;
     const now = new Date();
     document.getElementById("game-time").textContent =
         `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    updateTimeOfDayBand(now);
 
     const total = S.liveAgents.reduce((s, a) => s + a.totalTasks, 0);
     const done = S.liveAgents.reduce((s, a) => s + a.completedTasks, 0);
@@ -1884,3 +1940,529 @@ export function positionTooltip(tt, ex, ey) {
     tt.style.left = lx + "px";
     tt.style.top = ly + "px";
 }
+
+// ============================================================
+//  Insights modal — aggregate snapshot from current state
+// ============================================================
+function platformColor(platform) {
+    return PLATFORM_META[platform]?.color || "#94a3b8";
+}
+function platformLabel(platform) {
+    return PLATFORM_META[platform]?.label || platform || "Unknown";
+}
+function statusLabelI18n(statusKey) {
+    const key = `status.${statusKey}`;
+    const localized = i18n(key);
+    if (localized && localized !== key) return localized;
+    return STATUS_META[statusKey]?.label || statusKey;
+}
+
+export function refreshInsights() {
+    const agents = S.liveAgents || [];
+    const activeCount = agents.filter(a => a.isRunning).length;
+    const totalCompleted = agents.reduce((s, a) => s + (a.completedTasks || 0), 0);
+    const totalOngoing = agents.reduce((s, a) =>
+        s + ((a.tasks || []).filter(t => t.status === "in_progress").length), 0);
+    const totalRam = agents.reduce((s, a) => s + (a.memoryMB || 0), 0);
+
+    const el = (id) => document.getElementById(id);
+    if (el("insights-agents")) el("insights-agents").textContent = activeCount;
+    if (el("insights-completed")) el("insights-completed").textContent = totalCompleted;
+    if (el("insights-ongoing")) el("insights-ongoing").textContent = totalOngoing;
+    if (el("insights-ram")) {
+        el("insights-ram").innerHTML = totalRam.toLocaleString() + '<span class="insights-unit">MB</span>';
+    }
+
+    // Platform breakdown
+    const platformBuckets = new Map();
+    agents.forEach(a => {
+        const key = a.platform || "unknown";
+        if (!platformBuckets.has(key)) {
+            platformBuckets.set(key, { count: 0, ram: 0, running: 0 });
+        }
+        const b = platformBuckets.get(key);
+        b.count++;
+        b.ram += a.memoryMB || 0;
+        if (a.isRunning) b.running++;
+    });
+    const platformList = [...platformBuckets.entries()]
+        .sort((a, b) => b[1].count - a[1].count);
+    const maxPlatformCount = platformList[0]?.[1]?.count || 1;
+    const platformEl = el("insights-platforms");
+    if (platformEl) {
+        if (platformList.length === 0) {
+            platformEl.innerHTML = `<div class="insights-empty">${esc(i18n("insights.emptyPlatforms"))}</div>`;
+        } else {
+            platformEl.innerHTML = platformList.map(([key, b]) => {
+                const pct = Math.max(8, Math.round((b.count / maxPlatformCount) * 100));
+                const color = platformColor(key);
+                return `
+                    <div class="insights-platform-row">
+                        <div class="insights-platform-name">
+                            <span class="insights-platform-dot" style="background:${color}"></span>
+                            <span>${esc(platformLabel(key))}</span>
+                        </div>
+                        <div class="insights-platform-bar">
+                            <div class="insights-platform-fill" style="width:${pct}%;background:${color}"></div>
+                        </div>
+                        <div class="insights-platform-meta">
+                            <span class="insights-platform-count">${b.running}/${b.count}</span>
+                            <span class="insights-platform-ram">${b.ram.toLocaleString()}MB</span>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+
+    // Top projects (by total tasks)
+    const projectBuckets = new Map();
+    agents.forEach(a => {
+        const name = a.projectName || "(no project)";
+        if (!projectBuckets.has(name)) {
+            projectBuckets.set(name, { tasks: 0, completed: 0, agents: 0, platforms: new Set() });
+        }
+        const b = projectBuckets.get(name);
+        b.tasks += a.totalTasks || 0;
+        b.completed += a.completedTasks || 0;
+        b.agents++;
+        if (a.platform) b.platforms.add(a.platform);
+    });
+    const topProjects = [...projectBuckets.entries()]
+        .sort((a, b) => (b[1].tasks - a[1].tasks) || (b[1].agents - a[1].agents))
+        .slice(0, 5);
+    const projectEl = el("insights-projects");
+    if (projectEl) {
+        if (topProjects.length === 0) {
+            projectEl.innerHTML = `<div class="insights-empty">${esc(i18n("insights.emptyProjects"))}</div>`;
+        } else {
+            projectEl.innerHTML = topProjects.map(([name, b], idx) => {
+                const pct = b.tasks > 0 ? Math.round((b.completed / b.tasks) * 100) : 0;
+                const platforms = [...b.platforms].map(p =>
+                    `<span class="insights-mini-chip" style="background:${platformColor(p)}33;color:${platformColor(p)}">${esc(PLATFORM_META[p]?.badge || p.slice(0,2).toUpperCase())}</span>`
+                ).join("");
+                const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+                const peopleSuffix = lang === "en" ? (b.agents === 1 ? "agent" : "agents") : "명";
+                const doneLabel = lang === "en" ? "done" : "완료";
+                return `
+                    <button type="button" class="insights-project-row" data-project="${esc(name)}">
+                        <div class="insights-project-rank">#${idx + 1}</div>
+                        <div class="insights-project-info">
+                            <div class="insights-project-name">${esc(name)}</div>
+                            <div class="insights-project-meta">
+                                <span>${b.agents}${lang === "en" ? " " : ""}${peopleSuffix}</span>
+                                <span>·</span>
+                                <span>${b.completed}/${b.tasks} ${doneLabel} (${pct}%)</span>
+                                <span class="insights-project-platforms">${platforms}</span>
+                            </div>
+                        </div>
+                        <div class="insights-project-bar">
+                            <div class="insights-project-fill" style="width:${pct}%"></div>
+                        </div>
+                    </button>
+                `;
+            }).join("");
+            projectEl.querySelectorAll(".insights-project-row[data-project]").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const name = btn.getAttribute("data-project");
+                    if (typeof window.openProject === "function") window.openProject(name);
+                });
+            });
+        }
+    }
+
+    // Status distribution
+    const statusBuckets = new Map();
+    agents.forEach(a => {
+        const s = a.isRunning ? a.status : "offline";
+        statusBuckets.set(s, (statusBuckets.get(s) || 0) + 1);
+    });
+    const total = agents.length || 1;
+    const statusOrder = ["coding", "thinking", "searching", "reviewing", "meeting", "coffee", "idle", "offline"];
+    const statusEl = el("insights-status");
+    if (statusEl) {
+        const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const peopleWord = lang === "en" ? "" : "명";
+        const segments = statusOrder
+            .filter(s => statusBuckets.get(s))
+            .map(s => {
+                const count = statusBuckets.get(s);
+                const pct = (count / total) * 100;
+                const meta = STATUS_META[s] || STATUS_META.idle;
+                const label = statusLabelI18n(s);
+                return `<div class="insights-status-seg" style="width:${pct}%;background:${meta.color}" title="${esc(label)}: ${count}${lang === "en" ? "" : peopleWord}">
+                    <span>${pct > 8 ? esc(label) : ""}</span>
+                </div>`;
+            }).join("");
+        const legend = statusOrder
+            .filter(s => statusBuckets.get(s))
+            .map(s => {
+                const meta = STATUS_META[s] || STATUS_META.idle;
+                const label = statusLabelI18n(s);
+                return `<span class="insights-status-legend-item">
+                    <span class="insights-status-legend-dot" style="background:${meta.color}"></span>
+                    <span>${esc(label)} ${statusBuckets.get(s)}${peopleWord}</span>
+                </span>`;
+            }).join("");
+        statusEl.innerHTML = `
+            <div class="insights-status-bar-track">${segments || `<div class="insights-empty insights-empty-bar">${esc(i18n("insights.emptyStatus"))}</div>`}</div>
+            <div class="insights-status-legend">${legend}</div>
+        `;
+    }
+
+    // 7-day history chart
+    const historyEl = el("insights-history");
+    if (historyEl) {
+        const days = recentDays(7);
+        const today = todayStats();
+        const yesterday = yesterdayStats();
+        const deltaCard = (() => {
+            if (!today) return "";
+            const yc = yesterday?.completedMax || 0;
+            const tc = today.completedMax || 0;
+            const diff = tc - yc;
+            const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "▬";
+            const color = diff > 0 ? "#10b981" : diff < 0 ? "#ef4444" : "#94a3b8";
+            return `
+                <div class="insights-history-summary">
+                    <span class="insights-history-summary-num">${tc}</span>
+                    <span class="insights-history-summary-label">${esc(i18n("insights.completedLabel"))}</span>
+                    <span class="insights-history-summary-delta" style="color:${color}">${arrow} ${Math.abs(diff)} ${esc(i18n("insights.deltaSuffix"))}</span>
+                </div>
+            `;
+        })();
+        if (days.length === 0) {
+            historyEl.innerHTML = `<div class="insights-empty">${esc(i18n("insights.emptyHistory"))}</div>`;
+        } else {
+            const maxCompleted = Math.max(1, ...days.map(d => d.completedMax || 0));
+            const maxAgents = Math.max(1, ...days.map(d => d.agentsMax || 0));
+            const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const taskWord = lang === "en" ? "tasks" : "태스크";
+            const peopleWord = lang === "en" ? "peak" : "명";
+            const bars = days.map(d => {
+                const c = d.completedMax || 0;
+                const a = d.agentsMax || 0;
+                const cPct = Math.max(2, (c / maxCompleted) * 100);
+                const aPct = Math.max(2, (a / maxAgents) * 100);
+                const label = d.date.slice(5).replace("-", "/");
+                const isToday = d.date === days[days.length - 1].date;
+                const joinLabel = lang === "en" ? "joined" : "출근";
+                const eventsLabel = lang === "en" ? "events" : "이벤트";
+                const tooltip = `
+                    <div class="chart-tooltip-title">${esc(d.date)}${isToday ? ` · ${lang === "en" ? "Today" : "오늘"}` : ""}</div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#10b981"></span>${esc(taskWord)} <strong>${c}</strong></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#3b82f6"></span>${lang === "en" ? "Peak agents" : "최대 동시"} <strong>${a}</strong></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#facc15"></span>${esc(joinLabel)} <strong>${d.joinedCount || 0}</strong></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#a78bfa"></span>${esc(eventsLabel)} <strong>${d.events || 0}</strong></div>
+                `;
+                return `
+                    <div class="insights-history-col${isToday ? " is-today" : ""}" data-tooltip="${esc(tooltip)}">
+                        <div class="insights-history-bars">
+                            <div class="insights-history-bar insights-history-bar-task" style="height:${cPct}%"></div>
+                            <div class="insights-history-bar insights-history-bar-agent" style="height:${aPct}%"></div>
+                        </div>
+                        <div class="insights-history-label">${esc(label)}</div>
+                    </div>
+                `;
+            }).join("");
+            historyEl.innerHTML = `
+                ${deltaCard}
+                <div class="insights-history-chart">${bars}</div>
+                <div class="insights-history-legend">
+                    <span><span class="insights-history-legend-dot" style="background:#10b981"></span>${esc(i18n("insights.legendTasks"))}</span>
+                    <span><span class="insights-history-legend-dot" style="background:#3b82f6"></span>${esc(i18n("insights.legendAgents"))}</span>
+                </div>
+            `;
+        }
+    }
+
+    // Hourly heatmap (24 hour cells)
+    const hourlyEl = el("insights-hourly");
+    if (hourlyEl) {
+        const today = hourActivityToday();
+        const window7 = hourActivityWindow(7);
+        const maxV = Math.max(1, ...window7);
+        const nowHour = new Date().getHours();
+        const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const peakHour = window7.indexOf(Math.max(...window7));
+        const peakLabel = lang === "en"
+            ? `Peak: ${String(peakHour).padStart(2, "0")}:00`
+            : `피크 시간 ${String(peakHour).padStart(2, "0")}시`;
+        const todayLabel = lang === "en" ? "Today" : "오늘";
+        const weekLabel = lang === "en" ? "7-day" : "최근 7일";
+        const cells = window7.map((v, h) => {
+            const intensity = Math.max(0, Math.min(1, v / maxV));
+            const todayV = today[h] || 0;
+            const dotSize = Math.max(0, Math.min(1, todayV / Math.max(1, today[nowHour] || maxV)));
+            const isNow = h === nowHour;
+            const hourLabel = `${String(h).padStart(2, "0")}:00`;
+            const tooltip = `
+                <div class="chart-tooltip-title">${hourLabel}${isNow ? ` · ${lang === "en" ? "Now" : "지금"}` : ""}</div>
+                <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#10b981"></span>${esc(weekLabel)} <strong>${v}</strong></div>
+                <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#ff8a4c"></span>${esc(todayLabel)} <strong>${todayV}</strong></div>
+            `;
+            return `
+                <div class="insights-hour-cell${isNow ? " is-now" : ""}" data-tooltip="${esc(tooltip)}">
+                    <div class="insights-hour-bar" style="--intensity:${intensity.toFixed(2)}"></div>
+                    <div class="insights-hour-dot" style="opacity:${dotSize.toFixed(2)}"></div>
+                    <div class="insights-hour-label">${h % 3 === 0 ? String(h).padStart(2, "0") : "·"}</div>
+                </div>
+            `;
+        }).join("");
+        hourlyEl.innerHTML = `
+            <div class="insights-hourly-row">${cells}</div>
+            <div class="insights-hourly-legend">
+                <span><span class="insights-hour-key bar"></span>${esc(weekLabel)}</span>
+                <span><span class="insights-hour-key dot"></span>${esc(todayLabel)}</span>
+                <span class="insights-hourly-peak">${esc(peakLabel)}</span>
+            </div>
+        `;
+    }
+
+    // Achievements grid
+    const achEl = el("insights-achievements");
+    const achProgress = el("insights-ach-progress");
+    if (achEl) {
+        const items = listAchievements();
+        const prog = progressCount();
+        if (achProgress) achProgress.textContent = `${prog.unlocked}/${prog.total}`;
+        achEl.innerHTML = items.map(a => `
+            <div class="ach-tile${a.unlocked ? " is-unlocked" : ""}" title="${esc(a.desc)}">
+                <iconify-icon icon="${a.icon}" class="ach-tile-icon" aria-hidden="true"></iconify-icon>
+                <div class="ach-tile-body">
+                    <div class="ach-tile-title">${esc(a.title)}</div>
+                    <div class="ach-tile-desc">${esc(a.desc)}</div>
+                </div>
+                ${a.unlocked ? '<iconify-icon icon="solar:check-circle-bold" class="ach-tile-check" aria-hidden="true"></iconify-icon>' : ""}
+            </div>
+        `).join("");
+    }
+
+    // Recent feed — clickable rows that focus the agent
+    const feedEl = el("insights-feed");
+    if (feedEl) {
+        const events = (S.workEvents || []).slice(0, 12);
+        if (events.length === 0) {
+            feedEl.innerHTML = `<div class="insights-empty">${esc(i18n("insights.emptyFeed"))}</div>`;
+        } else {
+            feedEl.innerHTML = events.map(ev => {
+                const meta = STATUS_META[ev.status] || STATUS_META.idle;
+                const ts = ev.ts ? new Date(ev.ts) : new Date();
+                const time = `${String(ts.getHours()).padStart(2,"0")}:${String(ts.getMinutes()).padStart(2,"0")}`;
+                const labelText = ev.label || statusLabelI18n(ev.status) || meta.label;
+                const color = ev.statusColor || ev.color || meta.color;
+                const pid = ev.pid ? String(ev.pid) : "";
+                return `
+                    <button type="button" class="insights-feed-row" ${pid ? `data-pid="${esc(pid)}"` : ""} ${pid ? "" : "disabled"}>
+                        <span class="insights-feed-time">${esc(time)}</span>
+                        <span class="insights-feed-tag" style="background:${color}22;color:${color}">${esc(labelText)}</span>
+                        <span class="insights-feed-name">${esc(ev.agentName || "")}</span>
+                        <span class="insights-feed-text">${esc(ev.text || "")}</span>
+                    </button>
+                `;
+            }).join("");
+            feedEl.querySelectorAll(".insights-feed-row[data-pid]").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const pid = btn.getAttribute("data-pid");
+                    if (!pid) return;
+                    // Find agent, focus camera, close modal
+                    const ag = S.liveAgents.find(a => String(a.pid) === pid);
+                    if (!ag) return;
+                    S.selectedPid = pid;
+                    S.detailPid = pid;
+                    if (typeof window.focusActiveAgent === "function" && typeof S.directorMode !== "undefined") {
+                        // Use existing focus helper — switch to director mode targeting this pid
+                        S.directorFocusPid = pid;
+                        S.directorMode = true;
+                    }
+                    document.getElementById("insights-overlay")?.classList?.remove("is-visible");
+                    setTimeout(() => {
+                        const overlay = document.getElementById("insights-overlay");
+                        if (overlay) overlay.hidden = true;
+                    }, 280);
+                });
+            });
+        }
+    }
+}
+
+// ── Rich hover tooltip for chart cells inside the insights modal ──
+function ensureChartTooltip() {
+    let tt = document.getElementById("chart-tooltip");
+    if (tt) return tt;
+    tt = document.createElement("div");
+    tt.id = "chart-tooltip";
+    tt.className = "chart-tooltip";
+    document.body.appendChild(tt);
+    return tt;
+}
+function showChartTooltip(target, html) {
+    const tt = ensureChartTooltip();
+    tt.innerHTML = html;
+    tt.classList.add("is-visible");
+    const rect = target.getBoundingClientRect();
+    const ttRect = tt.getBoundingClientRect();
+    let x = rect.left + rect.width / 2 - ttRect.width / 2;
+    let y = rect.top - ttRect.height - 8;
+    if (y < 8) y = rect.bottom + 8;
+    x = Math.max(8, Math.min(x, window.innerWidth - ttRect.width - 8));
+    tt.style.left = `${x}px`;
+    tt.style.top = `${y}px`;
+}
+function hideChartTooltip() {
+    const tt = document.getElementById("chart-tooltip");
+    if (tt) tt.classList.remove("is-visible");
+}
+
+// Attach delegated hover handlers once
+if (typeof document !== "undefined") {
+    document.addEventListener("mouseover", (e) => {
+        const col = e.target.closest?.(".insights-history-col");
+        if (col?.dataset?.tooltip) {
+            showChartTooltip(col, col.dataset.tooltip);
+            return;
+        }
+        const cell = e.target.closest?.(".insights-hour-cell");
+        if (cell?.dataset?.tooltip) {
+            showChartTooltip(cell, cell.dataset.tooltip);
+        }
+    });
+    document.addEventListener("mouseout", (e) => {
+        if (e.target.closest?.(".insights-history-col, .insights-hour-cell")) {
+            hideChartTooltip();
+        }
+    });
+    document.addEventListener("scroll", hideChartTooltip, true);
+}
+
+// ============================================================
+//  Project drill-down modal
+// ============================================================
+export function refreshProject(projectName) {
+    const el = (id) => document.getElementById(id);
+    const titleEl = el("project-title");
+    if (titleEl) titleEl.textContent = projectName;
+
+    const matching = S.liveAgents.filter(a => (a.projectName || "") === projectName);
+    const running = matching.filter(a => a.isRunning);
+    const totalCompleted = matching.reduce((s, a) => s + (a.completedTasks || 0), 0);
+    const totalRam = matching.reduce((s, a) => s + (a.memoryMB || 0), 0);
+    const ongoing = matching.reduce((s, a) =>
+        s + ((a.tasks || []).filter(t => t.status === "in_progress").length), 0);
+
+    if (el("project-agents"))    el("project-agents").textContent    = running.length;
+    if (el("project-completed")) el("project-completed").textContent = totalCompleted;
+    if (el("project-ongoing"))   el("project-ongoing").textContent   = ongoing;
+    if (el("project-ram"))       el("project-ram").innerHTML = totalRam.toLocaleString() + '<span class="insights-unit">MB</span>';
+
+    // Platform breakdown for this project
+    const platformsEl = el("project-platforms");
+    if (platformsEl) {
+        const buckets = new Map();
+        matching.forEach(a => {
+            const k = a.platform || "unknown";
+            buckets.set(k, (buckets.get(k) || 0) + 1);
+        });
+        const items = [...buckets.entries()].sort((a, b) => b[1] - a[1]);
+        if (items.length === 0) {
+            platformsEl.innerHTML = `<div class="insights-empty">${esc(i18n("insights.emptyPlatforms"))}</div>`;
+        } else {
+            platformsEl.innerHTML = items.map(([key, count]) => `
+                <span class="project-platform-chip" style="background:${platformColor(key)}26;color:${platformColor(key)};border-color:${platformColor(key)}55">
+                    <span class="project-platform-dot" style="background:${platformColor(key)}"></span>
+                    <span>${esc(PLATFORM_META[key]?.label || key)}</span>
+                    <span class="project-platform-count">${count}</span>
+                </span>
+            `).join("");
+        }
+    }
+
+    // Agent list
+    const agentListEl = el("project-agent-list");
+    if (agentListEl) {
+        if (matching.length === 0) {
+            agentListEl.innerHTML = `<div class="insights-empty">${esc(i18n("project.empty"))}</div>`;
+        } else {
+            const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const taskWord = lang === "en" ? "tasks" : "태스크";
+            const memWord = "MB";
+            agentListEl.innerHTML = matching.map(a => {
+                const theme = themeForAgent(a);
+                const status = a.isRunning ? a.status : "offline";
+                const meta = STATUS_META[status] || STATUS_META.idle;
+                const work = getWorkText(a) || (a.currentTask?.subject || "");
+                return `
+                    <button type="button" class="project-agent-row" data-pid="${esc(String(a.pid))}">
+                        <span class="project-agent-avatar" style="background:${theme.body}">${esc(theme.name.charAt(0))}</span>
+                        <div class="project-agent-info">
+                            <div class="project-agent-name">${esc(theme.name)}</div>
+                            <div class="project-agent-meta">
+                                <span class="project-agent-status" style="color:${meta.color}">${esc(statusLabelI18n(status))}</span>
+                                <span>·</span>
+                                <span>${a.completedTasks || 0}/${a.totalTasks || 0} ${taskWord}</span>
+                                <span>·</span>
+                                <span>${a.memoryMB || 0} ${memWord}</span>
+                            </div>
+                            ${work ? `<div class="project-agent-work">${esc(work)}</div>` : ""}
+                        </div>
+                    </button>
+                `;
+            }).join("");
+            agentListEl.querySelectorAll(".project-agent-row").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const pid = btn.getAttribute("data-pid");
+                    if (!pid) return;
+                    S.selectedPid = pid;
+                    S.detailPid = pid;
+                    S.directorFocusPid = pid;
+                    S.directorMode = true;
+                    document.getElementById("project-overlay")?.classList?.remove("is-visible");
+                    setTimeout(() => {
+                        const ov = document.getElementById("project-overlay");
+                        if (ov) ov.hidden = true;
+                    }, 280);
+                });
+            });
+        }
+    }
+
+    // Recent tasks across all agents on this project
+    const tasksEl = el("project-tasks");
+    if (tasksEl) {
+        const flat = [];
+        matching.forEach(a => {
+            (a.tasks || []).forEach(t => flat.push({ ...t, _agent: themeForAgent(a).name }));
+        });
+        flat.sort((a, b) => {
+            const order = { in_progress: 0, pending: 1, completed: 2 };
+            const aOrd = order[a.status] ?? 3;
+            const bOrd = order[b.status] ?? 3;
+            return aOrd - bOrd;
+        });
+        if (flat.length === 0) {
+            tasksEl.innerHTML = `<div class="insights-empty">${esc(i18n("project.emptyTasks"))}</div>`;
+        } else {
+            const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+            tasksEl.innerHTML = flat.slice(0, 8).map(task => {
+                const statusLabel = task.status === "in_progress" ? (lang === "en" ? "in progress" : "진행")
+                    : task.status === "completed" ? (lang === "en" ? "done" : "완료")
+                    : (lang === "en" ? "pending" : "대기");
+                const color = task.status === "in_progress" ? "#10b981"
+                    : task.status === "completed" ? "#94a3b8"
+                    : "#f59e0b";
+                return `
+                    <div class="project-task-row">
+                        <span class="project-task-status" style="background:${color}22;color:${color}">${esc(statusLabel)}</span>
+                        <span class="project-task-subject">${esc(task.subject || task.activeForm || `Task ${task.id}`)}</span>
+                        <span class="project-task-agent">${esc(task._agent || "")}</span>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+}
+
+if (typeof window !== "undefined") window.refreshProject = refreshProject;
+
+// Expose for window-level button handlers
+if (typeof window !== "undefined") window.refreshInsights = refreshInsights;

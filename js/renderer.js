@@ -7,6 +7,13 @@ import {
     TILE, COLS, ROWS, PAL,
     OFFICE_MAP, AGENT_THEMES, PLATFORM_META, STATUS_META, POI,
 } from "./constants.js";
+import { getSkyPalette, sunWindowX, indoorLightBoost } from "./timeOfDay.js";
+import { drawNPCs } from "./npcs.js";
+import { t } from "./i18n.js";
+import { drawSeasonal } from "./seasons.js";
+
+// Stable per-window pseudo-random seed used for star fields & cloud drift.
+function winHash(x) { return ((x * 2654435761) >>> 0) / 4294967295; }
 
 // ── Main Render ──
 export function render() {
@@ -17,6 +24,8 @@ export function render() {
     drawOffice();
     drawFurniture();
     drawDecorations();
+    drawSeasonal(S.ctx, S.animFrame);
+    drawNPCs(S.ctx, S.animFrame);
     drawAgents();
     drawSubAgents();
     drawParticles();
@@ -60,6 +69,24 @@ function drawOffice() {
                 ctx.fillStyle = "rgba(255,255,255,0.08)";
                 ctx.fillRect(px, py, TILE, 1);
                 ctx.fillRect(px, py, 1, TILE);
+                // Zone-specific overlay: work area gets a wood-plank grain,
+                // lounge gets a softer parquet pattern.
+                if (x >= 1 && x <= 11) {
+                    // Work zone: horizontal wood grain
+                    ctx.fillStyle = "rgba(120,80,40,0.06)";
+                    ctx.fillRect(px, py + 7, TILE, 0.6);
+                    ctx.fillRect(px, py + 18, TILE, 0.6);
+                    ctx.fillRect(px, py + 26, TILE, 0.5);
+                } else if (x >= 14 && x <= 22) {
+                    // Lounge zone: parquet-style square pattern (every other 2x2 tile)
+                    if (((x >> 1) + (y >> 1)) % 2 === 0) {
+                        ctx.fillStyle = "rgba(255,255,255,0.04)";
+                        ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+                        ctx.fillStyle = "rgba(180,150,110,0.06)";
+                        ctx.fillRect(px + 4, py + 4, TILE - 8, 0.6);
+                        ctx.fillRect(px + 4, py + TILE - 5, TILE - 8, 0.6);
+                    }
+                }
             }
         }
     }
@@ -91,14 +118,22 @@ function drawDecorations() {
     const ctx = S.ctx;
     const ct = S.animFrame;
 
-    // ── Windows: 업무 공간 벽 ──
+    // ── Windows: time-of-day sky, sun/moon path follows real clock ──
+    const sky = getSkyPalette();
+    const workSunX   = sunWindowX(8, 11);
+    const loungeSunX = sunWindowX(17, 21);
+    // 업무 공간 벽
     for (let x = 8; x < 12; x++) {
-        drawWindow(x * TILE, 0, ct);
+        const anchor = workSunX != null && Math.abs(x - workSunX) < 0.5;
+        drawWindow(x * TILE, 0, ct, x, sky, anchor);
     }
-    // ── Windows: 휴게실 벽 ──
+    // 휴게실 벽
     for (let x = 17; x < 22; x++) {
-        drawWindow(x * TILE, 0, ct);
+        const anchor = loungeSunX != null && Math.abs(x - loungeSunX) < 0.5;
+        drawWindow(x * TILE, 0, ct, x, sky, anchor);
     }
+    // Birds flying past windows (dawn / golden hour / sunset)
+    drawBirds(ct, sky);
 
     // ── Wall clock (업무 공간) ──
     const clkX = 11 * TILE + 16, clkY = 12;
@@ -116,14 +151,52 @@ function drawDecorations() {
     ctx.lineWidth = 0.5;
     ctx.beginPath(); ctx.moveTo(clkX, clkY); ctx.lineTo(clkX + Math.cos(mAngle) * 4, clkY + Math.sin(mAngle) * 4); ctx.stroke();
 
+    // ── Wall decorations (work area side, left wall) ──
+    // Motivational poster (top of work area wall, near col 1.5)
+    const motX = 1 * TILE + 6, motY = 4;
+    ctx.fillStyle = "#3a2818";
+    ctx.fillRect(motX - 1, motY - 1, 22, 18);
+    ctx.fillStyle = "#FCE7A8";
+    ctx.fillRect(motX, motY, 20, 16);
+    ctx.fillStyle = "#d97757";
+    ctx.fillRect(motX + 2, motY + 2, 16, 1);
+    ctx.fillRect(motX + 2, motY + 5, 12, 1);
+    // Tiny rocket icon
+    ctx.fillStyle = "#3a78d4";
+    ctx.fillRect(motX + 9, motY + 9, 2, 4);
+    ctx.fillRect(motX + 10, motY + 8, 2, 5);
+    ctx.fillRect(motX + 9, motY + 13, 1, 2);
+    ctx.fillRect(motX + 12, motY + 13, 1, 2);
+    ctx.fillStyle = "#ff8a4c";
+    ctx.fillRect(motX + 10, motY + 14, 2, 2);
+
+    // Calendar (showing today's date)
+    const calX = 7 * TILE + 8, calY = 4;
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(calX, calY, 18, 18);
+    ctx.fillStyle = "#d97757";
+    ctx.fillRect(calX, calY, 18, 5);
+    ctx.font = "bold 4px Pretendard, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff";
+    const today = new Date();
+    const monthNames = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
+    ctx.fillText(monthNames[today.getMonth()], calX + 9, calY + 3.8);
+    ctx.fillStyle = "#3a2010";
+    ctx.font = "bold 7px Pretendard, sans-serif";
+    ctx.fillText(String(today.getDate()), calX + 9, calY + 14);
+    ctx.font = "3px Pretendard, sans-serif";
+    ctx.fillStyle = "#7a5a48";
+    ctx.fillText("MON TUE WED", calX + 9, calY + 17.5);
+
     // Poster on wall (휴게실 벽)
     const posX = 22 * TILE + 2, posY = 3;
     ctx.fillStyle = "#F0D8C0";
     ctx.fillRect(posX, posY, 20, 22);
     ctx.fillStyle = "#fff";
     ctx.fillRect(posX + 2, posY + 2, 16, 12);
-    // Tiny landscape in poster
-    ctx.fillStyle = "#87CEEB";
+    // Tiny landscape in poster (sky tinted by time-of-day too!)
+    ctx.fillStyle = sky.starDensity > 0.4 ? "#3a4878" : "#87CEEB";
     ctx.fillRect(posX + 2, posY + 2, 16, 6);
     ctx.fillStyle = "#7AD09A";
     ctx.fillRect(posX + 2, posY + 8, 16, 6);
@@ -131,6 +204,18 @@ function drawDecorations() {
     ctx.fillStyle = "#B09060";
     ctx.fillRect(posX + 4, posY + 16, 12, 1);
     ctx.fillRect(posX + 6, posY + 18, 8, 1);
+
+    // ── "CAFE" neon sign over breakroom — glows brighter at night ──
+    const cafeX = 15 * TILE + 8, cafeY = 0.4 * TILE;
+    const cafeGlow = 0.35 + indoorLightBoost() * 0.5;
+    ctx.fillStyle = `rgba(255,107,74,${cafeGlow * 0.4})`;
+    ctx.fillRect(cafeX - 2, cafeY - 1, 38, 9);
+    ctx.font = "bold 6px Pretendard, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillStyle = `rgba(255,180,140,${cafeGlow})`;
+    ctx.fillText("CAFE ☕", cafeX + 17, cafeY + 5);
+    ctx.fillStyle = `rgba(255,107,74,${cafeGlow * 0.9})`;
+    ctx.fillRect(cafeX, cafeY + 7, 34, 0.6);
 
     // ── Cute cat in breakroom ──
     const catX = 20 * TILE + 8, catY = 4 * TILE + 14;
@@ -270,22 +355,137 @@ function drawBossDesk(ct) {
     }
 }
 
-function drawWindow(px, py, ct) {
+// Birds: small flock that drifts across the window panes during dawn / golden hour.
+// They live in canvas space (so they share the office transform) but only render
+// when the sky palette warmth is moderate — dawn glow, late afternoon, sunset.
+const BIRDS = [];
+function ensureBirds() {
+    if (BIRDS.length > 0) return;
+    for (let i = 0; i < 5; i++) {
+        BIRDS.push({
+            x: -10 - i * 22,
+            y: 4 + Math.random() * 10,
+            speed: 0.06 + Math.random() * 0.08,
+            phase: Math.random() * Math.PI * 2,
+            wingSpeed: 0.18 + Math.random() * 0.1,
+        });
+    }
+}
+function drawBirds(ct, sky) {
+    // Only at dawn (5.5-7), golden hour / sunset (16-19), and brief moments of dusk
+    const h = sky.hour;
+    const visible = (h >= 5.4 && h < 7.4) || (h >= 16 && h < 19.3);
+    if (!visible) return;
+    ensureBirds();
     const ctx = S.ctx;
+    const range = (11 - 8 + 1) * TILE + (21 - 17 + 1) * TILE + 100;
+    BIRDS.forEach(b => {
+        b.x += b.speed;
+        if (b.x > 11 * TILE + 80) b.x = 6 * TILE - 60 - Math.random() * 40;
+        // Vertical bob
+        const by = b.y + Math.sin(ct * 0.04 + b.phase) * 0.8;
+        // Skip if outside the actual window strip (rows 0-1)
+        if (by < 0 || by > 22) return;
+        // Wing animation — alternate two shapes
+        const wingUp = (Math.floor(ct * b.wingSpeed) % 2 === 0);
+        const c = sky.warmth > 0.6 ? "rgba(40,30,20,0.8)" : "rgba(60,55,55,0.7)";
+        ctx.fillStyle = c;
+        // Two short strokes forming a flying "v"
+        if (wingUp) {
+            ctx.fillRect(b.x - 1.6, by, 1.6, 0.7);
+            ctx.fillRect(b.x + 0.8, by - 0.7, 1.6, 0.7);
+            ctx.fillRect(b.x + 0.4, by, 0.5, 0.5);
+        } else {
+            ctx.fillRect(b.x - 1.6, by + 0.3, 1.6, 0.7);
+            ctx.fillRect(b.x + 0.8, by + 0.3, 1.6, 0.7);
+            ctx.fillRect(b.x + 0.4, by, 0.5, 0.5);
+        }
+    });
+    void range;
+}
+
+function drawWindow(px, py, ct, tx, sky, isAnchor) {
+    const ctx = S.ctx;
+    sky = sky || getSkyPalette();
     // Frame
     ctx.fillStyle = PAL.windowFrame;
     ctx.fillRect(px + 3, py + 2, TILE - 6, TILE - 4);
-    // Glass (sky blue gradient feel)
-    ctx.fillStyle = "#D4EAFF";
-    ctx.fillRect(px + 5, py + 4, TILE - 10, TILE - 8);
-    // Sky detail
-    ctx.fillStyle = "#E8F4FF";
-    ctx.fillRect(px + 5, py + 4, TILE - 10, 6);
-    // Cloud (tiny, moves slowly)
-    const cloudX = ((ct * 0.02 + px * 0.5) % 20) - 2;
-    ctx.fillStyle = "rgba(255,255,255,0.6)";
-    ctx.fillRect(px + 6 + cloudX, py + 6, 5, 2);
-    ctx.fillRect(px + 8 + cloudX, py + 5, 3, 3);
+
+    // Glass interior — gradient sky (top→bottom)
+    const glassX = px + 5, glassY = py + 4;
+    const glassW = TILE - 10, glassH = TILE - 8;
+    const grad = ctx.createLinearGradient(glassX, glassY, glassX, glassY + glassH);
+    grad.addColorStop(0, sky.topCss);
+    grad.addColorStop(1, sky.botCss);
+    ctx.fillStyle = grad;
+    ctx.fillRect(glassX, glassY, glassW, glassH);
+
+    // Stars (only at night) — stable per-window scatter
+    if (sky.starDensity > 0.05) {
+        const seed = winHash(tx * 13 + 7);
+        const count = Math.round(sky.starDensity * 4);
+        ctx.fillStyle = `rgba(255,255,255,${0.3 + sky.starDensity * 0.5})`;
+        for (let i = 0; i < count; i++) {
+            const r1 = winHash(tx * 31 + i * 17 + 3);
+            const r2 = winHash(tx * 19 + i * 23 + 11);
+            const sx = glassX + 1 + r1 * (glassW - 2);
+            const sy = glassY + 1 + r2 * (glassH * 0.55);
+            const twinkle = 0.55 + 0.45 * Math.sin(ct * 0.06 + i * 1.3 + tx);
+            ctx.globalAlpha = sky.starDensity * twinkle;
+            ctx.fillRect(sx, sy, 1, 1);
+        }
+        ctx.globalAlpha = 1;
+        void seed;
+    }
+
+    // Celestial body — sun in daytime, moon in night, only on the anchor window
+    if (isAnchor && sky.body) {
+        const cyAbs = glassY + sky.sunY * glassH;
+        const cx = glassX + glassW / 2;
+        if (sky.body === "sun") {
+            // Soft halo
+            const halo = ctx.createRadialGradient(cx, cyAbs, 0, cx, cyAbs, 9);
+            halo.addColorStop(0, `rgba(${sky.sunColor[0]},${sky.sunColor[1]},${sky.sunColor[2]},0.55)`);
+            halo.addColorStop(1, `rgba(${sky.sunColor[0]},${sky.sunColor[1]},${sky.sunColor[2]},0)`);
+            ctx.fillStyle = halo;
+            ctx.fillRect(cx - 9, cyAbs - 9, 18, 18);
+            // Disc
+            ctx.fillStyle = sky.sunCss;
+            ctx.beginPath(); ctx.arc(cx, cyAbs, 3, 0, Math.PI * 2); ctx.fill();
+        } else {
+            // Moon: pale disc with subtle crater
+            ctx.fillStyle = "rgba(220,225,240,0.95)";
+            ctx.beginPath(); ctx.arc(cx, cyAbs, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = "rgba(170,175,200,0.6)";
+            ctx.fillRect(cx + 0.5, cyAbs - 1.5, 1, 1);
+            ctx.fillRect(cx - 1.5, cyAbs + 0.5, 1, 1);
+            // Soft glow halo
+            const halo = ctx.createRadialGradient(cx, cyAbs, 0, cx, cyAbs, 8);
+            halo.addColorStop(0, "rgba(220,225,255,0.35)");
+            halo.addColorStop(1, "rgba(220,225,255,0)");
+            ctx.fillStyle = halo;
+            ctx.fillRect(cx - 8, cyAbs - 8, 16, 16);
+        }
+    }
+
+    // Cloud — only when not deep night (skip if star density is high)
+    if (sky.starDensity < 0.5) {
+        const cloudX = ((ct * 0.02 + tx * 7) % (glassW + 12)) - 6;
+        const cloudAlpha = 0.45 + (1 - sky.starDensity) * 0.25;
+        ctx.fillStyle = `rgba(255,255,255,${cloudAlpha})`;
+        ctx.fillRect(glassX + cloudX, glassY + 7, 6, 2);
+        ctx.fillRect(glassX + cloudX + 2, glassY + 6, 4, 3);
+    }
+
+    // City silhouette at the bottom of the glass (subtle, day-tinted)
+    const silhouetteAlpha = sky.starDensity > 0.5 ? 0.55 : 0.18;
+    ctx.fillStyle = `rgba(40,55,80,${silhouetteAlpha})`;
+    ctx.fillRect(glassX,            glassY + glassH - 3, 4, 3);
+    ctx.fillRect(glassX + 5,        glassY + glassH - 5, 3, 5);
+    ctx.fillRect(glassX + 9,        glassY + glassH - 4, 4, 4);
+    ctx.fillRect(glassX + 14,       glassY + glassH - 6, 3, 6);
+    ctx.fillRect(glassX + 18,       glassY + glassH - 4, 4, 4);
+
     // Curtain (soft pink, draped on sides)
     ctx.fillStyle = "#F9D4E0";
     ctx.fillRect(px + 3, py + 2, 3, TILE - 4);
@@ -293,6 +493,13 @@ function drawWindow(px, py, ct) {
     // Curtain rod
     ctx.fillStyle = "#C8A878";
     ctx.fillRect(px + 2, py + 2, TILE - 4, 1.5);
+
+    // Inner warm light spill at night (lamp behind window suggesting interior glow)
+    const boost = indoorLightBoost();
+    if (boost > 0.2) {
+        ctx.fillStyle = `rgba(255,200,140,${boost * 0.22})`;
+        ctx.fillRect(glassX, glassY + glassH * 0.55, glassW, glassH * 0.45);
+    }
 }
 
 function drawTinyFlower(x, y, color, seed) {
@@ -352,6 +559,70 @@ function drawDesk(px, py, tx, ty) {
         // Stand
         ctx.fillStyle = "#B0A090";
         ctx.fillRect(px + 14, py + 15, 4, 2);
+
+        // ── Desk props: varied per desk (stable from tx/ty) ──
+        // Deterministic prop choice so each desk is consistent across frames.
+        const propSeed = ((tx * 73 + ty * 31) >>> 0) % 4;
+        // Desk lamp (left side of desk) — glows warm at night
+        const lampX = px + 4, lampY = py + 5;
+        ctx.fillStyle = "#5a4030"; // stand
+        ctx.fillRect(lampX + 1, lampY + 6, 1, 4);
+        ctx.fillStyle = "#3a2018"; // base
+        ctx.fillRect(lampX, lampY + 9, 4, 1);
+        ctx.fillStyle = "#8a6848"; // shade
+        ctx.beginPath();
+        ctx.moveTo(lampX - 0.5, lampY + 4);
+        ctx.lineTo(lampX + 4, lampY + 4);
+        ctx.lineTo(lampX + 3, lampY + 1);
+        ctx.lineTo(lampX, lampY + 1);
+        ctx.closePath();
+        ctx.fill();
+        // Bulb glow scales with indoor light boost (evening/night)
+        const boost = indoorLightBoost();
+        if (boost > 0.05) {
+            const glow = ctx.createRadialGradient(lampX + 1.5, lampY + 5, 0, lampX + 1.5, lampY + 5, 7);
+            glow.addColorStop(0, `rgba(255,220,140,${0.65 * boost})`);
+            glow.addColorStop(1, "rgba(255,220,140,0)");
+            ctx.fillStyle = glow;
+            ctx.fillRect(lampX - 4, lampY, 12, 12);
+            // Warm spot on desk surface
+            ctx.fillStyle = `rgba(255,210,130,${0.18 * boost})`;
+            ctx.fillRect(px + 2, py + 8, TILE - 4, 3);
+        }
+
+        // Coffee mug, sticky note, plant — pick one variant per desk
+        if (propSeed === 0) {
+            // Coffee mug (right side)
+            ctx.fillStyle = "#F2E8DC";
+            ctx.fillRect(px + 22, py + 9, 4, 4);
+            ctx.fillStyle = "#3a2418"; // coffee
+            ctx.fillRect(px + 22, py + 9, 4, 1);
+            ctx.fillStyle = "#F2E8DC";
+            ctx.fillRect(px + 26, py + 10, 1, 2);
+        } else if (propSeed === 1) {
+            // Sticky note stack (right side)
+            ctx.fillStyle = "#FCE7A8";
+            ctx.fillRect(px + 21, py + 9, 5, 4);
+            ctx.fillStyle = "rgba(180,140,40,0.4)";
+            ctx.fillRect(px + 22, py + 10, 3, 0.6);
+            ctx.fillRect(px + 22, py + 11.2, 2, 0.6);
+        } else if (propSeed === 2) {
+            // Tiny succulent in pot
+            ctx.fillStyle = "#8b5a3c";
+            ctx.fillRect(px + 22, py + 11, 4, 2);
+            ctx.fillStyle = "#3aa570";
+            ctx.fillRect(px + 22.5, py + 8.5, 1, 2.5);
+            ctx.fillRect(px + 23.5, py + 8, 1, 3);
+            ctx.fillRect(px + 24.5, py + 9, 1, 2);
+        } else {
+            // Stack of books
+            ctx.fillStyle = "#c25a55";
+            ctx.fillRect(px + 21, py + 11, 5, 1.5);
+            ctx.fillStyle = "#3a78d4";
+            ctx.fillRect(px + 21.5, py + 10, 4.5, 1);
+            ctx.fillStyle = "#e2c060";
+            ctx.fillRect(px + 22, py + 9, 4, 1);
+        }
 
         // Chair (cute pink!)
         ctx.fillStyle = PAL.chair;
@@ -1166,27 +1437,77 @@ function drawEmptyState() {
     const externalSignals = Number(diagnostics.externalCount || 0)
         + Number(diagnostics.codexSessionCount || 0)
         + Number(diagnostics.cursorWorkspaceCount || 0);
-    const mainText = S.connected ? "작업실 준비 완료" : "서버 연결 대기";
+    const mainText = S.connected ? t("empty.waitingTitle") : t("empty.connectingTitle");
     const subText = S.connected
-        ? `${sessionCount}개 세션 · ${externalSignals}개 AI 신호`
-        : "실시간 탐지 신호를 기다리는 중";
+        ? t("empty.signalCount", sessionCount, externalSignals)
+        : t("empty.justWait");
     ctx.save();
     ctx.textAlign = "center";
+
+    // Soft card behind the message for readability
+    const cardW = 132, cardH = 78;
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    roundRect(ctx, cx - cardW / 2, cy - 36, cardW, cardH, 6);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(0,0,0,0.07)";
+    ctx.lineWidth = 0.6;
+    roundRect(ctx, cx - cardW / 2, cy - 36, cardW, cardH, 6);
+    ctx.stroke();
+
     // Icon
-    ctx.font = "16px sans-serif";
-    ctx.fillStyle = "rgba(0,0,0,0.15)";
-    ctx.fillText("🏢", cx, cy - 20);
+    ctx.font = "18px sans-serif";
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.fillText("🪑", cx, cy - 18);
+
     // Main text
-    ctx.font = "bold 8px Pretendard, sans-serif";
+    ctx.font = "bold 7px Pretendard, sans-serif";
     ctx.fillStyle = PAL.emptyText;
-    ctx.fillText(mainText, cx, cy + 5);
-    ctx.font = "5px Pretendard, sans-serif";
+    ctx.fillText(mainText, cx, cy - 4);
+
+    // Sub text
+    ctx.font = "4.5px Pretendard, sans-serif";
     ctx.fillStyle = PAL.emptySub;
-    ctx.fillText(subText, cx, cy + 16);
-    if (!S.connected) {
-        ctx.fillStyle = "rgba(220,38,38,0.3)";
-        ctx.fillText("서버 연결 대기 중...", cx, cy + 26);
+    ctx.fillText(subText, cx, cy + 4);
+
+    // Platform hint row — show supported tools
+    if (S.connected) {
+        ctx.font = "bold 3.4px Pretendard, sans-serif";
+        ctx.fillStyle = PAL.emptySub;
+        ctx.fillText(t("empty.tryRunning"), cx, cy + 14);
+        const platforms = [
+            { c: "#D97757", t: "Claude" },
+            { c: "#10A37F", t: "Codex"  },
+            { c: "#00B4D8", t: "Cursor" },
+            { c: "#6E40C9", t: "Copilot"},
+        ];
+        const stepX = 28;
+        const totalW = stepX * (platforms.length - 1);
+        const startX = cx - totalW / 2;
+        platforms.forEach((p, i) => {
+            const bx = startX + stepX * i;
+            const by = cy + 22;
+            // chip background
+            ctx.fillStyle = `${p.c}26`;
+            roundRect(ctx, bx - 11, by - 4, 22, 8, 2);
+            ctx.fill();
+            // dot
+            ctx.fillStyle = p.c;
+            ctx.beginPath();
+            ctx.arc(bx - 7.5, by, 1.4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = p.c;
+            ctx.font = "bold 3.4px Pretendard, sans-serif";
+            ctx.fillText(p.t, bx + 1, by + 1.3);
+        });
+    } else {
+        ctx.fillStyle = "rgba(220,38,38,0.6)";
+        ctx.font = "bold 4px Pretendard, sans-serif";
+        ctx.fillText(t("empty.serverWaiting"), cx, cy + 16);
+        ctx.font = "3.5px Pretendard, sans-serif";
+        ctx.fillStyle = PAL.emptySub;
+        ctx.fillText(t("empty.checkServer"), cx, cy + 24);
     }
+
     ctx.restore();
 }
 

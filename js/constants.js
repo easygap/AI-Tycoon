@@ -58,9 +58,86 @@ export const PAL_DARK = {
 };
 export let PAL = { ...PAL_LIGHT };
 
+// ── Theme variants ──
+// Each theme = partial overrides applied on top of the active light/dark base.
+// Stored as { light: {...}, dark: {...} } so we can tweak both modes independently.
+export const PAL_THEMES = {
+    classic: { light: {}, dark: {} },
+    cafe: {
+        light: {
+            floor1: "#EBE2D3", floor2: "#DDD0BB",
+            wall: "#A8835F", wallTop: "#8E6E50", wallAccent: "#704F35",
+            desk: "#6F4A33", deskTop: "#8A5E40", deskEdge: "#4E3324",
+            chair: "#C68863", chairSeat: "#D89A75",
+            plant1: "#5C8A4E", plant2: "#7AAD63", pot: "#8B5A3C",
+            rug: "#D7B188", rugEdge: "#B88C5F",
+            meetTable: "#8A5E40", meetTableTop: "#A0734F",
+        },
+        dark: {
+            floor1: "#231a13", floor2: "#2c2218",
+            wall: "#3a261a", wallTop: "#4a3525", wallAccent: "#5e4530",
+            desk: "#4a311f", deskTop: "#5a3a25", deskEdge: "#311f12",
+            chair: "#7a4d33", chairSeat: "#8d5c40",
+            rug: "#3a2812", rugEdge: "#4a361a",
+        },
+    },
+    forest: {
+        light: {
+            floor1: "#E6EBD9", floor2: "#D8DEC6",
+            wall: "#A8B690", wallTop: "#8AA075", wallAccent: "#6E8458",
+            desk: "#6E8458", deskTop: "#8FA873", deskEdge: "#52663E",
+            chair: "#85B66B", chairSeat: "#9DCB85",
+            plant1: "#3F9F5A", plant2: "#6FC588", pot: "#8F6B45",
+            coffee: "#4a2818", coffeeMach: "#D2DBC4",
+            rug: "#C8DAA8", rugEdge: "#A6BA85",
+            flower1: "#FBA8C5", flower2: "#FDD9A0", flower3: "#A0D0B0",
+        },
+        dark: {
+            floor1: "#171c14", floor2: "#1d231a",
+            wall: "#1e2a1b", wallTop: "#2a3a26", wallAccent: "#3a4f35",
+            desk: "#2e3d28", deskTop: "#3a4d32", deskEdge: "#1e2b1a",
+            chair: "#2e5238", chairSeat: "#3e6748",
+            plant1: "#2a6840", plant2: "#3a8a55",
+            rug: "#1f3022", rugEdge: "#2a4030",
+        },
+    },
+    midnight: {
+        light: {
+            floor1: "#DAE2F2", floor2: "#C5D0E5",
+            wall: "#7A8AAE", wallTop: "#62749A", wallAccent: "#4D5E81",
+            desk: "#5A6B8E", deskTop: "#7286AB", deskEdge: "#3E4D6B",
+            chair: "#8A6FB8", chairSeat: "#A287D0",
+            monActive: "#bee2ff", monitor: "#1a1c2a", monFrame: "#2a2d3f",
+            plant1: "#5A8FB8", plant2: "#7BB0D0", pot: "#5A6FAB",
+            rug: "#B8C2DE", rugEdge: "#8E9CC4",
+            flower1: "#C8B5FF", flower2: "#9EC9FF", flower3: "#FFB5D7",
+            windowGlass: "rgba(100,140,220,0.4)",
+        },
+        dark: {
+            floor1: "#0e1426", floor2: "#141a2d",
+            wall: "#080c1a", wallTop: "#0e1426", wallAccent: "#1a2240",
+            desk: "#1a233e", deskTop: "#27305a", deskEdge: "#101630",
+            chair: "#2a2050", chairSeat: "#3a2c70",
+            plant1: "#1a3358", plant2: "#234478",
+            rug: "#161c34", rugEdge: "#1f2848",
+            monActive: "#1a3a5a",
+        },
+    },
+};
+
+export function getActiveTheme() {
+    try {
+        const t = localStorage.getItem("ai-tycoon-theme");
+        return t && PAL_THEMES[t] ? t : "classic";
+    } catch { return "classic"; }
+}
+
 export function updatePalette() {
     const isDark = document.body.classList.contains("dark");
-    Object.assign(PAL, isDark ? PAL_DARK : PAL_LIGHT);
+    const base = isDark ? PAL_DARK : PAL_LIGHT;
+    const themeKey = getActiveTheme();
+    const themeOverride = (PAL_THEMES[themeKey] || PAL_THEMES.classic)[isDark ? "dark" : "light"];
+    Object.assign(PAL, base, themeOverride || {});
 }
 
 // ── Character pools: names, gender expression, visual traits ──
