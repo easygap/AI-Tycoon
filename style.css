@@ -1,5 +1,34 @@
 /* ===== AI Tycoon — Live Operations Studio ===== */
 
+/* ── PWA install button (appears only when beforeinstallprompt fires) ── */
+.pwa-install-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    height: 32px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ff8a4c, #d97757);
+    color: #fff;
+    border: none;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 10px -2px rgba(217,119,87,0.45);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.pwa-install-btn iconify-icon { font-size: 14px; }
+.pwa-install-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px -2px rgba(217,119,87,0.55);
+}
+.pwa-install-btn:active { transform: translateY(0); }
+
+/* ── Theme transition fade — gentle palette swap ── */
+#office-canvas, .pixi-layer, .side-panel, .app-header {
+    transition: background 0.4s ease, background-color 0.4s ease;
+}
+
 /* ── Snapshot flash (camera shutter feel on header button) ── */
 .toolbar-icon.is-flashed {
     background: rgba(255,222,160,0.55) !important;
@@ -5147,6 +5176,53 @@ body.dark .insights-history-chart { border-bottom-color: rgba(255,255,255,0.08);
 body.dark .insights-history-label { color: #a89c8e; }
 body.dark .insights-history-col.is-today .insights-history-label { color: #fdba74; }
 body.dark .insights-history-legend { color: #c4b8aa; }
+
+/* Rich chart tooltip (floating, attaches to history columns + heatmap cells) */
+.chart-tooltip {
+    position: fixed;
+    z-index: 150;
+    background: rgba(40,28,18,0.95);
+    color: #fff;
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: 11.5px;
+    line-height: 1.4;
+    box-shadow: 0 12px 24px -6px rgba(40,20,10,0.4), 0 2px 6px rgba(0,0,0,0.2);
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    pointer-events: none;
+    max-width: 220px;
+}
+.chart-tooltip.is-visible { opacity: 1; }
+.chart-tooltip-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #fdba74;
+    margin-bottom: 4px;
+    letter-spacing: 0.02em;
+}
+.chart-tooltip-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+}
+.chart-tooltip-row strong {
+    margin-left: auto;
+    font-weight: 700;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+.chart-tooltip-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+body.dark .chart-tooltip {
+    background: rgba(20,15,8,0.97);
+    box-shadow: 0 12px 24px -6px rgba(0,0,0,0.7);
+}
 
 /* Hourly heatmap */
 .insights-hourly { display: flex; flex-direction: column; gap: 8px; }

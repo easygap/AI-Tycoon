@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Tycoon</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect fill='%23141715' rx='20' width='100' height='100'/%3E%3Crect x='24' y='30' width='52' height='48' rx='8' fill='%23F7FAF7'/%3E%3Crect x='34' y='42' width='9' height='9' rx='2' fill='%2310B981'/%3E%3Crect x='48' y='42' width='9' height='9' rx='2' fill='%23FF6B4A'/%3E%3Crect x='62' y='42' width='9' height='9' rx='2' fill='%232F80ED'/%3E%3Crect x='42' y='58' width='16' height='20' rx='3' fill='%23141715'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+    <link rel="apple-touch-icon" href="icons/icon.svg">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#d97757">
+    <meta name="description" content="Live pixel-art office dashboard for AI agents running on your machine">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AI Tycoon">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
     <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.18.1/dist/pixi.min.js"></script>
@@ -107,6 +115,12 @@
                     </button>
                 </div>
             </div>
+
+            <!-- PWA Install (hidden until beforeinstallprompt fires) -->
+            <button id="pwa-install" onclick="pwaInstall()" class="pwa-install-btn shrink-0" hidden data-i18n-attr="title:header.install,aria-label:header.install" title="앱으로 설치" aria-label="앱으로 설치">
+                <iconify-icon icon="solar:download-linear" aria-hidden="true"></iconify-icon>
+                <span data-i18n="header.installLabel">설치</span>
+            </button>
 
             <!-- Snapshot -->
             <button id="snapshot-toggle" onclick="takeOfficeSnapshot()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" data-i18n-attr="title:header.snapshot,aria-label:header.snapshot" title="작업실 스냅샷 저장" aria-label="작업실 스냅샷 저장">
@@ -992,6 +1006,56 @@
         }
     });
     document.addEventListener("DOMContentLoaded", showWelcomeIfNeeded);
+
+    // Handle PWA shortcut URLs (?action=insights / settings)
+    document.addEventListener("DOMContentLoaded", () => {
+        const params = new URLSearchParams(location.search);
+        const action = params.get("action");
+        if (action === "insights") setTimeout(openInsights, 500);
+        else if (action === "settings") setTimeout(openSettings, 500);
+    });
+
+    // ── Service worker (PWA offline support) ──
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker.register("/sw.js")
+                .then(reg => {
+                    // Listen for updates and prompt softly
+                    reg.addEventListener("updatefound", () => {
+                        const sw = reg.installing;
+                        if (!sw) return;
+                        sw.addEventListener("statechange", () => {
+                            if (sw.state === "installed" && navigator.serviceWorker.controller) {
+                                console.log("[ai-tycoon] new version available — refresh to update");
+                            }
+                        });
+                    });
+                })
+                .catch(err => console.warn("[ai-tycoon] SW registration failed:", err));
+        });
+    }
+
+    // ── PWA install prompt button (appears when browser allows install) ──
+    let pwaInstallPromptEvent = null;
+    window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        pwaInstallPromptEvent = event;
+        const btn = document.getElementById("pwa-install");
+        if (btn) btn.hidden = false;
+    });
+    function pwaInstall() {
+        if (!pwaInstallPromptEvent) return;
+        pwaInstallPromptEvent.prompt();
+        pwaInstallPromptEvent.userChoice.finally(() => {
+            pwaInstallPromptEvent = null;
+            const btn = document.getElementById("pwa-install");
+            if (btn) btn.hidden = true;
+        });
+    }
+    window.addEventListener("appinstalled", () => {
+        const btn = document.getElementById("pwa-install");
+        if (btn) btn.hidden = true;
+    });
 
     // ── Splash screen lifecycle ──
     // Hide once main.js has registered helpers (about 1-2 frames after DOMContentLoaded).

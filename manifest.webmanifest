@@ -1,0 +1,47 @@
+{
+  "name": "AI Tycoon",
+  "short_name": "AI Tycoon",
+  "description": "Live pixel-art office dashboard for AI agents running on your machine",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape-primary",
+  "background_color": "#f6f7f4",
+  "theme_color": "#d97757",
+  "lang": "ko",
+  "categories": ["productivity", "developer", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Insights",
+      "short_name": "Insights",
+      "description": "View today's workspace insights",
+      "url": "/?action=insights",
+      "icons": [
+        { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+      ]
+    },
+    {
+      "name": "Settings",
+      "short_name": "Settings",
+      "description": "Open settings",
+      "url": "/?action=settings",
+      "icons": [
+        { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+      ]
+    }
+  ]
+}
