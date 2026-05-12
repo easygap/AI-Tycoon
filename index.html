@@ -91,17 +91,28 @@
             </div>
 
             <!-- Insights Modal -->
-            <button id="insights-toggle" onclick="openInsights()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" title="작업실 인사이트" aria-label="작업실 인사이트 열기">
+            <button id="insights-toggle" onclick="openInsights()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" data-i18n-attr="title:header.insights,aria-label:header.insights" title="작업실 인사이트" aria-label="작업실 인사이트 열기">
                 <iconify-icon icon="solar:chart-2-linear" class="text-zinc-500 text-sm"></iconify-icon>
             </button>
 
             <!-- Keyboard Shortcuts -->
-            <button id="shortcuts-toggle" onclick="openShortcuts()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" title="키보드 단축키" aria-label="키보드 단축키 열기">
+            <button id="shortcuts-toggle" onclick="openShortcuts()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" data-i18n-attr="title:header.shortcuts,aria-label:header.shortcuts" title="키보드 단축키" aria-label="키보드 단축키 열기">
                 <iconify-icon icon="solar:command-linear" class="text-zinc-500 text-sm"></iconify-icon>
             </button>
 
+            <!-- Language Toggle -->
+            <button id="lang-toggle" onclick="toggleLanguage()" class="toolbar-icon h-8 min-w-[40px] px-2 rounded-lg flex items-center justify-center gap-1 shrink-0" data-i18n-attr="title:header.lang,aria-label:header.lang" title="언어 전환" aria-label="언어 전환">
+                <iconify-icon icon="solar:global-linear" class="text-zinc-500 text-xs"></iconify-icon>
+                <span id="lang-label" class="text-[10px] font-bold text-zinc-500">KO</span>
+            </button>
+
+            <!-- Sound Toggle -->
+            <button id="sound-toggle" onclick="toggleSoundFx()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" title="효과음 켜기/끄기" aria-label="효과음 켜기/끄기" aria-pressed="false">
+                <iconify-icon id="sound-icon" icon="solar:volume-cross-linear" class="text-zinc-500 text-sm"></iconify-icon>
+            </button>
+
             <!-- Dark Mode Toggle -->
-            <button id="dark-toggle" onclick="toggleDarkMode()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" title="다크모드 전환" aria-label="다크모드 전환">
+            <button id="dark-toggle" onclick="toggleDarkMode()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" data-i18n-attr="title:header.darkToggle,aria-label:header.darkToggle" title="다크모드 전환" aria-label="다크모드 전환">
                 <iconify-icon id="dark-icon" icon="solar:moon-linear" class="text-zinc-500 text-sm"></iconify-icon>
             </button>
 
@@ -175,9 +186,9 @@
             <!-- ── Side Panel ── -->
             <button id="panel-backdrop" type="button" class="panel-backdrop md:hidden" onclick="closeSidePanel()" aria-label="사이드 패널 닫기" hidden></button>
             <aside id="side-panel" class="side-panel w-[340px] shrink-0 border-l border-amber-200/40 bg-white/50 backdrop-blur-xl flex flex-col overflow-hidden" aria-label="에이전트 사이드 패널">
-                <button id="panel-close" type="button" onclick="closeSidePanel()" class="panel-close md:hidden" aria-label="사이드 패널 닫기">
+                <button id="panel-close" type="button" onclick="closeSidePanel()" class="panel-close md:hidden" data-i18n-attr="aria-label:panel.close" aria-label="사이드 패널 닫기">
                     <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
-                    <span>닫기</span>
+                    <span data-i18n="panel.close">닫기</span>
                 </button>
 
                 <!-- Boss Review Queue Panel -->
@@ -196,12 +207,12 @@
                 <div class="flex-1 overflow-y-auto p-3">
                     <div class="flex items-center gap-2 mb-2">
                         <iconify-icon icon="solar:users-group-rounded-linear" class="text-amber-500 text-sm"></iconify-icon>
-                        <h3 id="agents-heading" class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">에이전트</h3>
+                        <h3 id="agents-heading" class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase" data-i18n="panel.agents">에이전트</h3>
                         <span id="agent-count" class="text-[10px] text-zinc-400 tabular-nums ml-auto"></span>
                     </div>
                     <div class="agent-search-shell mb-2">
                         <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon>
-                        <input id="agent-search" class="agent-search-input" type="search" placeholder="직원, 프로젝트, 작업 검색" aria-label="에이전트 검색" autocomplete="off" oninput="setAgentSearch(this.value)" onkeydown="if(event.key==='Escape'&&this.value){clearAgentSearch();event.stopPropagation();}">
+                        <input id="agent-search" class="agent-search-input" type="search" placeholder="직원, 프로젝트, 작업 검색" data-i18n-placeholder="panel.searchPlaceholder" aria-label="에이전트 검색" autocomplete="off" oninput="setAgentSearch(this.value)" onkeydown="if(event.key==='Escape'&&this.value){clearAgentSearch();event.stopPropagation();}">
                         <button id="agent-search-clear" type="button" class="agent-search-clear" onclick="clearAgentSearch()" aria-label="검색어 지우기" hidden>
                             <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                         </button>
@@ -210,10 +221,10 @@
                     <div id="action-filter" class="action-filter-bar mb-2" aria-label="다음 행동 필터"></div>
                     <!-- Filter & Sort -->
                     <div id="filter-bar" class="flex flex-wrap gap-1 mb-2">
-                        <button class="filter-chip active" data-filter="all" onclick="setFilter('all')">전체</button>
-                        <button class="filter-chip" data-filter="coding" onclick="setFilter('coding')">코딩 중</button>
-                        <button class="filter-chip" data-filter="idle" onclick="setFilter('idle')">대기</button>
-                        <button class="filter-chip" data-filter="offline" onclick="setFilter('offline')">오프라인</button>
+                        <button class="filter-chip active" data-filter="all" onclick="setFilter('all')" data-i18n="panel.filterAll">전체</button>
+                        <button class="filter-chip" data-filter="coding" onclick="setFilter('coding')" data-i18n="panel.filterCoding">코딩 중</button>
+                        <button class="filter-chip" data-filter="idle" onclick="setFilter('idle')" data-i18n="panel.filterIdle">대기</button>
+                        <button class="filter-chip" data-filter="offline" onclick="setFilter('offline')" data-i18n="panel.filterOffline">오프라인</button>
                     </div>
                     <div id="platform-filter" class="flex flex-wrap gap-1 mb-2"></div>
                     <div class="flex items-center gap-1 mb-3">
@@ -232,7 +243,7 @@
                 <div class="activity-panel h-[240px] shrink-0 border-t border-amber-200/40 p-3 overflow-hidden flex flex-col">
                     <div class="flex items-center gap-2 mb-2">
                         <iconify-icon icon="solar:history-2-linear" class="text-rose-400 text-sm"></iconify-icon>
-                        <h3 class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">최근 활동</h3>
+                        <h3 class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase" data-i18n="panel.recentActivity">최근 활동</h3>
                         <span id="activity-count" class="text-[10px] text-zinc-400 tabular-nums ml-auto"></span>
                     </div>
                     <div id="activity-timeline" class="activity-timeline flex-1 overflow-y-auto"></div>
@@ -250,10 +261,10 @@
         <div class="modal-card insights-card">
             <header class="modal-header">
                 <div>
-                    <div class="modal-kicker">실시간 인사이트</div>
-                    <h2 id="insights-title" class="modal-title">오늘의 작업실</h2>
+                    <div class="modal-kicker" data-i18n="insights.kicker">실시간 인사이트</div>
+                    <h2 id="insights-title" class="modal-title" data-i18n="insights.title">오늘의 작업실</h2>
                 </div>
-                <button type="button" class="modal-close" onclick="closeInsights()" aria-label="닫기">
+                <button type="button" class="modal-close" onclick="closeInsights()" data-i18n-attr="aria-label:panel.close" aria-label="닫기">
                     <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                 </button>
             </header>
@@ -263,28 +274,28 @@
                         <iconify-icon icon="solar:users-group-rounded-bold" aria-hidden="true"></iconify-icon>
                         <div>
                             <div class="insights-stat-value" id="insights-agents">0</div>
-                            <div class="insights-stat-label">활성 에이전트</div>
+                            <div class="insights-stat-label" data-i18n="insights.activeAgents">활성 에이전트</div>
                         </div>
                     </div>
                     <div class="insights-stat">
                         <iconify-icon icon="solar:checklist-bold" aria-hidden="true"></iconify-icon>
                         <div>
                             <div class="insights-stat-value" id="insights-completed">0</div>
-                            <div class="insights-stat-label">완료 태스크</div>
+                            <div class="insights-stat-label" data-i18n="insights.completed">완료 태스크</div>
                         </div>
                     </div>
                     <div class="insights-stat">
                         <iconify-icon icon="solar:bolt-circle-bold" aria-hidden="true"></iconify-icon>
                         <div>
                             <div class="insights-stat-value" id="insights-ongoing">0</div>
-                            <div class="insights-stat-label">진행 중</div>
+                            <div class="insights-stat-label" data-i18n="insights.ongoing">진행 중</div>
                         </div>
                     </div>
                     <div class="insights-stat">
                         <iconify-icon icon="solar:cpu-bolt-bold" aria-hidden="true"></iconify-icon>
                         <div>
                             <div class="insights-stat-value" id="insights-ram">0<span class="insights-unit">MB</span></div>
-                            <div class="insights-stat-label">총 메모리</div>
+                            <div class="insights-stat-label" data-i18n="insights.totalRam">총 메모리</div>
                         </div>
                     </div>
                 </section>
@@ -292,7 +303,7 @@
                 <section class="insights-section">
                     <h3 class="insights-section-title">
                         <iconify-icon icon="solar:layers-minimalistic-linear" aria-hidden="true"></iconify-icon>
-                        <span>플랫폼 분포</span>
+                        <span data-i18n="insights.platforms">플랫폼 분포</span>
                     </h3>
                     <div id="insights-platforms" class="insights-platforms"></div>
                 </section>
@@ -300,7 +311,7 @@
                 <section class="insights-section">
                     <h3 class="insights-section-title">
                         <iconify-icon icon="solar:folder-favourite-bookmark-linear" aria-hidden="true"></iconify-icon>
-                        <span>활발한 프로젝트 TOP 5</span>
+                        <span data-i18n="insights.topProjects">활발한 프로젝트 TOP 5</span>
                     </h3>
                     <div id="insights-projects" class="insights-projects"></div>
                 </section>
@@ -308,15 +319,23 @@
                 <section class="insights-section">
                     <h3 class="insights-section-title">
                         <iconify-icon icon="solar:pulse-2-linear" aria-hidden="true"></iconify-icon>
-                        <span>상태 분포</span>
+                        <span data-i18n="insights.statusDist">상태 분포</span>
                     </h3>
                     <div id="insights-status" class="insights-status-bar"></div>
                 </section>
 
                 <section class="insights-section">
                     <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:calendar-mark-linear" aria-hidden="true"></iconify-icon>
+                        <span data-i18n="insights.history">최근 7일 추이</span>
+                    </h3>
+                    <div id="insights-history" class="insights-history"></div>
+                </section>
+
+                <section class="insights-section">
+                    <h3 class="insights-section-title">
                         <iconify-icon icon="solar:history-2-linear" aria-hidden="true"></iconify-icon>
-                        <span>최근 활동</span>
+                        <span data-i18n="insights.recentActivity">최근 활동</span>
                     </h3>
                     <div id="insights-feed" class="insights-feed"></div>
                 </section>
@@ -329,39 +348,39 @@
         <div class="modal-card shortcuts-card">
             <header class="modal-header">
                 <div>
-                    <div class="modal-kicker">단축키</div>
-                    <h2 id="shortcuts-title" class="modal-title">키보드 한 번에 끝내기</h2>
+                    <div class="modal-kicker" data-i18n="shortcuts.kicker">단축키</div>
+                    <h2 id="shortcuts-title" class="modal-title" data-i18n="shortcuts.title">키보드 한 번에 끝내기</h2>
                 </div>
-                <button type="button" class="modal-close" onclick="closeShortcuts()" aria-label="닫기">
+                <button type="button" class="modal-close" onclick="closeShortcuts()" data-i18n-attr="aria-label:panel.close" aria-label="닫기">
                     <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                 </button>
             </header>
             <div class="modal-body">
                 <section class="shortcuts-group">
-                    <h3 class="shortcuts-group-title">탐색</h3>
+                    <h3 class="shortcuts-group-title" data-i18n="shortcuts.navGroup">탐색</h3>
                     <ul class="shortcuts-list">
-                        <li><span class="shortcuts-keys"><kbd>/</kbd></span><span>에이전트 검색 포커스</span></li>
-                        <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>K</kbd></span><span>에이전트 검색 (대체)</span></li>
-                        <li><span class="shortcuts-keys"><kbd>Esc</kbd></span><span>검색·모달 닫기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>/</kbd></span><span data-i18n="shortcuts.searchFocus">에이전트 검색 포커스</span></li>
+                        <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>K</kbd></span><span data-i18n="shortcuts.searchAlt">에이전트 검색 (대체)</span></li>
+                        <li><span class="shortcuts-keys"><kbd>Esc</kbd></span><span data-i18n="shortcuts.escClose">검색·모달 닫기</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
-                    <h3 class="shortcuts-group-title">화면</h3>
+                    <h3 class="shortcuts-group-title" data-i18n="shortcuts.screenGroup">화면</h3>
                     <ul class="shortcuts-list">
-                        <li><span class="shortcuts-keys"><kbd>D</kbd></span><span>다크 모드 전환</span></li>
-                        <li><span class="shortcuts-keys"><kbd>F</kbd></span><span>가장 활발한 직원 포커스</span></li>
-                        <li><span class="shortcuts-keys"><kbd>H</kbd></span><span>전체 보기로 리셋</span></li>
-                        <li><span class="shortcuts-keys"><kbd>?</kbd></span><span>이 도움말 열기</span></li>
-                        <li><span class="shortcuts-keys"><kbd>I</kbd></span><span>인사이트 열기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>D</kbd></span><span data-i18n="shortcuts.darkToggle">다크 모드 전환</span></li>
+                        <li><span class="shortcuts-keys"><kbd>F</kbd></span><span data-i18n="shortcuts.focusActive">가장 활발한 직원 포커스</span></li>
+                        <li><span class="shortcuts-keys"><kbd>H</kbd></span><span data-i18n="shortcuts.resetView">전체 보기로 리셋</span></li>
+                        <li><span class="shortcuts-keys"><kbd>?</kbd></span><span data-i18n="shortcuts.help">이 도움말 열기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>I</kbd></span><span data-i18n="shortcuts.insights">인사이트 열기</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
-                    <h3 class="shortcuts-group-title">캔버스</h3>
+                    <h3 class="shortcuts-group-title" data-i18n="shortcuts.canvasGroup">캔버스</h3>
                     <ul class="shortcuts-list">
-                        <li><span class="shortcuts-keys"><kbd>+</kbd>/<kbd>-</kbd></span><span>줌 인 / 아웃</span></li>
-                        <li><span class="shortcuts-keys"><kbd>0</kbd></span><span>줌 리셋</span></li>
-                        <li><span class="shortcuts-keys"><kbd>드래그</kbd></span><span>패닝</span></li>
-                        <li><span class="shortcuts-keys"><kbd>더블클릭</kbd></span><span>줌 리셋</span></li>
+                        <li><span class="shortcuts-keys"><kbd>+</kbd>/<kbd>-</kbd></span><span data-i18n="shortcuts.zoom">줌 인 / 아웃</span></li>
+                        <li><span class="shortcuts-keys"><kbd>0</kbd></span><span data-i18n="shortcuts.zoomReset">줌 리셋</span></li>
+                        <li><span class="shortcuts-keys"><kbd>드래그</kbd></span><span data-i18n="shortcuts.panning">패닝</span></li>
+                        <li><span class="shortcuts-keys"><kbd>더블클릭</kbd></span><span data-i18n="shortcuts.dblZoom">줌 리셋</span></li>
                     </ul>
                 </section>
             </div>
@@ -389,33 +408,33 @@
                 <div class="welcome-character welcome-character-3" style="--char-color:#93C5FD"></div>
             </div>
             <div class="welcome-body">
-                <div class="welcome-kicker">처음 오셨군요</div>
-                <h2 id="welcome-title" class="welcome-title">AI Tycoon에 오신 걸 환영합니다</h2>
-                <p id="welcome-desc" class="welcome-desc">내 컴퓨터에서 동작 중인 AI 에이전트들의 작업 상태를 픽셀 아트 오피스로 한눈에 봐보세요.</p>
+                <div class="welcome-kicker" data-i18n="welcome.kicker">처음 오셨군요</div>
+                <h2 id="welcome-title" class="welcome-title" data-i18n="welcome.title">AI Tycoon에 오신 걸 환영합니다</h2>
+                <p id="welcome-desc" class="welcome-desc" data-i18n="welcome.desc">내 컴퓨터에서 동작 중인 AI 에이전트들의 작업 상태를 픽셀 아트 오피스로 한눈에 봐보세요.</p>
                 <ul class="welcome-list">
                     <li>
                         <iconify-icon icon="solar:user-plus-rounded-linear" aria-hidden="true"></iconify-icon>
-                        <span><strong>Claude Code · Cursor · Codex</strong> 등을 실행하면 작업실에 캐릭터로 등장해요.</span>
+                        <span data-i18n="welcome.feat1" data-i18n-mode="html"><strong>Claude Code · Cursor · Codex</strong> 등을 실행하면 작업실에 캐릭터로 등장해요.</span>
                     </li>
                     <li>
                         <iconify-icon icon="solar:pulse-2-linear" aria-hidden="true"></iconify-icon>
-                        <span>코딩 · 생각 · 검색 · 리뷰 상태가 <strong>실시간</strong>으로 표시됩니다.</span>
+                        <span data-i18n="welcome.feat2" data-i18n-mode="html">코딩 · 생각 · 검색 · 리뷰 상태가 <strong>실시간</strong>으로 표시됩니다.</span>
                     </li>
                     <li>
                         <iconify-icon icon="solar:sun-2-linear" aria-hidden="true"></iconify-icon>
-                        <span>시계 시간에 따라 <strong>창밖 하늘</strong>이 새벽·낮·노을·밤으로 바뀌어요.</span>
+                        <span data-i18n="welcome.feat3" data-i18n-mode="html">시계 시간에 따라 <strong>창밖 하늘</strong>이 새벽·낮·노을·밤으로 바뀌어요.</span>
                     </li>
                     <li>
                         <iconify-icon icon="solar:tuning-square-linear" aria-hidden="true"></iconify-icon>
-                        <span>헤더의 <strong>시각 밀도</strong>·<strong>다크모드</strong>·<strong>디렉터 모드</strong>로 보기를 바꿔보세요.</span>
+                        <span data-i18n="welcome.feat4" data-i18n-mode="html">헤더의 <strong>시각 밀도</strong>·<strong>다크모드</strong>·<strong>디렉터 모드</strong>로 보기를 바꿔보세요.</span>
                     </li>
                 </ul>
                 <div class="welcome-actions">
                     <button type="button" class="welcome-primary" onclick="dismissWelcome(true)" autofocus>
                         <iconify-icon icon="solar:play-circle-linear" aria-hidden="true"></iconify-icon>
-                        <span>작업실 둘러보기</span>
+                        <span data-i18n="welcome.primary">작업실 둘러보기</span>
                     </button>
-                    <button type="button" class="welcome-secondary" onclick="dismissWelcome(false)">
+                    <button type="button" class="welcome-secondary" onclick="dismissWelcome(false)" data-i18n="welcome.secondary">
                         다음에 다시 보지 않기
                     </button>
                 </div>
@@ -481,6 +500,29 @@
         setTimeout(() => { overlay.hidden = true; }, 280);
         void rememberStart;
     }
+    // Language toggle (KO ⇄ EN) — wired by i18n module, declared here for inline onclick
+    function toggleLanguage() {
+        if (window.aiTycoonI18n) {
+            window.aiTycoonI18n.toggleLang();
+            const label = document.getElementById("lang-label");
+            if (label) label.textContent = window.aiTycoonI18n.getLang().toUpperCase();
+        }
+    }
+    // Sound effects toggle
+    function toggleSoundFx() {
+        if (!window.aiTycoonSound) return;
+        window.aiTycoonSound.toggle();
+        syncSoundIcon();
+    }
+    function syncSoundIcon() {
+        if (!window.aiTycoonSound) return;
+        const on = window.aiTycoonSound.isEnabled();
+        const icon = document.getElementById("sound-icon");
+        const btn  = document.getElementById("sound-toggle");
+        if (icon) icon.setAttribute("icon", on ? "solar:volume-loud-linear" : "solar:volume-cross-linear");
+        if (btn) btn.setAttribute("aria-pressed", on ? "true" : "false");
+    }
+    document.addEventListener("DOMContentLoaded", () => setTimeout(syncSoundIcon, 100));
     // ── Generic modal open/close (insights + shortcuts) ──
     function openModalOverlay(overlay) {
         if (!overlay) return;
