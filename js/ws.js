@@ -9,6 +9,9 @@ import {
     generateDeskSpots,
 } from "./constants.js";
 import { updatePanel, updateStats, updateDetailPanel, updateLiveHud } from "./panel.js";
+import { recordStateSnapshot } from "./stats.js";
+import { t } from "./i18n.js";
+import { sfxJoin, sfxLeave, sfxTaskDone, sfxReview } from "./sound.js";
 
 // ── WebSocket ──
 export function connectWS() {
@@ -66,27 +69,26 @@ export function setConn(ok) {
     const badge = document.getElementById("conn-badge");
     if (ok) {
         dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-300";
-        txt.textContent = "실시간";
+        txt.textContent = t("conn.live");
         badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 ring-1 ring-emerald-200/60 text-xs text-emerald-600 font-medium";
-        badge.title = `${WS_URL} · 연결됨`;
-        badge.setAttribute("aria-label", "서버에 실시간 연결됨");
+        badge.title = `${WS_URL}`;
+        badge.setAttribute("aria-label", t("conn.live"));
     } else {
         dot.className = "w-1.5 h-1.5 rounded-full bg-zinc-400";
-        // Show different copy depending on retry count
         if (S.reconnectAttempt >= 3) {
-            txt.textContent = "서버 응답 없음";
+            txt.textContent = t("conn.lost");
             badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 ring-1 ring-rose-200/60 text-xs text-rose-600 font-medium";
         } else {
-            txt.textContent = "연결 중";
+            txt.textContent = t("conn.connecting");
             badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-xs text-zinc-500";
         }
-        badge.title = `${WS_URL} · 응답 없음`;
-        badge.setAttribute("aria-label", `서버 ${WS_URL} 응답 없음`);
+        badge.title = `${WS_URL}`;
+        badge.setAttribute("aria-label", `${t("conn.lost")} — ${WS_URL}`);
     }
 
     const hudText = document.getElementById("hud-conn-text");
     const hudDot = document.getElementById("hud-live-dot");
-    if (hudText) hudText.textContent = ok ? "라이브 연결" : "연결 대기";
+    if (hudText) hudText.textContent = ok ? t("hud.live") : t("hud.waiting");
     if (hudDot) hudDot.classList.toggle("is-on", ok);
     updateLiveHud();
 }
@@ -166,6 +168,7 @@ function collectWorkEvents(prevAgentsByPid) {
                 text: getWorkText(agent) || firstLine(agent.currentWork?.prompt || agent.currentTask?.subject || "확인이 필요해요", 72),
                 key: `review|${agent.pid}|${workSignature(agent)}`,
             });
+            try { sfxReview(); } catch { /* ignore */ }
         }
 
         if (agent.currentWork?.prompt && workSignature(agent) !== workSignature(prev)) {
@@ -207,6 +210,7 @@ function collectWorkEvents(prevAgentsByPid) {
                     text: firstLine(task.subject || task.activeForm || `Task ${task.id}`, 72),
                     key: `task-done|${agent.pid}|${task.id}`,
                 });
+                try { sfxTaskDone(); } catch { /* ignore */ }
             }
         });
     });
@@ -251,6 +255,7 @@ export function handleState(state) {
                 });
                 spawnParticles(dx, dy, theme.body, 12);
                 spawnHearts(dx, dy - 16, 3);
+                try { sfxJoin(); } catch { /* ignore */ }
             }
         }
     });
@@ -270,6 +275,7 @@ export function handleState(state) {
                     text: "작업실에서 나갔어요",
                     key: `leave|${pid}`,
                 });
+                try { sfxLeave(); } catch { /* ignore */ }
             }
             delete S.visualAgents[pid];
             // Fix: clear selectedPid if agent left
@@ -336,5 +342,6 @@ export function handleState(state) {
 
     updatePanel();
     updateStats();
+    recordStateSnapshot(S.liveAgents);
     if (S.detailPid) updateDetailPanel();
 }

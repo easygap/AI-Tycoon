@@ -9,6 +9,7 @@ import {
 } from "./constants.js";
 import { getSkyPalette, sunWindowX, indoorLightBoost } from "./timeOfDay.js";
 import { drawNPCs } from "./npcs.js";
+import { t } from "./i18n.js";
 
 // Stable per-window pseudo-random seed used for star fields & cloud drift.
 function winHash(x) { return ((x * 2654435761) >>> 0) / 4294967295; }
@@ -1383,10 +1384,10 @@ function drawEmptyState() {
     const externalSignals = Number(diagnostics.externalCount || 0)
         + Number(diagnostics.codexSessionCount || 0)
         + Number(diagnostics.cursorWorkspaceCount || 0);
-    const mainText = S.connected ? "직원을 기다리고 있어요" : "서버에 연결하는 중";
+    const mainText = S.connected ? t("empty.waitingTitle") : t("empty.connectingTitle");
     const subText = S.connected
-        ? `${sessionCount}개 세션 · ${externalSignals}개 AI 신호 감지`
-        : "잠시만요…";
+        ? t("empty.signalCount", sessionCount, externalSignals)
+        : t("empty.justWait");
     ctx.save();
     ctx.textAlign = "center";
 
@@ -1419,7 +1420,7 @@ function drawEmptyState() {
     if (S.connected) {
         ctx.font = "bold 3.4px Pretendard, sans-serif";
         ctx.fillStyle = PAL.emptySub;
-        ctx.fillText("이 도구 중 하나를 실행해 보세요", cx, cy + 14);
+        ctx.fillText(t("empty.tryRunning"), cx, cy + 14);
         const platforms = [
             { c: "#D97757", t: "Claude" },
             { c: "#10A37F", t: "Codex"  },
@@ -1446,13 +1447,12 @@ function drawEmptyState() {
             ctx.fillText(p.t, bx + 1, by + 1.3);
         });
     } else {
-        // Show connection trouble hint
         ctx.fillStyle = "rgba(220,38,38,0.6)";
         ctx.font = "bold 4px Pretendard, sans-serif";
-        ctx.fillText("서버 응답 대기 중…", cx, cy + 16);
+        ctx.fillText(t("empty.serverWaiting"), cx, cy + 16);
         ctx.font = "3.5px Pretendard, sans-serif";
         ctx.fillStyle = PAL.emptySub;
-        ctx.fillText("npm start 가 실행 중인지 확인해 주세요", cx, cy + 24);
+        ctx.fillText(t("empty.checkServer"), cx, cy + 24);
     }
 
     ctx.restore();

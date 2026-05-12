@@ -84,17 +84,18 @@ export function getSkyPalette(date) {
     };
 }
 
-/** Korean label for the current time band. Honours the override if set. */
+/** Label for the current time band, localized via i18n. Honours the override if set. */
 export function timeOfDayLabel(date) {
     const t = getSkyPalette(date).hour;
-    if (t < 5) return "심야";
-    if (t < 7) return "새벽";
-    if (t < 11) return "아침";
-    if (t < 15) return "한낮";
-    if (t < 17.5) return "오후";
-    if (t < 19.5) return "황혼";
-    if (t < 22) return "저녁";
-    return "밤";
+    const tr = (typeof window !== "undefined" && window.aiTycoonI18n?.t) || (k => k);
+    if (t < 5) return tr("tod.deepNight");
+    if (t < 7) return tr("tod.dawn");
+    if (t < 11) return tr("tod.morning");
+    if (t < 15) return tr("tod.noon");
+    if (t < 17.5) return tr("tod.afternoon");
+    if (t < 19.5) return tr("tod.dusk");
+    if (t < 22) return tr("tod.evening");
+    return tr("tod.night");
 }
 
 /** RGBA color for the Pixi ambient overlay (warm sunset, cool night, neutral day). */

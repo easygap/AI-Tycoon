@@ -14,6 +14,8 @@ import {
     SUB_COLORS,
 } from "./constants.js";
 import { timeOfDayLabel, getSkyPalette } from "./timeOfDay.js";
+import { recentDays, todayStats, yesterdayStats } from "./stats.js";
+import { t as i18n } from "./i18n.js";
 
 const PIN_STORAGE_KEY = "ai-tycoon-pinned-agents";
 const PIN_LEGACY_STORAGE_KEY = "ai-tycoon-pinned-pids";
@@ -1919,6 +1921,12 @@ function platformColor(platform) {
 function platformLabel(platform) {
     return PLATFORM_META[platform]?.label || platform || "Unknown";
 }
+function statusLabelI18n(statusKey) {
+    const key = `status.${statusKey}`;
+    const localized = i18n(key);
+    if (localized && localized !== key) return localized;
+    return STATUS_META[statusKey]?.label || statusKey;
+}
 
 export function refreshInsights() {
     const agents = S.liveAgents || [];
@@ -1954,7 +1962,7 @@ export function refreshInsights() {
     const platformEl = el("insights-platforms");
     if (platformEl) {
         if (platformList.length === 0) {
-            platformEl.innerHTML = '<div class="insights-empty">감지된 에이전트가 없어요.</div>';
+            platformEl.innerHTML = `<div class="insights-empty">${esc(i18n("insights.emptyPlatforms"))}</div>`;
         } else {
             platformEl.innerHTML = platformList.map(([key, b]) => {
                 const pct = Math.max(8, Math.round((b.count / maxPlatformCount) * 100));
@@ -1997,22 +2005,25 @@ export function refreshInsights() {
     const projectEl = el("insights-projects");
     if (projectEl) {
         if (topProjects.length === 0) {
-            projectEl.innerHTML = '<div class="insights-empty">아직 프로젝트가 없어요.</div>';
+            projectEl.innerHTML = `<div class="insights-empty">${esc(i18n("insights.emptyProjects"))}</div>`;
         } else {
             projectEl.innerHTML = topProjects.map(([name, b], idx) => {
                 const pct = b.tasks > 0 ? Math.round((b.completed / b.tasks) * 100) : 0;
                 const platforms = [...b.platforms].map(p =>
                     `<span class="insights-mini-chip" style="background:${platformColor(p)}33;color:${platformColor(p)}">${esc(PLATFORM_META[p]?.badge || p.slice(0,2).toUpperCase())}</span>`
                 ).join("");
+                const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+                const peopleSuffix = lang === "en" ? (b.agents === 1 ? "agent" : "agents") : "명";
+                const doneLabel = lang === "en" ? "done" : "완료";
                 return `
                     <div class="insights-project-row">
                         <div class="insights-project-rank">#${idx + 1}</div>
                         <div class="insights-project-info">
                             <div class="insights-project-name">${esc(name)}</div>
                             <div class="insights-project-meta">
-                                <span>${b.agents}명</span>
+                                <span>${b.agents}${lang === "en" ? " " : ""}${peopleSuffix}</span>
                                 <span>·</span>
-                                <span>${b.completed}/${b.tasks} 완료 (${pct}%)</span>
+                                <span>${b.completed}/${b.tasks} ${doneLabel} (${pct}%)</span>
                                 <span class="insights-project-platforms">${platforms}</span>
                             </div>
                         </div>
@@ -2035,29 +2046,90 @@ export function refreshInsights() {
     const statusOrder = ["coding", "thinking", "searching", "reviewing", "meeting", "coffee", "idle", "offline"];
     const statusEl = el("insights-status");
     if (statusEl) {
+        const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const peopleWord = lang === "en" ? "" : "명";
         const segments = statusOrder
             .filter(s => statusBuckets.get(s))
             .map(s => {
                 const count = statusBuckets.get(s);
                 const pct = (count / total) * 100;
                 const meta = STATUS_META[s] || STATUS_META.idle;
-                return `<div class="insights-status-seg" style="width:${pct}%;background:${meta.color}" title="${esc(meta.label)}: ${count}명">
-                    <span>${pct > 8 ? esc(meta.label) : ""}</span>
+                const label = statusLabelI18n(s);
+                return `<div class="insights-status-seg" style="width:${pct}%;background:${meta.color}" title="${esc(label)}: ${count}${lang === "en" ? "" : peopleWord}">
+                    <span>${pct > 8 ? esc(label) : ""}</span>
                 </div>`;
             }).join("");
         const legend = statusOrder
             .filter(s => statusBuckets.get(s))
             .map(s => {
                 const meta = STATUS_META[s] || STATUS_META.idle;
+                const label = statusLabelI18n(s);
                 return `<span class="insights-status-legend-item">
                     <span class="insights-status-legend-dot" style="background:${meta.color}"></span>
-                    <span>${esc(meta.label)} ${statusBuckets.get(s)}명</span>
+                    <span>${esc(label)} ${statusBuckets.get(s)}${peopleWord}</span>
                 </span>`;
             }).join("");
         statusEl.innerHTML = `
-            <div class="insights-status-bar-track">${segments || '<div class="insights-empty insights-empty-bar">상태 정보 없음</div>'}</div>
+            <div class="insights-status-bar-track">${segments || `<div class="insights-empty insights-empty-bar">${esc(i18n("insights.emptyStatus"))}</div>`}</div>
             <div class="insights-status-legend">${legend}</div>
         `;
+    }
+
+    // 7-day history chart
+    const historyEl = el("insights-history");
+    if (historyEl) {
+        const days = recentDays(7);
+        const today = todayStats();
+        const yesterday = yesterdayStats();
+        const deltaCard = (() => {
+            if (!today) return "";
+            const yc = yesterday?.completedMax || 0;
+            const tc = today.completedMax || 0;
+            const diff = tc - yc;
+            const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "▬";
+            const color = diff > 0 ? "#10b981" : diff < 0 ? "#ef4444" : "#94a3b8";
+            return `
+                <div class="insights-history-summary">
+                    <span class="insights-history-summary-num">${tc}</span>
+                    <span class="insights-history-summary-label">${esc(i18n("insights.completedLabel"))}</span>
+                    <span class="insights-history-summary-delta" style="color:${color}">${arrow} ${Math.abs(diff)} ${esc(i18n("insights.deltaSuffix"))}</span>
+                </div>
+            `;
+        })();
+        if (days.length === 0) {
+            historyEl.innerHTML = `<div class="insights-empty">${esc(i18n("insights.emptyHistory"))}</div>`;
+        } else {
+            const maxCompleted = Math.max(1, ...days.map(d => d.completedMax || 0));
+            const maxAgents = Math.max(1, ...days.map(d => d.agentsMax || 0));
+            const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const taskWord = lang === "en" ? "tasks" : "태스크";
+            const peopleWord = lang === "en" ? "peak" : "명";
+            const bars = days.map(d => {
+                const c = d.completedMax || 0;
+                const a = d.agentsMax || 0;
+                const cPct = Math.max(2, (c / maxCompleted) * 100);
+                const aPct = Math.max(2, (a / maxAgents) * 100);
+                const label = d.date.slice(5).replace("-", "/");
+                const isToday = d.date === days[days.length - 1].date;
+                return `
+                    <div class="insights-history-col${isToday ? " is-today" : ""}" title="${esc(d.date)} · ${c} ${taskWord} · ${a} ${peopleWord}">
+                        <div class="insights-history-bars">
+                            <div class="insights-history-bar insights-history-bar-task" style="height:${cPct}%"></div>
+                            <div class="insights-history-bar insights-history-bar-agent" style="height:${aPct}%"></div>
+                        </div>
+                        <div class="insights-history-label">${esc(label)}</div>
+                    </div>
+                `;
+            }).join("");
+            historyEl.innerHTML = `
+                ${deltaCard}
+                <div class="insights-history-chart">${bars}</div>
+                <div class="insights-history-legend">
+                    <span><span class="insights-history-legend-dot" style="background:#10b981"></span>${esc(i18n("insights.legendTasks"))}</span>
+                    <span><span class="insights-history-legend-dot" style="background:#3b82f6"></span>${esc(i18n("insights.legendAgents"))}</span>
+                </div>
+            `;
+        }
     }
 
     // Recent feed
@@ -2065,7 +2137,7 @@ export function refreshInsights() {
     if (feedEl) {
         const events = (S.workEvents || []).slice(0, 12);
         if (events.length === 0) {
-            feedEl.innerHTML = '<div class="insights-empty">아직 활동 기록이 없어요.</div>';
+            feedEl.innerHTML = `<div class="insights-empty">${esc(i18n("insights.emptyFeed"))}</div>`;
         } else {
             feedEl.innerHTML = events.map(ev => {
                 const meta = STATUS_META[ev.status] || STATUS_META.idle;

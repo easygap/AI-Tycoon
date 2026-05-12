@@ -17,6 +17,7 @@ import { render } from "./renderer.js";
 import { updatePanel, updateDetailPanel, updateBossQueueUI, updateLiveHud, onMouseMove } from "./panel.js";
 import { initPixiOverlay, resizePixiOverlay, renderPixiOverlay, getPixiOverlayDebug } from "./pixiOverlay.js";
 import { compareAgentPriority } from "./agentPriority.js";
+import { applyToDom as applyI18nToDom, onLangChange, getLang, t } from "./i18n.js";
 
 const PANEL_FOCUSABLE = [
     "a[href]",
@@ -394,6 +395,18 @@ function init() {
     if (panel && window.innerWidth <= 480) panel.classList.add("panel-hidden");
     syncSidePanelState();
     updateCanvasAccessibility(true);
+
+    // Apply current language to DOM and refresh on switch
+    applyI18nToDom();
+    const langLabel = document.getElementById("lang-label");
+    if (langLabel) langLabel.textContent = getLang().toUpperCase();
+    onLangChange(() => {
+        applyI18nToDom();
+        if (langLabel) langLabel.textContent = getLang().toUpperCase();
+        // Re-render dynamic panels that build HTML strings
+        if (typeof window.refreshInsights === "function") window.refreshInsights();
+        updatePanel();
+    });
 
     // Delay first resize to let layout settle
     requestAnimationFrame(() => { resize(); connectWS(); loop(); });

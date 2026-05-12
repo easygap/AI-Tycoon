@@ -4896,6 +4896,101 @@ body.dark .welcome-secondary:hover { background: rgba(255,255,255,0.06); color: 
     border-radius: 50%;
 }
 
+/* History chart (7-day) */
+.insights-history {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.insights-history-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.45));
+    border: 1px solid rgba(217,170,120,0.2);
+    border-radius: 10px;
+}
+.insights-history-summary-num {
+    font-size: 22px;
+    font-weight: 800;
+    color: #2a1a10;
+    letter-spacing: -0.02em;
+}
+.insights-history-summary-label {
+    font-size: 12px;
+    color: #5a4438;
+    margin-right: auto;
+}
+.insights-history-summary-delta {
+    font-size: 11.5px;
+    font-weight: 700;
+}
+.insights-history-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    height: 86px;
+    padding: 6px 4px 0;
+    border-bottom: 1px solid rgba(217,170,120,0.15);
+}
+.insights-history-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+}
+.insights-history-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 70px;
+    width: 100%;
+    max-width: 32px;
+}
+.insights-history-bar {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    min-height: 2px;
+    transition: height 0.4s ease;
+}
+.insights-history-bar-task { background: linear-gradient(180deg, #10b981, #059669); }
+.insights-history-bar-agent { background: linear-gradient(180deg, #3b82f6, #1d4ed8); opacity: 0.85; }
+.insights-history-label {
+    font-size: 10px;
+    font-variant-numeric: tabular-nums;
+    color: #8a6b4c;
+    font-weight: 600;
+}
+.insights-history-col.is-today .insights-history-label {
+    color: #d97757;
+    font-weight: 700;
+}
+.insights-history-col.is-today .insights-history-bar {
+    box-shadow: 0 0 0 1px rgba(217,119,87,0.5);
+}
+.insights-history-legend {
+    display: flex;
+    gap: 14px;
+    font-size: 11px;
+    color: #5a4438;
+}
+.insights-history-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.insights-history-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+body.dark .insights-history-summary {
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+    border-color: rgba(255,255,255,0.06);
+}
+body.dark .insights-history-summary-num { color: #f4f4f5; }
+body.dark .insights-history-summary-label { color: #a89c8e; }
+body.dark .insights-history-chart { border-bottom-color: rgba(255,255,255,0.08); }
+body.dark .insights-history-label { color: #a89c8e; }
+body.dark .insights-history-col.is-today .insights-history-label { color: #fdba74; }
+body.dark .insights-history-legend { color: #c4b8aa; }
+
 /* Feed */
 .insights-feed {
     display: flex;
