@@ -132,6 +132,8 @@ function drawDecorations() {
         const anchor = loungeSunX != null && Math.abs(x - loungeSunX) < 0.5;
         drawWindow(x * TILE, 0, ct, x, sky, anchor);
     }
+    // Birds flying past windows (dawn / golden hour / sunset)
+    drawBirds(ct, sky);
 
     // ── Wall clock (업무 공간) ──
     const clkX = 11 * TILE + 16, clkY = 12;
@@ -351,6 +353,55 @@ function drawBossDesk(ct) {
         ctx.fillStyle = PAL.coffeeSteam;
         ctx.fillRect(bx + 13, by - 5 - (ct % 10) * 0.3, 2, 2);
     }
+}
+
+// Birds: small flock that drifts across the window panes during dawn / golden hour.
+// They live in canvas space (so they share the office transform) but only render
+// when the sky palette warmth is moderate — dawn glow, late afternoon, sunset.
+const BIRDS = [];
+function ensureBirds() {
+    if (BIRDS.length > 0) return;
+    for (let i = 0; i < 5; i++) {
+        BIRDS.push({
+            x: -10 - i * 22,
+            y: 4 + Math.random() * 10,
+            speed: 0.06 + Math.random() * 0.08,
+            phase: Math.random() * Math.PI * 2,
+            wingSpeed: 0.18 + Math.random() * 0.1,
+        });
+    }
+}
+function drawBirds(ct, sky) {
+    // Only at dawn (5.5-7), golden hour / sunset (16-19), and brief moments of dusk
+    const h = sky.hour;
+    const visible = (h >= 5.4 && h < 7.4) || (h >= 16 && h < 19.3);
+    if (!visible) return;
+    ensureBirds();
+    const ctx = S.ctx;
+    const range = (11 - 8 + 1) * TILE + (21 - 17 + 1) * TILE + 100;
+    BIRDS.forEach(b => {
+        b.x += b.speed;
+        if (b.x > 11 * TILE + 80) b.x = 6 * TILE - 60 - Math.random() * 40;
+        // Vertical bob
+        const by = b.y + Math.sin(ct * 0.04 + b.phase) * 0.8;
+        // Skip if outside the actual window strip (rows 0-1)
+        if (by < 0 || by > 22) return;
+        // Wing animation — alternate two shapes
+        const wingUp = (Math.floor(ct * b.wingSpeed) % 2 === 0);
+        const c = sky.warmth > 0.6 ? "rgba(40,30,20,0.8)" : "rgba(60,55,55,0.7)";
+        ctx.fillStyle = c;
+        // Two short strokes forming a flying "v"
+        if (wingUp) {
+            ctx.fillRect(b.x - 1.6, by, 1.6, 0.7);
+            ctx.fillRect(b.x + 0.8, by - 0.7, 1.6, 0.7);
+            ctx.fillRect(b.x + 0.4, by, 0.5, 0.5);
+        } else {
+            ctx.fillRect(b.x - 1.6, by + 0.3, 1.6, 0.7);
+            ctx.fillRect(b.x + 0.8, by + 0.3, 1.6, 0.7);
+            ctx.fillRect(b.x + 0.4, by, 0.5, 0.5);
+        }
+    });
+    void range;
 }
 
 function drawWindow(px, py, ct, tx, sky, isAnchor) {
