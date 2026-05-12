@@ -43,10 +43,9 @@ export function setToastsEnabled(v) {
     try { localStorage.setItem(KEY, enabled ? "true" : "false"); } catch { /* ignore */ }
 }
 
-export function showToast(kind, title, body) {
+export function showToast(kind, title, body, opts = {}) {
     if (!enabled) return;
     if (typeof document === "undefined") return;
-    // Skip if user hasn't interacted yet (avoids flooding on initial state push)
     const now = Date.now();
     const cooldownKey = `${kind}:${title}`;
     const last = lastByKind.get(cooldownKey) || 0;
@@ -56,7 +55,6 @@ export function showToast(kind, title, body) {
     const meta = KIND_META[kind] || KIND_META.info;
     const root = ensureStack();
 
-    // Evict oldest if at max
     while (stack.length >= MAX_STACK) {
         const old = stack.shift();
         if (old?.parentNode) {
@@ -67,6 +65,7 @@ export function showToast(kind, title, body) {
 
     const card = document.createElement("div");
     card.className = "toast-card";
+    if (opts.pid) card.classList.add("is-clickable");
     card.style.setProperty("--toast-color", meta.color);
     card.innerHTML = `
         <span class="toast-icon" style="background:${meta.bg}"><iconify-icon icon="${meta.icon}" aria-hidden="true"></iconify-icon></span>
@@ -76,12 +75,29 @@ export function showToast(kind, title, body) {
         </div>
         <button type="button" class="toast-close" aria-label="Dismiss">×</button>
     `;
-    card.querySelector(".toast-close").addEventListener("click", () => {
+    card.querySelector(".toast-close").addEventListener("click", (e) => {
+        e.stopPropagation();
         card.classList.remove("is-shown");
         setTimeout(() => card.remove(), 240);
         const i = stack.indexOf(card);
         if (i >= 0) stack.splice(i, 1);
     });
+    if (opts.pid) {
+        card.addEventListener("click", () => {
+            try {
+                const pid = String(opts.pid);
+                if (window.S) {
+                    window.S.selectedPid = pid;
+                    window.S.detailPid = pid;
+                    window.S.directorFocusPid = pid;
+                    window.S.directorMode = true;
+                }
+                // Dismiss the toast after action
+                card.classList.remove("is-shown");
+                setTimeout(() => card.remove(), 200);
+            } catch { /* ignore */ }
+        });
+    }
     root.appendChild(card);
     stack.push(card);
     requestAnimationFrame(() => card.classList.add("is-shown"));
