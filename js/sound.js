@@ -6,10 +6,29 @@
 // Off by default — user opts in via the speaker toggle in the header.
 
 const KEY = "ai-tycoon-sound";
+const VOL_KEY = "ai-tycoon-sound-volume";
 let ctx = null;
 let enabled = (typeof localStorage !== "undefined" && localStorage.getItem(KEY)) === "true";
 let userInteracted = false;
 const listeners = new Set();
+const volumeListeners = new Set();
+
+let volume = 0.6;
+try {
+    const v = typeof localStorage !== "undefined" && localStorage.getItem(VOL_KEY);
+    if (v != null) {
+        const n = parseFloat(v);
+        if (Number.isFinite(n)) volume = Math.max(0, Math.min(1, n));
+    }
+} catch { /* ignore */ }
+
+export function getSoundVolume() { return volume; }
+export function setSoundVolume(v) {
+    volume = Math.max(0, Math.min(1, Number(v) || 0));
+    try { localStorage.setItem(VOL_KEY, String(volume)); } catch { /* ignore */ }
+    volumeListeners.forEach(fn => { try { fn(volume); } catch { /* ignore */ } });
+}
+export function onSoundVolumeChange(fn) { volumeListeners.add(fn); return () => volumeListeners.delete(fn); }
 
 export function isSoundEnabled() { return enabled; }
 
@@ -63,8 +82,9 @@ function playTone(freq, duration = 0.15, type = "sine", gain = 0.08, attack = 0.
         osc.type = type;
         osc.frequency.value = freq;
         const now = audio.currentTime;
+        const peak = gain * volume;
         g.gain.setValueAtTime(0, now);
-        g.gain.linearRampToValueAtTime(gain, now + attack);
+        g.gain.linearRampToValueAtTime(peak, now + attack);
         g.gain.linearRampToValueAtTime(0.0001, now + duration);
         osc.connect(g).connect(audio.destination);
         osc.start(now);
@@ -103,6 +123,8 @@ if (typeof window !== "undefined") {
         isEnabled: isSoundEnabled,
         toggle: toggleSound,
         setEnabled: setSoundEnabled,
+        getVolume: getSoundVolume,
+        setVolume: setSoundVolume,
         sfxJoin, sfxLeave, sfxTaskDone, sfxReview, sfxClick,
     };
 }
