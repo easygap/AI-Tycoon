@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="mb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ff8a4c"/>
+      <stop offset="1" stop-color="#d97757"/>
+    </linearGradient>
+  </defs>
+  <!-- Full-bleed background for maskable (no transparency) -->
+  <rect width="512" height="512" fill="url(#mb)"/>
+  <!-- Center pixel-office mark, padded to fit inside ~40% safe zone -->
+  <g transform="translate(128 128) scale(0.5)">
+    <rect width="512" height="512" rx="80" fill="#fff3df"/>
+    <rect x="96" y="80" width="320" height="180" rx="18" fill="#2a1a10"/>
+    <rect x="108" y="92" width="296" height="156" rx="10" fill="#a5d4ff"/>
+    <circle cx="316" cy="155" r="36" fill="#fff5b6"/>
+    <rect x="80" y="320" width="352" height="32" rx="6" fill="#704f35"/>
+    <rect x="80" y="352" width="352" height="80" fill="#8a5e40"/>
+    <rect x="176" y="240" width="160" height="100" rx="10" fill="#2a1a10"/>
+    <rect x="188" y="252" width="136" height="76" rx="6" fill="#34d399"/>
+  </g>
+</svg>

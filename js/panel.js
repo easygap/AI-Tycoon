@@ -2112,8 +2112,17 @@ export function refreshInsights() {
                 const aPct = Math.max(2, (a / maxAgents) * 100);
                 const label = d.date.slice(5).replace("-", "/");
                 const isToday = d.date === days[days.length - 1].date;
+                const joinLabel = lang === "en" ? "joined" : "출근";
+                const eventsLabel = lang === "en" ? "events" : "이벤트";
+                const tooltip = `
+                    <div class="chart-tooltip-title">${esc(d.date)}${isToday ? ` · ${lang === "en" ? "Today" : "오늘"}` : ""}</div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#10b981"></span>${esc(taskWord)} <strong>${c}</strong></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#3b82f6"></span>${lang === "en" ? "Peak agents" : "최대 동시"} <strong>${a}</strong></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#facc15"></span>${esc(joinLabel)} <strong>${d.joinedCount || 0}</strong></div>
+                    <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#a78bfa"></span>${esc(eventsLabel)} <strong>${d.events || 0}</strong></div>
+                `;
                 return `
-                    <div class="insights-history-col${isToday ? " is-today" : ""}" title="${esc(d.date)} · ${c} ${taskWord} · ${a} ${peopleWord}">
+                    <div class="insights-history-col${isToday ? " is-today" : ""}" data-tooltip="${esc(tooltip)}">
                         <div class="insights-history-bars">
                             <div class="insights-history-bar insights-history-bar-task" style="height:${cPct}%"></div>
                             <div class="insights-history-bar insights-history-bar-agent" style="height:${aPct}%"></div>
@@ -2152,8 +2161,14 @@ export function refreshInsights() {
             const todayV = today[h] || 0;
             const dotSize = Math.max(0, Math.min(1, todayV / Math.max(1, today[nowHour] || maxV)));
             const isNow = h === nowHour;
+            const hourLabel = `${String(h).padStart(2, "0")}:00`;
+            const tooltip = `
+                <div class="chart-tooltip-title">${hourLabel}${isNow ? ` · ${lang === "en" ? "Now" : "지금"}` : ""}</div>
+                <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#10b981"></span>${esc(weekLabel)} <strong>${v}</strong></div>
+                <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#ff8a4c"></span>${esc(todayLabel)} <strong>${todayV}</strong></div>
+            `;
             return `
-                <div class="insights-hour-cell${isNow ? " is-now" : ""}" title="${String(h).padStart(2, "0")}:00 · ${weekLabel} ${v} · ${todayLabel} ${todayV}">
+                <div class="insights-hour-cell${isNow ? " is-now" : ""}" data-tooltip="${esc(tooltip)}">
                     <div class="insights-hour-bar" style="--intensity:${intensity.toFixed(2)}"></div>
                     <div class="insights-hour-dot" style="opacity:${dotSize.toFixed(2)}"></div>
                     <div class="insights-hour-label">${h % 3 === 0 ? String(h).padStart(2, "0") : "·"}</div>
@@ -2235,6 +2250,55 @@ export function refreshInsights() {
             });
         }
     }
+}
+
+// ── Rich hover tooltip for chart cells inside the insights modal ──
+function ensureChartTooltip() {
+    let tt = document.getElementById("chart-tooltip");
+    if (tt) return tt;
+    tt = document.createElement("div");
+    tt.id = "chart-tooltip";
+    tt.className = "chart-tooltip";
+    document.body.appendChild(tt);
+    return tt;
+}
+function showChartTooltip(target, html) {
+    const tt = ensureChartTooltip();
+    tt.innerHTML = html;
+    tt.classList.add("is-visible");
+    const rect = target.getBoundingClientRect();
+    const ttRect = tt.getBoundingClientRect();
+    let x = rect.left + rect.width / 2 - ttRect.width / 2;
+    let y = rect.top - ttRect.height - 8;
+    if (y < 8) y = rect.bottom + 8;
+    x = Math.max(8, Math.min(x, window.innerWidth - ttRect.width - 8));
+    tt.style.left = `${x}px`;
+    tt.style.top = `${y}px`;
+}
+function hideChartTooltip() {
+    const tt = document.getElementById("chart-tooltip");
+    if (tt) tt.classList.remove("is-visible");
+}
+
+// Attach delegated hover handlers once
+if (typeof document !== "undefined") {
+    document.addEventListener("mouseover", (e) => {
+        const col = e.target.closest?.(".insights-history-col");
+        if (col?.dataset?.tooltip) {
+            showChartTooltip(col, col.dataset.tooltip);
+            return;
+        }
+        const cell = e.target.closest?.(".insights-hour-cell");
+        if (cell?.dataset?.tooltip) {
+            showChartTooltip(cell, cell.dataset.tooltip);
+        }
+    });
+    document.addEventListener("mouseout", (e) => {
+        if (e.target.closest?.(".insights-history-col, .insights-hour-cell")) {
+            hideChartTooltip();
+        }
+    });
+    document.addEventListener("scroll", hideChartTooltip, true);
 }
 
 // Expose for window-level button handlers

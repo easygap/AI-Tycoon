@@ -60,12 +60,18 @@ const MIME = {
     ".css":  "text/css",
     ".js":   "application/javascript",
     ".ico":  "image/x-icon",
+    ".svg":  "image/svg+xml",
+    ".png":  "image/png",
+    ".webmanifest": "application/manifest+json",
+    ".json": "application/json",
 };
 
 const PUBLIC_FILES = new Set([
     "/index.html",
     "/style.css",
     "/css/tailwind.generated.css",
+    "/manifest.webmanifest",
+    "/sw.js",
 ]);
 
 function resolvePublicFile(requestUrl) {
@@ -86,7 +92,8 @@ function resolvePublicFile(requestUrl) {
 
     const normalized = path.posix.normalize(pathname);
     const allowed = PUBLIC_FILES.has(normalized)
-        || /^\/js\/[A-Za-z0-9_-]+\.js$/.test(normalized);
+        || /^\/js\/[A-Za-z0-9_-]+\.js$/.test(normalized)
+        || /^\/icons\/[A-Za-z0-9_.-]+\.(svg|png|ico)$/.test(normalized);
     if (!allowed) return null;
 
     const resolved = path.resolve(__dirname, `.${normalized}`);

@@ -32,6 +32,8 @@ const DICT = {
         "header.lang": "언어 전환",
         "header.settings": "설정",
         "header.snapshot": "작업실 스냅샷 저장",
+        "header.install": "앱으로 설치",
+        "header.installLabel": "설치",
         "shortcuts.snapshot": "스냅샷 PNG 저장",
         // Settings modal
         "settings.kicker": "설정",
@@ -187,6 +189,8 @@ const DICT = {
         "header.lang": "Switch language",
         "header.settings": "Settings",
         "header.snapshot": "Save workspace snapshot",
+        "header.install": "Install as app",
+        "header.installLabel": "Install",
         "shortcuts.snapshot": "Save snapshot PNG",
         "settings.kicker": "SETTINGS",
         "settings.title": "Tune your workspace",
