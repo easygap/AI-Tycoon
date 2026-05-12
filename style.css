@@ -5497,6 +5497,79 @@ body.dark .insights-feed-row:not(:disabled):hover {
     white-space: nowrap;
 }
 
+/* Settings modal — theme picker */
+.theme-picker {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    width: 100%;
+}
+.theme-swatch {
+    background: rgba(255,255,255,0.55);
+    border: 1.5px solid rgba(217,170,120,0.25);
+    border-radius: 9px;
+    padding: 6px 4px 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+    font-family: inherit;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
+}
+.theme-swatch:hover {
+    background: rgba(255,250,240,0.85);
+    transform: translateY(-1px);
+}
+.theme-swatch.is-active {
+    border-color: #d97757;
+    background: linear-gradient(180deg, rgba(255,232,200,0.6), rgba(255,210,170,0.45));
+    box-shadow: 0 4px 12px -4px rgba(217,119,87,0.4);
+}
+.theme-swatch-preview {
+    width: 40px;
+    height: 32px;
+    border-radius: 5px;
+    border: 1px solid rgba(40,30,20,0.2);
+    position: relative;
+    overflow: hidden;
+}
+.theme-swatch-preview::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: var(--theme-bg);
+}
+.theme-swatch-preview::after {
+    content: "";
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+    height: 8px;
+    background: var(--theme-desk);
+    border-radius: 1px;
+}
+.theme-preview-classic { --theme-bg: linear-gradient(180deg, #F0E8D8 0%, #E8DFD0 100%); --theme-desk: #C8A878; }
+.theme-preview-cafe    { --theme-bg: linear-gradient(180deg, #EBE2D3 0%, #C68863 100%); --theme-desk: #6F4A33; }
+.theme-preview-forest  { --theme-bg: linear-gradient(180deg, #E6EBD9 0%, #A8B690 100%); --theme-desk: #6E8458; }
+.theme-preview-midnight{ --theme-bg: linear-gradient(180deg, #DAE2F2 0%, #7A8AAE 100%); --theme-desk: #5A6B8E; }
+.theme-swatch-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #3a2818;
+}
+body.dark .theme-swatch {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.08);
+}
+body.dark .theme-swatch:hover { background: rgba(255,255,255,0.08); }
+body.dark .theme-swatch.is-active {
+    border-color: #fdba74;
+    background: linear-gradient(180deg, rgba(253,186,116,0.16), rgba(217,119,87,0.1));
+}
+body.dark .theme-swatch-label { color: #d4d4d8; }
+
 /* Settings modal */
 .settings-section { margin-bottom: 16px; }
 .settings-section:last-child { margin-bottom: 4px; }

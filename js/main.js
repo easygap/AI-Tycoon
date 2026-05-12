@@ -401,6 +401,12 @@ function init() {
     syncSidePanelState();
     updateCanvasAccessibility(true);
 
+    // Force immediate palette + repaint (used by theme picker)
+    window.aiTycoonForceRepaint = () => {
+        try { updatePalette(); } catch (err) { void err; }
+        // Render happens on next tick via the existing game loop
+    };
+
     // Apply current language to DOM and refresh on switch
     applyI18nToDom();
     const langLabel = document.getElementById("lang-label");
