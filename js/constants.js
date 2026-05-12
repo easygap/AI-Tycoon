@@ -123,6 +123,49 @@ export const PAL_THEMES = {
             monActive: "#1a3a5a",
         },
     },
+    sakura: {
+        light: {
+            floor1: "#FBE6EE", floor2: "#F4D2DF",
+            wall: "#E4A0B8", wallTop: "#CC7E9C", wallAccent: "#B66687",
+            desk: "#C68C9C", deskTop: "#D8A4B4", deskEdge: "#9E6478",
+            chair: "#FFB0CD", chairSeat: "#FFC6D9",
+            plant1: "#7AC889", plant2: "#A6E5B0", pot: "#C68C9C",
+            rug: "#F8C8DC", rugEdge: "#E5A8C2",
+            flower1: "#FFB0D5", flower2: "#FFE2A8", flower3: "#FFC0E2",
+            meetTable: "#D8A4B4", meetTableTop: "#E8C0CE",
+            windowGlass: "rgba(255,180,210,0.32)",
+        },
+        dark: {
+            floor1: "#28161e", floor2: "#33202a",
+            wall: "#3a1a28", wallTop: "#4a253a", wallAccent: "#5e3450",
+            desk: "#3d2530", deskTop: "#502c3d", deskEdge: "#2a1820",
+            chair: "#7a3a55", chairSeat: "#92486a",
+            rug: "#3d1f2c", rugEdge: "#4a2838",
+        },
+    },
+    ocean: {
+        light: {
+            floor1: "#D5EAEE", floor2: "#B8D8DE",
+            wall: "#7AB4C0", wallTop: "#5A9CAC", wallAccent: "#3F8090",
+            desk: "#3F7E92", deskTop: "#5A9CAC", deskEdge: "#2A6378",
+            chair: "#5DC2D6", chairSeat: "#7FD8E6",
+            plant1: "#4FAE96", plant2: "#7DD0BA", pot: "#3F7E92",
+            rug: "#B8E0E4", rugEdge: "#8DBFC8",
+            flower1: "#FFB0D5", flower2: "#FFE2A8", flower3: "#A6CFEA",
+            meetTable: "#5A9CAC", meetTableTop: "#74B5C5",
+            monActive: "#bef0ff", monitor: "#102438", monFrame: "#1e3a56",
+            windowGlass: "rgba(100,180,210,0.38)",
+        },
+        dark: {
+            floor1: "#0a1e26", floor2: "#102832",
+            wall: "#082834", wallTop: "#0e3848", wallAccent: "#1a4a5d",
+            desk: "#143a4a", deskTop: "#1e4d62", deskEdge: "#0a2530",
+            chair: "#1a6378", chairSeat: "#247a92",
+            plant1: "#1c5a4c", plant2: "#287864",
+            rug: "#0e2a36", rugEdge: "#143845",
+            monActive: "#1a4a6a",
+        },
+    },
 };
 
 export function getActiveTheme() {

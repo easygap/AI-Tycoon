@@ -6344,9 +6344,12 @@ body.dark .about-line { color: #a89c8e; }
 /* Settings modal — theme picker */
 .theme-picker {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 6px;
     width: 100%;
+}
+@media (min-width: 561px) {
+    .theme-picker { grid-template-columns: repeat(6, 1fr); }
 }
 .theme-swatch {
     background: rgba(255,255,255,0.55);
@@ -6398,6 +6401,8 @@ body.dark .about-line { color: #a89c8e; }
 .theme-preview-cafe    { --theme-bg: linear-gradient(180deg, #EBE2D3 0%, #C68863 100%); --theme-desk: #6F4A33; }
 .theme-preview-forest  { --theme-bg: linear-gradient(180deg, #E6EBD9 0%, #A8B690 100%); --theme-desk: #6E8458; }
 .theme-preview-midnight{ --theme-bg: linear-gradient(180deg, #DAE2F2 0%, #7A8AAE 100%); --theme-desk: #5A6B8E; }
+.theme-preview-sakura  { --theme-bg: linear-gradient(180deg, #FBE6EE 0%, #E4A0B8 100%); --theme-desk: #C68C9C; }
+.theme-preview-ocean   { --theme-bg: linear-gradient(180deg, #D5EAEE 0%, #7AB4C0 100%); --theme-desk: #3F7E92; }
 .theme-swatch-label {
     font-size: 11px;
     font-weight: 600;
