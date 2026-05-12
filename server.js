@@ -33,6 +33,8 @@ const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL, 10) || 2000;
 const HEARTBEAT_INTERVAL = 10000; // 10s
 
 // ── State ────────────────────────────────────────────────────
+const STARTED_AT = Date.now();
+const VERSION = "1.0.0";
 let lastState = null;
 let clients = new Set();
 let watchDebounceTimer = null;
@@ -110,6 +112,39 @@ const httpServer = http.createServer((req, res) => {
             "Cache-Control": "no-cache, no-store, must-revalidate",
         });
         res.end();
+        return;
+    }
+
+    // /api/health — JSON status endpoint for monitoring & "About" panel
+    if (urlPath === "/api/health") {
+        const agents = (lastState?.agents) || [];
+        const running = agents.filter(a => a.isRunning);
+        const platformsByCount = {};
+        agents.forEach(a => {
+            const k = a.platform || "unknown";
+            platformsByCount[k] = (platformsByCount[k] || 0) + 1;
+        });
+        const payload = {
+            ok: true,
+            version: VERSION,
+            startedAt: new Date(STARTED_AT).toISOString(),
+            uptimeMs: Date.now() - STARTED_AT,
+            nodeVersion: process.version,
+            platform: process.platform,
+            clients: clients.size,
+            agents: {
+                total: agents.length,
+                running: running.length,
+                platforms: platformsByCount,
+            },
+            diagnostics: lastDiagnostics || null,
+            pollIntervalMs: POLL_INTERVAL,
+        };
+        res.writeHead(200, {
+            "Content-Type": "application/json; charset=utf-8",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+        });
+        res.end(JSON.stringify(payload, null, 2));
         return;
     }
 

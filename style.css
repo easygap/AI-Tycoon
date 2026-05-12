@@ -5905,6 +5905,16 @@ body.dark .tour-card-step { color: #fdba74; }
     opacity: 1;
     transform: translateX(0);
 }
+.toast-card.is-clickable {
+    cursor: pointer;
+    transition: opacity 0.28s ease, transform 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.toast-card.is-clickable:hover {
+    box-shadow: 0 10px 22px -6px rgba(40,20,10,0.32),
+                0 0 0 1px var(--toast-color, rgba(217,170,120,0.6));
+    transform: translateY(-1px);
+}
 .toast-icon {
     flex-shrink: 0;
     width: 30px;
@@ -6151,6 +6161,61 @@ body.dark .insights-feed-row:not(:disabled):hover {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* About card in Settings */
+.about-card {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, rgba(255,232,200,0.5), rgba(255,200,160,0.32));
+    border: 1px solid rgba(217,119,87,0.25);
+    border-radius: 12px;
+}
+.about-mark {
+    display: grid;
+    grid-template-columns: repeat(2, 16px);
+    grid-template-rows: repeat(2, 16px);
+    gap: 4px;
+    padding: 2px;
+    flex-shrink: 0;
+}
+.about-mark span {
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.45);
+}
+.about-mark span:nth-child(1) { background: #10b981; }
+.about-mark span:nth-child(2) { background: #ff6b4a; }
+.about-mark span:nth-child(3) {
+    grid-column: 1 / span 2;
+    background: #2f80ed;
+}
+.about-body { flex: 1; min-width: 0; }
+.about-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: #2a1a10;
+    letter-spacing: -0.01em;
+}
+.about-version {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #d97757;
+    margin-top: 1px;
+}
+.about-line {
+    font-size: 11px;
+    color: #7a5a48;
+    margin-top: 4px;
+    font-variant-numeric: tabular-nums;
+}
+body.dark .about-card {
+    background: linear-gradient(135deg, rgba(253,186,116,0.14), rgba(217,119,87,0.08));
+    border-color: rgba(253,186,116,0.3);
+}
+body.dark .about-name { color: #f4f4f5; }
+body.dark .about-version { color: #fdba74; }
+body.dark .about-line { color: #a89c8e; }
 
 /* Settings modal — theme picker */
 .theme-picker {

@@ -207,7 +207,7 @@ function collectWorkEvents(prevAgentsByPid) {
             try {
                 const lang = window.aiTycoonI18n?.getLang?.() || "ko";
                 const title = lang === "en" ? `${theme.name} needs review` : `${theme.name} 검토 요청`;
-                showToast("review", title, reviewText);
+                showToast("review", title, reviewText, { pid: agent.pid });
             } catch { /* ignore */ }
         }
 
@@ -257,7 +257,7 @@ function collectWorkEvents(prevAgentsByPid) {
                 try {
                     const lang = window.aiTycoonI18n?.getLang?.() || "ko";
                     const title = lang === "en" ? `${theme.name} finished a task` : `${theme.name} 태스크 완료`;
-                    showToast("task-done", title, taskText);
+                    showToast("task-done", title, taskText, { pid: agent.pid });
                 } catch { /* ignore */ }
             }
         });
@@ -309,7 +309,7 @@ export function handleState(state) {
                     const title = lang === "en"
                         ? `${theme.name} joined`
                         : `${theme.name} 출근!`;
-                    showToast("join", title, agent.projectName || "");
+                    showToast("join", title, agent.projectName || "", { pid: agent.pid });
                 } catch { /* ignore */ }
             }
         }

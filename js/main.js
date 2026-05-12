@@ -32,7 +32,11 @@ import "./tour.js";
 import "./crossTab.js";
 
 // Expose Pixi overlay debug for the perf HUD
-if (typeof window !== "undefined") window.aiTycoonOverlayDebug = getPixiOverlayDebug;
+if (typeof window !== "undefined") {
+    window.aiTycoonOverlayDebug = getPixiOverlayDebug;
+    // Expose shared state for one-shot helpers (toasts, mini-map, etc.)
+    window.S = S;
+}
 
 const PANEL_FOCUSABLE = [
     "a[href]",

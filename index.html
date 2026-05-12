@@ -625,6 +625,21 @@
                 </section>
 
                 <section class="settings-section">
+                    <h3 class="settings-section-title" data-i18n="settings.about">정보</h3>
+                    <div class="about-card">
+                        <div class="about-mark" aria-hidden="true">
+                            <span></span><span></span><span></span>
+                        </div>
+                        <div class="about-body">
+                            <div class="about-name">AI Tycoon</div>
+                            <div class="about-version" id="settings-about-version">v—</div>
+                            <div class="about-line" id="settings-about-uptime">—</div>
+                            <div class="about-line" id="settings-about-node">—</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="settings-section">
                     <h3 class="settings-section-title" data-i18n="settings.help">도움말</h3>
                     <div class="settings-row settings-row-vertical">
                         <button type="button" class="settings-action" onclick="settingsReplayTour()">
@@ -942,6 +957,23 @@
         const demoOn = window.aiTycoonDemo?.isEnabled() || false;
         const demoChk = document.getElementById("settings-demo");
         if (demoChk) demoChk.checked = demoOn;
+        // About — fetch live server info
+        fetch("/api/health").then(r => r.ok ? r.json() : null).then(info => {
+            if (!info) return;
+            const v = document.getElementById("settings-about-version");
+            const u = document.getElementById("settings-about-uptime");
+            const n = document.getElementById("settings-about-node");
+            const langNow = window.aiTycoonI18n?.getLang?.() || "ko";
+            if (v) v.textContent = `v${info.version}`;
+            if (u) {
+                const sec = Math.round((info.uptimeMs || 0) / 1000);
+                const h = Math.floor(sec / 3600);
+                const m = Math.floor((sec % 3600) / 60);
+                const upLabel = langNow === "en" ? "uptime" : "가동 시간";
+                u.textContent = h > 0 ? `${upLabel}: ${h}h ${m}m` : `${upLabel}: ${m}m`;
+            }
+            if (n) n.textContent = `Node ${info.nodeVersion} · ${info.platform}`;
+        }).catch(() => {});
         // Office theme
         const themeNow = localStorage.getItem("ai-tycoon-theme") || "classic";
         document.querySelectorAll(".theme-swatch").forEach(s => {
