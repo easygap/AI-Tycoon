@@ -4991,6 +4991,179 @@ body.dark .insights-history-label { color: #a89c8e; }
 body.dark .insights-history-col.is-today .insights-history-label { color: #fdba74; }
 body.dark .insights-history-legend { color: #c4b8aa; }
 
+/* Achievements grid */
+.insights-ach-progress {
+    margin-left: auto;
+    font-size: 11px;
+    font-weight: 700;
+    color: #d97757;
+    background: rgba(217,119,87,0.12);
+    padding: 2px 8px;
+    border-radius: 999px;
+    letter-spacing: 0;
+    text-transform: none;
+}
+.insights-achievements {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+.ach-tile {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255,255,255,0.45);
+    border: 1px solid rgba(217,170,120,0.18);
+    border-radius: 10px;
+    opacity: 0.45;
+    transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ach-tile.is-unlocked {
+    opacity: 1;
+    background: linear-gradient(135deg, rgba(255,210,150,0.45), rgba(255,180,160,0.32));
+    border-color: rgba(217,119,87,0.35);
+    box-shadow: 0 4px 12px -4px rgba(217,119,87,0.3);
+}
+.ach-tile-icon {
+    font-size: 26px;
+    color: #b89880;
+    flex-shrink: 0;
+}
+.ach-tile.is-unlocked .ach-tile-icon {
+    color: #d97757;
+    filter: drop-shadow(0 0 6px rgba(217,119,87,0.4));
+}
+.ach-tile-body { flex: 1; min-width: 0; }
+.ach-tile-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #5a4438;
+    margin-bottom: 2px;
+}
+.ach-tile.is-unlocked .ach-tile-title { color: #2a1a10; }
+.ach-tile-desc {
+    font-size: 10.5px;
+    color: #8a6b4c;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.ach-tile-check {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 14px;
+    color: #10b981;
+}
+
+body.dark .ach-tile {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.06);
+}
+body.dark .ach-tile.is-unlocked {
+    background: linear-gradient(135deg, rgba(217,119,87,0.18), rgba(217,119,87,0.08));
+    border-color: rgba(253,186,116,0.35);
+}
+body.dark .ach-tile-title { color: #c4b8aa; }
+body.dark .ach-tile.is-unlocked .ach-tile-title { color: #f4f4f5; }
+body.dark .ach-tile-desc { color: #a89c8e; }
+body.dark .ach-tile-icon { color: #6a5a48; }
+body.dark .ach-tile.is-unlocked .ach-tile-icon { color: #fdba74; }
+body.dark .insights-ach-progress { background: rgba(253,186,116,0.16); color: #fdba74; }
+
+/* Achievement badge popup (toast) */
+.badge-popup-stack {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 130;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+.badge-popup {
+    position: relative;
+    pointer-events: auto;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: linear-gradient(135deg, #ff8a4c, #d97757);
+    color: #fff;
+    padding: 14px 36px 14px 16px;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px -6px rgba(217,119,87,0.55),
+                0 4px 10px rgba(40,20,10,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.25);
+    width: 320px;
+    max-width: calc(100vw - 32px);
+    opacity: 0;
+    transform: translateX(28px);
+    transition: opacity 0.4s ease, transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.badge-popup.is-shown {
+    opacity: 1;
+    transform: translateX(0);
+}
+.badge-popup-icon {
+    font-size: 32px;
+    line-height: 1;
+    color: #fff;
+    filter: drop-shadow(0 0 12px rgba(255,255,255,0.5));
+    flex-shrink: 0;
+}
+.badge-popup-icon iconify-icon { font-size: 32px; }
+.badge-popup-body { flex: 1; min-width: 0; }
+.badge-popup-kicker {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 2px;
+}
+.badge-popup-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 2px;
+}
+.badge-popup-desc {
+    font-size: 11.5px;
+    color: rgba(255,255,255,0.92);
+    line-height: 1.35;
+}
+.badge-popup-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: rgba(255,255,255,0.85);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.badge-popup-close:hover { background: rgba(255,255,255,0.3); color: #fff; }
+
+@media (max-width: 640px) {
+    .insights-achievements { grid-template-columns: 1fr; }
+    .badge-popup-stack { bottom: 12px; right: 12px; }
+    .badge-popup { width: 280px; }
+}
+
 /* Feed */
 .insights-feed {
     display: flex;

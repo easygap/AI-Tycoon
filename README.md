@@ -1,8 +1,11 @@
 # AI Tycoon
 
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
+> *A live pixel-art office dashboard for AI agents running on your machine.*
 
 Claude Code · Cursor · Codex 같은 AI 에이전트가 지금 어떤 작업을 하고 있는지 자동으로 감지하고, 픽셀 아트 오피스 안의 캐릭터로 보여줍니다.
+
+> 🌐 **English readers:** scroll to the bottom for a quick English overview, or hit the globe icon in the app header to switch the UI to English.
 
 ---
 
@@ -146,3 +149,66 @@ ai-tycoon/
 이 프로젝트는 "AI가 실제로 일하고 있는 느낌"을 조금 더 직관적으로 보고 싶어서 시작했습니다.
 
 단순히 로그를 보는 방식보다, 작업 중 / 대기 중 / 리뷰 중 같은 흐름이 시각적으로 보이니까 여러 세션을 동시에 관리할 때 훨씬 편했습니다.
+
+---
+
+## 🇺🇸 English
+
+**AI Tycoon** is a real-time pixel-art office dashboard that visualizes the AI agents (Claude Code, Cursor, Codex, Ollama, LM Studio, Copilot, Jan, GPT4All) currently running on your local machine.
+
+Instead of glancing at half a dozen terminals, you see your agents as characters in a tiny office: they sit at desks coding, walk to the whiteboard when planning, queue up at the "boss desk" (you) for reviews, and head to the breakroom when idle. The sky outside the windows tracks your real clock from dawn to dusk to night, and the whole scene gets warmer at sunset and cooler at night.
+
+### Highlights
+
+- 🤖 **Zero-config detection** — automatically picks up 8 supported AI platforms; no setup
+- 🎯 **6 live states** — coding / thinking / searching / reviewing / idle / offline
+- 🌅 **Time-of-day lighting** — sky colour, sun/moon, stars and ambient tint follow the real clock
+- 🏢 **Rich interior** — desks, monitors, lamps, sofas, vending machine, aquarium, meeting room
+- 🧹 **Background NPCs** — cleaning robot patrols the corridors, a paper plane glides through, the breakroom cat naps, occasional courier deliveries
+- 📊 **Insights modal** — daily totals, platform breakdown, top projects, status distribution, 7-day trend
+- 🏆 **Achievements** — small milestone badges saved in localStorage
+- 🔊 **Optional sound effects** — toggle in the header, plays soft tones on join / leave / task done / review
+- 🌐 **Bilingual UI** — KO/EN toggle via the globe button
+- ⌨️ **Keyboard shortcuts** — `?` for the cheatsheet, `I` for insights, `D` for dark mode, etc.
+- 📱 **Mobile-aware** — pinch-zoom, single-finger pan, mobile priority dock
+
+### Run
+
+```bash
+npm install
+npm start          # http://localhost:3777
+```
+
+Optional environment variables:
+
+```bash
+PORT=8080 POLL_INTERVAL=3000 npm start
+```
+
+### Project layout
+
+```
+ai-tycoon/
+├── server.js          # Detects AI sessions, broadcasts state via WebSocket
+├── index.html         # Layout + welcome card + modals
+├── css/, style.css    # Tailwind utilities + custom styles
+└── js/
+    ├── main.js        # Entry point, game loop, input
+    ├── renderer.js    # Canvas 2D drawing (office, agents, NPCs)
+    ├── pixiOverlay.js # PixiJS effects layer (ambient tint, weather, auras)
+    ├── npcs.js        # Background characters (robot, cat, plane, courier)
+    ├── timeOfDay.js   # Sky palette + ambient lighting maths
+    ├── panel.js       # Side panel + insights modal
+    ├── ws.js          # WebSocket reconnect + state diffing
+    ├── i18n.js        # KO/EN dictionary
+    ├── stats.js       # Daily rollups persisted to localStorage
+    ├── achievements.js# Milestone tracking + popups
+    └── sound.js       # Web Audio tones
+```
+
+### Notes
+
+- The frontend uses native ES modules — no bundler. Open the page and refresh after editing.
+- Tailwind utilities are pre-built into `css/tailwind.generated.css`; regenerate with `npm run build`.
+- The "boss desk" is *your* seat: agents needing review walk over and queue.
+- New AI platforms can be added by extending `AI_PLATFORMS` in `server.js`.

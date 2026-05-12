@@ -27,7 +27,7 @@
             <!-- Connection Status -->
             <div id="conn-badge" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-[11px] text-zinc-500 shrink-0">
                 <div id="conn-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-400"></div>
-                <span id="conn-text">연결 중</span>
+                <span id="conn-text" data-i18n="conn.connecting">연결 중</span>
             </div>
 
             <!-- Clock + time-of-day band -->
@@ -134,43 +134,43 @@
                     <section class="hud-panel hud-summary">
                         <div class="hud-kicker">
                             <span id="hud-live-dot" class="live-dot"></span>
-                            <span id="hud-conn-text">연결 중</span>
+                            <span id="hud-conn-text" data-i18n="hud.waiting">연결 중</span>
                         </div>
-                        <div class="hud-title">실시간 작업실</div>
+                        <div class="hud-title" data-i18n="hud.realtimeOffice">실시간 작업실</div>
                         <div class="hud-metrics">
                             <div>
                                 <span id="hud-active">0</span>
-                                <label>활성</label>
+                                <label data-i18n="hud.metricActive">활성</label>
                             </div>
                             <div>
                                 <span id="hud-working">0</span>
-                                <label>작업</label>
+                                <label data-i18n="hud.metricWorking">작업</label>
                             </div>
                             <div>
                                 <span id="hud-review">0</span>
-                                <label>검토</label>
+                                <label data-i18n="hud.metricReview">검토</label>
                             </div>
                         </div>
                         <div id="hud-diagnostics" class="hud-diagnostics" aria-live="polite"></div>
                     </section>
 
                     <section class="hud-panel hud-focus">
-                        <div class="hud-kicker">포커스</div>
-                        <div id="hud-focus-name" class="focus-name">대기 중</div>
-                        <div id="hud-focus-work" class="focus-work">에이전트 상태 수집 중</div>
+                        <div class="hud-kicker" data-i18n="hud.focus">포커스</div>
+                        <div id="hud-focus-name" class="focus-name" data-i18n="hud.standby">대기 중</div>
+                        <div id="hud-focus-work" class="focus-work" data-i18n="hud.collectingStatus">에이전트 상태 수집 중</div>
                         <div class="focus-progress" aria-hidden="true">
                             <span id="hud-focus-progress"></span>
                         </div>
                         <div class="hud-actions">
-                            <button id="director-toggle" type="button" onclick="toggleDirectorMode()" class="hud-action" aria-pressed="false" title="가장 중요한 직원 자동 추적">
+                            <button id="director-toggle" type="button" onclick="toggleDirectorMode()" class="hud-action" aria-pressed="false" data-i18n-attr="title:hud.directorTitle" title="가장 중요한 직원 자동 추적">
                                 <iconify-icon icon="solar:target-linear"></iconify-icon>
-                                <span>디렉터</span>
+                                <span data-i18n="hud.director">디렉터</span>
                             </button>
-                            <button type="button" onclick="focusActiveAgent()" class="hud-action" title="가장 활발한 직원 보기">
+                            <button type="button" onclick="focusActiveAgent()" class="hud-action" data-i18n-attr="title:hud.focusTitle" title="가장 활발한 직원 보기">
                                 <iconify-icon icon="solar:focus-linear"></iconify-icon>
-                                <span>포커스</span>
+                                <span data-i18n="hud.focus">포커스</span>
                             </button>
-                            <button type="button" onclick="resetCameraView()" class="hud-action icon-only" aria-label="전체 보기" title="전체 보기">
+                            <button type="button" onclick="resetCameraView()" class="hud-action icon-only" data-i18n-attr="aria-label:hud.fullView,title:hud.fullView" aria-label="전체 보기" title="전체 보기">
                                 <iconify-icon icon="solar:home-angle-linear"></iconify-icon>
                             </button>
                         </div>
@@ -334,6 +334,15 @@
 
                 <section class="insights-section">
                     <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:medal-ribbons-star-linear" aria-hidden="true"></iconify-icon>
+                        <span data-i18n="insights.achievements">업적</span>
+                        <span id="insights-ach-progress" class="insights-ach-progress"></span>
+                    </h3>
+                    <div id="insights-achievements" class="insights-achievements"></div>
+                </section>
+
+                <section class="insights-section">
+                    <h3 class="insights-section-title">
                         <iconify-icon icon="solar:history-2-linear" aria-hidden="true"></iconify-icon>
                         <span data-i18n="insights.recentActivity">최근 활동</span>
                     </h3>
@@ -453,6 +462,17 @@
         const isDark = !document.body.classList.contains("dark");
         localStorage.setItem("ai-tycoon-dark", isDark); // explicit user choice
         applyDark(isDark);
+        if (window.aiTycoonAchievements?.check) {
+            // Mark the dark toggle counter via internal flag
+            try {
+                const raw = localStorage.getItem("ai-tycoon-achievements-v1");
+                const blob = raw ? JSON.parse(raw) : { unlocked: {}, counters: {} };
+                blob.counters = blob.counters || {};
+                blob.counters.darkToggled = true;
+                localStorage.setItem("ai-tycoon-achievements-v1", JSON.stringify(blob));
+            } catch { /* ignore */ }
+            window.aiTycoonAchievements.check();
+        }
     }
     function closeDetail() {
         const dp = document.getElementById("detail-panel");
@@ -506,6 +526,16 @@
             window.aiTycoonI18n.toggleLang();
             const label = document.getElementById("lang-label");
             if (label) label.textContent = window.aiTycoonI18n.getLang().toUpperCase();
+            if (window.aiTycoonAchievements?.check) {
+                try {
+                    const raw = localStorage.getItem("ai-tycoon-achievements-v1");
+                    const blob = raw ? JSON.parse(raw) : { unlocked: {}, counters: {} };
+                    blob.counters = blob.counters || {};
+                    blob.counters.langToggled = true;
+                    localStorage.setItem("ai-tycoon-achievements-v1", JSON.stringify(blob));
+                } catch { /* ignore */ }
+                window.aiTycoonAchievements.check();
+            }
         }
     }
     // Sound effects toggle
@@ -540,6 +570,16 @@
         const overlay = document.getElementById("insights-overlay");
         if (window.refreshInsights) window.refreshInsights();
         openModalOverlay(overlay);
+        if (window.aiTycoonAchievements) {
+            try {
+                const raw = localStorage.getItem("ai-tycoon-achievements-v1");
+                const blob = raw ? JSON.parse(raw) : { unlocked: {}, counters: {} };
+                blob.counters = blob.counters || {};
+                blob.counters.insightsOpened = (blob.counters.insightsOpened || 0) + 1;
+                localStorage.setItem("ai-tycoon-achievements-v1", JSON.stringify(blob));
+            } catch { /* ignore */ }
+            window.aiTycoonAchievements.check();
+        }
     }
     function closeInsights() { closeModalOverlay(document.getElementById("insights-overlay")); }
     function openShortcuts() { openModalOverlay(document.getElementById("shortcuts-overlay")); }
