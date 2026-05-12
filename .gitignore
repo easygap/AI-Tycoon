@@ -1,3 +1,25 @@
+# Dependencies
 node_modules/
+
+# Editor / OS noise
 .claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs & temp
+*.log
 *.bak
+*.tmp
+*.swp
+.npm/
+
+# Test / preview output
+.playwright-mcp/
+playwright-report/
+test-results/
+
+# Local environment
+.env
+.env.local
