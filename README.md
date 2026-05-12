@@ -1,33 +1,80 @@
-# pixel-AI-Agents
+# AI Tycoon
 
-로컬에서 실행 중인 AI 작업 상태를 한눈에 볼 수 있도록 만든 AI Tycoon 스타일 대시보드입니다.
+> **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
+> *A live pixel-art office dashboard for AI agents running on your machine.*
 
-Claude Code, Cursor, Codex 같은 AI 에이전트가 지금 어떤 작업을 하고 있는지 실시간으로 감지하고, 픽셀 아트 오피스 안의 캐릭터로 보여줍니다.
+Claude Code · Cursor · Codex 같은 AI 에이전트가 지금 어떤 작업을 하고 있는지 자동으로 감지하고, 픽셀 아트 오피스 안의 캐릭터로 보여줍니다.
+
+> 🌐 **English readers:** scroll to the bottom for a quick English overview, or hit the globe icon in the app header to switch the UI to English.
 
 ---
 
 ## 소개
 
-평소에 여러 AI 세션을 동시에 띄워두고 작업하다 보면  
-"지금 누가 일하고 있는지", "어떤 프로젝트를 보고 있는지", "멈춘 건 아닌지"  
-텍스트 로그만으로 바로 파악하기가 어려웠습니다.
+여러 AI 세션을 동시에 띄워놓고 작업하다 보면 "지금 누가 일하고 있는지", "어떤 프로젝트를 보고 있는지", "멈춘 건 아닌지" 텍스트 로그만으로 바로 파악하기가 어렵습니다.
 
-그래서 현재 내 컴퓨터에서 돌아가는 AI 작업을 게임처럼 한눈에 볼 수 있는 형태로 만들어봤습니다.
+AI Tycoon은 현재 내 컴퓨터에서 돌아가는 AI 작업을 **게임처럼 한눈에** 볼 수 있도록 만든 대시보드입니다. 캐릭터들이 자기 자리에 앉아 코딩하고, 막히면 검색하러 가고, 검토 차례가 되면 보스 자리(=사용자)로 모입니다.
 
 ---
 
 ## 주요 기능
 
-- 로컬에서 실행 중인 AI 에이전트 자동 감지
-- 작업 상태 실시간 시각화 (coding, thinking, searching, reviewing, idle, offline)
-- 픽셀 아트 오피스 기반 대시보드
-- WebSocket 기반 실시간 업데이트
-- 에이전트별 프로젝트 / 메모리 / 현재 작업 확인
-- 보스 리뷰 큐를 통한 작업 흐름 표현
-- 다크 모드, 줌/패닝, 필터/정렬 지원
-- 남녀 캐릭터 다양성 (헤어스타일, 액세서리, 피부톤)
-- 역할 자동 배정 (개발자, 기획자, QA, 디자이너, 리뷰어)
-- 모바일 터치 지원 (핀치 줌, 한 손가락 패닝)
+### 🤖 실시간 감지 & 시각화
+- **자동 감지** — Claude Code · Cursor · Codex · Copilot · Ollama · LM Studio · Jan · GPT4All 등 8종 AI 플랫폼 (설정 없음)
+- **실시간 상태** — coding · thinking · searching · reviewing · idle · offline 6단계, 깜빡임 방지 hold 로직 포함
+- **보스 리뷰 큐** — 검토 차례가 된 에이전트가 줄 서서 사용자 앞에 옵니다
+- **역할 자동 배정** — 개발자 · 기획자 · QA · 디자이너 · 리뷰어
+
+### 🎨 풍부한 비주얼
+- **픽셀 아트 오피스** — 데스크 · 모니터 · 의자 · 휴게실 · 자판기 · 수족관 · 미팅룸 · 책장 · 식물
+- **시간대 조명** — 시계 시간에 맞춰 창밖 하늘이 새벽·낮·황혼·밤으로 자동 전환 (Pixi 앰비언트 틴트 + 윈도우 별/달/태양 궤도)
+- **빗방울 날씨** — 시간당 8% 확률로 비 효과
+- **백그라운드 NPC** — 청소 로봇, 종이비행기, 휴게실 고양이, 야간 보안 순찰, 배송 NPC
+- **오피스 테마 4종** — 클래식 / 카페 / 숲속 / 심야 (light/dark 양쪽 팔레트)
+- **자동 시즌 장식** — 12월 크리스마스 트리+눈, 10-11월 잭오랜턴+거미줄, 3-4월 벚꽃
+- **인테리어 디테일** — 책상별 램프(저녁 글로우), 커피잔/포스트잇/식물/책 변형, 캘린더·CAFE 네온·모티브 포스터
+
+### 🎭 캐릭터
+- 20개 캐릭터 테마 — 헤어스타일·액세서리·피부톤·의상 자동 배정
+- 합성 데모 모드 — 실제 에이전트 없이도 6-8명 풀-페이크 직원으로 작업실 시연
+
+### 📊 인사이트 & 통계
+- **인사이트 모달** (`I` 키) — 활성/완료/진행/메모리, 플랫폼 분포, TOP 5 프로젝트, 상태 분포, 24시간 히트맵, 7일 추이, 최근 활동 피드(클릭→포커스), 업적
+- **일자별 통계 영속화** — localStorage 14일 보관, 시간대별 누적
+- **차트 hover 툴팁** — 5가지 지표(태스크/직원/출근/이벤트) 풍부한 정보
+
+### 🏆 게임화
+- **업적 14종** — 첫 연결, 10/50태스크, 멀티플랫폼, 야간 작업, 3/7일 연속, 5+ 동시 등
+- **컨페티 폭발** + 토스트 팝업 + 헤더 미해제 카운트 뱃지
+
+### 🌐 i18n & 접근성
+- **KO/EN 토글** — 헤더 🌐 버튼, 70+ 문자열 양국어
+- **접근성** — 키보드 내비게이션, `prefers-reduced-motion`, ARIA 라벨, 포커스 트랩
+
+### 🔊 알림 & 사운드
+- **데스크탑 알림** — Web Notifications API, 태스크 완료·검토 요청 (탭 백그라운드 시)
+- **효과음** — Web Audio API, 출근/퇴근/완료/리뷰 미니 멜로디, 0-100% 볼륨
+
+### ⚡ PWA
+- **앱으로 설치** — manifest + Service Worker로 데스크탑 앱처럼 띄우기
+- **오프라인 지원** — 셸 자산 28개 캐시
+- **URL 단축 라우팅** — `?action=insights` / `?action=settings`
+
+### 🎯 UX 폴리시
+- **첫 실행 환영 카드** — 픽셀 아트 미리보기 + 4가지 핵심 안내
+- **"혹시 알고 계셨나요?" 팁 카드** — 10개 팁 회전 (5초 후 등장, 30초 회전, dismiss 영속)
+- **단축키 모달** (`?` 키) — `I/D/F/H/P/,/Ctrl+Shift+P` 등 12+ 키
+- **PNG 스냅샷** (`P` 키) — Canvas + Pixi 합성 다운로드
+- **성능 HUD** (`Ctrl+Shift+P`) — FPS, 메모리, 스프라이트 카운트
+- **미니맵** — 줌 1.1x 이상 시 자동 노출, 클릭→패닝
+- **통합 설정 모달** (`,` 키) — 다크/언어/밀도/테마/효과음/볼륨/알림/시즌/시간 강제/백업/복원
+- **백업/복원** — 모든 prefs·통계·업적 JSON export/import
+- **시간대 강제** — 데모/스크린샷용 시각 고정
+
+### 📱 모바일
+- 핀치 줌, 한 손가락 패닝
+- 모바일 우선순위 도크 (가장 중요한 직원 압축 표시)
+- 사이드 패널 슬라이드 오버레이 (480px 이하)
 
 ---
 
@@ -87,12 +134,18 @@ PORT=8080 POLL_INTERVAL=3000 npm start
 npm run build
 ```
 
+스모크 테스트로 모든 모듈/자산이 정상 로드되는지 확인:
+
+```bash
+npm test
+```
+
 ---
 
 ## 프로젝트 구조
 
 ```
-pixel-AI-Agents/
+ai-tycoon/
 ├── css/
 │   ├── tailwind.input.css      # Tailwind 입력 파일
 │   └── tailwind.generated.css  # 로컬 생성 유틸리티 CSS
@@ -101,11 +154,13 @@ pixel-AI-Agents/
 │   ├── state.js       # 공유 상태, 유틸 함수, 보스 큐 헬퍼
 │   ├── ws.js          # WebSocket 연결/재연결, 상태 핸들러
 │   ├── renderer.js    # 캔버스 렌더링 (오피스, 가구, 에이전트, 파티클)
+│   ├── npcs.js        # 배경 NPC (청소 로봇, 종이비행기, 휴게실 고양이)
+│   ├── timeOfDay.js   # 시간대별 하늘/조명 팔레트 계산
 │   ├── panel.js       # 사이드 패널, 필터/정렬, 보스 리뷰 큐 UI
-│   ├── pixiOverlay.js # PixiJS 실시간 그래픽 오버레이
+│   ├── pixiOverlay.js # PixiJS 실시간 그래픽 오버레이 (앰비언트 틴트, 날씨, 작업 효과)
 │   └── main.js        # 진입점, 게임 루프, 입력 처리, 채팅 시스템
 ├── server.js          # AI 세션 감지, 상태 수집, WebSocket 서버
-├── index.html         # 전체 레이아웃
+├── index.html         # 전체 레이아웃 + 환영 카드
 ├── style.css          # 테마 및 UI 스타일
 ├── tailwind.config.js # Tailwind 로컬 빌드 설정
 ├── package.json
@@ -145,3 +200,125 @@ pixel-AI-Agents/
 이 프로젝트는 "AI가 실제로 일하고 있는 느낌"을 조금 더 직관적으로 보고 싶어서 시작했습니다.
 
 단순히 로그를 보는 방식보다, 작업 중 / 대기 중 / 리뷰 중 같은 흐름이 시각적으로 보이니까 여러 세션을 동시에 관리할 때 훨씬 편했습니다.
+
+---
+
+## 🇺🇸 English
+
+**AI Tycoon** is a real-time pixel-art office dashboard that visualizes the AI agents (Claude Code, Cursor, Codex, Ollama, LM Studio, Copilot, Jan, GPT4All) currently running on your local machine.
+
+Instead of glancing at half a dozen terminals, you see your agents as characters in a tiny office: they sit at desks coding, walk to the whiteboard when planning, queue up at the "boss desk" (you) for reviews, and head to the breakroom when idle. The sky outside the windows tracks your real clock from dawn to dusk to night, and the whole scene gets warmer at sunset and cooler at night.
+
+### Highlights
+
+#### Realtime detection
+- **Zero-config detection** — auto-discovers 8 AI platforms (Claude Code, Cursor, Codex, Copilot, Ollama, LM Studio, Jan, GPT4All)
+- **6 live states** — coding / thinking / searching / reviewing / idle / offline
+- **Boss review queue** — agents needing review walk to your "boss desk" and queue
+- **Auto role assignment** — developer / planner / QA / designer / reviewer
+
+#### Visual richness
+- **Time-of-day lighting** — sky, sun/moon, stars and ambient tint follow the real clock; sunrise/sunset/midnight palettes
+- **Weather** — occasional rain (8%/hour)
+- **4 office themes** — Classic / Cafe / Forest / Midnight, light & dark each
+- **Seasonal decor** — Christmas tree + snow (Dec), jack-o-lantern + spider web (Oct/Nov), cherry blossoms (Mar/Apr)
+- **Background NPCs** — cleaning robot, paper airplane, breakroom cat, night security guard, delivery courier
+- **Desk personalities** — lamps that glow at night, coffee mugs / sticky notes / succulents / book stacks
+- **Wall art** — calendar, motivational poster, CAFE neon sign, world map
+
+#### Insights & history
+- **Insights modal** (`I`) — totals, platform breakdown, top 5 projects, status distribution, 24-hour heatmap, 7-day trend, clickable activity feed, achievements grid
+- **Daily stats** — localStorage, 14-day retention
+- **Rich hover tooltips** on every chart
+
+#### Gamification
+- **14 achievements** — first connect, 10/50 tasks, multi-platform, night owl, streaks, full house, …
+- **Confetti** + toast popups + header unseen-count badge
+
+#### i18n & accessibility
+- **KO/EN toggle** — 70+ strings, persisted preference
+- Keyboard navigation, `prefers-reduced-motion`, ARIA labels, focus traps
+
+#### Audio & alerts
+- **Desktop notifications** — Web Notifications API for task done / review requests (when tab in background)
+- **Sound effects** — Web Audio tones for join/leave/done/review, 0-100% volume
+
+#### PWA
+- **Install as app** — manifest + service worker, 28 shell assets cached for offline
+- **URL shortcuts** — `?action=insights` / `?action=settings`
+
+#### Polish
+- First-run welcome card with pixel-art preview
+- Rotating "Did you know?" tips
+- Keyboard shortcuts modal (`?`)
+- **PNG snapshot export** (`P`) — Canvas + Pixi composite download
+- **Performance HUD** (`Ctrl+Shift+P`) — FPS, heap, sprite count
+- **Mini-map** — appears when zoomed in, click to pan
+- **Settings modal** (`,`) — dark / lang / density / theme / sound / notify / season / time / backup / reset
+- **Backup & restore** — full JSON export/import of prefs, stats, achievements
+- Pinch-zoom, single-finger pan, mobile priority dock
+
+### Run
+
+```bash
+npm install
+npm start          # http://localhost:3777
+npm test           # smoke check: 26 assets + modules
+```
+
+Optional environment variables:
+
+```bash
+PORT=8080 POLL_INTERVAL=3000 npm start
+```
+
+### Project layout
+
+```
+ai-tycoon/
+├── server.js          # Detects AI sessions, broadcasts state via WebSocket
+├── index.html         # Layout + welcome card + modals + splash
+├── manifest.webmanifest, sw.js, icons/  # PWA support
+├── css/, style.css    # Tailwind utilities + custom styles
+└── js/
+    ├── main.js        # Entry point, game loop, input
+    ├── state.js       # Shared mutable state + utility functions
+    ├── constants.js   # Palettes, themes, character themes, office map
+    ├── renderer.js    # Canvas 2D drawing (office, agents, NPCs)
+    ├── pixiOverlay.js # PixiJS effects layer (ambient tint, weather, auras)
+    ├── npcs.js        # Background characters (robot, cat, plane, courier, guard)
+    ├── seasons.js     # Christmas / Halloween / Spring decorations
+    ├── timeOfDay.js   # Sky palette + ambient lighting maths
+    ├── panel.js       # Side panel + insights modal
+    ├── ws.js          # WebSocket reconnect + state diffing
+    ├── agentPriority.js # Sorting & filtering of agents
+    ├── i18n.js        # KO/EN dictionary (70+ keys)
+    ├── stats.js       # Daily rollups persisted to localStorage
+    ├── achievements.js# 14 milestone tracking + popups + confetti
+    ├── sound.js       # Web Audio tones + volume slider
+    ├── notifications.js # Web Notifications API wrapper
+    ├── demoMode.js    # Synthetic agents for screenshots
+    ├── snapshot.js    # PNG export (Canvas + Pixi composite)
+    ├── perfHud.js     # FPS / heap / density debug overlay
+    ├── tips.js        # Rotating "did you know?" hint card
+    ├── miniMap.js     # Bottom-right office overview when zoomed in
+    └── backup.js      # JSON export / import of all state
+```
+
+### Notes
+
+- The frontend uses native ES modules — no bundler. Open the page and refresh after editing.
+- Tailwind utilities are pre-built into `css/tailwind.generated.css`; regenerate with `npm run build`.
+- The "boss desk" is *your* seat: agents needing review walk over and queue.
+- New AI platforms can be added by extending `AI_PLATFORMS` in `server.js`.
+
+### Docs
+
+- [`CHANGELOG.md`](./CHANGELOG.md) — feature drops by iteration
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — project layout + how to add modals / shortcuts / achievements / platforms
+- [`LICENSE`](./LICENSE) — MIT
+
+### Easter eggs
+
+- ↑ ↑ ↓ ↓ ← → ← → B A — Konami unlocks a hidden achievement
+- Inspect the DevTools console — there's a hello message + helper APIs

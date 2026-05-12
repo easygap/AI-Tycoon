@@ -9,6 +9,12 @@ import {
     generateDeskSpots,
 } from "./constants.js";
 import { updatePanel, updateStats, updateDetailPanel, updateLiveHud } from "./panel.js";
+import { recordStateSnapshot } from "./stats.js";
+import { t } from "./i18n.js";
+import { sfxJoin, sfxLeave, sfxTaskDone, sfxReview } from "./sound.js";
+import { checkAll as checkAchievements } from "./achievements.js";
+import { notify } from "./notifications.js";
+import { showToast } from "./toasts.js";
 
 // ── WebSocket ──
 export function connectWS() {
@@ -19,13 +25,25 @@ export function connectWS() {
         S.lastHeartbeat = Date.now();
         setConn(true);
         addLog("서버 연결 완료!", "system");
+        if (typeof window !== "undefined") window.__aiTycoonConnected = true;
+        try { checkAchievements(); } catch { /* ignore */ }
     };
     S.ws.onmessage = (e) => {
         try {
+            const now = Date.now();
+            if (S.lastHeartbeat) {
+                const delta = now - S.lastHeartbeat;
+                // Track a small rolling window of inter-arrival times
+                S.heartbeatDeltas = S.heartbeatDeltas || [];
+                if (delta > 0 && delta < 20000) {
+                    S.heartbeatDeltas.push(delta);
+                    if (S.heartbeatDeltas.length > 10) S.heartbeatDeltas.shift();
+                }
+            }
             const msg = JSON.parse(e.data);
             if (msg.type === "full_state") handleState(msg.data);
             else if (msg.type === "heartbeat") {
-                S.lastHeartbeat = Date.now();
+                S.lastHeartbeat = now;
                 if (msg.diagnostics && S.serverState) {
                     S.serverState.diagnostics = msg.diagnostics;
                     updateLiveHud();
@@ -41,13 +59,39 @@ export function connectWS() {
     S.ws.onerror = () => { try { S.ws.close(); } catch(e) {} };
 }
 
+/** Median inter-arrival time of recent heartbeats, in ms. */
+export function avgHeartbeatGap() {
+    const arr = S.heartbeatDeltas;
+    if (!arr || arr.length === 0) return null;
+    const sorted = [...arr].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)];
+}
+
+/** "good" / "fair" / "poor" classification of the live link. */
+export function connQuality() {
+    const ms = avgHeartbeatGap();
+    if (ms == null) return "unknown";
+    if (ms < 2500) return "good";
+    if (ms < 4500) return "fair";
+    return "poor";
+}
+
 export function scheduleReconnect() {
     S.reconnectAttempt++;
     const delay = Math.min(RECONNECT_BASE * Math.pow(1.5, S.reconnectAttempt - 1), RECONNECT_MAX);
     const txt = document.getElementById("conn-text");
     const dot = document.getElementById("conn-dot");
+    const badge = document.getElementById("conn-badge");
     if (txt) txt.textContent = `재연결 (${S.reconnectAttempt})`;
     if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse";
+    // After 3 failed retries, surface the actual server address and a hint
+    if (S.reconnectAttempt >= 3 && badge) {
+        badge.title = `${WS_URL} 에 연결할 수 없어요. 서버가 실행 중인지 확인해주세요.`;
+        badge.setAttribute("aria-label", `재연결 ${S.reconnectAttempt}회 — ${WS_URL} 응답 없음. 서버가 실행 중인지 확인하세요.`);
+        if (S.reconnectAttempt === 3) {
+            addLog(`서버 ${WS_URL} 응답 없음 — npm start 가 실행 중인지 확인해 주세요.`, "system");
+        }
+    }
     setTimeout(connectWS, delay);
 }
 
@@ -57,17 +101,26 @@ export function setConn(ok) {
     const badge = document.getElementById("conn-badge");
     if (ok) {
         dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-300";
-        txt.textContent = "실시간";
+        txt.textContent = t("conn.live");
         badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 ring-1 ring-emerald-200/60 text-xs text-emerald-600 font-medium";
+        badge.title = `${WS_URL}`;
+        badge.setAttribute("aria-label", t("conn.live"));
     } else {
         dot.className = "w-1.5 h-1.5 rounded-full bg-zinc-400";
-        txt.textContent = "연결 중";
-        badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-xs text-zinc-500";
+        if (S.reconnectAttempt >= 3) {
+            txt.textContent = t("conn.lost");
+            badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 ring-1 ring-rose-200/60 text-xs text-rose-600 font-medium";
+        } else {
+            txt.textContent = t("conn.connecting");
+            badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-xs text-zinc-500";
+        }
+        badge.title = `${WS_URL}`;
+        badge.setAttribute("aria-label", `${t("conn.lost")} — ${WS_URL}`);
     }
 
     const hudText = document.getElementById("hud-conn-text");
     const hudDot = document.getElementById("hud-live-dot");
-    if (hudText) hudText.textContent = ok ? "라이브 연결" : "연결 대기";
+    if (hudText) hudText.textContent = ok ? t("hud.live") : t("hud.waiting");
     if (hudDot) hudDot.classList.toggle("is-on", ok);
     updateLiveHud();
 }
@@ -142,11 +195,20 @@ function collectWorkEvents(prevAgentsByPid) {
         }
 
         if (!prev.needsReview && agent.needsReview) {
+            const theme = themeForAgent(agent);
+            const reviewText = getWorkText(agent) || firstLine(agent.currentWork?.prompt || agent.currentTask?.subject || "확인이 필요해요", 72);
             addAgentEvent(agent, "review", {
                 label: "검토 요청",
-                text: getWorkText(agent) || firstLine(agent.currentWork?.prompt || agent.currentTask?.subject || "확인이 필요해요", 72),
+                text: reviewText,
                 key: `review|${agent.pid}|${workSignature(agent)}`,
             });
+            try { sfxReview(); } catch { /* ignore */ }
+            try { notify("review", `${theme.name} · ${agent.projectName}`, `검토 요청: ${reviewText}`, { tag: `review-${agent.pid}` }); } catch { /* ignore */ }
+            try {
+                const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                const title = lang === "en" ? `${theme.name} needs review` : `${theme.name} 검토 요청`;
+                showToast("review", title, reviewText, { pid: agent.pid });
+            } catch { /* ignore */ }
         }
 
         if (agent.currentWork?.prompt && workSignature(agent) !== workSignature(prev)) {
@@ -182,12 +244,21 @@ function collectWorkEvents(prevAgentsByPid) {
                     key: `task-start|${agent.pid}|${task.id}|${task.status}`,
                 });
             } else if (task.status === "completed" && prevTask.status !== "completed") {
+                const theme = themeForAgent(agent);
+                const taskText = firstLine(task.subject || task.activeForm || `Task ${task.id}`, 72);
                 addAgentEvent(agent, "task-done", {
                     taskId: task.id,
                     label: "완료",
-                    text: firstLine(task.subject || task.activeForm || `Task ${task.id}`, 72),
+                    text: taskText,
                     key: `task-done|${agent.pid}|${task.id}`,
                 });
+                try { sfxTaskDone(); } catch { /* ignore */ }
+                try { notify("task-done", `${theme.name} 완료!`, taskText, { tag: `done-${task.id}` }); } catch { /* ignore */ }
+                try {
+                    const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                    const title = lang === "en" ? `${theme.name} finished a task` : `${theme.name} 태스크 완료`;
+                    showToast("task-done", title, taskText, { pid: agent.pid });
+                } catch { /* ignore */ }
             }
         });
     });
@@ -232,6 +303,14 @@ export function handleState(state) {
                 });
                 spawnParticles(dx, dy, theme.body, 12);
                 spawnHearts(dx, dy - 16, 3);
+                try { sfxJoin(); } catch { /* ignore */ }
+                try {
+                    const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                    const title = lang === "en"
+                        ? `${theme.name} joined`
+                        : `${theme.name} 출근!`;
+                    showToast("join", title, agent.projectName || "", { pid: agent.pid });
+                } catch { /* ignore */ }
             }
         }
     });
@@ -251,6 +330,12 @@ export function handleState(state) {
                     text: "작업실에서 나갔어요",
                     key: `leave|${pid}`,
                 });
+                try { sfxLeave(); } catch { /* ignore */ }
+                try {
+                    const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                    const title = lang === "en" ? `${theme.name} left` : `${theme.name} 퇴근`;
+                    showToast("leave", title, prevAgent.projectName || "");
+                } catch { /* ignore */ }
             }
             delete S.visualAgents[pid];
             // Fix: clear selectedPid if agent left
@@ -317,5 +402,8 @@ export function handleState(state) {
 
     updatePanel();
     updateStats();
+    recordStateSnapshot(S.liveAgents);
+    if (typeof window !== "undefined") window.__aiTycoonAgents = S.liveAgents;
+    try { checkAchievements(); } catch { /* ignore */ }
     if (S.detailPid) updateDetailPanel();
 }

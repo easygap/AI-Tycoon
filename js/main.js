@@ -17,6 +17,39 @@ import { render } from "./renderer.js";
 import { updatePanel, updateDetailPanel, updateBossQueueUI, updateLiveHud, onMouseMove } from "./panel.js";
 import { initPixiOverlay, resizePixiOverlay, renderPixiOverlay, getPixiOverlayDebug } from "./pixiOverlay.js";
 import { compareAgentPriority } from "./agentPriority.js";
+import { applyToDom as applyI18nToDom, onLangChange, getLang, t } from "./i18n.js";
+// Auto-load helper modules so window.aiTycoon* helpers register on boot
+import "./achievements.js";
+import "./notifications.js";
+import "./demoMode.js";
+import "./snapshot.js";
+import "./perfHud.js";
+import "./tips.js";
+import "./miniMap.js";
+import "./backup.js";
+import "./toasts.js";
+import "./tour.js";
+import "./crossTab.js";
+import "./konami.js";
+
+// ── Console branding (devtools welcome) ──
+if (typeof console !== "undefined") {
+    const big = "color:#d97757;font-weight:800;font-size:14px";
+    const dim = "color:#7a5a48;font-size:11px";
+    const ok  = "color:#10b981;font-weight:700";
+    try {
+        console.log("%c\n  ▄▄▄▄▄  AI Tycoon\n  █ █ █  pixel-art office for AI agents\n", big);
+        console.log("%cTry %caiTycoonDemo.toggle()%c, %caiTycoonAchievements.list()%c, %caiTycoonSnapshot.download()", dim, ok, dim, ok, dim, ok);
+        console.log("%cHotkeys: ? help · I insights · , settings · P snapshot · D dark · Ctrl+Shift+P perf", dim);
+    } catch { /* ignore */ }
+}
+
+// Expose Pixi overlay debug for the perf HUD
+if (typeof window !== "undefined") {
+    window.aiTycoonOverlayDebug = getPixiOverlayDebug;
+    // Expose shared state for one-shot helpers (toasts, mini-map, etc.)
+    window.S = S;
+}
 
 const PANEL_FOCUSABLE = [
     "a[href]",
@@ -394,6 +427,24 @@ function init() {
     if (panel && window.innerWidth <= 480) panel.classList.add("panel-hidden");
     syncSidePanelState();
     updateCanvasAccessibility(true);
+
+    // Force immediate palette + repaint (used by theme picker)
+    window.aiTycoonForceRepaint = () => {
+        try { updatePalette(); } catch (err) { void err; }
+        // Render happens on next tick via the existing game loop
+    };
+
+    // Apply current language to DOM and refresh on switch
+    applyI18nToDom();
+    const langLabel = document.getElementById("lang-label");
+    if (langLabel) langLabel.textContent = getLang().toUpperCase();
+    onLangChange(() => {
+        applyI18nToDom();
+        if (langLabel) langLabel.textContent = getLang().toUpperCase();
+        // Re-render dynamic panels that build HTML strings
+        if (typeof window.refreshInsights === "function") window.refreshInsights();
+        updatePanel();
+    });
 
     // Delay first resize to let layout settle
     requestAnimationFrame(() => { resize(); connectWS(); loop(); });

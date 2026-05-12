@@ -2,12 +2,14 @@
   "name": "ai-tycoon",
   "version": "1.0.0",
   "description": "Pixel Art Office - Real-time Claude Code Agent Visualizer",
+  "license": "MIT",
   "main": "server.js",
   "scripts": {
     "build": "npm run build:css",
     "build:css": "node scripts/build-css.js",
     "start": "node server.js",
-    "dev": "npm run build:css && node server.js"
+    "dev": "npm run build:css && node server.js",
+    "test": "node scripts/smoke-test.js"
   },
   "dependencies": {
     "ws": "^8.16.0"

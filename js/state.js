@@ -3,6 +3,7 @@
 // ============================================================
 
 import { generateDeskSpots, MAX_PARTICLES, MAX_HEARTS } from "./constants.js";
+import { recordEvent } from "./stats.js";
 
 function readStoredStringArray(key) {
     try {
@@ -147,6 +148,7 @@ export function addWorkEvent(event) {
         ts: event.ts || now,
     });
     if (S.workEvents.length > 28) S.workEvents.length = 28;
+    try { recordEvent(); } catch (err) { /* persistence is non-fatal */ void err; }
 }
 
 // ── Boss Review Queue helpers ──
