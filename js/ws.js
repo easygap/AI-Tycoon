@@ -46,8 +46,17 @@ export function scheduleReconnect() {
     const delay = Math.min(RECONNECT_BASE * Math.pow(1.5, S.reconnectAttempt - 1), RECONNECT_MAX);
     const txt = document.getElementById("conn-text");
     const dot = document.getElementById("conn-dot");
+    const badge = document.getElementById("conn-badge");
     if (txt) txt.textContent = `재연결 (${S.reconnectAttempt})`;
     if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse";
+    // After 3 failed retries, surface the actual server address and a hint
+    if (S.reconnectAttempt >= 3 && badge) {
+        badge.title = `${WS_URL} 에 연결할 수 없어요. 서버가 실행 중인지 확인해주세요.`;
+        badge.setAttribute("aria-label", `재연결 ${S.reconnectAttempt}회 — ${WS_URL} 응답 없음. 서버가 실행 중인지 확인하세요.`);
+        if (S.reconnectAttempt === 3) {
+            addLog(`서버 ${WS_URL} 응답 없음 — npm start 가 실행 중인지 확인해 주세요.`, "system");
+        }
+    }
     setTimeout(connectWS, delay);
 }
 
@@ -59,10 +68,20 @@ export function setConn(ok) {
         dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-300";
         txt.textContent = "실시간";
         badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 ring-1 ring-emerald-200/60 text-xs text-emerald-600 font-medium";
+        badge.title = `${WS_URL} · 연결됨`;
+        badge.setAttribute("aria-label", "서버에 실시간 연결됨");
     } else {
         dot.className = "w-1.5 h-1.5 rounded-full bg-zinc-400";
-        txt.textContent = "연결 중";
-        badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-xs text-zinc-500";
+        // Show different copy depending on retry count
+        if (S.reconnectAttempt >= 3) {
+            txt.textContent = "서버 응답 없음";
+            badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 ring-1 ring-rose-200/60 text-xs text-rose-600 font-medium";
+        } else {
+            txt.textContent = "연결 중";
+            badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-xs text-zinc-500";
+        }
+        badge.title = `${WS_URL} · 응답 없음`;
+        badge.setAttribute("aria-label", `서버 ${WS_URL} 응답 없음`);
     }
 
     const hudText = document.getElementById("hud-conn-text");

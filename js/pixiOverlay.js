@@ -9,6 +9,7 @@ import {
     AGENT_THEMES, PLATFORM_META, STATUS_META,
 } from "./constants.js";
 import { agentNextAction, compareAgentPriority } from "./agentPriority.js";
+import { ambientTint, getSkyPalette } from "./timeOfDay.js";
 
 let app = null;
 let world = null;
@@ -21,6 +22,8 @@ let flowFX = null;
 let burstFX = null;
 let agentFX = null;
 let labelFX = null;
+let ambientTintFX = null;
+let weatherFX = null;
 let ready = false;
 let failed = false;
 let resizeObserver = null;
@@ -172,6 +175,11 @@ export async function initPixiOverlay() {
         world.addChild(ambient, interiorFX, projectFX, floorFX, actionFX, flowFX, burstFX, agentFX, labelFX);
         app.stage.addChild(world);
 
+        // Time-of-day mood layers (screen-space, sit above the world)
+        ambientTintFX = new PIXI.Graphics();
+        weatherFX = new PIXI.Container();
+        app.stage.addChild(ambientTintFX, weatherFX);
+
         for (let i = 0; i < 26; i++) {
             ambientDots.push({
                 x: Math.random() * COLS * TILE,
@@ -226,6 +234,8 @@ export function renderPixiOverlay() {
     syncWorkEventBursts();
     syncAgentSprites();
     drawAgentLabels();
+    drawAmbientTint();
+    drawWeather();
 }
 
 export function getPixiOverlayDebug() {
@@ -260,6 +270,97 @@ function drawAmbient() {
         const alpha = (0.024 + (Math.sin(t * 0.012 + i) + 1) * 0.008) * calm;
         fillCircle(g, dot.x, dot.y + bob, dot.r, dot.color, alpha);
     });
+}
+
+// ── Time-of-day mood overlay (screen-space, sits above the scene) ──
+function drawAmbientTint() {
+    if (!ambientTintFX) return;
+    clearGraphic(ambientTintFX);
+    const tint = ambientTint();
+    if (tint.alpha <= 0.005) return;
+    const w = app?.screen?.width || S.canvasW || 0;
+    const h = app?.screen?.height || S.canvasH || 0;
+    if (w <= 0 || h <= 0) return;
+    if (typeof ambientTintFX.rect === "function") {
+        ambientTintFX.rect(0, 0, w, h).fill({ color: tint.color, alpha: tint.alpha });
+    } else {
+        ambientTintFX.beginFill(tint.color, tint.alpha);
+        ambientTintFX.drawRect(0, 0, w, h);
+        ambientTintFX.endFill();
+    }
+    // Soft vignette darkening at deep night for depth
+    const sky = getSkyPalette();
+    if (sky.starDensity > 0.4) {
+        const vignetteAlpha = Math.min(0.22, sky.starDensity * 0.20);
+        const corner = Math.min(w, h) * 0.45;
+        if (typeof ambientTintFX.rect === "function") {
+            ambientTintFX.rect(0, 0, w, corner).fill({ color: 0x0a0e1c, alpha: vignetteAlpha * 0.5 });
+            ambientTintFX.rect(0, h - corner, w, corner).fill({ color: 0x0a0e1c, alpha: vignetteAlpha * 0.6 });
+        } else {
+            ambientTintFX.beginFill(0x0a0e1c, vignetteAlpha * 0.5);
+            ambientTintFX.drawRect(0, 0, w, corner);
+            ambientTintFX.endFill();
+            ambientTintFX.beginFill(0x0a0e1c, vignetteAlpha * 0.6);
+            ambientTintFX.drawRect(0, h - corner, w, corner);
+            ambientTintFX.endFill();
+        }
+    }
+}
+
+// ── Weather: occasional rain streaks across the screen (placeholder for now) ──
+const _weatherState = { kind: "clear", until: 0, drops: [] };
+function pickWeather(now) {
+    // 8% chance per hour that weather is "rain"
+    const hourSeed = Math.floor(now / 3_600_000);
+    const rng = ((hourSeed * 2654435761) >>> 0) / 4294967295;
+    if (rng < 0.08) {
+        return { kind: "rain", until: now + 6 * 60 * 1000 + rng * 4 * 60 * 1000 };
+    }
+    return { kind: "clear", until: now + 8 * 60 * 1000 };
+}
+function drawWeather() {
+    if (!weatherFX) return;
+    const now = Date.now();
+    if (now >= _weatherState.until) {
+        Object.assign(_weatherState, pickWeather(now), { drops: [] });
+    }
+    weatherFX.removeChildren();
+    if (_weatherState.kind !== "rain") return;
+    const w = app?.screen?.width || S.canvasW || 0;
+    const h = app?.screen?.height || S.canvasH || 0;
+    if (w <= 0 || h <= 0) return;
+    const PIXI = window.PIXI;
+    if (!PIXI) return;
+    if (_weatherState.drops.length === 0) {
+        const count = Math.min(60, Math.round((w * h) / 18000));
+        for (let i = 0; i < count; i++) {
+            _weatherState.drops.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                speed: 5 + Math.random() * 4,
+                len: 8 + Math.random() * 6,
+                alpha: 0.15 + Math.random() * 0.18,
+            });
+        }
+    }
+    const g = new PIXI.Graphics();
+    const motion = motionFactor() * 1.6 + 0.4;
+    _weatherState.drops.forEach(d => {
+        d.y += d.speed * motion;
+        d.x += d.speed * 0.4 * motion;
+        if (d.y > h + 12) { d.y = -10; d.x = Math.random() * w; }
+        if (d.x > w + 12) d.x -= w + 24;
+        if (typeof g.moveTo === "function" && typeof g.lineTo === "function") {
+            g.moveTo(d.x, d.y);
+            g.lineTo(d.x - d.len * 0.4, d.y + d.len);
+            if (typeof g.stroke === "function") {
+                g.stroke({ color: 0xb0d8ff, alpha: d.alpha, width: 1 });
+            } else {
+                g.lineStyle(1, 0xb0d8ff, d.alpha);
+            }
+        }
+    });
+    weatherFX.addChild(g);
 }
 
 function activeAgentCount() {

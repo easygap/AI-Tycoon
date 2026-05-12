@@ -4210,3 +4210,368 @@ body.dark #panel-toggle.has-review::after {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* ────────────────────────────────────────────────────────────
+   First-run Welcome Card
+   ──────────────────────────────────────────────────────────── */
+.welcome-overlay {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at top, rgba(255,200,160,0.25), rgba(40,30,60,0.55));
+    backdrop-filter: blur(8px) saturate(1.05);
+    z-index: 120;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.32s ease;
+}
+.welcome-overlay.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+.welcome-card {
+    position: relative;
+    width: min(540px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    overflow: auto;
+    background: linear-gradient(180deg, rgba(255,253,248,0.96), rgba(255,243,230,0.95));
+    border: 1px solid rgba(217,170,120,0.4);
+    border-radius: 22px;
+    box-shadow:
+        0 30px 90px -20px rgba(70,40,30,0.45),
+        0 8px 24px rgba(40,20,10,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+    padding: 0;
+    transform: translateY(20px) scale(0.98);
+    transition: transform 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.welcome-overlay.is-visible .welcome-card {
+    transform: translateY(0) scale(1);
+}
+.welcome-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(0,0,0,0.06);
+    color: #6a5040;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.welcome-close:hover {
+    background: rgba(255,255,255,0.95);
+    color: #3a2010;
+}
+.welcome-close iconify-icon { font-size: 16px; }
+
+/* Mini pixel-art preview at the top of the card */
+.welcome-art {
+    position: relative;
+    height: 132px;
+    background:
+        linear-gradient(180deg, #fff3df 0%, #ffe2c2 60%, #f8d4a8 100%);
+    border-bottom: 1px solid rgba(217,170,120,0.3);
+    overflow: hidden;
+    border-radius: 22px 22px 0 0;
+    image-rendering: pixelated;
+}
+.welcome-window {
+    position: absolute;
+    top: 14px;
+    left: 24px;
+    width: 92px;
+    height: 56px;
+    background: #d4a878;
+    border-radius: 4px;
+    padding: 4px;
+    box-shadow: 0 4px 8px rgba(80,40,20,0.18);
+}
+.welcome-sky {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, #a5d4ff 0%, #ffe0c2 70%, #ffb88a 100%);
+    border-radius: 2px;
+    position: relative;
+    overflow: hidden;
+}
+.welcome-sky::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 18px;
+    height: 4px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 2px;
+    animation: welcome-cloud 9s linear infinite;
+}
+.welcome-sun {
+    position: absolute;
+    top: 24px;
+    right: 14px;
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(circle, #fff2c0 0%, #ffd270 60%, transparent 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 16px rgba(255,210,140,0.7);
+    animation: welcome-sun 5s ease-in-out infinite alternate;
+}
+@keyframes welcome-cloud {
+    from { transform: translateX(-30px); }
+    to   { transform: translateX(120px); }
+}
+@keyframes welcome-sun {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-3px); }
+}
+
+.welcome-desks {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    display: flex;
+    gap: 6px;
+}
+.welcome-desk {
+    position: relative;
+    width: 28px;
+    height: 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+.welcome-monitor {
+    width: 22px;
+    height: 16px;
+    background: #2a2a3a;
+    border: 1px solid #1a1a28;
+    border-radius: 1px;
+    box-shadow: 0 0 8px rgba(80,220,160,0.45);
+    position: relative;
+}
+.welcome-monitor::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    background: linear-gradient(180deg, rgba(80,220,160,0.7), rgba(40,180,130,0.45));
+    border-radius: 1px;
+    animation: welcome-blink 1.4s ease-in-out infinite alternate;
+}
+.welcome-chair {
+    width: 22px;
+    height: 10px;
+    background: linear-gradient(180deg, #e8a0b0, #d088a0);
+    border-radius: 2px 2px 4px 4px;
+    margin-top: 2px;
+}
+@keyframes welcome-blink {
+    from { opacity: 0.55; }
+    to   { opacity: 0.95; }
+}
+.welcome-character {
+    position: absolute;
+    bottom: 18px;
+    width: 14px;
+    height: 18px;
+    background: var(--char-color, #FFB3C6);
+    border-radius: 6px 6px 4px 4px;
+    box-shadow: 0 4px 6px rgba(40,20,10,0.18);
+    animation: welcome-bob 2.2s ease-in-out infinite;
+}
+.welcome-character::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    background: #F5D5C8;
+    border-radius: 4px 4px 5px 5px;
+}
+.welcome-character::after {
+    content: '';
+    position: absolute;
+    top: -9px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 5px;
+    background: #2D2018;
+    border-radius: 5px 5px 0 0;
+}
+.welcome-character-1 { left: 140px; animation-delay: 0s; }
+.welcome-character-2 { left: 160px; animation-delay: 0.5s; }
+.welcome-character-3 { left: 180px; animation-delay: 1.1s; }
+@keyframes welcome-bob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-2px); }
+}
+
+.welcome-body {
+    padding: 22px 28px 24px;
+}
+.welcome-kicker {
+    font-size: 11px;
+    font-weight: 700;
+    color: #d97757;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+.welcome-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #2a1a10;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.01em;
+}
+.welcome-desc {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: #5a4438;
+    margin: 0 0 16px 0;
+}
+.welcome-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 22px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.welcome-list li {
+    display: flex;
+    gap: 11px;
+    align-items: flex-start;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #4a3828;
+    padding: 9px 11px;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid rgba(217,170,120,0.25);
+    border-radius: 10px;
+}
+.welcome-list li iconify-icon {
+    flex-shrink: 0;
+    font-size: 18px;
+    color: #d97757;
+    margin-top: 1px;
+}
+.welcome-list li strong {
+    color: #2a1a10;
+    font-weight: 700;
+}
+.welcome-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+.welcome-primary {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 11px 18px;
+    background: linear-gradient(180deg, #ff8a4c, #d97757);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(217,119,87,0.4), inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.welcome-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(217,119,87,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.welcome-primary:active {
+    transform: translateY(0);
+}
+.welcome-primary iconify-icon { font-size: 16px; }
+.welcome-secondary {
+    padding: 11px 14px;
+    background: transparent;
+    color: #7a5a48;
+    border: none;
+    border-radius: 999px;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+.welcome-secondary:hover {
+    background: rgba(0,0,0,0.05);
+    color: #3a2010;
+}
+
+/* Dark mode welcome card */
+body.dark .welcome-overlay {
+    background: radial-gradient(ellipse at top, rgba(60,40,90,0.4), rgba(8,10,16,0.7));
+}
+body.dark .welcome-card {
+    background: linear-gradient(180deg, rgba(28,30,40,0.97), rgba(20,22,32,0.96));
+    border-color: rgba(140,110,80,0.25);
+    box-shadow:
+        0 30px 90px -20px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+}
+body.dark .welcome-close {
+    background: rgba(255,255,255,0.06);
+    color: #d4d4d8;
+    border-color: rgba(255,255,255,0.08);
+}
+body.dark .welcome-close:hover {
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+}
+body.dark .welcome-art {
+    background: linear-gradient(180deg, #1a1825 0%, #2a1e30 60%, #3a2440 100%);
+    border-bottom-color: rgba(140,110,80,0.2);
+}
+body.dark .welcome-sky {
+    background: linear-gradient(180deg, #1a2a48 0%, #3a2858 70%, #6a3c70 100%);
+}
+body.dark .welcome-title { color: #f4f4f5; }
+body.dark .welcome-desc { color: #c4b8aa; }
+body.dark .welcome-kicker { color: #fdba74; }
+body.dark .welcome-list li {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.06);
+    color: #d4d4d8;
+}
+body.dark .welcome-list li strong { color: #f4f4f5; }
+body.dark .welcome-list li iconify-icon { color: #fdba74; }
+body.dark .welcome-secondary { color: #a89c8e; }
+body.dark .welcome-secondary:hover { background: rgba(255,255,255,0.06); color: #f4f4f5; }
+
+@media (max-width: 560px) {
+    .welcome-body { padding: 18px 20px 20px; }
+    .welcome-title { font-size: 19px; }
+    .welcome-desc { font-size: 12.5px; }
+    .welcome-list li { font-size: 12.5px; }
+    .welcome-art { height: 108px; }
+    .welcome-window { width: 76px; height: 46px; left: 18px; top: 12px; }
+    .welcome-desks { right: 12px; gap: 4px; }
+    .welcome-desk { width: 22px; }
+    .welcome-monitor { width: 18px; height: 12px; }
+    .welcome-chair { width: 18px; height: 8px; }
+    .welcome-character-1 { left: 108px; }
+    .welcome-character-2 { left: 124px; }
+    .welcome-character-3 { left: 140px; }
+    .welcome-actions { flex-direction: column; align-items: stretch; }
+    .welcome-secondary { width: 100%; }
+}

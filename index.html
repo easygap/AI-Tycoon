@@ -30,10 +30,11 @@
                 <span id="conn-text">연결 중</span>
             </div>
 
-            <!-- Clock -->
+            <!-- Clock + time-of-day band -->
             <div class="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-50 ring-1 ring-zinc-200/60 shrink-0">
-                <iconify-icon icon="solar:clock-circle-linear" class="text-amber-400 text-xs"></iconify-icon>
+                <iconify-icon id="game-time-icon" icon="solar:clock-circle-linear" class="text-amber-400 text-xs"></iconify-icon>
                 <span id="game-time" class="text-[11px] text-zinc-600 font-medium tabular-nums">--:--</span>
+                <span id="tod-band" class="text-[10px] text-zinc-400 font-medium tracking-tight border-l border-zinc-300/60 pl-1.5" title="실시간 시간대">--</span>
             </div>
 
             <div class="flex-1"></div>
@@ -234,6 +235,61 @@
     <!-- Tooltip -->
     <div id="tooltip" class="hidden fixed z-50 pointer-events-none"></div>
 
+    <!-- ── First-run Welcome Card ── -->
+    <div id="welcome-overlay" class="welcome-overlay" role="dialog" aria-modal="true" aria-labelledby="welcome-title" aria-describedby="welcome-desc" hidden>
+        <div class="welcome-card">
+            <button id="welcome-close" type="button" class="welcome-close" onclick="dismissWelcome(false)" aria-label="닫기">
+                <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
+            </button>
+            <div class="welcome-art" aria-hidden="true">
+                <div class="welcome-window">
+                    <div class="welcome-sky"></div>
+                    <div class="welcome-sun"></div>
+                </div>
+                <div class="welcome-desks">
+                    <div class="welcome-desk"><div class="welcome-monitor"></div><div class="welcome-chair"></div></div>
+                    <div class="welcome-desk"><div class="welcome-monitor"></div><div class="welcome-chair"></div></div>
+                    <div class="welcome-desk"><div class="welcome-monitor"></div><div class="welcome-chair"></div></div>
+                </div>
+                <div class="welcome-character welcome-character-1" style="--char-color:#86EFAC"></div>
+                <div class="welcome-character welcome-character-2" style="--char-color:#FFB3C6"></div>
+                <div class="welcome-character welcome-character-3" style="--char-color:#93C5FD"></div>
+            </div>
+            <div class="welcome-body">
+                <div class="welcome-kicker">처음 오셨군요</div>
+                <h2 id="welcome-title" class="welcome-title">AI Tycoon에 오신 걸 환영합니다</h2>
+                <p id="welcome-desc" class="welcome-desc">내 컴퓨터에서 동작 중인 AI 에이전트들의 작업 상태를 픽셀 아트 오피스로 한눈에 봐보세요.</p>
+                <ul class="welcome-list">
+                    <li>
+                        <iconify-icon icon="solar:user-plus-rounded-linear" aria-hidden="true"></iconify-icon>
+                        <span><strong>Claude Code · Cursor · Codex</strong> 등을 실행하면 작업실에 캐릭터로 등장해요.</span>
+                    </li>
+                    <li>
+                        <iconify-icon icon="solar:pulse-2-linear" aria-hidden="true"></iconify-icon>
+                        <span>코딩 · 생각 · 검색 · 리뷰 상태가 <strong>실시간</strong>으로 표시됩니다.</span>
+                    </li>
+                    <li>
+                        <iconify-icon icon="solar:sun-2-linear" aria-hidden="true"></iconify-icon>
+                        <span>시계 시간에 따라 <strong>창밖 하늘</strong>이 새벽·낮·노을·밤으로 바뀌어요.</span>
+                    </li>
+                    <li>
+                        <iconify-icon icon="solar:tuning-square-linear" aria-hidden="true"></iconify-icon>
+                        <span>헤더의 <strong>시각 밀도</strong>·<strong>다크모드</strong>·<strong>디렉터 모드</strong>로 보기를 바꿔보세요.</span>
+                    </li>
+                </ul>
+                <div class="welcome-actions">
+                    <button type="button" class="welcome-primary" onclick="dismissWelcome(true)" autofocus>
+                        <iconify-icon icon="solar:play-circle-linear" aria-hidden="true"></iconify-icon>
+                        <span>작업실 둘러보기</span>
+                    </button>
+                    <button type="button" class="welcome-secondary" onclick="dismissWelcome(false)">
+                        다음에 다시 보지 않기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
     // Dark mode: user choice > system preference
     function applyDark(isDark) {
@@ -273,6 +329,36 @@
         if (!panel || panel.classList.contains("panel-hidden")) return;
         closeSidePanel();
     });
+    // ── First-run welcome handling ──
+    const WELCOME_KEY = "ai-tycoon-welcomed-v1";
+    function showWelcomeIfNeeded() {
+        const overlay = document.getElementById("welcome-overlay");
+        if (!overlay) return;
+        if (localStorage.getItem(WELCOME_KEY) === "true") return;
+        overlay.hidden = false;
+        overlay.classList.add("is-visible");
+        const primary = overlay.querySelector(".welcome-primary");
+        primary?.focus({ preventScroll: true });
+    }
+    function dismissWelcome(rememberStart) {
+        const overlay = document.getElementById("welcome-overlay");
+        if (!overlay) return;
+        overlay.classList.remove("is-visible");
+        // Always remember dismissal so it doesn't reappear; "start" is just label flavor
+        localStorage.setItem(WELCOME_KEY, "true");
+        setTimeout(() => { overlay.hidden = true; }, 280);
+        void rememberStart;
+    }
+    document.addEventListener("keydown", (event) => {
+        if (event.key !== "Escape") return;
+        const overlay = document.getElementById("welcome-overlay");
+        if (overlay && !overlay.hidden) {
+            dismissWelcome(false);
+            event.stopPropagation();
+        }
+    });
+    document.addEventListener("DOMContentLoaded", showWelcomeIfNeeded);
+
     // Resolve initial dark mode: explicit choice → system preference
     (function() {
         const stored = localStorage.getItem("ai-tycoon-dark");

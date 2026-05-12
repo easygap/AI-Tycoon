@@ -13,6 +13,7 @@ import {
     AGENT_THEMES, PLATFORM_META, ROLE_META, STATUS_META,
     SUB_COLORS,
 } from "./constants.js";
+import { timeOfDayLabel, getSkyPalette } from "./timeOfDay.js";
 
 const PIN_STORAGE_KEY = "ai-tycoon-pinned-agents";
 const PIN_LEGACY_STORAGE_KEY = "ai-tycoon-pinned-pids";
@@ -1527,11 +1528,35 @@ export function updatePanel() {
     });
 }
 
+function timeOfDayIcon(hour) {
+    if (hour < 5) return "solar:moon-stars-linear";
+    if (hour < 7) return "solar:cloudy-sun-linear";
+    if (hour < 11) return "solar:sun-2-linear";
+    if (hour < 15) return "solar:sun-linear";
+    if (hour < 17.5) return "solar:cloudy-sun-linear";
+    if (hour < 19.5) return "solar:sunset-linear";
+    if (hour < 22) return "solar:moon-linear";
+    return "solar:moon-stars-linear";
+}
+
+function updateTimeOfDayBand(now) {
+    const band = document.getElementById("tod-band");
+    const icon = document.getElementById("game-time-icon");
+    if (!band) return;
+    const sky = getSkyPalette(now);
+    band.textContent = timeOfDayLabel(now);
+    band.style.color = sky.warmth > 0.4 ? "#d97757"
+        : sky.starDensity > 0.4 ? "#7a85b8"
+        : "#71717a";
+    if (icon) icon.setAttribute("icon", timeOfDayIcon(sky.hour));
+}
+
 export function updateStats() {
     if (!S.serverState) return;
     const now = new Date();
     document.getElementById("game-time").textContent =
         `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    updateTimeOfDayBand(now);
 
     const total = S.liveAgents.reduce((s, a) => s + a.totalTasks, 0);
     const done = S.liveAgents.reduce((s, a) => s + a.completedTasks, 0);
