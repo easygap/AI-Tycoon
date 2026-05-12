@@ -6040,9 +6040,40 @@ body.dark .theme-swatch-label { color: #d4d4d8; }
     font-weight: 600;
     cursor: pointer;
     transition: background 0.15s ease;
+    flex: 1;
 }
 .settings-danger:hover { background: rgba(239,68,68,0.16); }
 .settings-danger iconify-icon { font-size: 14px; }
+.settings-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    background: rgba(217,119,87,0.1);
+    border: 1px solid rgba(217,119,87,0.28);
+    color: #d97757;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+    flex: 1;
+}
+.settings-action:hover { background: rgba(217,119,87,0.18); }
+.settings-action:active { transform: scale(0.98); }
+.settings-action iconify-icon { font-size: 14px; }
+.settings-button-pair {
+    display: flex;
+    gap: 7px;
+    width: 100%;
+}
+body.dark .settings-action {
+    background: rgba(253,186,116,0.14);
+    border-color: rgba(253,186,116,0.3);
+    color: #fdba74;
+}
+body.dark .settings-action:hover { background: rgba(253,186,116,0.22); }
 
 body.dark .settings-row {
     background: rgba(255,255,255,0.04);
