@@ -49,6 +49,135 @@ const airplane = {
     nextSpawn: Math.floor(Math.random() * 600) + 300, // frames until first appearance
 };
 
+// ── Office dog ───────────────────────────────────────────
+// Wanders the lounge area between sofas and the aquarium, sits and
+// wags occasionally, with rare little barks.
+const DOG_WAYPOINTS = [
+    { x: 16.5, y: 7.5 },   // near vending
+    { x: 19, y: 7 },       // mid-lounge
+    { x: 21, y: 4.5 },     // toward aquarium
+    { x: 17, y: 4.5 },     // near sofa 1
+    { x: 16, y: 9.5 },     // sofa 2 area
+    { x: 19, y: 10.5 },    // near plant
+    { x: 21, y: 14 },      // meeting room corner
+    { x: 17.5, y: 14 },    // return through center
+];
+const dog = {
+    idx: 0,
+    progress: 0,
+    speed: 0.003,
+    facing: 1,         // 1 = right, -1 = left
+    sitTimer: 0,
+    barkTimer: 0,
+    waggle: 0,
+};
+
+function updateDog() {
+    if (dog.sitTimer > 0) {
+        dog.sitTimer--;
+        dog.waggle += 0.16;
+        return;
+    }
+    const from = DOG_WAYPOINTS[dog.idx];
+    const to = DOG_WAYPOINTS[(dog.idx + 1) % DOG_WAYPOINTS.length];
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const segLen = Math.hypot(dx, dy) || 1;
+    dog.progress += dog.speed / segLen;
+    if (Math.abs(dx) > 0.05) dog.facing = dx > 0 ? 1 : -1;
+    if (dog.progress >= 1) {
+        dog.progress = 0;
+        dog.idx = (dog.idx + 1) % DOG_WAYPOINTS.length;
+        // Occasional sit at waypoint
+        if (Math.random() < 0.32) dog.sitTimer = 80 + Math.floor(Math.random() * 140);
+    }
+    dog.waggle += 0.12;
+}
+
+function drawDog(ctx, animFrame) {
+    const from = DOG_WAYPOINTS[dog.idx];
+    const to = DOG_WAYPOINTS[(dog.idx + 1) % DOG_WAYPOINTS.length];
+    const t = dog.progress;
+    const tx = from.x + (to.x - from.x) * t;
+    const ty = from.y + (to.y - from.y) * t;
+    const px = tx * TILE;
+    const py = ty * TILE;
+    const sitting = dog.sitTimer > 0;
+    const dir = dog.facing;
+
+    // Shadow
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.beginPath(); ctx.ellipse(px, py + 5, 6, 1.6, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Bouncy stride when walking
+    const bob = sitting ? 0 : Math.sin(animFrame * 0.25) * 0.5;
+
+    // Body — short tan corgi-ish
+    ctx.fillStyle = "#d6a868";
+    ctx.fillRect(px - 4, py + 1 + bob, 8, 4);
+    ctx.fillStyle = "#b48848";
+    ctx.fillRect(px - 4, py + 4 + bob, 8, 1);
+
+    // Head (slightly forward of body)
+    ctx.fillStyle = "#e6b878";
+    ctx.fillRect(px + dir * 2 - 2, py - 3 + bob, 4, 4);
+    ctx.fillStyle = "#d6a868";
+    ctx.fillRect(px + dir * 2 - 2, py - 1 + bob, 4, 1);
+
+    // Ears
+    ctx.fillStyle = "#9c6f3a";
+    ctx.fillRect(px + dir * 2 - 2, py - 4 + bob, 1.4, 2);
+    ctx.fillRect(px + dir * 2 + 0.6, py - 4 + bob, 1.4, 2);
+
+    // Eye
+    ctx.fillStyle = "#2a1a10";
+    ctx.fillRect(px + dir * 3, py - 2 + bob, 0.8, 0.8);
+
+    // Snout
+    ctx.fillStyle = "#1a1010";
+    ctx.fillRect(px + dir * 4, py - 0.5 + bob, 0.6, 0.6);
+
+    // Legs (4 short stubs)
+    ctx.fillStyle = "#9c6f3a";
+    if (sitting) {
+        // Front legs flat, back legs tucked
+        ctx.fillRect(px - 3, py + 5, 2, 2);
+        ctx.fillRect(px + 1, py + 5, 2, 2);
+    } else {
+        const step = Math.sin(animFrame * 0.5) > 0 ? 0.5 : -0.5;
+        ctx.fillRect(px - 3 + step, py + 5, 1.5, 2);
+        ctx.fillRect(px - 1 - step, py + 5, 1.5, 2);
+        ctx.fillRect(px + 1 + step, py + 5, 1.5, 2);
+        ctx.fillRect(px + 3 - step, py + 5, 1.5, 2);
+    }
+
+    // Tail — wags faster when sitting (happy)
+    const wagAmp = sitting ? 3 : 1.5;
+    const wagSpeed = sitting ? 0.5 : 0.25;
+    const tailX = px - dir * 4;
+    const tailY = py + 1 + bob;
+    const wag = Math.sin(animFrame * wagSpeed + dog.waggle) * wagAmp;
+    ctx.fillStyle = "#d6a868";
+    ctx.fillRect(tailX - dir, tailY, dir * -2, 1.4);
+    ctx.fillRect(tailX - dir * 2.5, tailY + wag, dir * -1.5, 1.4);
+
+    // Occasional bark (small text bubble)
+    dog.barkTimer = (dog.barkTimer + 1) % 600;
+    if (dog.barkTimer < 40 && Math.random() < 0.04) {
+        // do nothing — handled below by a stable check
+    }
+    if (animFrame % 540 < 40 && sitting) {
+        ctx.font = "bold 3px Pretendard, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "rgba(255,255,255,0.95)";
+        const bx = px, by = py - 7;
+        ctx.fillStyle = "rgba(40,30,20,0.85)";
+        ctx.fillRect(bx - 6, by - 4, 12, 6);
+        ctx.fillStyle = "#fff";
+        ctx.fillText("멍!", bx, by + 0.8);
+    }
+}
+
 // ── Night security guard ─────────────────────────────────
 // Patrols a perimeter route, with a torch beam, only at night.
 const GUARD_PATH = [
@@ -502,8 +631,10 @@ export function drawNPCs(ctx, animFrame) {
     maybeSpawnAirplane(animFrame);
     updateDelivery(animFrame);
     updateGuard();
+    updateDog();
     drawCleaningRobot(ctx, animFrame);
     drawLoungeCat(ctx, animFrame);
+    drawDog(ctx, animFrame);
     drawDelivery(ctx, animFrame);
     drawGuard(ctx, animFrame);
     drawAirplane(ctx, animFrame);
