@@ -134,6 +134,12 @@ PORT=8080 POLL_INTERVAL=3000 npm start
 npm run build
 ```
 
+스모크 테스트로 모든 모듈/자산이 정상 로드되는지 확인:
+
+```bash
+npm test
+```
+
 ---
 
 ## 프로젝트 구조
@@ -257,6 +263,7 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 ```bash
 npm install
 npm start          # http://localhost:3777
+npm test           # smoke check: 26 assets + modules
 ```
 
 Optional environment variables:
