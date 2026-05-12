@@ -66,6 +66,24 @@ function drawOffice() {
                 ctx.fillStyle = "rgba(255,255,255,0.08)";
                 ctx.fillRect(px, py, TILE, 1);
                 ctx.fillRect(px, py, 1, TILE);
+                // Zone-specific overlay: work area gets a wood-plank grain,
+                // lounge gets a softer parquet pattern.
+                if (x >= 1 && x <= 11) {
+                    // Work zone: horizontal wood grain
+                    ctx.fillStyle = "rgba(120,80,40,0.06)";
+                    ctx.fillRect(px, py + 7, TILE, 0.6);
+                    ctx.fillRect(px, py + 18, TILE, 0.6);
+                    ctx.fillRect(px, py + 26, TILE, 0.5);
+                } else if (x >= 14 && x <= 22) {
+                    // Lounge zone: parquet-style square pattern (every other 2x2 tile)
+                    if (((x >> 1) + (y >> 1)) % 2 === 0) {
+                        ctx.fillStyle = "rgba(255,255,255,0.04)";
+                        ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+                        ctx.fillStyle = "rgba(180,150,110,0.06)";
+                        ctx.fillRect(px + 4, py + 4, TILE - 8, 0.6);
+                        ctx.fillRect(px + 4, py + TILE - 5, TILE - 8, 0.6);
+                    }
+                }
             }
         }
     }

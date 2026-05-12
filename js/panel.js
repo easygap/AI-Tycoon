@@ -1909,3 +1909,182 @@ export function positionTooltip(tt, ex, ey) {
     tt.style.left = lx + "px";
     tt.style.top = ly + "px";
 }
+
+// ============================================================
+//  Insights modal — aggregate snapshot from current state
+// ============================================================
+function platformColor(platform) {
+    return PLATFORM_META[platform]?.color || "#94a3b8";
+}
+function platformLabel(platform) {
+    return PLATFORM_META[platform]?.label || platform || "Unknown";
+}
+
+export function refreshInsights() {
+    const agents = S.liveAgents || [];
+    const activeCount = agents.filter(a => a.isRunning).length;
+    const totalCompleted = agents.reduce((s, a) => s + (a.completedTasks || 0), 0);
+    const totalOngoing = agents.reduce((s, a) =>
+        s + ((a.tasks || []).filter(t => t.status === "in_progress").length), 0);
+    const totalRam = agents.reduce((s, a) => s + (a.memoryMB || 0), 0);
+
+    const el = (id) => document.getElementById(id);
+    if (el("insights-agents")) el("insights-agents").textContent = activeCount;
+    if (el("insights-completed")) el("insights-completed").textContent = totalCompleted;
+    if (el("insights-ongoing")) el("insights-ongoing").textContent = totalOngoing;
+    if (el("insights-ram")) {
+        el("insights-ram").innerHTML = totalRam.toLocaleString() + '<span class="insights-unit">MB</span>';
+    }
+
+    // Platform breakdown
+    const platformBuckets = new Map();
+    agents.forEach(a => {
+        const key = a.platform || "unknown";
+        if (!platformBuckets.has(key)) {
+            platformBuckets.set(key, { count: 0, ram: 0, running: 0 });
+        }
+        const b = platformBuckets.get(key);
+        b.count++;
+        b.ram += a.memoryMB || 0;
+        if (a.isRunning) b.running++;
+    });
+    const platformList = [...platformBuckets.entries()]
+        .sort((a, b) => b[1].count - a[1].count);
+    const maxPlatformCount = platformList[0]?.[1]?.count || 1;
+    const platformEl = el("insights-platforms");
+    if (platformEl) {
+        if (platformList.length === 0) {
+            platformEl.innerHTML = '<div class="insights-empty">감지된 에이전트가 없어요.</div>';
+        } else {
+            platformEl.innerHTML = platformList.map(([key, b]) => {
+                const pct = Math.max(8, Math.round((b.count / maxPlatformCount) * 100));
+                const color = platformColor(key);
+                return `
+                    <div class="insights-platform-row">
+                        <div class="insights-platform-name">
+                            <span class="insights-platform-dot" style="background:${color}"></span>
+                            <span>${esc(platformLabel(key))}</span>
+                        </div>
+                        <div class="insights-platform-bar">
+                            <div class="insights-platform-fill" style="width:${pct}%;background:${color}"></div>
+                        </div>
+                        <div class="insights-platform-meta">
+                            <span class="insights-platform-count">${b.running}/${b.count}</span>
+                            <span class="insights-platform-ram">${b.ram.toLocaleString()}MB</span>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+
+    // Top projects (by total tasks)
+    const projectBuckets = new Map();
+    agents.forEach(a => {
+        const name = a.projectName || "(no project)";
+        if (!projectBuckets.has(name)) {
+            projectBuckets.set(name, { tasks: 0, completed: 0, agents: 0, platforms: new Set() });
+        }
+        const b = projectBuckets.get(name);
+        b.tasks += a.totalTasks || 0;
+        b.completed += a.completedTasks || 0;
+        b.agents++;
+        if (a.platform) b.platforms.add(a.platform);
+    });
+    const topProjects = [...projectBuckets.entries()]
+        .sort((a, b) => (b[1].tasks - a[1].tasks) || (b[1].agents - a[1].agents))
+        .slice(0, 5);
+    const projectEl = el("insights-projects");
+    if (projectEl) {
+        if (topProjects.length === 0) {
+            projectEl.innerHTML = '<div class="insights-empty">아직 프로젝트가 없어요.</div>';
+        } else {
+            projectEl.innerHTML = topProjects.map(([name, b], idx) => {
+                const pct = b.tasks > 0 ? Math.round((b.completed / b.tasks) * 100) : 0;
+                const platforms = [...b.platforms].map(p =>
+                    `<span class="insights-mini-chip" style="background:${platformColor(p)}33;color:${platformColor(p)}">${esc(PLATFORM_META[p]?.badge || p.slice(0,2).toUpperCase())}</span>`
+                ).join("");
+                return `
+                    <div class="insights-project-row">
+                        <div class="insights-project-rank">#${idx + 1}</div>
+                        <div class="insights-project-info">
+                            <div class="insights-project-name">${esc(name)}</div>
+                            <div class="insights-project-meta">
+                                <span>${b.agents}명</span>
+                                <span>·</span>
+                                <span>${b.completed}/${b.tasks} 완료 (${pct}%)</span>
+                                <span class="insights-project-platforms">${platforms}</span>
+                            </div>
+                        </div>
+                        <div class="insights-project-bar">
+                            <div class="insights-project-fill" style="width:${pct}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+
+    // Status distribution
+    const statusBuckets = new Map();
+    agents.forEach(a => {
+        const s = a.isRunning ? a.status : "offline";
+        statusBuckets.set(s, (statusBuckets.get(s) || 0) + 1);
+    });
+    const total = agents.length || 1;
+    const statusOrder = ["coding", "thinking", "searching", "reviewing", "meeting", "coffee", "idle", "offline"];
+    const statusEl = el("insights-status");
+    if (statusEl) {
+        const segments = statusOrder
+            .filter(s => statusBuckets.get(s))
+            .map(s => {
+                const count = statusBuckets.get(s);
+                const pct = (count / total) * 100;
+                const meta = STATUS_META[s] || STATUS_META.idle;
+                return `<div class="insights-status-seg" style="width:${pct}%;background:${meta.color}" title="${esc(meta.label)}: ${count}명">
+                    <span>${pct > 8 ? esc(meta.label) : ""}</span>
+                </div>`;
+            }).join("");
+        const legend = statusOrder
+            .filter(s => statusBuckets.get(s))
+            .map(s => {
+                const meta = STATUS_META[s] || STATUS_META.idle;
+                return `<span class="insights-status-legend-item">
+                    <span class="insights-status-legend-dot" style="background:${meta.color}"></span>
+                    <span>${esc(meta.label)} ${statusBuckets.get(s)}명</span>
+                </span>`;
+            }).join("");
+        statusEl.innerHTML = `
+            <div class="insights-status-bar-track">${segments || '<div class="insights-empty insights-empty-bar">상태 정보 없음</div>'}</div>
+            <div class="insights-status-legend">${legend}</div>
+        `;
+    }
+
+    // Recent feed
+    const feedEl = el("insights-feed");
+    if (feedEl) {
+        const events = (S.workEvents || []).slice(0, 12);
+        if (events.length === 0) {
+            feedEl.innerHTML = '<div class="insights-empty">아직 활동 기록이 없어요.</div>';
+        } else {
+            feedEl.innerHTML = events.map(ev => {
+                const meta = STATUS_META[ev.status] || STATUS_META.idle;
+                const ts = ev.ts ? new Date(ev.ts) : new Date();
+                const time = `${String(ts.getHours()).padStart(2,"0")}:${String(ts.getMinutes()).padStart(2,"0")}`;
+                const labelText = ev.label || meta.label;
+                const color = ev.statusColor || ev.color || meta.color;
+                return `
+                    <div class="insights-feed-row">
+                        <span class="insights-feed-time">${esc(time)}</span>
+                        <span class="insights-feed-tag" style="background:${color}22;color:${color}">${esc(labelText)}</span>
+                        <span class="insights-feed-name">${esc(ev.agentName || "")}</span>
+                        <span class="insights-feed-text">${esc(ev.text || "")}</span>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+}
+
+// Expose for window-level button handlers
+if (typeof window !== "undefined") window.refreshInsights = refreshInsights;

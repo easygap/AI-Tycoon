@@ -90,6 +90,16 @@
                 </div>
             </div>
 
+            <!-- Insights Modal -->
+            <button id="insights-toggle" onclick="openInsights()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" title="작업실 인사이트" aria-label="작업실 인사이트 열기">
+                <iconify-icon icon="solar:chart-2-linear" class="text-zinc-500 text-sm"></iconify-icon>
+            </button>
+
+            <!-- Keyboard Shortcuts -->
+            <button id="shortcuts-toggle" onclick="openShortcuts()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" title="키보드 단축키" aria-label="키보드 단축키 열기">
+                <iconify-icon icon="solar:command-linear" class="text-zinc-500 text-sm"></iconify-icon>
+            </button>
+
             <!-- Dark Mode Toggle -->
             <button id="dark-toggle" onclick="toggleDarkMode()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" title="다크모드 전환" aria-label="다크모드 전환">
                 <iconify-icon id="dark-icon" icon="solar:moon-linear" class="text-zinc-500 text-sm"></iconify-icon>
@@ -235,6 +245,129 @@
     <!-- Tooltip -->
     <div id="tooltip" class="hidden fixed z-50 pointer-events-none"></div>
 
+    <!-- ── Insights Modal ── -->
+    <div id="insights-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="insights-title" hidden>
+        <div class="modal-card insights-card">
+            <header class="modal-header">
+                <div>
+                    <div class="modal-kicker">실시간 인사이트</div>
+                    <h2 id="insights-title" class="modal-title">오늘의 작업실</h2>
+                </div>
+                <button type="button" class="modal-close" onclick="closeInsights()" aria-label="닫기">
+                    <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
+                </button>
+            </header>
+            <div class="modal-body">
+                <section class="insights-overview">
+                    <div class="insights-stat">
+                        <iconify-icon icon="solar:users-group-rounded-bold" aria-hidden="true"></iconify-icon>
+                        <div>
+                            <div class="insights-stat-value" id="insights-agents">0</div>
+                            <div class="insights-stat-label">활성 에이전트</div>
+                        </div>
+                    </div>
+                    <div class="insights-stat">
+                        <iconify-icon icon="solar:checklist-bold" aria-hidden="true"></iconify-icon>
+                        <div>
+                            <div class="insights-stat-value" id="insights-completed">0</div>
+                            <div class="insights-stat-label">완료 태스크</div>
+                        </div>
+                    </div>
+                    <div class="insights-stat">
+                        <iconify-icon icon="solar:bolt-circle-bold" aria-hidden="true"></iconify-icon>
+                        <div>
+                            <div class="insights-stat-value" id="insights-ongoing">0</div>
+                            <div class="insights-stat-label">진행 중</div>
+                        </div>
+                    </div>
+                    <div class="insights-stat">
+                        <iconify-icon icon="solar:cpu-bolt-bold" aria-hidden="true"></iconify-icon>
+                        <div>
+                            <div class="insights-stat-value" id="insights-ram">0<span class="insights-unit">MB</span></div>
+                            <div class="insights-stat-label">총 메모리</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="insights-section">
+                    <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:layers-minimalistic-linear" aria-hidden="true"></iconify-icon>
+                        <span>플랫폼 분포</span>
+                    </h3>
+                    <div id="insights-platforms" class="insights-platforms"></div>
+                </section>
+
+                <section class="insights-section">
+                    <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:folder-favourite-bookmark-linear" aria-hidden="true"></iconify-icon>
+                        <span>활발한 프로젝트 TOP 5</span>
+                    </h3>
+                    <div id="insights-projects" class="insights-projects"></div>
+                </section>
+
+                <section class="insights-section">
+                    <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:pulse-2-linear" aria-hidden="true"></iconify-icon>
+                        <span>상태 분포</span>
+                    </h3>
+                    <div id="insights-status" class="insights-status-bar"></div>
+                </section>
+
+                <section class="insights-section">
+                    <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:history-2-linear" aria-hidden="true"></iconify-icon>
+                        <span>최근 활동</span>
+                    </h3>
+                    <div id="insights-feed" class="insights-feed"></div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Keyboard Shortcuts Modal ── -->
+    <div id="shortcuts-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title" hidden>
+        <div class="modal-card shortcuts-card">
+            <header class="modal-header">
+                <div>
+                    <div class="modal-kicker">단축키</div>
+                    <h2 id="shortcuts-title" class="modal-title">키보드 한 번에 끝내기</h2>
+                </div>
+                <button type="button" class="modal-close" onclick="closeShortcuts()" aria-label="닫기">
+                    <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
+                </button>
+            </header>
+            <div class="modal-body">
+                <section class="shortcuts-group">
+                    <h3 class="shortcuts-group-title">탐색</h3>
+                    <ul class="shortcuts-list">
+                        <li><span class="shortcuts-keys"><kbd>/</kbd></span><span>에이전트 검색 포커스</span></li>
+                        <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>K</kbd></span><span>에이전트 검색 (대체)</span></li>
+                        <li><span class="shortcuts-keys"><kbd>Esc</kbd></span><span>검색·모달 닫기</span></li>
+                    </ul>
+                </section>
+                <section class="shortcuts-group">
+                    <h3 class="shortcuts-group-title">화면</h3>
+                    <ul class="shortcuts-list">
+                        <li><span class="shortcuts-keys"><kbd>D</kbd></span><span>다크 모드 전환</span></li>
+                        <li><span class="shortcuts-keys"><kbd>F</kbd></span><span>가장 활발한 직원 포커스</span></li>
+                        <li><span class="shortcuts-keys"><kbd>H</kbd></span><span>전체 보기로 리셋</span></li>
+                        <li><span class="shortcuts-keys"><kbd>?</kbd></span><span>이 도움말 열기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>I</kbd></span><span>인사이트 열기</span></li>
+                    </ul>
+                </section>
+                <section class="shortcuts-group">
+                    <h3 class="shortcuts-group-title">캔버스</h3>
+                    <ul class="shortcuts-list">
+                        <li><span class="shortcuts-keys"><kbd>+</kbd>/<kbd>-</kbd></span><span>줌 인 / 아웃</span></li>
+                        <li><span class="shortcuts-keys"><kbd>0</kbd></span><span>줌 리셋</span></li>
+                        <li><span class="shortcuts-keys"><kbd>드래그</kbd></span><span>패닝</span></li>
+                        <li><span class="shortcuts-keys"><kbd>더블클릭</kbd></span><span>줌 리셋</span></li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </div>
+
     <!-- ── First-run Welcome Card ── -->
     <div id="welcome-overlay" class="welcome-overlay" role="dialog" aria-modal="true" aria-labelledby="welcome-title" aria-describedby="welcome-desc" hidden>
         <div class="welcome-card">
@@ -344,17 +477,73 @@
         const overlay = document.getElementById("welcome-overlay");
         if (!overlay) return;
         overlay.classList.remove("is-visible");
-        // Always remember dismissal so it doesn't reappear; "start" is just label flavor
         localStorage.setItem(WELCOME_KEY, "true");
         setTimeout(() => { overlay.hidden = true; }, 280);
         void rememberStart;
     }
+    // ── Generic modal open/close (insights + shortcuts) ──
+    function openModalOverlay(overlay) {
+        if (!overlay) return;
+        overlay.hidden = false;
+        requestAnimationFrame(() => overlay.classList.add("is-visible"));
+        const close = overlay.querySelector(".modal-close");
+        close?.focus({ preventScroll: true });
+    }
+    function closeModalOverlay(overlay) {
+        if (!overlay) return;
+        overlay.classList.remove("is-visible");
+        setTimeout(() => { overlay.hidden = true; }, 240);
+    }
+    function openInsights() {
+        const overlay = document.getElementById("insights-overlay");
+        if (window.refreshInsights) window.refreshInsights();
+        openModalOverlay(overlay);
+    }
+    function closeInsights() { closeModalOverlay(document.getElementById("insights-overlay")); }
+    function openShortcuts() { openModalOverlay(document.getElementById("shortcuts-overlay")); }
+    function closeShortcuts() { closeModalOverlay(document.getElementById("shortcuts-overlay")); }
+
+    // Click outside to close
+    ["insights-overlay", "shortcuts-overlay"].forEach(id => {
+        document.addEventListener("click", (e) => {
+            const overlay = document.getElementById(id);
+            if (!overlay || overlay.hidden) return;
+            if (e.target === overlay) closeModalOverlay(overlay);
+        });
+    });
+
     document.addEventListener("keydown", (event) => {
         if (event.key !== "Escape") return;
-        const overlay = document.getElementById("welcome-overlay");
-        if (overlay && !overlay.hidden) {
-            dismissWelcome(false);
-            event.stopPropagation();
+        // Priority: welcome > shortcuts > insights > side panel
+        const welcome = document.getElementById("welcome-overlay");
+        if (welcome && !welcome.hidden) { dismissWelcome(false); event.stopPropagation(); return; }
+        const shortcuts = document.getElementById("shortcuts-overlay");
+        if (shortcuts && !shortcuts.hidden) { closeShortcuts(); event.stopPropagation(); return; }
+        const insights = document.getElementById("insights-overlay");
+        if (insights && !insights.hidden) { closeInsights(); event.stopPropagation(); return; }
+    });
+
+    // Global single-letter shortcuts (only when not typing)
+    document.addEventListener("keydown", (event) => {
+        const target = event.target;
+        const typing = target instanceof HTMLElement &&
+            (target.matches("input, textarea, select") || target.isContentEditable);
+        if (typing || event.ctrlKey || event.metaKey || event.altKey) return;
+        const k = event.key;
+        if (k === "?" || (event.shiftKey && k === "/")) { event.preventDefault(); openShortcuts(); }
+        else if (k === "i" || k === "I") { event.preventDefault(); openInsights(); }
+        else if (k === "d" || k === "D") { event.preventDefault(); toggleDarkMode(); }
+        else if (k === "h" || k === "H") {
+            event.preventDefault();
+            if (typeof window.resetCameraView === "function") window.resetCameraView();
+        }
+        else if (k === "f" || k === "F") {
+            event.preventDefault();
+            if (typeof window.focusActiveAgent === "function") window.focusActiveAgent();
+        }
+        else if (k === "0") {
+            event.preventDefault();
+            if (typeof window.resetCameraView === "function") window.resetCameraView();
         }
     });
     document.addEventListener("DOMContentLoaded", showWelcomeIfNeeded);

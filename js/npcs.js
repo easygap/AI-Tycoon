@@ -48,6 +48,19 @@ const airplane = {
     nextSpawn: Math.floor(Math.random() * 600) + 300, // frames until first appearance
 };
 
+// ── Delivery person ───────────────────────────────────────
+// Visits a random work-area corridor spot, drops a package, leaves.
+// Phases: idle → entering → dropping (pause) → leaving → idle
+const delivery = {
+    phase: "idle",
+    phaseT: 0,
+    targetTx: 0,
+    targetTy: 0,
+    nextSpawn: 600,    // frames until first appearance
+    facingRight: true,
+};
+const DELIVERY_DROP_FRAMES = 90;
+
 function tileWalkable(tx, ty) {
     const ch = OFFICE_MAP[ty]?.[tx];
     return ch === "F" || ch === "R" || ch === " ";
@@ -236,12 +249,145 @@ function drawLoungeCat(ctx, animFrame) {
     }
 }
 
+// ── Delivery person rendering ──
+function deliveryCurrentPos() {
+    // Entrance is at row 16, between cols 12-13.
+    const entranceX = 12.5;
+    const entranceY = 16.5;
+    if (delivery.phase === "entering") {
+        // Walk from entrance up to target tile
+        const t = Math.max(0, Math.min(1, delivery.phaseT / 200));
+        const ease = 1 - Math.pow(1 - t, 2);
+        const tx = entranceX + (delivery.targetTx - entranceX) * ease;
+        const ty = entranceY + (delivery.targetTy - entranceY) * ease;
+        return { tx, ty, moving: t < 1 };
+    }
+    if (delivery.phase === "dropping") {
+        return { tx: delivery.targetTx, ty: delivery.targetTy, moving: false };
+    }
+    if (delivery.phase === "leaving") {
+        const t = Math.max(0, Math.min(1, delivery.phaseT / 200));
+        const ease = t * t;
+        const tx = delivery.targetTx + (entranceX - delivery.targetTx) * ease;
+        const ty = delivery.targetTy + (entranceY - delivery.targetTy) * ease;
+        return { tx, ty, moving: t < 1, exiting: true };
+    }
+    return null;
+}
+
+function updateDelivery(animFrame) {
+    if (delivery.phase === "idle") {
+        if (animFrame >= delivery.nextSpawn) {
+            // Pick a random corridor tile in work area (col 1-11, even rows)
+            delivery.targetTx = 1 + Math.floor(Math.random() * 10);
+            const corridorRows = [2, 5, 8, 11, 14];
+            delivery.targetTy = corridorRows[Math.floor(Math.random() * corridorRows.length)];
+            delivery.phase = "entering";
+            delivery.phaseT = 0;
+            delivery.facingRight = delivery.targetTx > 12.5 ? false : true;
+        }
+        return;
+    }
+    delivery.phaseT++;
+    if (delivery.phase === "entering" && delivery.phaseT >= 200) {
+        delivery.phase = "dropping";
+        delivery.phaseT = 0;
+    } else if (delivery.phase === "dropping" && delivery.phaseT >= DELIVERY_DROP_FRAMES) {
+        delivery.phase = "leaving";
+        delivery.phaseT = 0;
+        delivery.facingRight = !delivery.facingRight;
+    } else if (delivery.phase === "leaving" && delivery.phaseT >= 200) {
+        delivery.phase = "idle";
+        delivery.phaseT = 0;
+        delivery.nextSpawn = animFrame + 2400 + Math.floor(Math.random() * 3000); // 40-90 sec
+    }
+}
+
+function drawDelivery(ctx, animFrame) {
+    if (delivery.phase === "idle") return;
+    const pos = deliveryCurrentPos();
+    if (!pos) return;
+    const px = pos.tx * TILE;
+    const py = pos.ty * TILE;
+    const bob = pos.moving ? Math.sin(animFrame * 0.4) * 0.6 : 0;
+
+    // Shadow
+    ctx.fillStyle = "rgba(0,0,0,0.20)";
+    ctx.beginPath(); ctx.ellipse(px, py + 9, 6, 1.8, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Body — courier uniform (navy with orange vest)
+    const skinColor = "#F0D0B8";
+    ctx.fillStyle = "#2a4a78"; // pants
+    ctx.fillRect(px - 4, py + bob, 8, 6);
+    ctx.fillStyle = "#ff8a4c"; // hi-vis vest
+    ctx.fillRect(px - 4, py - 5 + bob, 8, 6);
+    ctx.fillStyle = "rgba(255,255,255,0.6)"; // reflective stripe
+    ctx.fillRect(px - 4, py - 3 + bob, 8, 0.8);
+    // Head
+    ctx.fillStyle = skinColor;
+    ctx.fillRect(px - 2.5, py - 11 + bob, 5, 5);
+    // Cap
+    ctx.fillStyle = "#1a2a48";
+    ctx.fillRect(px - 3, py - 12 + bob, 6, 2);
+    ctx.fillRect(px + (delivery.facingRight ? 2 : -4), py - 11 + bob, 2, 1);
+    // Eyes (single line, 8-bit)
+    ctx.fillStyle = "#1a1a2e";
+    if (delivery.facingRight) {
+        ctx.fillRect(px + 0.5, py - 9 + bob, 1, 1);
+    } else {
+        ctx.fillRect(px - 1.5, py - 9 + bob, 1, 1);
+    }
+
+    // Package being carried (during entering only) or dropped (during dropping)
+    if (delivery.phase === "entering" || delivery.phase === "dropping") {
+        const dropping = delivery.phase === "dropping";
+        const phaseProgress = dropping ? (delivery.phaseT / DELIVERY_DROP_FRAMES) : 0;
+        const boxY = dropping ? py + 4 + phaseProgress * 4 : py + 1 + bob;
+        const boxX = dropping ? px - 4 : px + (delivery.facingRight ? 3 : -7);
+        ctx.fillStyle = "#c8a878";
+        ctx.fillRect(boxX, boxY, 6, 5);
+        ctx.fillStyle = "#8a6848";
+        ctx.fillRect(boxX, boxY, 6, 0.6);
+        ctx.fillRect(boxX + 2.5, boxY, 1, 5);
+        // Sparkle when dropping
+        if (dropping && phaseProgress > 0.7 && animFrame % 8 < 4) {
+            ctx.fillStyle = "rgba(255,210,140,0.7)";
+            ctx.fillRect(boxX - 1, boxY - 1, 1, 1);
+            ctx.fillRect(boxX + 6, boxY - 1, 1, 1);
+            ctx.fillRect(boxX + 2, boxY - 2, 1, 1);
+        }
+    } else if (delivery.phase === "leaving") {
+        // Box stays at target after delivery, slightly above the desk floor
+        ctx.fillStyle = "#c8a878";
+        const stayX = delivery.targetTx * TILE - 3;
+        const stayY = delivery.targetTy * TILE + 6;
+        ctx.fillRect(stayX, stayY, 6, 5);
+        ctx.fillStyle = "#8a6848";
+        ctx.fillRect(stayX, stayY, 6, 0.6);
+        ctx.fillRect(stayX + 2.5, stayY, 1, 5);
+    }
+
+    // Speech bubble when dropping
+    if (delivery.phase === "dropping" && delivery.phaseT < 50) {
+        ctx.font = "bold 3.5px Pretendard, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "rgba(255,255,255,0.92)";
+        const bx = px, by = py - 17 + bob;
+        ctx.fillStyle = "rgba(40,30,20,0.85)";
+        ctx.fillRect(bx - 12, by - 4, 24, 7);
+        ctx.fillStyle = "#fff";
+        ctx.fillText("배송 도착!", bx, by + 0.8);
+    }
+}
+
 // ── Public render entry ──
 export function drawNPCs(ctx, animFrame) {
     moveAlongPath(animFrame);
     maybeSpawnAirplane(animFrame);
+    updateDelivery(animFrame);
     drawCleaningRobot(ctx, animFrame);
     drawLoungeCat(ctx, animFrame);
+    drawDelivery(ctx, animFrame);
     drawAirplane(ctx, animFrame);
 }
 
@@ -251,5 +397,14 @@ export function npcState() {
         robotPos: ROBOT_PATH[robot.idx],
         robotPause: robot.pauseTimer,
         airplaneActive: airplane.active,
+        deliveryPhase: delivery.phase,
     };
 }
+
+// Force-trigger the delivery NPC for testing / demos
+export function triggerDelivery() {
+    delivery.phase = "idle";
+    delivery.phaseT = 0;
+    delivery.nextSpawn = 0;
+}
+if (typeof window !== "undefined") window.triggerDelivery = triggerDelivery;
