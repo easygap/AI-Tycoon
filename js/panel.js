@@ -16,6 +16,7 @@ import {
 import { timeOfDayLabel, getSkyPalette } from "./timeOfDay.js";
 import { recentDays, todayStats, yesterdayStats } from "./stats.js";
 import { t as i18n } from "./i18n.js";
+import { listAchievements, progressCount } from "./achievements.js";
 
 const PIN_STORAGE_KEY = "ai-tycoon-pinned-agents";
 const PIN_LEGACY_STORAGE_KEY = "ai-tycoon-pinned-pids";
@@ -2130,6 +2131,25 @@ export function refreshInsights() {
                 </div>
             `;
         }
+    }
+
+    // Achievements grid
+    const achEl = el("insights-achievements");
+    const achProgress = el("insights-ach-progress");
+    if (achEl) {
+        const items = listAchievements();
+        const prog = progressCount();
+        if (achProgress) achProgress.textContent = `${prog.unlocked}/${prog.total}`;
+        achEl.innerHTML = items.map(a => `
+            <div class="ach-tile${a.unlocked ? " is-unlocked" : ""}" title="${esc(a.desc)}">
+                <iconify-icon icon="${a.icon}" class="ach-tile-icon" aria-hidden="true"></iconify-icon>
+                <div class="ach-tile-body">
+                    <div class="ach-tile-title">${esc(a.title)}</div>
+                    <div class="ach-tile-desc">${esc(a.desc)}</div>
+                </div>
+                ${a.unlocked ? '<iconify-icon icon="solar:check-circle-bold" class="ach-tile-check" aria-hidden="true"></iconify-icon>' : ""}
+            </div>
+        `).join("");
     }
 
     // Recent feed

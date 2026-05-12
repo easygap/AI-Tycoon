@@ -12,6 +12,7 @@ import { updatePanel, updateStats, updateDetailPanel, updateLiveHud } from "./pa
 import { recordStateSnapshot } from "./stats.js";
 import { t } from "./i18n.js";
 import { sfxJoin, sfxLeave, sfxTaskDone, sfxReview } from "./sound.js";
+import { checkAll as checkAchievements } from "./achievements.js";
 
 // ── WebSocket ──
 export function connectWS() {
@@ -22,6 +23,8 @@ export function connectWS() {
         S.lastHeartbeat = Date.now();
         setConn(true);
         addLog("서버 연결 완료!", "system");
+        if (typeof window !== "undefined") window.__aiTycoonConnected = true;
+        try { checkAchievements(); } catch { /* ignore */ }
     };
     S.ws.onmessage = (e) => {
         try {
@@ -343,5 +346,7 @@ export function handleState(state) {
     updatePanel();
     updateStats();
     recordStateSnapshot(S.liveAgents);
+    if (typeof window !== "undefined") window.__aiTycoonAgents = S.liveAgents;
+    try { checkAchievements(); } catch { /* ignore */ }
     if (S.detailPid) updateDetailPanel();
 }
