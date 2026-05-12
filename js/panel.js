@@ -1385,8 +1385,18 @@ export function updateLiveHud() {
 }
 
 // ── Side Panel ──
+// Show/hide the empty-state CTA based on agents + demo state
+function refreshEmptyCta() {
+    const cta = document.getElementById("empty-cta");
+    if (!cta) return;
+    const demoOn = window.aiTycoonDemo?.isEnabled?.() === true;
+    const hasAgents = (S.liveAgents || []).length > 0;
+    cta.hidden = demoOn || hasAgents;
+}
+
 export function updatePanel() {
     updateFilterChips();
+    refreshEmptyCta();
 
     const list = document.getElementById("agents-list");
     list.innerHTML = "";
