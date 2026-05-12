@@ -110,6 +110,42 @@ const ACHIEVEMENTS = [
         en: { title: "Bilingual", desc: "Switched language" },
         check: ({ langToggled }) => langToggled === true,
     },
+    {
+        id: "century",
+        icon: "solar:cup-paper-bold",
+        ko: { title: "100태스크 클럽", desc: "하루에 100개의 태스크를 완료했어요" },
+        en: { title: "Century", desc: "100 tasks done in a day" },
+        check: ({ today }) => (today?.completedMax || 0) >= 100,
+    },
+    {
+        id: "marathon-week",
+        icon: "solar:running-2-bold",
+        ko: { title: "주간 마라톤", desc: "7일 누적 200개 이상 태스크를 완료" },
+        en: { title: "Marathon week", desc: "200+ tasks completed across 7 days" },
+        check: ({ weekTotal }) => weekTotal >= 200,
+    },
+    {
+        id: "snapshot-taker",
+        icon: "solar:camera-bold",
+        ko: { title: "관찰자", desc: "작업실 스냅샷을 5번 저장했어요" },
+        en: { title: "Observer", desc: "Saved the office snapshot 5 times" },
+        check: ({ snapshots }) => snapshots >= 5,
+    },
+    {
+        id: "customizer",
+        icon: "solar:palette-round-bold",
+        ko: { title: "취향가", desc: "테마·시즌·언어를 모두 바꿔봤어요" },
+        en: { title: "Tinkerer", desc: "Changed theme + season + language" },
+        check: ({ themeChanged, seasonChanged, langToggled }) =>
+            themeChanged && seasonChanged && langToggled,
+    },
+    {
+        id: "project-curious",
+        icon: "solar:folder-with-files-bold",
+        ko: { title: "프로젝트 탐험가", desc: "프로젝트 드릴다운을 3번 열어봤어요" },
+        en: { title: "Project explorer", desc: "Opened 3 project drill-downs" },
+        check: ({ projectOpens }) => projectOpens >= 3,
+    },
 ];
 
 function loadUnlocked() {
@@ -177,6 +213,7 @@ function gatherContext() {
     const running = liveAgents.filter(a => a.isRunning);
     const platforms = new Set(running.map(a => a.platform).filter(Boolean));
     const peak = days.reduce((m, d) => Math.max(m, d.agentsMax || 0), 0);
+    const weekTotal = days.slice(-7).reduce((s, d) => s + (d.completedMax || 0), 0);
     return {
         connected: typeof window !== "undefined" && window.__aiTycoonConnected === true,
         today: t,
@@ -184,11 +221,16 @@ function gatherContext() {
         allTimePlatforms: allTimePlatformCount(),
         peakAgents: peak,
         streak: consecutiveDayStreak(),
+        weekTotal,
         hour: new Date().getHours(),
         anyActive: running.length > 0,
         insightsOpened: state.counters.insightsOpened || 0,
         darkToggled: !!state.counters.darkToggled,
         langToggled: !!state.counters.langToggled,
+        themeChanged: !!state.counters.themeChanged,
+        seasonChanged: !!state.counters.seasonChanged,
+        snapshots: state.counters.snapshots || 0,
+        projectOpens: state.counters.projectOpens || 0,
     };
 }
 

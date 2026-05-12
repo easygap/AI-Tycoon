@@ -2035,7 +2035,7 @@ export function refreshInsights() {
                 const peopleSuffix = lang === "en" ? (b.agents === 1 ? "agent" : "agents") : "명";
                 const doneLabel = lang === "en" ? "done" : "완료";
                 return `
-                    <div class="insights-project-row">
+                    <button type="button" class="insights-project-row" data-project="${esc(name)}">
                         <div class="insights-project-rank">#${idx + 1}</div>
                         <div class="insights-project-info">
                             <div class="insights-project-name">${esc(name)}</div>
@@ -2049,9 +2049,15 @@ export function refreshInsights() {
                         <div class="insights-project-bar">
                             <div class="insights-project-fill" style="width:${pct}%"></div>
                         </div>
-                    </div>
+                    </button>
                 `;
             }).join("");
+            projectEl.querySelectorAll(".insights-project-row[data-project]").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const name = btn.getAttribute("data-project");
+                    if (typeof window.openProject === "function") window.openProject(name);
+                });
+            });
         }
     }
 
@@ -2318,6 +2324,135 @@ if (typeof document !== "undefined") {
     });
     document.addEventListener("scroll", hideChartTooltip, true);
 }
+
+// ============================================================
+//  Project drill-down modal
+// ============================================================
+export function refreshProject(projectName) {
+    const el = (id) => document.getElementById(id);
+    const titleEl = el("project-title");
+    if (titleEl) titleEl.textContent = projectName;
+
+    const matching = S.liveAgents.filter(a => (a.projectName || "") === projectName);
+    const running = matching.filter(a => a.isRunning);
+    const totalCompleted = matching.reduce((s, a) => s + (a.completedTasks || 0), 0);
+    const totalRam = matching.reduce((s, a) => s + (a.memoryMB || 0), 0);
+    const ongoing = matching.reduce((s, a) =>
+        s + ((a.tasks || []).filter(t => t.status === "in_progress").length), 0);
+
+    if (el("project-agents"))    el("project-agents").textContent    = running.length;
+    if (el("project-completed")) el("project-completed").textContent = totalCompleted;
+    if (el("project-ongoing"))   el("project-ongoing").textContent   = ongoing;
+    if (el("project-ram"))       el("project-ram").innerHTML = totalRam.toLocaleString() + '<span class="insights-unit">MB</span>';
+
+    // Platform breakdown for this project
+    const platformsEl = el("project-platforms");
+    if (platformsEl) {
+        const buckets = new Map();
+        matching.forEach(a => {
+            const k = a.platform || "unknown";
+            buckets.set(k, (buckets.get(k) || 0) + 1);
+        });
+        const items = [...buckets.entries()].sort((a, b) => b[1] - a[1]);
+        if (items.length === 0) {
+            platformsEl.innerHTML = `<div class="insights-empty">${esc(i18n("insights.emptyPlatforms"))}</div>`;
+        } else {
+            platformsEl.innerHTML = items.map(([key, count]) => `
+                <span class="project-platform-chip" style="background:${platformColor(key)}26;color:${platformColor(key)};border-color:${platformColor(key)}55">
+                    <span class="project-platform-dot" style="background:${platformColor(key)}"></span>
+                    <span>${esc(PLATFORM_META[key]?.label || key)}</span>
+                    <span class="project-platform-count">${count}</span>
+                </span>
+            `).join("");
+        }
+    }
+
+    // Agent list
+    const agentListEl = el("project-agent-list");
+    if (agentListEl) {
+        if (matching.length === 0) {
+            agentListEl.innerHTML = `<div class="insights-empty">${esc(i18n("project.empty"))}</div>`;
+        } else {
+            const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const taskWord = lang === "en" ? "tasks" : "태스크";
+            const memWord = "MB";
+            agentListEl.innerHTML = matching.map(a => {
+                const theme = themeForAgent(a);
+                const status = a.isRunning ? a.status : "offline";
+                const meta = STATUS_META[status] || STATUS_META.idle;
+                const work = getWorkText(a) || (a.currentTask?.subject || "");
+                return `
+                    <button type="button" class="project-agent-row" data-pid="${esc(String(a.pid))}">
+                        <span class="project-agent-avatar" style="background:${theme.body}">${esc(theme.name.charAt(0))}</span>
+                        <div class="project-agent-info">
+                            <div class="project-agent-name">${esc(theme.name)}</div>
+                            <div class="project-agent-meta">
+                                <span class="project-agent-status" style="color:${meta.color}">${esc(statusLabelI18n(status))}</span>
+                                <span>·</span>
+                                <span>${a.completedTasks || 0}/${a.totalTasks || 0} ${taskWord}</span>
+                                <span>·</span>
+                                <span>${a.memoryMB || 0} ${memWord}</span>
+                            </div>
+                            ${work ? `<div class="project-agent-work">${esc(work)}</div>` : ""}
+                        </div>
+                    </button>
+                `;
+            }).join("");
+            agentListEl.querySelectorAll(".project-agent-row").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const pid = btn.getAttribute("data-pid");
+                    if (!pid) return;
+                    S.selectedPid = pid;
+                    S.detailPid = pid;
+                    S.directorFocusPid = pid;
+                    S.directorMode = true;
+                    document.getElementById("project-overlay")?.classList?.remove("is-visible");
+                    setTimeout(() => {
+                        const ov = document.getElementById("project-overlay");
+                        if (ov) ov.hidden = true;
+                    }, 280);
+                });
+            });
+        }
+    }
+
+    // Recent tasks across all agents on this project
+    const tasksEl = el("project-tasks");
+    if (tasksEl) {
+        const flat = [];
+        matching.forEach(a => {
+            (a.tasks || []).forEach(t => flat.push({ ...t, _agent: themeForAgent(a).name }));
+        });
+        flat.sort((a, b) => {
+            const order = { in_progress: 0, pending: 1, completed: 2 };
+            const aOrd = order[a.status] ?? 3;
+            const bOrd = order[b.status] ?? 3;
+            return aOrd - bOrd;
+        });
+        if (flat.length === 0) {
+            tasksEl.innerHTML = `<div class="insights-empty">${esc(i18n("project.emptyTasks"))}</div>`;
+        } else {
+            const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+            tasksEl.innerHTML = flat.slice(0, 8).map(task => {
+                const statusLabel = task.status === "in_progress" ? (lang === "en" ? "in progress" : "진행")
+                    : task.status === "completed" ? (lang === "en" ? "done" : "완료")
+                    : (lang === "en" ? "pending" : "대기");
+                const color = task.status === "in_progress" ? "#10b981"
+                    : task.status === "completed" ? "#94a3b8"
+                    : "#f59e0b";
+                return `
+                    <div class="project-task-row">
+                        <span class="project-task-status" style="background:${color}22;color:${color}">${esc(statusLabel)}</span>
+                        <span class="project-task-subject">${esc(task.subject || task.activeForm || `Task ${task.id}`)}</span>
+                        <span class="project-task-agent">${esc(task._agent || "")}</span>
+                    </div>
+                `;
+            }).join("");
+        }
+    }
+}
+
+if (typeof window !== "undefined") window.refreshProject = refreshProject;
 
 // Expose for window-level button handlers
 if (typeof window !== "undefined") window.refreshInsights = refreshInsights;
