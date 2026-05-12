@@ -1,5 +1,125 @@
 /* ===== AI Tycoon — Live Operations Studio ===== */
 
+/* ── Performance HUD (dev overlay, toggle Ctrl/Cmd+Shift+P) ── */
+.perf-hud {
+    position: fixed;
+    bottom: 12px;
+    left: 12px;
+    z-index: 160;
+    background: rgba(10,14,28,0.92);
+    color: #d4d4d8;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    pointer-events: auto;
+    box-shadow: 0 8px 20px -6px rgba(0,0,0,0.45);
+    min-width: 200px;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+.perf-hud .perf-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.perf-hud .perf-row-main { font-size: 12px; }
+.perf-hud .perf-fps { font-weight: 700; }
+.perf-fast { color: #4ade80; }
+.perf-mid  { color: #fbbf24; }
+.perf-slow { color: #f87171; }
+.perf-delim { color: #64748b; }
+.perf-mem  { color: #94a3b8; font-size: 10.5px; }
+.perf-hint { color: #475569; font-size: 9.5px; margin-top: 2px; }
+
+/* ── 'Did you know?' tip card (auto-rotating, dismissible) ── */
+.tip-card {
+    position: fixed;
+    left: 12px;
+    bottom: 60px;
+    z-index: 95;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    width: 300px;
+    max-width: calc(100vw - 24px);
+    padding: 11px 30px 11px 12px;
+    background: linear-gradient(135deg, rgba(255,253,248,0.96), rgba(252,243,230,0.92));
+    border: 1px solid rgba(217,170,120,0.32);
+    border-radius: 12px;
+    box-shadow: 0 8px 22px -6px rgba(80,40,20,0.22), 0 2px 6px rgba(0,0,0,0.08);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.32s ease, transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+}
+.tip-card.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.tip-icon {
+    font-size: 22px;
+    color: #d97757;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.tip-body { flex: 1; min-width: 0; }
+.tip-kicker {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #d97757;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+.tip-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #2a1a10;
+    margin-bottom: 2px;
+}
+.tip-text {
+    font-size: 12px;
+    color: #5a4438;
+    line-height: 1.45;
+}
+.tip-close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+    color: #8a6b4c;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.tip-close:hover {
+    background: rgba(0,0,0,0.05);
+    color: #2a1a10;
+}
+
+body.dark .tip-card {
+    background: linear-gradient(135deg, rgba(28,30,40,0.95), rgba(20,22,32,0.92));
+    border-color: rgba(140,110,80,0.22);
+    box-shadow: 0 8px 22px -6px rgba(0,0,0,0.55);
+}
+body.dark .tip-icon { color: #fdba74; }
+body.dark .tip-kicker { color: #fdba74; }
+body.dark .tip-title { color: #f4f4f5; }
+body.dark .tip-text { color: #c4b8aa; }
+body.dark .tip-close { color: #c4b8aa; }
+body.dark .tip-close:hover { background: rgba(255,255,255,0.06); color: #f4f4f5; }
+
+@media (max-width: 720px) {
+    .tip-card { display: none !important; }
+}
+@media (max-width: 480px) {
+    .perf-hud { font-size: 10px; min-width: 160px; }
+}
+
 /* ── PWA install button (appears only when beforeinstallprompt fires) ── */
 .pwa-install-btn {
     display: inline-flex;

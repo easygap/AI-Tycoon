@@ -29,6 +29,8 @@ const SHELL_ASSETS = [
     "/js/timeOfDay.js",
     "/js/npcs.js",
     "/js/seasons.js",
+    "/js/perfHud.js",
+    "/js/tips.js",
 ];
 
 self.addEventListener("install", (event) => {
