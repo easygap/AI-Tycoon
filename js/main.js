@@ -18,6 +18,10 @@ import { updatePanel, updateDetailPanel, updateBossQueueUI, updateLiveHud, onMou
 import { initPixiOverlay, resizePixiOverlay, renderPixiOverlay, getPixiOverlayDebug } from "./pixiOverlay.js";
 import { compareAgentPriority } from "./agentPriority.js";
 import { applyToDom as applyI18nToDom, onLangChange, getLang, t } from "./i18n.js";
+// Auto-load helper modules so window.aiTycoon* helpers register on boot
+import "./achievements.js";
+import "./notifications.js";
+import "./demoMode.js";
 
 const PANEL_FOCUSABLE = [
     "a[href]",
