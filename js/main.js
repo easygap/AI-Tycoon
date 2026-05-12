@@ -26,6 +26,7 @@ import "./snapshot.js";
 import "./perfHud.js";
 import "./tips.js";
 import "./miniMap.js";
+import "./backup.js";
 
 // Expose Pixi overlay debug for the perf HUD
 if (typeof window !== "undefined") window.aiTycoonOverlayDebug = getPixiOverlayDebug;

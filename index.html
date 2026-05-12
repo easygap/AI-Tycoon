@@ -556,14 +556,28 @@
                 <section class="settings-section">
                     <h3 class="settings-section-title" data-i18n="settings.data">데이터</h3>
                     <div class="settings-row settings-row-vertical">
-                        <button type="button" class="settings-danger" onclick="settingsResetStats()">
-                            <iconify-icon icon="solar:database-linear" aria-hidden="true"></iconify-icon>
-                            <span data-i18n="settings.resetStats">통계 초기화</span>
-                        </button>
-                        <button type="button" class="settings-danger" onclick="settingsResetAchievements()">
-                            <iconify-icon icon="solar:medal-ribbons-star-linear" aria-hidden="true"></iconify-icon>
-                            <span data-i18n="settings.resetAchievements">업적 초기화</span>
-                        </button>
+                        <div class="settings-button-pair">
+                            <button type="button" class="settings-action" onclick="settingsBackup()">
+                                <iconify-icon icon="solar:download-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.backup">백업 내보내기</span>
+                            </button>
+                            <button type="button" class="settings-action" onclick="settingsRestoreClick()">
+                                <iconify-icon icon="solar:upload-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.restore">백업 가져오기</span>
+                            </button>
+                        </div>
+                        <input id="settings-restore-input" type="file" accept="application/json,.json" hidden onchange="settingsRestoreFile(this.files[0])">
+                        <p class="settings-help" data-i18n="settings.backupHelp">현재 환경설정·통계·업적을 JSON 파일로 내보내거나, 같은 형식의 파일을 불러와 복원합니다.</p>
+                        <div class="settings-button-pair">
+                            <button type="button" class="settings-danger" onclick="settingsResetStats()">
+                                <iconify-icon icon="solar:database-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.resetStats">통계 초기화</span>
+                            </button>
+                            <button type="button" class="settings-danger" onclick="settingsResetAchievements()">
+                                <iconify-icon icon="solar:medal-ribbons-star-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.resetAchievements">업적 초기화</span>
+                            </button>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -929,6 +943,22 @@
         localStorage.removeItem("ai-tycoon-time-override");
         const input = document.getElementById("settings-time-input");
         if (input) input.value = "";
+    }
+    function settingsBackup() {
+        if (window.aiTycoonBackup) window.aiTycoonBackup.download();
+    }
+    function settingsRestoreClick() {
+        document.getElementById("settings-restore-input")?.click();
+    }
+    function settingsRestoreFile(file) {
+        if (!file || !window.aiTycoonBackup) return;
+        if (!confirm("현재 데이터를 덮어씁니다. 계속할까요? / Overwrite current data?")) return;
+        window.aiTycoonBackup.restore(file).then(count => {
+            alert(`복원 완료 (${count} 항목) — 페이지를 새로고침 합니다.\nRestored ${count} items. The page will reload.`);
+            location.reload();
+        }).catch(err => {
+            alert("복원 실패 / Restore failed: " + (err?.message || err));
+        });
     }
     function settingsResetStats() {
         if (!confirm("정말 모든 통계를 초기화할까요? / Reset all stats?")) return;
