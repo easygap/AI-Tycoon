@@ -146,6 +146,13 @@ const ACHIEVEMENTS = [
         en: { title: "Project explorer", desc: "Opened 3 project drill-downs" },
         check: ({ projectOpens }) => projectOpens >= 3,
     },
+    {
+        id: "konami",
+        icon: "solar:gameboy-bold",
+        ko: { title: "히든: 코나미", desc: "↑ ↑ ↓ ↓ ← → ← → B A — 비밀의 입력!" },
+        en: { title: "Hidden: Konami", desc: "↑ ↑ ↓ ↓ ← → ← → B A — the secret combo" },
+        check: ({ konami }) => konami === true,
+    },
 ];
 
 function loadUnlocked() {
@@ -231,6 +238,7 @@ function gatherContext() {
         seasonChanged: !!state.counters.seasonChanged,
         snapshots: state.counters.snapshots || 0,
         projectOpens: state.counters.projectOpens || 0,
+        konami: !!state.counters.konami,
     };
 }
 

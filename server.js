@@ -150,8 +150,35 @@ const httpServer = http.createServer((req, res) => {
 
     const filePath = resolvePublicFile(req.url);
     if (!filePath) {
-        res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-        res.end("Not found");
+        // Friendly 404: small inline page that points back to the dashboard
+        const isHtmlRequest = (req.headers.accept || "").includes("text/html");
+        if (isHtmlRequest) {
+            res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+            res.end(`<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><title>404 · AI Tycoon</title>
+<style>
+  body { font-family: "Pretendard", system-ui, sans-serif; background: linear-gradient(180deg, #fff3df 0%, #ffb88a 100%); margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; color: #2a1a10; }
+  .card { background: rgba(255,253,248,0.96); border: 1px solid rgba(217,170,120,0.4); border-radius: 18px; padding: 32px 36px; box-shadow: 0 20px 40px -10px rgba(80,40,20,0.32); text-align: center; max-width: 360px; }
+  .kicker { font-size: 11px; font-weight: 700; color: #d97757; letter-spacing: 0.18em; text-transform: uppercase; }
+  h1 { font-size: 28px; margin: 8px 0 6px; }
+  p { font-size: 13px; color: #5a4438; line-height: 1.55; }
+  a { display: inline-block; margin-top: 18px; padding: 9px 22px; background: linear-gradient(180deg, #ff8a4c, #d97757); color: #fff; border-radius: 999px; text-decoration: none; font-weight: 700; font-size: 13px; box-shadow: 0 6px 14px -2px rgba(217,119,87,0.45); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="kicker">404 · NOT FOUND</div>
+    <h1>길을 잃으셨네요</h1>
+    <p>이 경로는 작업실의 어느 자리도 가리키지 않아요. 책상으로 돌아갈까요?</p>
+    <a href="/">작업실로 돌아가기</a>
+  </div>
+</body>
+</html>`);
+            return;
+        }
+        res.writeHead(404, { "Content-Type": "application/json; charset=utf-8" });
+        res.end(JSON.stringify({ ok: false, error: "Not found", path: req.url }));
         return;
     }
 
