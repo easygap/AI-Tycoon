@@ -2,7 +2,7 @@
 // Caches the static shell so the dashboard still opens offline,
 // then falls back to network for everything else.
 
-const VERSION = "ai-tycoon-shell-v3";
+const VERSION = "ai-tycoon-shell-v4";
 const SHELL_ASSETS = [
     "/",
     "/index.html",
@@ -33,6 +33,8 @@ const SHELL_ASSETS = [
     "/js/tips.js",
     "/js/miniMap.js",
     "/js/backup.js",
+    "/js/toasts.js",
+    "/js/tour.js",
 ];
 
 self.addEventListener("install", (event) => {
