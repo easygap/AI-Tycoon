@@ -15,6 +15,7 @@ import {
 } from "./constants.js";
 import { timeOfDayLabel, getSkyPalette } from "./timeOfDay.js";
 import { recentDays, todayStats, yesterdayStats, hourActivityToday, hourActivityWindow } from "./stats.js";
+import { avgHeartbeatGap, connQuality } from "./ws.js";
 import { t as i18n } from "./i18n.js";
 import { listAchievements, progressCount } from "./achievements.js";
 
@@ -1253,10 +1254,27 @@ function renderTeamRadar() {
     });
 }
 
+function updateConnQualityIndicator() {
+    if (!S.connected) return;
+    const badge = document.getElementById("conn-badge");
+    const txt = document.getElementById("conn-text");
+    if (!badge || !txt) return;
+    const ms = avgHeartbeatGap();
+    if (ms == null) return;
+    const quality = connQuality();
+    const lang = (window.aiTycoonI18n?.getLang?.()) || "ko";
+    const live = lang === "en" ? "Live" : "실시간";
+    txt.textContent = `${live} · ${Math.round(ms)}ms`;
+    badge.dataset.connQuality = quality;
+}
+
 // ── Live HUD ──
 export function updateLiveHud() {
     const activeEl = document.getElementById("hud-active");
     if (!activeEl) return;
+
+    // Connection quality dot on the badge
+    updateConnQualityIndicator();
 
     const active = S.liveAgents.filter(a => a.isRunning);
     const working = S.liveAgents.filter(a =>

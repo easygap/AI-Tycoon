@@ -175,6 +175,25 @@ body.dark .tip-close:hover { background: rgba(255,255,255,0.06); color: #f4f4f5;
     .perf-hud { font-size: 10px; min-width: 160px; }
 }
 
+/* ── Connection quality dot (colours the conn badge based on heartbeat health) ── */
+#conn-badge[data-conn-quality="good"] #conn-dot {
+    background: #10b981 !important;
+    box-shadow: 0 0 0 2px rgba(16,185,129,0.18);
+}
+#conn-badge[data-conn-quality="fair"] #conn-dot {
+    background: #f59e0b !important;
+    box-shadow: 0 0 0 2px rgba(245,158,11,0.2);
+}
+#conn-badge[data-conn-quality="poor"] #conn-dot {
+    background: #ef4444 !important;
+    box-shadow: 0 0 0 2px rgba(239,68,68,0.22);
+    animation: conn-poor-pulse 1.6s ease-in-out infinite;
+}
+@keyframes conn-poor-pulse {
+    0%, 100% { box-shadow: 0 0 0 2px rgba(239,68,68,0.22); }
+    50%      { box-shadow: 0 0 0 4px rgba(239,68,68,0.08); }
+}
+
 /* ── PWA install button (appears only when beforeinstallprompt fires) ── */
 .pwa-install-btn {
     display: inline-flex;

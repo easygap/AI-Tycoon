@@ -30,10 +30,20 @@ export function connectWS() {
     };
     S.ws.onmessage = (e) => {
         try {
+            const now = Date.now();
+            if (S.lastHeartbeat) {
+                const delta = now - S.lastHeartbeat;
+                // Track a small rolling window of inter-arrival times
+                S.heartbeatDeltas = S.heartbeatDeltas || [];
+                if (delta > 0 && delta < 20000) {
+                    S.heartbeatDeltas.push(delta);
+                    if (S.heartbeatDeltas.length > 10) S.heartbeatDeltas.shift();
+                }
+            }
             const msg = JSON.parse(e.data);
             if (msg.type === "full_state") handleState(msg.data);
             else if (msg.type === "heartbeat") {
-                S.lastHeartbeat = Date.now();
+                S.lastHeartbeat = now;
                 if (msg.diagnostics && S.serverState) {
                     S.serverState.diagnostics = msg.diagnostics;
                     updateLiveHud();
@@ -47,6 +57,23 @@ export function connectWS() {
         scheduleReconnect();
     };
     S.ws.onerror = () => { try { S.ws.close(); } catch(e) {} };
+}
+
+/** Median inter-arrival time of recent heartbeats, in ms. */
+export function avgHeartbeatGap() {
+    const arr = S.heartbeatDeltas;
+    if (!arr || arr.length === 0) return null;
+    const sorted = [...arr].sort((a, b) => a - b);
+    return sorted[Math.floor(sorted.length / 2)];
+}
+
+/** "good" / "fair" / "poor" classification of the live link. */
+export function connQuality() {
+    const ms = avgHeartbeatGap();
+    if (ms == null) return "unknown";
+    if (ms < 2500) return "good";
+    if (ms < 4500) return "fair";
+    return "poor";
 }
 
 export function scheduleReconnect() {
