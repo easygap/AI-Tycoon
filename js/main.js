@@ -29,6 +29,7 @@ import "./miniMap.js";
 import "./backup.js";
 import "./toasts.js";
 import "./tour.js";
+import "./crossTab.js";
 
 // Expose Pixi overlay debug for the perf HUD
 if (typeof window !== "undefined") window.aiTycoonOverlayDebug = getPixiOverlayDebug;

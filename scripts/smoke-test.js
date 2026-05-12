@@ -37,6 +37,7 @@ const SHELL = [
     { url: "/js/toasts.js", contains: "showToast", label: "toasts.js" },
     { url: "/js/tour.js", contains: "startTour", label: "tour.js" },
     { url: "/js/demoMode.js", contains: "startDemo", label: "demoMode.js" },
+    { url: "/js/crossTab.js", contains: "BroadcastChannel", label: "crossTab.js" },
 ];
 
 function request(urlPath) {
