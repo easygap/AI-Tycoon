@@ -311,3 +311,14 @@ ai-tycoon/
 - Tailwind utilities are pre-built into `css/tailwind.generated.css`; regenerate with `npm run build`.
 - The "boss desk" is *your* seat: agents needing review walk over and queue.
 - New AI platforms can be added by extending `AI_PLATFORMS` in `server.js`.
+
+### Docs
+
+- [`CHANGELOG.md`](./CHANGELOG.md) — feature drops by iteration
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — project layout + how to add modals / shortcuts / achievements / platforms
+- [`LICENSE`](./LICENSE) — MIT
+
+### Easter eggs
+
+- ↑ ↑ ↓ ↓ ← → ← → B A — Konami unlocks a hidden achievement
+- Inspect the DevTools console — there's a hello message + helper APIs
