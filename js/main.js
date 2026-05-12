@@ -23,6 +23,11 @@ import "./achievements.js";
 import "./notifications.js";
 import "./demoMode.js";
 import "./snapshot.js";
+import "./perfHud.js";
+import "./tips.js";
+
+// Expose Pixi overlay debug for the perf HUD
+if (typeof window !== "undefined") window.aiTycoonOverlayDebug = getPixiOverlayDebug;
 
 const PANEL_FOCUSABLE = [
     "a[href]",
