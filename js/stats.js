@@ -68,9 +68,14 @@ function ensureToday(blob) {
             events: 0,
             platforms: {},
             statusMinutes: {},
+            hourActivity: new Array(24).fill(0),
             firstSeenAt: new Date().toISOString(),
             lastSeenAt: new Date().toISOString(),
         };
+    }
+    // Backfill for older blobs without hourActivity
+    if (!Array.isArray(blob.days[k].hourActivity) || blob.days[k].hourActivity.length !== 24) {
+        blob.days[k].hourActivity = new Array(24).fill(0);
     }
     return blob.days[k];
 }
@@ -147,6 +152,12 @@ export function recordStateSnapshot(agents) {
         }
     });
 
+    // Hourly activity heatmap — accumulate running-agent count by current hour
+    if (running.length > 0) {
+        const hour = new Date().getHours();
+        day.hourActivity[hour] = (day.hourActivity[hour] || 0) + running.length;
+    }
+
     day.lastSeenAt = new Date().toISOString();
     saveBlob(blob);
 }
@@ -185,6 +196,22 @@ export function yesterdayStats() {
 export function statusMinutesToday() {
     const t = todayStats();
     return t ? { ...t.statusMinutes } : {};
+}
+
+/** Per-hour activity (0..23) for today, summed across last N days. */
+export function hourActivityToday() {
+    const t = todayStats();
+    return t?.hourActivity ? [...t.hourActivity] : new Array(24).fill(0);
+}
+export function hourActivityWindow(days = 7) {
+    const list = recentDays(days);
+    const merged = new Array(24).fill(0);
+    list.forEach(d => {
+        if (Array.isArray(d.hourActivity)) {
+            d.hourActivity.forEach((v, i) => { merged[i] += v || 0; });
+        }
+    });
+    return merged;
 }
 
 /** Clear all persisted stats. */

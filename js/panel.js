@@ -14,7 +14,7 @@ import {
     SUB_COLORS,
 } from "./constants.js";
 import { timeOfDayLabel, getSkyPalette } from "./timeOfDay.js";
-import { recentDays, todayStats, yesterdayStats } from "./stats.js";
+import { recentDays, todayStats, yesterdayStats, hourActivityToday, hourActivityWindow } from "./stats.js";
 import { t as i18n } from "./i18n.js";
 import { listAchievements, progressCount } from "./achievements.js";
 
@@ -2131,6 +2131,43 @@ export function refreshInsights() {
                 </div>
             `;
         }
+    }
+
+    // Hourly heatmap (24 hour cells)
+    const hourlyEl = el("insights-hourly");
+    if (hourlyEl) {
+        const today = hourActivityToday();
+        const window7 = hourActivityWindow(7);
+        const maxV = Math.max(1, ...window7);
+        const nowHour = new Date().getHours();
+        const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const peakHour = window7.indexOf(Math.max(...window7));
+        const peakLabel = lang === "en"
+            ? `Peak: ${String(peakHour).padStart(2, "0")}:00`
+            : `피크 시간 ${String(peakHour).padStart(2, "0")}시`;
+        const todayLabel = lang === "en" ? "Today" : "오늘";
+        const weekLabel = lang === "en" ? "7-day" : "최근 7일";
+        const cells = window7.map((v, h) => {
+            const intensity = Math.max(0, Math.min(1, v / maxV));
+            const todayV = today[h] || 0;
+            const dotSize = Math.max(0, Math.min(1, todayV / Math.max(1, today[nowHour] || maxV)));
+            const isNow = h === nowHour;
+            return `
+                <div class="insights-hour-cell${isNow ? " is-now" : ""}" title="${String(h).padStart(2, "0")}:00 · ${weekLabel} ${v} · ${todayLabel} ${todayV}">
+                    <div class="insights-hour-bar" style="--intensity:${intensity.toFixed(2)}"></div>
+                    <div class="insights-hour-dot" style="opacity:${dotSize.toFixed(2)}"></div>
+                    <div class="insights-hour-label">${h % 3 === 0 ? String(h).padStart(2, "0") : "·"}</div>
+                </div>
+            `;
+        }).join("");
+        hourlyEl.innerHTML = `
+            <div class="insights-hourly-row">${cells}</div>
+            <div class="insights-hourly-legend">
+                <span><span class="insights-hour-key bar"></span>${esc(weekLabel)}</span>
+                <span><span class="insights-hour-key dot"></span>${esc(todayLabel)}</span>
+                <span class="insights-hourly-peak">${esc(peakLabel)}</span>
+            </div>
+        `;
     }
 
     // Achievements grid

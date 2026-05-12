@@ -1,5 +1,150 @@
 /* ===== AI Tycoon — Live Operations Studio ===== */
 
+/* ── Splash screen (painted first to avoid FOUC) ── */
+.splash-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at top, #fff3df 0%, #ffd9a8 50%, #f3b884 100%);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.splash-overlay.is-leaving {
+    opacity: 0;
+    transform: scale(1.02);
+    pointer-events: none;
+}
+.splash-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+.splash-mark {
+    width: 76px;
+    height: 76px;
+    position: relative;
+    border-radius: 16px;
+    background: linear-gradient(160deg, #fff 0%, #f0e8d8 100%);
+    border: 2px solid #2a1a10;
+    box-shadow:
+        0 12px 28px -6px rgba(80,40,20,0.32),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+    overflow: hidden;
+    animation: splash-pulse 1.6s ease-in-out infinite;
+    image-rendering: pixelated;
+}
+.splash-mark-window {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    width: 52px;
+    height: 30px;
+    background: #b8c8d8;
+    border: 1.5px solid #2a1a10;
+    overflow: hidden;
+    display: block;
+}
+.splash-mark-sky {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, #a5d4ff 0%, #ffd09e 60%, #ff9d6c 100%);
+    display: block;
+}
+.splash-mark-sun {
+    position: absolute;
+    right: 6px;
+    top: 5px;
+    width: 8px;
+    height: 8px;
+    background: radial-gradient(circle, #fff5b6 0%, #ffc060 70%, transparent 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 12px rgba(255,210,140,0.6);
+    display: block;
+}
+.splash-mark-desk {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 18px;
+    background: linear-gradient(180deg, #d8b890 0%, #b89870 100%);
+    border: 1.5px solid #2a1a10;
+    border-radius: 2px;
+}
+.splash-mark-monitor {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 12px;
+    background: #1a1a28;
+    border: 1.5px solid #2a1a10;
+    border-radius: 1px;
+}
+.splash-mark-monitor::after {
+    content: "";
+    position: absolute;
+    inset: 2px;
+    background: linear-gradient(180deg, #4adeb5 0%, #10b981 100%);
+    border-radius: 1px;
+    animation: splash-screen 1.2s ease-in-out infinite alternate;
+}
+@keyframes splash-pulse {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+}
+@keyframes splash-screen {
+    0%   { opacity: 0.45; }
+    100% { opacity: 0.95; }
+}
+.splash-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #2a1a10;
+    letter-spacing: -0.01em;
+    margin-top: 4px;
+}
+.splash-sub {
+    font-size: 12px;
+    color: #7a5a48;
+    font-weight: 500;
+}
+.splash-progress {
+    width: 140px;
+    height: 4px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+.splash-progress span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #ff8a4c, #d97757);
+    width: 30%;
+    border-radius: 99px;
+    animation: splash-progress 1.4s ease-in-out infinite;
+}
+@keyframes splash-progress {
+    0%   { transform: translateX(-100%); width: 30%; }
+    50%  { width: 60%; }
+    100% { transform: translateX(280%); width: 30%; }
+}
+@media (prefers-color-scheme: dark) {
+    body:not([data-theme="light"]) .splash-overlay {
+        background: radial-gradient(ellipse at top, #2a1e3a 0%, #1a1626 50%, #0e0c14 100%);
+    }
+    body:not([data-theme="light"]) .splash-name { color: #f4f4f5; }
+    body:not([data-theme="light"]) .splash-sub { color: #a89c8e; }
+}
+
+
 :root {
     --bg: #f6f7f4;
     --surface: rgba(255,255,255,0.82);
@@ -4992,6 +5137,92 @@ body.dark .insights-history-label { color: #a89c8e; }
 body.dark .insights-history-col.is-today .insights-history-label { color: #fdba74; }
 body.dark .insights-history-legend { color: #c4b8aa; }
 
+/* Hourly heatmap */
+.insights-hourly { display: flex; flex-direction: column; gap: 8px; }
+.insights-hourly-row {
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    gap: 2px;
+    align-items: end;
+    padding: 4px 0 0;
+}
+.insights-hour-cell {
+    position: relative;
+    height: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+}
+.insights-hour-bar {
+    width: 100%;
+    height: calc(var(--intensity, 0) * 38px + 3px);
+    background: linear-gradient(180deg, #10b981 0%, #34d399 100%);
+    border-radius: 2px;
+    transition: height 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.insights-hour-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #ff8a4c;
+    box-shadow: 0 0 6px rgba(255,138,76,0.55);
+    transition: opacity 0.3s ease;
+}
+.insights-hour-label {
+    font-size: 9px;
+    color: #8a6b4c;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+.insights-hour-cell.is-now .insights-hour-bar {
+    box-shadow: 0 0 0 1px rgba(255,138,76,0.7);
+}
+.insights-hour-cell.is-now .insights-hour-label {
+    color: #d97757;
+    font-weight: 700;
+}
+.insights-hourly-legend {
+    display: flex;
+    gap: 14px;
+    font-size: 11px;
+    color: #5a4438;
+    align-items: center;
+}
+.insights-hourly-legend > span { display: inline-flex; gap: 5px; align-items: center; }
+.insights-hour-key {
+    display: inline-block;
+    width: 12px;
+    height: 8px;
+    border-radius: 2px;
+}
+.insights-hour-key.bar { background: linear-gradient(180deg, #10b981, #34d399); }
+.insights-hour-key.dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff8a4c;
+    box-shadow: 0 0 4px rgba(255,138,76,0.5);
+}
+.insights-hourly-peak {
+    margin-left: auto;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #d97757;
+    background: rgba(217,119,87,0.12);
+    padding: 2px 8px;
+    border-radius: 99px;
+}
+
+body.dark .insights-hour-bar {
+    background: linear-gradient(180deg, #059669 0%, #10b981 100%);
+}
+body.dark .insights-hour-label { color: #a89c8e; }
+body.dark .insights-hour-cell.is-now .insights-hour-label { color: #fdba74; }
+body.dark .insights-hourly-legend { color: #c4b8aa; }
+body.dark .insights-hourly-peak { background: rgba(253,186,116,0.16); color: #fdba74; }
+
 /* Achievements grid */
 .insights-ach-progress {
     margin-left: auto;
@@ -5077,6 +5308,30 @@ body.dark .ach-tile-desc { color: #a89c8e; }
 body.dark .ach-tile-icon { color: #6a5a48; }
 body.dark .ach-tile.is-unlocked .ach-tile-icon { color: #fdba74; }
 body.dark .insights-ach-progress { background: rgba(253,186,116,0.16); color: #fdba74; }
+
+/* Confetti for achievement unlocks */
+.confetti-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 140;
+    overflow: hidden;
+}
+.confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 12px;
+    border-radius: 2px;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    animation: confetti-fly var(--dur, 1.1s) cubic-bezier(0.21, 0.58, 0.39, 1.13) forwards;
+    will-change: transform, opacity;
+}
+@keyframes confetti-fly {
+    0%   { opacity: 0;   transform: translate(-50%, -50%) rotate(0deg) scale(0.7); }
+    15%  { opacity: 1; }
+    100% { opacity: 0;   transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(var(--rot)) scale(0.9); }
+}
 
 /* Achievement badge popup (toast) */
 .badge-popup-stack {
