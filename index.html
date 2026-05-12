@@ -954,6 +954,10 @@
                 localStorage.setItem("ai-tycoon-achievements-v1", JSON.stringify(blob));
             } catch { /* ignore */ }
             window.aiTycoonAchievements.check();
+            // Mark all current unlocks as seen so the badge clears
+            if (window.aiTycoonAchievements.markAllSeen) {
+                window.aiTycoonAchievements.markAllSeen();
+            }
         }
     }
     function closeInsights() { closeModalOverlay(document.getElementById("insights-overlay")); }

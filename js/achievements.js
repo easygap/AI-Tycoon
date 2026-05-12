@@ -308,13 +308,56 @@ function spawnConfetti(anchorEl) {
     }
 }
 
+// Track "freshly unlocked" badges (unseen by user) so we can put a dot on
+// the insights button until they open the modal.
+const SEEN_KEY = "ai-tycoon-achievements-seen";
+function loadSeen() {
+    try { return new Set(JSON.parse(localStorage.getItem(SEEN_KEY) || "[]")); }
+    catch { return new Set(); }
+}
+function saveSeen(set) {
+    try { localStorage.setItem(SEEN_KEY, JSON.stringify([...set])); } catch { /* ignore */ }
+}
+export function unseenCount() {
+    const seen = loadSeen();
+    let n = 0;
+    Object.keys(state.unlocked).forEach(id => { if (!seen.has(id)) n++; });
+    return n;
+}
+export function markAllSeen() {
+    const seen = new Set(Object.keys(state.unlocked));
+    saveSeen(seen);
+    refreshHeaderBadge();
+}
+function refreshHeaderBadge() {
+    const btn = typeof document !== "undefined" && document.getElementById("insights-toggle");
+    if (!btn) return;
+    const count = unseenCount();
+    let badge = btn.querySelector(".ach-header-badge");
+    if (count > 0) {
+        if (!badge) {
+            badge = document.createElement("span");
+            badge.className = "ach-header-badge";
+            btn.appendChild(badge);
+        }
+        badge.textContent = count > 9 ? "9+" : String(count);
+        btn.dataset.unseen = String(count);
+    } else {
+        if (badge) badge.remove();
+        btn.dataset.unseen = "0";
+    }
+}
+
 if (typeof window !== "undefined") {
-    // Hook into unlock event to show popup
     onUnlock(showBadgePopup);
+    onUnlock(refreshHeaderBadge);
+    document.addEventListener("DOMContentLoaded", () => setTimeout(refreshHeaderBadge, 600));
     window.aiTycoonAchievements = {
         list: listAchievements,
         progress: progressCount,
         check: checkAll,
         reset: resetAchievements,
+        unseenCount,
+        markAllSeen,
     };
 }
