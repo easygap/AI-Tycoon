@@ -10,6 +10,7 @@
 // after furniture and before agent sprites.
 
 import { TILE, COLS, ROWS, OFFICE_MAP } from "./constants.js";
+import { getSkyPalette } from "./timeOfDay.js";
 
 // ── Cleaning robot ──────────────────────────────────────────
 // Path: loops counter-clockwise around the work-area corridors.
@@ -47,6 +48,121 @@ const airplane = {
     progress: 0,
     nextSpawn: Math.floor(Math.random() * 600) + 300, // frames until first appearance
 };
+
+// ── Night security guard ─────────────────────────────────
+// Patrols a perimeter route, with a torch beam, only at night.
+const GUARD_PATH = [
+    { x: 2, y: 15.5 },
+    { x: 11, y: 15.5 },
+    { x: 11, y: 11 },
+    { x: 2, y: 11 },
+    { x: 2, y: 5 },
+    { x: 11, y: 5 },
+    { x: 11, y: 1.5 },
+    { x: 15, y: 1.5 },
+    { x: 21, y: 1.5 },
+    { x: 21, y: 15.5 },
+    { x: 15, y: 15.5 },
+    { x: 13.5, y: 16.5 },   // pass through entrance
+];
+const guard = {
+    idx: 0,
+    progress: 0,
+    speed: 0.0018,
+    facingRight: true,
+};
+function guardActive() {
+    const sky = getSkyPalette();
+    return sky.hour >= 21 || sky.hour < 6;
+}
+function updateGuard() {
+    if (!guardActive()) return;
+    const from = GUARD_PATH[guard.idx];
+    const to = GUARD_PATH[(guard.idx + 1) % GUARD_PATH.length];
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const segLen = Math.hypot(dx, dy) || 1;
+    guard.progress += guard.speed / segLen;
+    if (Math.abs(dx) > 0.001) guard.facingRight = dx > 0;
+    if (guard.progress >= 1) {
+        guard.progress = 0;
+        guard.idx = (guard.idx + 1) % GUARD_PATH.length;
+    }
+}
+function drawGuard(ctx, animFrame) {
+    if (!guardActive()) return;
+    const from = GUARD_PATH[guard.idx];
+    const to = GUARD_PATH[(guard.idx + 1) % GUARD_PATH.length];
+    const t = guard.progress;
+    const tx = from.x + (to.x - from.x) * t;
+    const ty = from.y + (to.y - from.y) * t;
+    const px = tx * TILE;
+    const py = ty * TILE;
+    const bob = Math.sin(animFrame * 0.18) * 0.5;
+    const dir = guard.facingRight ? 1 : -1;
+
+    // Torch beam — soft warm cone in front of guard
+    const beamLen = 36;
+    const beamStartX = px + dir * 4;
+    const beamY = py - 2 + bob;
+    const grad = ctx.createRadialGradient(beamStartX, beamY, 0, beamStartX + dir * beamLen * 0.5, beamY, beamLen);
+    grad.addColorStop(0, "rgba(255,235,170,0.45)");
+    grad.addColorStop(1, "rgba(255,235,170,0)");
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(beamStartX, beamY);
+    ctx.lineTo(beamStartX + dir * beamLen, beamY - beamLen * 0.4);
+    ctx.lineTo(beamStartX + dir * beamLen, beamY + beamLen * 0.4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Shadow
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.beginPath(); ctx.ellipse(px, py + 8, 5, 1.6, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Body — navy uniform
+    ctx.fillStyle = "#1a2540"; // pants
+    ctx.fillRect(px - 3.5, py + bob, 7, 7);
+    ctx.fillStyle = "#23355a"; // shirt
+    ctx.fillRect(px - 3.5, py - 5 + bob, 7, 6);
+    // Badge
+    ctx.fillStyle = "#facc15";
+    ctx.fillRect(px - 1.5, py - 3 + bob, 1.5, 1.5);
+    // Belt
+    ctx.fillStyle = "#0a0e1a";
+    ctx.fillRect(px - 3.5, py + bob - 0.5, 7, 1);
+    // Head
+    ctx.fillStyle = "#E8C0A0"; // skin
+    ctx.fillRect(px - 2.5, py - 11 + bob, 5, 5);
+    // Cap
+    ctx.fillStyle = "#0d1530";
+    ctx.fillRect(px - 3, py - 12 + bob, 6, 2);
+    ctx.fillRect(px + (dir > 0 ? 2 : -4), py - 11 + bob, 2, 1);
+    // Cap badge
+    ctx.fillStyle = "#facc15";
+    ctx.fillRect(px - 0.5, py - 11.5 + bob, 1, 1);
+    // Eyes — small dot
+    ctx.fillStyle = "#1a1a2e";
+    if (dir > 0) ctx.fillRect(px + 0.5, py - 9 + bob, 1, 1);
+    else ctx.fillRect(px - 1.5, py - 9 + bob, 1, 1);
+
+    // Flashlight (extended arm forward)
+    ctx.fillStyle = "#3a3a48";
+    ctx.fillRect(px + dir * 2, py - 3 + bob, 3, 2);
+    ctx.fillStyle = "#ffeaa3";
+    ctx.fillRect(px + dir * 4.5, py - 3 + bob, 1.2, 2);
+
+    // "야간 순찰" speech every once in a while
+    if (animFrame % 1400 < 80) {
+        ctx.font = "bold 3px Pretendard, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillStyle = "rgba(20,20,28,0.85)";
+        ctx.fillRect(px - 14, py - 17 + bob, 28, 6);
+        ctx.fillStyle = "#facc15";
+        ctx.fillText("야간 순찰 중", px, py - 13 + bob);
+    }
+    void getSkyPalette;
+}
 
 // ── Delivery person ───────────────────────────────────────
 // Visits a random work-area corridor spot, drops a package, leaves.
@@ -385,9 +501,11 @@ export function drawNPCs(ctx, animFrame) {
     moveAlongPath(animFrame);
     maybeSpawnAirplane(animFrame);
     updateDelivery(animFrame);
+    updateGuard();
     drawCleaningRobot(ctx, animFrame);
     drawLoungeCat(ctx, animFrame);
     drawDelivery(ctx, animFrame);
+    drawGuard(ctx, animFrame);
     drawAirplane(ctx, animFrame);
 }
 

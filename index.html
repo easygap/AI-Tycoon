@@ -449,6 +449,17 @@
                     <h3 class="settings-section-title" data-i18n="settings.demo">데모</h3>
                     <div class="settings-row">
                         <div class="settings-row-label">
+                            <iconify-icon icon="solar:user-plus-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.demoMode">합성 직원 표시</span>
+                        </div>
+                        <label class="settings-switch">
+                            <input id="settings-demo" type="checkbox" onchange="settingsToggleDemo(this.checked)">
+                            <span></span>
+                        </label>
+                    </div>
+                    <p class="settings-help" data-i18n="settings.demoModeHelp">실제 에이전트가 없을 때 가상의 직원으로 작업실을 시연합니다 (마케팅 · 스크린샷용).</p>
+                    <div class="settings-row">
+                        <div class="settings-row-label">
                             <iconify-icon icon="solar:sun-2-linear" aria-hidden="true"></iconify-icon>
                             <span data-i18n="settings.timeOverride">시간대 강제</span>
                         </div>
@@ -738,6 +749,10 @@
         const tov = localStorage.getItem("ai-tycoon-time-override") || "";
         const tovInput = document.getElementById("settings-time-input");
         if (tovInput) tovInput.value = tov;
+        // Demo mode
+        const demoOn = window.aiTycoonDemo?.isEnabled() || false;
+        const demoChk = document.getElementById("settings-demo");
+        if (demoChk) demoChk.checked = demoOn;
 
         openModalOverlay(overlay);
     }
@@ -788,6 +803,9 @@
     function settingsSetTimeOverride(v) {
         if (v) localStorage.setItem("ai-tycoon-time-override", v);
         else localStorage.removeItem("ai-tycoon-time-override");
+    }
+    function settingsToggleDemo(on) {
+        if (window.aiTycoonDemo) window.aiTycoonDemo.setEnabled(on);
     }
     function settingsClearTimeOverride() {
         localStorage.removeItem("ai-tycoon-time-override");
