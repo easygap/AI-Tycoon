@@ -402,6 +402,77 @@
         </div>
     </div>
 
+    <!-- ── Project Drill-Down Modal ── -->
+    <div id="project-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="project-title" hidden>
+        <div class="modal-card project-card">
+            <header class="modal-header">
+                <div>
+                    <div class="modal-kicker" data-i18n="project.kicker">프로젝트</div>
+                    <h2 id="project-title" class="modal-title">—</h2>
+                </div>
+                <button type="button" class="modal-close" onclick="closeProject()" data-i18n-attr="aria-label:panel.close" aria-label="닫기">
+                    <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
+                </button>
+            </header>
+            <div class="modal-body">
+                <section class="insights-overview">
+                    <div class="insights-stat">
+                        <iconify-icon icon="solar:users-group-rounded-bold" aria-hidden="true"></iconify-icon>
+                        <div>
+                            <div class="insights-stat-value" id="project-agents">0</div>
+                            <div class="insights-stat-label" data-i18n="project.agents">참여 직원</div>
+                        </div>
+                    </div>
+                    <div class="insights-stat">
+                        <iconify-icon icon="solar:checklist-bold" aria-hidden="true"></iconify-icon>
+                        <div>
+                            <div class="insights-stat-value" id="project-completed">0</div>
+                            <div class="insights-stat-label" data-i18n="insights.completed">완료 태스크</div>
+                        </div>
+                    </div>
+                    <div class="insights-stat">
+                        <iconify-icon icon="solar:bolt-circle-bold" aria-hidden="true"></iconify-icon>
+                        <div>
+                            <div class="insights-stat-value" id="project-ongoing">0</div>
+                            <div class="insights-stat-label" data-i18n="insights.ongoing">진행 중</div>
+                        </div>
+                    </div>
+                    <div class="insights-stat">
+                        <iconify-icon icon="solar:cpu-bolt-bold" aria-hidden="true"></iconify-icon>
+                        <div>
+                            <div class="insights-stat-value" id="project-ram">0<span class="insights-unit">MB</span></div>
+                            <div class="insights-stat-label" data-i18n="insights.totalRam">총 메모리</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="insights-section">
+                    <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:layers-minimalistic-linear" aria-hidden="true"></iconify-icon>
+                        <span data-i18n="project.platforms">플랫폼</span>
+                    </h3>
+                    <div id="project-platforms" class="project-platforms"></div>
+                </section>
+
+                <section class="insights-section">
+                    <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:user-rounded-linear" aria-hidden="true"></iconify-icon>
+                        <span data-i18n="project.agentList">참여 직원</span>
+                    </h3>
+                    <div id="project-agent-list" class="project-agent-list"></div>
+                </section>
+
+                <section class="insights-section">
+                    <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:checklist-minimalistic-linear" aria-hidden="true"></iconify-icon>
+                        <span data-i18n="project.tasks">최근 태스크</span>
+                    </h3>
+                    <div id="project-tasks" class="project-tasks"></div>
+                </section>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Settings Modal ── -->
     <div id="settings-overlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
         <div class="modal-card settings-card">
@@ -907,9 +978,25 @@
             s.classList.toggle("is-active", active);
         });
         if (window.aiTycoonForceRepaint) window.aiTycoonForceRepaint();
+        bumpAchCounter("themeChanged", true);
     }
     function settingsPickSeason(v) {
         if (window.aiTycoonSeason) window.aiTycoonSeason.override(v === "auto" ? null : v);
+        bumpAchCounter("seasonChanged", true);
+    }
+    function bumpAchCounter(name, value) {
+        try {
+            const raw = localStorage.getItem("ai-tycoon-achievements-v1");
+            const blob = raw ? JSON.parse(raw) : { unlocked: {}, counters: {} };
+            blob.counters = blob.counters || {};
+            if (typeof value === "boolean") {
+                blob.counters[name] = value;
+            } else {
+                blob.counters[name] = (blob.counters[name] || 0) + (value || 1);
+            }
+            localStorage.setItem("ai-tycoon-achievements-v1", JSON.stringify(blob));
+            window.aiTycoonAchievements?.check();
+        } catch { /* ignore */ }
     }
     function settingsToggleSound(on) {
         if (!window.aiTycoonSound) return;
@@ -957,6 +1044,7 @@
             btn.classList.add("is-flashed");
             setTimeout(() => btn.classList.remove("is-flashed"), 600);
         }
+        if (ok) bumpAchCounter("snapshots", 1);
         return ok;
     }
     function settingsClearTimeOverride() {
@@ -1022,9 +1110,16 @@
     function closeInsights() { closeModalOverlay(document.getElementById("insights-overlay")); }
     function openShortcuts() { openModalOverlay(document.getElementById("shortcuts-overlay")); }
     function closeShortcuts() { closeModalOverlay(document.getElementById("shortcuts-overlay")); }
+    function openProject(name) {
+        if (!name || !window.refreshProject) return;
+        window.refreshProject(name);
+        openModalOverlay(document.getElementById("project-overlay"));
+        if (typeof bumpAchCounter === "function") bumpAchCounter("projectOpens", 1);
+    }
+    function closeProject() { closeModalOverlay(document.getElementById("project-overlay")); }
 
     // Click outside to close
-    ["insights-overlay", "shortcuts-overlay", "settings-overlay"].forEach(id => {
+    ["insights-overlay", "shortcuts-overlay", "settings-overlay", "project-overlay"].forEach(id => {
         document.addEventListener("click", (e) => {
             const overlay = document.getElementById(id);
             if (!overlay || overlay.hidden) return;
@@ -1040,6 +1135,8 @@
         if (settings && !settings.hidden) { closeSettings(); event.stopPropagation(); return; }
         const shortcuts = document.getElementById("shortcuts-overlay");
         if (shortcuts && !shortcuts.hidden) { closeShortcuts(); event.stopPropagation(); return; }
+        const project = document.getElementById("project-overlay");
+        if (project && !project.hidden) { closeProject(); event.stopPropagation(); return; }
         const insights = document.getElementById("insights-overlay");
         if (insights && !insights.hidden) { closeInsights(); event.stopPropagation(); return; }
     });

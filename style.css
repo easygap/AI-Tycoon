@@ -5183,6 +5183,166 @@ body.dark .welcome-secondary:hover { background: rgba(255,255,255,0.06); color: 
     text-align: right;
 }
 
+/* ── Project drill-down modal ── */
+.project-card { width: min(640px, calc(100vw - 32px)); }
+.project-platforms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.project-platform-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+.project-platform-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+.project-platform-count {
+    font-weight: 800;
+    margin-left: 2px;
+}
+
+.project-agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 280px;
+    overflow-y: auto;
+}
+.project-agent-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(255,255,255,0.5);
+    border: 1px solid rgba(217,170,120,0.18);
+    border-radius: 9px;
+    padding: 8px 10px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+    width: 100%;
+}
+.project-agent-row:hover {
+    background: rgba(255,222,180,0.6);
+    border-color: rgba(217,119,87,0.3);
+}
+.project-agent-row:active { transform: scale(0.99); }
+.project-agent-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 12.5px;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1.5px rgba(255,255,255,0.5);
+}
+.project-agent-info { flex: 1; min-width: 0; }
+.project-agent-name {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #2a1a10;
+}
+.project-agent-meta {
+    font-size: 10.5px;
+    color: #7a5a48;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    margin-top: 1px;
+}
+.project-agent-status { font-weight: 700; }
+.project-agent-work {
+    font-size: 11px;
+    color: #5a4438;
+    margin-top: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.project-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.project-task-row {
+    display: grid;
+    grid-template-columns: 60px 1fr 80px;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 10px;
+    background: rgba(255,255,255,0.45);
+    border-radius: 7px;
+    font-size: 11.5px;
+}
+.project-task-status {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-align: center;
+}
+.project-task-subject {
+    color: #2a1a10;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.project-task-agent {
+    font-size: 10.5px;
+    color: #7a5a48;
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+body.dark .project-agent-row {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.06);
+}
+body.dark .project-agent-row:hover {
+    background: rgba(217,119,87,0.18);
+    border-color: rgba(253,186,116,0.25);
+}
+body.dark .project-agent-name { color: #f4f4f5; }
+body.dark .project-agent-meta { color: #a89c8e; }
+body.dark .project-agent-work { color: #c4b8aa; }
+body.dark .project-task-row { background: rgba(255,255,255,0.04); }
+body.dark .project-task-subject { color: #f4f4f5; }
+body.dark .project-task-agent { color: #a89c8e; }
+body.dark .project-platform-chip { border-color: rgba(255,255,255,0.06); }
+
+/* Make existing insights-project-row clickable buttons */
+.insights-project-row {
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+.insights-project-row:hover {
+    background: rgba(255,222,180,0.6);
+    border-color: rgba(217,119,87,0.3);
+}
+.insights-project-row:active { transform: scale(0.99); }
+body.dark .insights-project-row:hover {
+    background: rgba(217,119,87,0.16);
+    border-color: rgba(253,186,116,0.25);
+}
+
 /* Projects */
 .insights-projects {
     display: flex;
