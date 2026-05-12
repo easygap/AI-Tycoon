@@ -108,6 +108,11 @@
                 </div>
             </div>
 
+            <!-- Snapshot -->
+            <button id="snapshot-toggle" onclick="takeOfficeSnapshot()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" data-i18n-attr="title:header.snapshot,aria-label:header.snapshot" title="작업실 스냅샷 저장" aria-label="작업실 스냅샷 저장">
+                <iconify-icon icon="solar:camera-linear" class="text-zinc-500 text-sm"></iconify-icon>
+            </button>
+
             <!-- Settings -->
             <button id="settings-toggle" onclick="openSettings()" class="toolbar-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0" data-i18n-attr="title:header.settings,aria-label:header.settings" title="설정" aria-label="설정 열기">
                 <iconify-icon icon="solar:settings-linear" class="text-zinc-500 text-sm"></iconify-icon>
@@ -544,6 +549,7 @@
                         <li><span class="shortcuts-keys"><kbd>?</kbd></span><span data-i18n="shortcuts.help">이 도움말 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>I</kbd></span><span data-i18n="shortcuts.insights">인사이트 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>,</kbd></span><span data-i18n="shortcuts.settings">설정 열기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>P</kbd></span><span data-i18n="shortcuts.snapshot">스냅샷 저장</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
@@ -833,6 +839,17 @@
     function settingsToggleDemo(on) {
         if (window.aiTycoonDemo) window.aiTycoonDemo.setEnabled(on);
     }
+    // Office snapshot (called by header button + shortcut + settings)
+    function takeOfficeSnapshot() {
+        if (!window.aiTycoonSnapshot) return false;
+        const ok = window.aiTycoonSnapshot.download();
+        const btn = document.getElementById("snapshot-toggle");
+        if (btn) {
+            btn.classList.add("is-flashed");
+            setTimeout(() => btn.classList.remove("is-flashed"), 600);
+        }
+        return ok;
+    }
     function settingsClearTimeOverride() {
         localStorage.removeItem("ai-tycoon-time-override");
         const input = document.getElementById("settings-time-input");
@@ -897,7 +914,8 @@
         if (typing || event.ctrlKey || event.metaKey || event.altKey) return;
         const k = event.key;
         if (k === "?" || (event.shiftKey && k === "/")) { event.preventDefault(); openShortcuts(); }
-        else if (k === "," || k === "S" || k === "s") { event.preventDefault(); openSettings(); }
+        else if (k === ",") { event.preventDefault(); openSettings(); }
+        else if (k === "p" || k === "P") { event.preventDefault(); takeOfficeSnapshot(); }
         else if (k === "i" || k === "I") { event.preventDefault(); openInsights(); }
         else if (k === "d" || k === "D") { event.preventDefault(); toggleDarkMode(); }
         else if (k === "h" || k === "H") {

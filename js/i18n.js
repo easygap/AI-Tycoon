@@ -31,6 +31,8 @@ const DICT = {
         "header.shortcuts": "키보드 단축키",
         "header.lang": "언어 전환",
         "header.settings": "설정",
+        "header.snapshot": "작업실 스냅샷 저장",
+        "shortcuts.snapshot": "스냅샷 PNG 저장",
         // Settings modal
         "settings.kicker": "설정",
         "settings.title": "취향대로 작업실 꾸미기",
@@ -173,6 +175,8 @@ const DICT = {
         "header.shortcuts": "Keyboard shortcuts",
         "header.lang": "Switch language",
         "header.settings": "Settings",
+        "header.snapshot": "Save workspace snapshot",
+        "shortcuts.snapshot": "Save snapshot PNG",
         "settings.kicker": "SETTINGS",
         "settings.title": "Tune your workspace",
         "settings.appearance": "Appearance",

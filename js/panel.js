@@ -2189,7 +2189,7 @@ export function refreshInsights() {
         `).join("");
     }
 
-    // Recent feed
+    // Recent feed — clickable rows that focus the agent
     const feedEl = el("insights-feed");
     if (feedEl) {
         const events = (S.workEvents || []).slice(0, 12);
@@ -2200,17 +2200,39 @@ export function refreshInsights() {
                 const meta = STATUS_META[ev.status] || STATUS_META.idle;
                 const ts = ev.ts ? new Date(ev.ts) : new Date();
                 const time = `${String(ts.getHours()).padStart(2,"0")}:${String(ts.getMinutes()).padStart(2,"0")}`;
-                const labelText = ev.label || meta.label;
+                const labelText = ev.label || statusLabelI18n(ev.status) || meta.label;
                 const color = ev.statusColor || ev.color || meta.color;
+                const pid = ev.pid ? String(ev.pid) : "";
                 return `
-                    <div class="insights-feed-row">
+                    <button type="button" class="insights-feed-row" ${pid ? `data-pid="${esc(pid)}"` : ""} ${pid ? "" : "disabled"}>
                         <span class="insights-feed-time">${esc(time)}</span>
                         <span class="insights-feed-tag" style="background:${color}22;color:${color}">${esc(labelText)}</span>
                         <span class="insights-feed-name">${esc(ev.agentName || "")}</span>
                         <span class="insights-feed-text">${esc(ev.text || "")}</span>
-                    </div>
+                    </button>
                 `;
             }).join("");
+            feedEl.querySelectorAll(".insights-feed-row[data-pid]").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const pid = btn.getAttribute("data-pid");
+                    if (!pid) return;
+                    // Find agent, focus camera, close modal
+                    const ag = S.liveAgents.find(a => String(a.pid) === pid);
+                    if (!ag) return;
+                    S.selectedPid = pid;
+                    S.detailPid = pid;
+                    if (typeof window.focusActiveAgent === "function" && typeof S.directorMode !== "undefined") {
+                        // Use existing focus helper — switch to director mode targeting this pid
+                        S.directorFocusPid = pid;
+                        S.directorMode = true;
+                    }
+                    document.getElementById("insights-overlay")?.classList?.remove("is-visible");
+                    setTimeout(() => {
+                        const overlay = document.getElementById("insights-overlay");
+                        if (overlay) overlay.hidden = true;
+                    }, 280);
+                });
+            });
         }
     }
 }
