@@ -1,5 +1,115 @@
 /* ===== AI Tycoon — Live Operations Studio ===== */
 
+/* ── Empty-state Demo CTA (only visible when no agents) ── */
+.empty-cta {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, calc(-50% + 60px));
+    z-index: 8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px 20px;
+    background: linear-gradient(180deg, rgba(255,253,248,0.95), rgba(255,237,212,0.92));
+    border: 1px solid rgba(217,170,120,0.4);
+    border-radius: 16px;
+    box-shadow:
+        0 18px 36px -8px rgba(80,40,20,0.32),
+        0 6px 14px rgba(40,20,10,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.55);
+    backdrop-filter: blur(4px);
+    width: min(360px, calc(100% - 40px));
+    animation: empty-cta-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
+}
+.empty-cta-glow {
+    position: absolute;
+    inset: -20px;
+    border-radius: 30px;
+    background: radial-gradient(ellipse at center, rgba(255,180,120,0.25), transparent 60%);
+    pointer-events: none;
+    z-index: -1;
+    animation: empty-cta-pulse 3.4s ease-in-out infinite;
+}
+@keyframes empty-cta-rise {
+    from { opacity: 0; transform: translate(-50%, calc(-50% + 76px)); }
+    to   { opacity: 1; transform: translate(-50%, calc(-50% + 60px)); }
+}
+@keyframes empty-cta-pulse {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50%      { opacity: 1;    transform: scale(1.04); }
+}
+.empty-cta-text { text-align: center; }
+.empty-cta-kicker {
+    font-size: 11px;
+    font-weight: 700;
+    color: #d97757;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.empty-cta-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #2a1a10;
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+}
+.empty-cta-desc {
+    font-size: 12px;
+    color: #5a4438;
+    line-height: 1.5;
+    max-width: 280px;
+}
+.empty-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 22px;
+    background: linear-gradient(180deg, #ff8a4c, #d97757);
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow:
+        0 6px 14px -2px rgba(217,119,87,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: transform 0.15s ease, box-shadow 0.18s ease;
+    font-family: inherit;
+}
+.empty-cta-btn:hover {
+    transform: translateY(-1px);
+    box-shadow:
+        0 9px 18px -2px rgba(217,119,87,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.empty-cta-btn:active { transform: translateY(0); }
+.empty-cta-btn iconify-icon { font-size: 16px; }
+
+body.dark .empty-cta {
+    background: linear-gradient(180deg, rgba(28,30,40,0.95), rgba(20,22,32,0.92));
+    border-color: rgba(140,110,80,0.28);
+}
+body.dark .empty-cta-glow {
+    background: radial-gradient(ellipse at center, rgba(253,186,116,0.16), transparent 60%);
+}
+body.dark .empty-cta-kicker { color: #fdba74; }
+body.dark .empty-cta-title { color: #f4f4f5; }
+body.dark .empty-cta-desc { color: #c4b8aa; }
+
+@media (max-width: 720px) {
+    .empty-cta { transform: translate(-50%, -50%); width: min(280px, calc(100% - 24px)); padding: 14px 16px 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .empty-cta { animation: none; }
+    .empty-cta-glow { animation: none; }
+}
+
 /* ── Mini-map (overview when zoomed in) ── */
 .mini-map {
     position: fixed;

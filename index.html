@@ -170,6 +170,20 @@
             <!-- Canvas -->
             <div class="stage-shell flex-1 relative">
                 <canvas id="office-canvas" class="block w-full h-full" tabindex="0" role="application" aria-roledescription="실시간 작업실" aria-label="AI Tycoon 실시간 작업실" aria-describedby="office-a11y-status"></canvas>
+
+                <!-- Empty-state CTA — shown when no agents are detected -->
+                <div id="empty-cta" class="empty-cta" hidden>
+                    <div class="empty-cta-glow"></div>
+                    <div class="empty-cta-text">
+                        <div class="empty-cta-kicker" data-i18n="empty.ctaKicker">아직 직원이 없네요</div>
+                        <div class="empty-cta-title" data-i18n="empty.ctaTitle">데모 모드로 미리 보기</div>
+                        <div class="empty-cta-desc" data-i18n="empty.ctaDesc">실제 AI 세션이 없어도 합성 직원으로 작업실을 둘러볼 수 있어요.</div>
+                    </div>
+                    <button type="button" class="empty-cta-btn" onclick="emptyCtaTryDemo()">
+                        <iconify-icon icon="solar:play-circle-bold" aria-hidden="true"></iconify-icon>
+                        <span data-i18n="empty.ctaButton">데모 시작</span>
+                    </button>
+                </div>
                 <div id="office-a11y-status" class="sr-only" role="status" aria-live="polite">에이전트 상태 수집 중</div>
                 <div id="pixi-layer" class="pixi-layer" aria-hidden="true"></div>
                 <div id="live-hud" class="live-hud" aria-live="off">
@@ -1068,6 +1082,11 @@
         if (window.aiTycoonDemo) window.aiTycoonDemo.setEnabled(on);
     }
     // Office snapshot (called by header button + shortcut + settings)
+    function emptyCtaTryDemo() {
+        if (window.aiTycoonDemo) window.aiTycoonDemo.setEnabled(true);
+        const cta = document.getElementById("empty-cta");
+        if (cta) cta.hidden = true;
+    }
     function takeOfficeSnapshot() {
         if (!window.aiTycoonSnapshot) return false;
         const ok = window.aiTycoonSnapshot.download();
