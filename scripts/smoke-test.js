@@ -13,6 +13,7 @@ const PORT = 3778; // dedicated test port so it doesn't collide with dev server
 const SHELL = [
     { url: "/", contains: "<title>AI Tycoon</title>", label: "index.html" },
     { url: "/api/health", contains: "\"ok\": true", label: "health endpoint" },
+    { url: "/api/agents", contains: "\"agents\":", label: "agents endpoint" },
     { url: "/manifest.webmanifest", contains: "\"name\":", label: "manifest" },
     { url: "/sw.js", contains: "ai-tycoon-shell", label: "service worker" },
     { url: "/icons/icon.svg", contains: "<svg", label: "icon (svg)" },
