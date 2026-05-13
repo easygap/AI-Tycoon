@@ -540,16 +540,26 @@ function drawDesk(px, py, tx, ty) {
         const agentHere = findAgentAtDesk(tx, ty);
         if (agentHere?.isRunning) {
             const pulse = 0.7 + Math.sin(S.animFrame * 0.04 + tx * 2) * 0.15;
+            // Use the platform's brand colour for the active screen so each
+            // platform feels visually identifiable at a glance.
+            const platMeta = PLATFORM_META[agentHere.platform] || null;
+            const tint = platMeta?.color || PAL.monActive;
             ctx.globalAlpha = pulse;
-            ctx.fillStyle = PAL.monActive;
+            // Base wash with a soft platform tint
+            ctx.fillStyle = hexToRgba(tint, 0.65);
             ctx.fillRect(px + 9, py + 3, 14, 10);
             ctx.globalAlpha = 1;
 
-            // Code lines
-            ctx.fillStyle = "rgba(5,150,105,0.4)";
+            // Code lines in a darker shade of the same tint
+            ctx.fillStyle = hexToRgba(tint, 0.85);
             for (let i = 0; i < 4; i++) {
                 const w = 3 + ((tx * 5 + i * 3 + Math.floor(S.animFrame / 12)) % 9);
                 ctx.fillRect(px + 10, py + 4 + i * 2.5, w, 1);
+            }
+            // Cursor blink — single pixel on the last line
+            if (Math.floor(S.animFrame / 14) % 2 === 0) {
+                ctx.fillStyle = hexToRgba(tint, 1);
+                ctx.fillRect(px + 21, py + 12, 1, 1);
             }
         } else {
             ctx.fillStyle = PAL.monDim;
