@@ -724,6 +724,10 @@
                 <section class="settings-section">
                     <h3 class="settings-section-title" data-i18n="settings.help">도움말</h3>
                     <div class="settings-row settings-row-vertical">
+                        <button type="button" class="settings-action" onclick="closeSettings(); setTimeout(openShortcuts, 280);">
+                            <iconify-icon icon="solar:command-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.openShortcuts">단축키 보기</span>
+                        </button>
                         <button type="button" class="settings-action" onclick="settingsReplayTour()">
                             <iconify-icon icon="solar:route-linear" aria-hidden="true"></iconify-icon>
                             <span data-i18n="settings.replayTour">투어 다시 보기</span>
