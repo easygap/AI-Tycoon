@@ -283,6 +283,9 @@
                         <button id="agent-search-clear" type="button" class="agent-search-clear" onclick="clearAgentSearch()" aria-label="검색어 지우기" hidden>
                             <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                         </button>
+                        <button id="agent-search-cmdk" type="button" class="agent-search-cmdk" onclick="window.aiTycoonCommandPalette?.open?.()" title="명령 팔레트 (Ctrl+K)" aria-label="명령 팔레트 열기">
+                            <kbd>Ctrl</kbd><kbd>K</kbd>
+                        </button>
                     </div>
                     <div id="agent-visibility-summary" class="agent-visibility-summary mb-2" aria-live="polite"></div>
                     <div id="action-filter" class="action-filter-bar mb-2" aria-label="다음 행동 필터"></div>
