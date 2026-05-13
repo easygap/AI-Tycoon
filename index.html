@@ -1429,19 +1429,56 @@
         window.addEventListener("load", () => {
             navigator.serviceWorker.register("/sw.js")
                 .then(reg => {
-                    // Listen for updates and prompt softly
                     reg.addEventListener("updatefound", () => {
                         const sw = reg.installing;
                         if (!sw) return;
                         sw.addEventListener("statechange", () => {
                             if (sw.state === "installed" && navigator.serviceWorker.controller) {
-                                console.log("[ai-tycoon] new version available — refresh to update");
+                                showSwUpdatePrompt();
                             }
                         });
                     });
                 })
                 .catch(err => console.warn("[ai-tycoon] SW registration failed:", err));
         });
+    }
+    function showSwUpdatePrompt() {
+        // Use the in-app toast stack so it's consistent with other notifications.
+        // The card is built manually so we can append a "Refresh" action button.
+        const stack = document.getElementById("toast-stack") || (() => {
+            const el = document.createElement("div");
+            el.id = "toast-stack";
+            el.className = "toast-stack";
+            el.setAttribute("aria-live", "polite");
+            document.body.appendChild(el);
+            return el;
+        })();
+        // Avoid duplicates
+        if (stack.querySelector(".toast-card[data-kind='sw-update']")) return;
+        const lang = (window.aiTycoonI18n?.getLang?.()) || "ko";
+        const title = lang === "en" ? "Update available" : "업데이트가 준비됐어요";
+        const body = lang === "en"
+            ? "Refresh to pick up the latest version."
+            : "새로고침하면 최신 버전이 적용돼요.";
+        const refreshLabel = lang === "en" ? "Refresh" : "새로고침";
+        const card = document.createElement("div");
+        card.className = "toast-card is-shown";
+        card.dataset.kind = "sw-update";
+        card.style.setProperty("--toast-color", "#3b82f6");
+        card.innerHTML = `
+            <span class="toast-icon" style="background:rgba(59,130,246,0.95)">
+                <iconify-icon icon="solar:refresh-circle-bold" aria-hidden="true"></iconify-icon>
+            </span>
+            <div class="toast-body">
+                <div class="toast-title">${title}</div>
+                <div class="toast-text">${body}</div>
+            </div>
+            <button type="button" class="toast-action">${refreshLabel}</button>
+            <button type="button" class="toast-close" aria-label="Dismiss">×</button>
+        `;
+        card.querySelector(".toast-action").addEventListener("click", () => location.reload());
+        card.querySelector(".toast-close").addEventListener("click", () => card.remove());
+        stack.appendChild(card);
     }
 
     // ── PWA install prompt button (appears when browser allows install) ──
