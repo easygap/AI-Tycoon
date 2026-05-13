@@ -4787,6 +4787,66 @@ body.dark #panel-toggle.has-review::after {
     }
 }
 
+/* ── Print stylesheet — keep the insights modal, drop the rest ── */
+@media print {
+    /* Reset noisy backgrounds so the page is printer-friendly */
+    body { background: #fff !important; color: #000 !important; }
+
+    /* Hide everything by default */
+    .app-header,
+    .stage-shell,
+    .side-panel,
+    .panel-backdrop,
+    #live-hud,
+    #work-stream,
+    #tip-card,
+    #mini-map,
+    #perf-hud,
+    #toast-stack,
+    #empty-cta,
+    #welcome-overlay,
+    #settings-overlay,
+    #shortcuts-overlay,
+    #project-overlay,
+    #splash,
+    .pwa-install-btn,
+    .toolbar-icon,
+    .badge-popup-stack,
+    .confetti-layer,
+    .tour-backdrop,
+    .tour-spotlight,
+    .tour-card {
+        display: none !important;
+    }
+
+    /* When Insights is open, expand it to full page */
+    #insights-overlay:not([hidden]) {
+        display: block !important;
+        position: static !important;
+        background: #fff !important;
+        backdrop-filter: none !important;
+        padding: 0 !important;
+        opacity: 1 !important;
+    }
+    #insights-overlay:not([hidden]) .modal-card {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        max-height: none !important;
+        background: #fff !important;
+    }
+    #insights-overlay .modal-close { display: none !important; }
+    .insights-feed,
+    .insights-history,
+    .insights-hourly { page-break-inside: avoid; }
+    .insights-stat-value,
+    .insights-section-title { color: #000 !important; }
+    .insights-hour-bar,
+    .insights-history-bar { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+
 /* ────────────────────────────────────────────────────────────
    First-run Welcome Card
    ──────────────────────────────────────────────────────────── */
