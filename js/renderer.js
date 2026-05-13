@@ -1139,6 +1139,24 @@ function drawAgent(agent, v) {
         ctx.globalAlpha = 1;
     }
 
+    // Typing dots when actively coding (and not currently speaking)
+    if (agent.isRunning && status === "coding" && !(v.speechTimer > 0 && v.speechText)) {
+        const tdy = by - 18;
+        const dots = 3;
+        const pmetaTint = PLATFORM_META[agent.platform];
+        const dotColor = pmetaTint?.color || "#059669";
+        for (let i = 0; i < dots; i++) {
+            const phase = (t * 0.18) - i * 0.55;
+            const bouncY = Math.max(0, Math.sin(phase) * 1.6);
+            ctx.fillStyle = dotColor;
+            ctx.globalAlpha = 0.35 + Math.max(0, Math.sin(phase)) * 0.55;
+            ctx.beginPath();
+            ctx.arc(x - 4 + i * 4, tdy - bouncY, 0.95, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    }
+
     // Speech bubble (higher position, bigger, distinct from sub-agent bubbles)
     if (v.speechTimer > 0 && v.speechText) {
         drawBubble(x, by - 26, v.speechText, v.speechTimer, v.chatPartner != null);
