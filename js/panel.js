@@ -1394,6 +1394,70 @@ function refreshEmptyCta() {
     cta.hidden = demoOn || hasAgents;
 }
 
+/** Render a one-line status breakdown above the agent list.
+ *  Each chip is clickable and toggles the corresponding status filter. */
+function renderAgentsStatusSummary() {
+    const el = document.getElementById("agents-status-summary");
+    if (!el) return;
+    const agents = S.liveAgents || [];
+    if (agents.length === 0) {
+        el.hidden = true;
+        el.innerHTML = "";
+        return;
+    }
+    const buckets = { coding: 0, thinking: 0, reviewing: 0, searching: 0, idle: 0, offline: 0 };
+    agents.forEach(a => {
+        const s = a.isRunning ? (a.status || "idle") : "offline";
+        if (buckets.hasOwnProperty(s)) buckets[s]++;
+        else buckets.idle++;
+    });
+    const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const labels = lang === "en"
+        ? { coding: "coding", thinking: "thinking", reviewing: "review", searching: "search", idle: "idle", offline: "offline" }
+        : { coding: "코딩", thinking: "생각", reviewing: "검토", searching: "검색", idle: "대기", offline: "오프라인" };
+    // Only show non-zero buckets, ordered by "activity level" descending
+    const order = ["coding", "thinking", "reviewing", "searching", "idle", "offline"];
+    const visible = order.filter(k => buckets[k] > 0);
+    if (visible.length === 0) {
+        el.hidden = true;
+        el.innerHTML = "";
+        return;
+    }
+    el.hidden = false;
+    el.innerHTML = visible.map(k => {
+        const meta = STATUS_META[k] || STATUS_META.idle;
+        const active = (S.activeFilter === k);
+        // Filter chip-style: clicking toggles the status filter
+        const filterKey = (k === "coding" || k === "idle" || k === "offline") ? k : null;
+        const role = filterKey ? "button" : "presentation";
+        const cls = `agents-status-pill${active ? " is-active" : ""}${filterKey ? " is-clickable" : ""}`;
+        const attrs = filterKey
+            ? `role="button" tabindex="0" data-status-filter="${esc(filterKey)}"`
+            : "";
+        return `<span class="${cls}" ${attrs} style="--pill-color:${meta.color}">
+            <span class="agents-status-dot" style="background:${meta.color}"></span>
+            <span class="agents-status-num">${buckets[k]}</span>
+            <span class="agents-status-label">${esc(labels[k])}</span>
+        </span>`;
+    }).join("");
+    // Wire click handlers (only on clickable pills)
+    el.querySelectorAll('[data-status-filter]').forEach(node => {
+        const fk = node.getAttribute("data-status-filter");
+        const handle = () => {
+            // Toggle: clicking the active filter goes back to "all"
+            if (S.activeFilter === fk) {
+                if (typeof window.setFilter === "function") window.setFilter("all");
+            } else if (typeof window.setFilter === "function") {
+                window.setFilter(fk);
+            }
+        };
+        node.addEventListener("click", handle);
+        node.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handle(); }
+        });
+    });
+}
+
 export function updatePanel() {
     updateFilterChips();
     refreshEmptyCta();
@@ -1407,6 +1471,10 @@ export function updatePanel() {
         const active = S.liveAgents.filter(a => a.isRunning).length;
         countEl.textContent = `${active}/${S.liveAgents.length}`;
     }
+
+    // Status summary bar — bird's-eye breakdown so the user knows
+    // what's happening even before scanning the agent list
+    renderAgentsStatusSummary();
 
     const filteredAgents = getFilteredSortedAgents();
     updateSearchControls(filteredAgents);

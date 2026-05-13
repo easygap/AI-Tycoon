@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 58 — 사이드 패널 상단에 상태별 요약 칩
+- 에이전트 목록 위에 한 줄짜리 상태 분포 칩 (`6 코딩 · 2 생각 · 1 검토 · 3 대기 …`)
+- 0이 아닌 상태만 표시, 활동량 큰 순으로 배치
+- 코딩/대기/오프라인 칩은 클릭 가능 — 클릭하면 해당 상태 필터, 다시 클릭하면 전체로 토글
+- 활성 필터와 동기화되어 현재 어떤 필터가 적용됐는지 한눈에 확인
+- 다크모드 색감 별도, `color-mix()` 로 자동 톤 매칭
+
 ### Iteration 57 — "방금 출근" 펄스 + NEW 배지
 - 새로 등장한 에이전트 카드는 60초 동안 초록 보더 펄스 + 우측 상단 NEW 칩
 - `S.visualAgents[pid].joinedAt`를 ws.js에서 기록해 두고 panel.js 에서 `(now - joinedAt) < 60s` 일 때 `.is-new` 클래스 부여
