@@ -176,51 +176,56 @@ function buildAgentResults(query) {
 }
 
 function buildActions(query) {
+    const setFilter = (key) => { try { window.setFilter?.(key); } catch { /* ignore */ } };
+    const setTheme = (theme) => {
+        try {
+            localStorage.setItem("ai-tycoon-theme", theme);
+            window.applyTheme?.(theme);
+            // Also try clicking the swatch to keep settings UI in sync
+            document.querySelector(`.theme-swatch[data-theme="${theme}"]`)?.click();
+        } catch { /* ignore */ }
+    };
+    const setLang = (lang) => {
+        try {
+            window.aiTycoonI18n?.setLang?.(lang);
+            window.dispatchEvent(new Event("ai-tycoon-lang-change"));
+        } catch { /* ignore */ }
+    };
+
     const all = [
-        {
-            id: "theme-toggle",
-            title: "다크 / 라이트 토글",
-            hint: "D",
-            run: () => { try { document.body.classList.toggle("dark"); localStorage.setItem("ai-tycoon-dark", document.body.classList.contains("dark") ? "true" : "false"); } catch { /* ignore */ } },
-        },
-        {
-            id: "demo-toggle",
-            title: "데모 모드 전환",
-            hint: "demo",
-            run: () => { try { window.aiTycoonDemo?.toggle?.(); } catch { /* ignore */ } },
-        },
-        {
-            id: "insights",
-            title: "인사이트 모달 열기",
-            hint: "I",
-            run: () => { try { window.openInsights?.(); } catch { /* ignore */ } },
-        },
-        {
-            id: "snapshot",
-            title: "스냅샷 저장",
-            hint: "P",
-            run: () => { try { window.aiTycoonSnapshot?.download?.(); } catch { /* ignore */ } },
-        },
-        {
-            id: "settings",
-            title: "설정 열기",
-            hint: ",",
-            run: () => { try { document.getElementById("settings-toggle")?.click(); } catch { /* ignore */ } },
-        },
-        {
-            id: "help",
-            title: "단축키 도움말",
-            hint: "?",
-            run: () => { try { document.getElementById("help-toggle")?.click(); } catch { /* ignore */ } },
-        },
-        {
-            id: "privacy",
-            title: "프라이버시 모드 토글",
-            hint: "⇧P",
-            run: () => { try { window.aiTycoonPrivacy?.toggle?.(); } catch { /* ignore */ } },
-        },
+        // ── Display ──
+        { id: "theme-toggle", group: "display", title: "다크 / 라이트 토글", hint: "D", run: () => { try { document.body.classList.toggle("dark"); localStorage.setItem("ai-tycoon-dark", document.body.classList.contains("dark") ? "true" : "false"); } catch { /* ignore */ } } },
+        { id: "privacy", group: "display", title: "프라이버시 모드 토글", hint: "⇧P", run: () => { try { window.aiTycoonPrivacy?.toggle?.(); } catch { /* ignore */ } } },
+        { id: "cinema", group: "display", title: "시네마 모드 (오버레이 숨김)", hint: "Z", run: () => { try { window.toggleCinemaMode?.(); } catch { /* ignore */ } } },
+        // ── Modals ──
+        { id: "insights", group: "modal", title: "인사이트 모달 열기", hint: "I", run: () => { try { window.openInsights?.(); } catch { /* ignore */ } } },
+        { id: "settings", group: "modal", title: "설정 열기", hint: ",", run: () => { try { document.getElementById("settings-toggle")?.click(); } catch { /* ignore */ } } },
+        { id: "help", group: "modal", title: "단축키 도움말", hint: "?", run: () => { try { document.getElementById("help-toggle")?.click(); } catch { /* ignore */ } } },
+        // ── Filters ──
+        { id: "filter-all", group: "filter", title: "필터: 전체", run: () => setFilter("all") },
+        { id: "filter-coding", group: "filter", title: "필터: 코딩 중", run: () => setFilter("coding") },
+        { id: "filter-idle", group: "filter", title: "필터: 대기", run: () => setFilter("idle") },
+        { id: "filter-offline", group: "filter", title: "필터: 오프라인", run: () => setFilter("offline") },
+        // ── Theme ──
+        { id: "theme-classic", group: "theme", title: "테마: 클래식", run: () => setTheme("classic") },
+        { id: "theme-cafe", group: "theme", title: "테마: 카페", run: () => setTheme("cafe") },
+        { id: "theme-forest", group: "theme", title: "테마: 숲속", run: () => setTheme("forest") },
+        { id: "theme-midnight", group: "theme", title: "테마: 심야", run: () => setTheme("midnight") },
+        { id: "theme-sakura", group: "theme", title: "테마: 사쿠라", run: () => setTheme("sakura") },
+        { id: "theme-ocean", group: "theme", title: "테마: 바다", run: () => setTheme("ocean") },
+        // ── Language ──
+        { id: "lang-ko", group: "lang", title: "언어: 한국어", run: () => setLang("ko") },
+        { id: "lang-en", group: "lang", title: "Language: English", run: () => setLang("en") },
+        // ── Tools ──
+        { id: "demo-toggle", group: "tools", title: "데모 모드 전환", run: () => { try { window.aiTycoonDemo?.toggle?.(); } catch { /* ignore */ } } },
+        { id: "snapshot", group: "tools", title: "스냅샷 저장", hint: "P", run: () => { try { window.aiTycoonSnapshot?.download?.(); } catch { /* ignore */ } } },
+        { id: "backup", group: "tools", title: "설정 백업 (JSON)", run: () => { try { window.aiTycoonBackup?.download?.(); } catch { /* ignore */ } } },
+        { id: "mute", group: "tools", title: "사운드 음소거 토글", hint: "M", run: () => { try { window.aiTycoonSound?.toggle?.(); } catch { /* ignore */ } } },
     ];
-    if (!query) return all.slice(0, 4);
+    if (!query) {
+        // Pick a relevant default starter set
+        return all.filter(a => ["display", "modal", "filter"].includes(a.group)).slice(0, 6);
+    }
     const q = query.toLowerCase();
     return all.filter(a => a.title.toLowerCase().includes(q) || a.id.includes(q) || (a.hint || "").toLowerCase() === q);
 }

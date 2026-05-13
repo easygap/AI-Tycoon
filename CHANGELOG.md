@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 62 — 명령 팔레트 명령 22종 확장
+- 6개 카테고리 × 22명령으로 확장: Display (다크/프라이버시/시네마), Modal (인사이트/설정/도움말), Filter (전체/코딩/대기/오프라인), Theme (6종), Language (한/영), Tools (데모/스냅샷/백업/음소거)
+- 빈 검색 시 자주 쓰는 6개 기본 표시, 입력 시 22개 전체에서 매칭
+- `window.toggleCinemaMode` / `window.applyTheme` 글로벌 노출 — 팔레트에서 즉시 호출 가능
+- 이제 Ctrl+K 만으로 거의 모든 기능에 도달 가능 — 마우스 없이 운영
+
 ### Iteration 61 — 프라이버시 모드 (Shift+P)
 - 새 `js/privacyMode.js`: 프롬프트·프로젝트명·태스크·로그를 `filter: blur(4px)`로 가림
 - 좌하단 'EYE_CLOSED + 프라이버시 모드' 보라색 배지로 모드 활성화 시각화 (X 버튼으로 즉시 해제)
