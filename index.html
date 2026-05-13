@@ -1559,6 +1559,16 @@
         const action = params.get("action");
         if (action === "insights") setTimeout(openInsights, 500);
         else if (action === "settings") setTimeout(openSettings, 500);
+        // ?clean=1 — auto-enable cinema mode (good for embeds / status-board mirrors)
+        if (params.get("clean") === "1") {
+            // Suppress welcome + tour so the embed is immediately clean
+            try { localStorage.setItem("ai-tycoon-welcomed-v1", "true"); } catch { /* ignore */ }
+            try { localStorage.setItem("ai-tycoon-tour-done", "true"); } catch { /* ignore */ }
+            try { localStorage.setItem("ai-tycoon-tips-dismissed-v1", "true"); } catch { /* ignore */ }
+            setTimeout(() => {
+                if (typeof toggleCinemaMode === "function") toggleCinemaMode();
+            }, 600);
+        }
     });
 
     // ── Service worker (PWA offline support) ──
