@@ -2051,6 +2051,70 @@ export function refreshInsights() {
         }
     }
 
+    // Today's MVP — agent with the highest combined score:
+    //   score = completedTasks*3 + recent work-event count + (running ? 1 : 0)
+    // Only shown when there's at least one agent that actually scored something
+    const mvpSection = el("insights-mvp-section");
+    const mvpEl = el("insights-mvp");
+    if (mvpSection && mvpEl) {
+        const eventCounts = new Map();
+        (S.workEvents || []).forEach(ev => {
+            const pid = String(ev?.pid || "");
+            if (!pid) return;
+            eventCounts.set(pid, (eventCounts.get(pid) || 0) + 1);
+        });
+        const scored = agents.map(a => {
+            const ev = eventCounts.get(String(a.pid)) || 0;
+            const score = (a.completedTasks || 0) * 3 + ev + (a.isRunning ? 1 : 0);
+            return { a, ev, score };
+        }).filter(x => x.score > 0)
+          .sort((a, b) => b.score - a.score);
+
+        if (scored.length === 0) {
+            mvpSection.hidden = true;
+            mvpEl.innerHTML = "";
+        } else {
+            mvpSection.hidden = false;
+            const winner = scored[0];
+            const a = winner.a;
+            const theme = getAgentTheme(a);
+            const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const project = a.projectName || a.platformName || "—";
+            const initial = (theme.name || "?").charAt(0);
+            const completedLabel = lang === "en" ? "completed" : "완료";
+            const eventsLabel = lang === "en" ? "events" : "이벤트";
+            const reasonText = lang === "en"
+                ? "Most active today"
+                : "오늘 가장 바쁘게 일했어요";
+            mvpEl.innerHTML = `
+                <span class="insights-mvp-crown" aria-hidden="true">
+                    <iconify-icon icon="solar:cup-star-bold"></iconify-icon>
+                </span>
+                <span class="insights-mvp-avatar" style="background:${theme.body};color:#fff">${esc(initial)}</span>
+                <div class="insights-mvp-info">
+                    <div class="insights-mvp-name">${esc(theme.name)}</div>
+                    <div class="insights-mvp-project">${esc(project)}</div>
+                    <div class="insights-mvp-reason">${esc(reasonText)}</div>
+                </div>
+                <div class="insights-mvp-stats">
+                    <span><strong>${a.completedTasks || 0}</strong> ${esc(completedLabel)}</span>
+                    <span><strong>${winner.ev}</strong> ${esc(eventsLabel)}</span>
+                </div>
+            `;
+            mvpEl.onclick = () => {
+                S.selectedPid = a.pid;
+                S.detailPid = a.pid;
+                S.directorFocusPid = a.pid;
+                S.directorMode = true;
+                document.getElementById("insights-overlay")?.classList?.remove("is-visible");
+                setTimeout(() => {
+                    const overlay = document.getElementById("insights-overlay");
+                    if (overlay) overlay.hidden = true;
+                }, 280);
+            };
+        }
+    }
+
     // Top projects (by total tasks)
     const projectBuckets = new Map();
     agents.forEach(a => {

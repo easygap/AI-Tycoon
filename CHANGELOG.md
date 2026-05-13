@@ -5,6 +5,14 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 56 — Insights 모달에 "오늘의 MVP" 카드
+- 새 섹션이 Insights 모달의 플랫폼 분포와 Top 5 프로젝트 사이에 등장
+- 점수 = (완료 태스크 × 3) + 최근 work-event 개수 + (실행 중이면 +1) 으로 가장 활발한 에이전트 1명을 선정
+- 황금 트로피 아이콘 + 에이전트 아바타 + 프로젝트 이름 + 통계 — 클릭하면 해당 에이전트로 포커스
+- 점수가 0이면 섹션 자체를 숨김 (조용한 시간에 빈 카드 안 보이도록)
+- 다국어 키 `insights.mvp` (KO "오늘의 MVP" / EN "Today's MVP") 추가
+- 다크모드 전용 색감 / 모바일 그리드 재배치 포함
+
 ### Iteration 55 — "자리 비운 사이" 요약 토스트
 - New `js/awaySummary.js`: listens to `visibilitychange`, snapshots the work-event tally when the tab hides, and on return (after ≥ 30 s away) shows a single concise toast — e.g. `완료 2 · 검토 요청 1 · 출근 1` — so users don't miss what happened while they were elsewhere
 - Bilingual: KO `자리 비운 사이 (3분)` / EN `While you were away (3 min)`
