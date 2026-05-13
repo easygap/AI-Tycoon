@@ -31,6 +31,7 @@ const CURSOR_STORAGE = path.join(HOME, "AppData", "Roaming", "Cursor", "User", "
 const PORT = parseInt(process.env.PORT, 10) || 3777;
 const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL, 10) || 2000;
 const HEARTBEAT_INTERVAL = 10000; // 10s
+const QUIET = process.env.QUIET === "1" || process.env.LOG_LEVEL === "warn" || process.env.LOG_LEVEL === "error";
 
 // ── State ────────────────────────────────────────────────────
 const STARTED_AT = Date.now();
@@ -206,7 +207,7 @@ const wss = new WebSocketServer({ server: httpServer });
 
 wss.on("connection", (ws) => {
     clients.add(ws);
-    console.log(`[WS] Client connected (total: ${clients.size})`);
+    if (!QUIET) console.log(`[WS] Client connected (total: ${clients.size})`);
 
     // Send current state immediately
     if (lastState) {
@@ -215,7 +216,7 @@ wss.on("connection", (ws) => {
 
     ws.on("close", () => {
         clients.delete(ws);
-        console.log(`[WS] Client disconnected (total: ${clients.size})`);
+        if (!QUIET) console.log(`[WS] Client disconnected (total: ${clients.size})`);
     });
 });
 
@@ -1133,9 +1134,9 @@ async function pollAndBroadcast() {
         };
         lastDiagnostics = diagnostics;
 
-        // Debug log: show detected agents
+        // Debug log: show detected agents (suppressed in quiet mode)
         const prevCount = lastState?.agents?.length ?? -1;
-        if (allAgents.length !== prevCount) {
+        if (!QUIET && allAgents.length !== prevCount) {
             console.log(`[POLL] ${processes.length} claude + ${externalAIs.length} external → ${allAgents.length} agents`);
             allAgents.forEach(a => {
                 console.log(`  → [${a.platform}] ${a.pid} | ${a.projectName} | ${a.status} | mem=${a.memoryMB}MB`);
