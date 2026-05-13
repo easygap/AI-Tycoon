@@ -4,6 +4,9 @@
   "description": "Pixel Art Office - Real-time Claude Code Agent Visualizer",
   "license": "MIT",
   "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "npm run build:css",
     "build:css": "node scripts/build-css.js",

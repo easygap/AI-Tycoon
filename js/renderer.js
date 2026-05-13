@@ -540,16 +540,26 @@ function drawDesk(px, py, tx, ty) {
         const agentHere = findAgentAtDesk(tx, ty);
         if (agentHere?.isRunning) {
             const pulse = 0.7 + Math.sin(S.animFrame * 0.04 + tx * 2) * 0.15;
+            // Use the platform's brand colour for the active screen so each
+            // platform feels visually identifiable at a glance.
+            const platMeta = PLATFORM_META[agentHere.platform] || null;
+            const tint = platMeta?.color || PAL.monActive;
             ctx.globalAlpha = pulse;
-            ctx.fillStyle = PAL.monActive;
+            // Base wash with a soft platform tint
+            ctx.fillStyle = hexToRgba(tint, 0.65);
             ctx.fillRect(px + 9, py + 3, 14, 10);
             ctx.globalAlpha = 1;
 
-            // Code lines
-            ctx.fillStyle = "rgba(5,150,105,0.4)";
+            // Code lines in a darker shade of the same tint
+            ctx.fillStyle = hexToRgba(tint, 0.85);
             for (let i = 0; i < 4; i++) {
                 const w = 3 + ((tx * 5 + i * 3 + Math.floor(S.animFrame / 12)) % 9);
                 ctx.fillRect(px + 10, py + 4 + i * 2.5, w, 1);
+            }
+            // Cursor blink — single pixel on the last line
+            if (Math.floor(S.animFrame / 14) % 2 === 0) {
+                ctx.fillStyle = hexToRgba(tint, 1);
+                ctx.fillRect(px + 21, py + 12, 1, 1);
             }
         } else {
             ctx.fillStyle = PAL.monDim;
@@ -1126,6 +1136,24 @@ function drawAgent(agent, v) {
         ctx.fillStyle = pct > 0.7 ? "#ef4444" : pct > 0.4 ? "#eab308" : "#059669";
         ctx.globalAlpha = 0.8;
         ctx.fillRect(x - bw / 2, y + 17, bw * pct, 2);
+        ctx.globalAlpha = 1;
+    }
+
+    // Typing dots when actively coding (and not currently speaking)
+    if (agent.isRunning && status === "coding" && !(v.speechTimer > 0 && v.speechText)) {
+        const tdy = by - 18;
+        const dots = 3;
+        const pmetaTint = PLATFORM_META[agent.platform];
+        const dotColor = pmetaTint?.color || "#059669";
+        for (let i = 0; i < dots; i++) {
+            const phase = (t * 0.18) - i * 0.55;
+            const bouncY = Math.max(0, Math.sin(phase) * 1.6);
+            ctx.fillStyle = dotColor;
+            ctx.globalAlpha = 0.35 + Math.max(0, Math.sin(phase)) * 0.55;
+            ctx.beginPath();
+            ctx.arc(x - 4 + i * 4, tdy - bouncY, 0.95, 0, Math.PI * 2);
+            ctx.fill();
+        }
         ctx.globalAlpha = 1;
     }
 

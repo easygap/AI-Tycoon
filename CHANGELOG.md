@@ -5,6 +5,80 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 40 — Typing dots above coding agents
+- Three small bouncing dots above any agent currently `coding`, tinted with their platform colour
+- Hidden when a speech bubble is up to avoid visual collision
+
+### Iteration 39 — Daily mood line in Insights
+- Friendly sentence describing today's pace: 조용한 오피스 / 여유로운 하루 / 꾸준한 흐름 / 활발한 하루 / 마라톤 모드 / 불타는 하루
+- Emoji + colour-coded background + task count chip on the right
+
+### Iteration 38 — Live agent count in tab title
+- `(N) AI Tycoon` (or `(N) {workspace} · AI Tycoon`) refreshed every 5 s
+
+### Iteration 37 — README refresh
+- Highlights section synced with new features
+- Dedicated shortcuts table (14 keys + Konami)
+
+### Iteration 36 — J/K agent cycling
+- `J` next agent, `K` previous, auto-engages director mode
+- Toast feedback with project name + N/M position
+
+### Iteration 35 — Sound preview buttons
+- Four colour-coded preview buttons in Settings → Sound (join/leave/done/review)
+- Auto-enables sound if currently off so the first tap actually plays
+
+### Iteration 34 — CHANGELOG sync · SW v7
+
+### Iteration 33 — Cinema mode (Z key)
+- Single hotkey hides every canvas overlay (HUD, work stream, tip, mini-map, focus rail, perf, empty CTA)
+- Header + side panel fade to 6% opacity, restored on hover
+- Combine with `P` to capture clean office screenshots
+
+### Iteration 32 — Sound mute hotkey · "Reset all" option
+- `M` toggles sound effects, with on/off toast
+- Settings → Data → "Reset all preferences" wipes every `ai-tycoon-*` key + reloads
+
+### Iteration 31 — SW update prompt
+- New service-worker version emits an in-app toast with a "Refresh" action
+- Previous behaviour just logged to console
+
+### Iteration 30 — A11y focus rings · hotkey hint badges · CHANGELOG sync
+- Visible `:focus-visible` outline (orange, 2.5px) for every focusable control
+- Tiny `data-hotkey` badges appear on hover for `,` `P` `I` `?` `D` toolbar buttons
+- Synced CHANGELOG for iterations 28-30
+
+### Iteration 29 — Platform-tinted monitors · CSV feedback
+- Each agent's monitor screen glows in their platform brand colour
+- Blinking 1-pixel cursor on active screens
+- CSV export now shows a toast ("CSV 저장 완료 · N 일자") and gracefully handles empty stats
+
+### Iteration 28 — Workspace name · CSV stats export
+- Settings → Appearance "Workspace name" input customises page title + HUD label
+- Settings → Data "Export daily stats CSV" downloads a 14-day rollup as CSV
+  (columns: date, completedMax, agentsMax, joinedCount, events, platformsTop)
+- New key added to cross-tab sync list
+
+### Iteration 27 — HUD visibility toggles · CHANGELOG sync
+- Toggle live HUD and work-stream overlays from Settings → Appearance
+- Both persisted in localStorage + cross-tab synced
+- KO/EN labels
+
+### Iteration 26 — Time-scrub slider · GitHub help links
+- Settings → Demo: time scrubber slider (0-1439 minutes, 5-min steps)
+- Slider icon auto-shifts: moon-stars → cloudy-sun → sun → sunset → moon
+- Bidirectional sync with time input + "real-time" reset
+- Settings → Help: GitHub repo link + bug-report link
+- Anchor styling compatible with `.settings-action`
+
+### Iteration 25 — Sakura + Ocean themes · CI workflow
+- 6 office themes total (Classic / Cafe / Forest / Midnight / Sakura / Ocean)
+- Sakura: cherry-blossom pinks + ivory floor + green plants
+- Ocean: teal/cyan with deep-blue dark mode
+- GitHub Actions CI on push/PR for Node 18/20/22 (`npm test`)
+- README badges (CI, MIT, Node ≥18, PWA)
+- `.gitignore` expanded (editor/OS/test/env), `engines.node = ">=18"`
+
 ### Iteration 22 — Console branding · Konami egg · friendly 404
 - Boot banner in DevTools console with helper-API hints
 - ↑↑↓↓←→←→BA easter egg — 60-piece confetti + body filter shift + Hidden achievement (21 total)
