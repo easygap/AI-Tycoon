@@ -1198,6 +1198,9 @@
         if (ws) ws.style.display = wsOn ? "" : "none";
     }
     document.addEventListener("DOMContentLoaded", () => setTimeout(applyHudVisibility, 50));
+    // Expose for command palette / external scripts
+    window.toggleCinemaMode = toggleCinemaMode;
+    window.applyTheme = (theme) => { try { settingsPickTheme(theme); } catch { /* ignore */ } };
     function settingsPickTheme(theme) {
         localStorage.setItem("ai-tycoon-theme", theme);
         document.querySelectorAll(".theme-swatch").forEach(s => {
