@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 65 — Smoke test에 API JSON 계약 검증 추가
+- `/api/health` 응답을 JSON 으로 파싱하여 `ok / version / startedAt / uptimeMs / nodeVersion / platform / clients / agents.total / agents.running / pollIntervalMs` 9개 필드 존재 확인
+- `/api/agents` 응답 구조 검증 (`ok / count / agents[]`)
+- `/api/agents` CORS 헤더 (`Access-Control-Allow-Origin: *`) 확인
+- 단순 substring 검사에서 실제 API 계약 회귀 방지로 한 단계 업그레이드
+- 총 검증 항목 34개 → 37개
+
 ### Iteration 64 — 명령 팔레트 발견성 강화 (투어 + 검색바 힌트)
 - 검색 입력창 우측에 `Ctrl K` 키캡 칩 — 클릭하면 명령 팔레트 즉시 오픈
 - 호버 시 보라색 강조, 모바일(<480px) 자동 숨김, 다크모드 별도 색감

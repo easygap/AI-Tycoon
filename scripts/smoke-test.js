@@ -106,8 +106,50 @@ async function main() {
         }
     }
 
+    // ── Deep API contract checks ──
+    // /api/health JSON shape
+    try {
+        const res = await request("/api/health");
+        const data = JSON.parse(res.body);
+        const required = ["ok", "version", "startedAt", "uptimeMs", "nodeVersion", "platform", "clients", "agents", "pollIntervalMs"];
+        const missing = required.filter(k => !(k in data));
+        const agentsShape = data.agents && typeof data.agents === "object" && "total" in data.agents && "running" in data.agents;
+        const okShape = data.ok === true && missing.length === 0 && agentsShape && typeof data.version === "string";
+        process.stdout.write(`${okShape ? "✔" : "✘"}  [api] /api/health JSON shape (v=${data.version}, agents.total=${data.agents?.total})\n`);
+        if (!okShape) {
+            if (missing.length) process.stdout.write(`    missing fields: ${missing.join(", ")}\n`);
+            failed++;
+        }
+    } catch (err) {
+        process.stdout.write(`✘  [api] /api/health JSON parse failed: ${err.message}\n`);
+        failed++;
+    }
+    // /api/agents JSON shape
+    try {
+        const res = await request("/api/agents");
+        const data = JSON.parse(res.body);
+        const okShape = data && data.ok === true && Array.isArray(data.agents) && typeof data.count === "number";
+        process.stdout.write(`${okShape ? "✔" : "✘"}  [api] /api/agents JSON shape (count=${data?.count})\n`);
+        if (!okShape) failed++;
+    } catch (err) {
+        process.stdout.write(`✘  [api] /api/agents JSON parse failed: ${err.message}\n`);
+        failed++;
+    }
+    // CORS header on /api/agents
+    try {
+        const res = await request("/api/agents");
+        const cors = res.headers["access-control-allow-origin"];
+        const ok = cors === "*";
+        process.stdout.write(`${ok ? "✔" : "✘"}  [api] /api/agents Access-Control-Allow-Origin = *\n`);
+        if (!ok) failed++;
+    } catch (err) {
+        process.stdout.write(`✘  [api] CORS check failed: ${err.message}\n`);
+        failed++;
+    }
+    const totalChecks = SHELL.length + 3;
+
     process.stdout.write("────────────────────────\n");
-    process.stdout.write(`${SHELL.length - failed}/${SHELL.length} checks passed\n`);
+    process.stdout.write(`${totalChecks - failed}/${totalChecks} checks passed\n`);
     server.kill();
     process.exit(failed === 0 ? 0 : 1);
 }
