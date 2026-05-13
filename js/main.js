@@ -33,6 +33,7 @@ import "./crossTab.js";
 import "./konami.js";
 import "./awaySummary.js";
 import "./commandPalette.js";
+import "./privacyMode.js";
 
 // ── Console branding (devtools welcome) ──
 if (typeof console !== "undefined") {

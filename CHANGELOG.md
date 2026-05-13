@@ -5,6 +5,15 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 61 — 프라이버시 모드 (Shift+P)
+- 새 `js/privacyMode.js`: 프롬프트·프로젝트명·태스크·로그를 `filter: blur(4px)`로 가림
+- 좌하단 'EYE_CLOSED + 프라이버시 모드' 보라색 배지로 모드 활성화 시각화 (X 버튼으로 즉시 해제)
+- 흐려진 텍스트에 hover 하면 잠깐 또렷해짐 — 본인은 읽을 수 있고 화면 공유 시청자는 못 읽음
+- `Shift+P` 단축키 + 명령 팔레트에 '프라이버시 모드 토글' 항목 추가
+- 토글 시 토스트로 ON/OFF 안내, 상태는 localStorage 에 영구 저장
+- 모든 민감한 셀렉터 통합: 카드 / 디테일 / 인사이트 / 토스트 / 명령 팔레트 / `[data-privacy]` 지정 가능
+- SW v11, smoke test 34개로 확장
+
 ### Iteration 60 — 명령 팔레트 (Ctrl+K / Cmd+K)
 - 새 `js/commandPalette.js` — VS Code 스타일 빠른 검색 모달
 - 입력 즉시 에이전트 이름 / 프로젝트 / 플랫폼 / 현재 작업 텍스트 / PID 를 다중 토큰으로 매칭, 상위 8명 표시

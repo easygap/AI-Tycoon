@@ -3505,6 +3505,72 @@ body.dark .boss-q-no {
         rgba(255,255,255,0.92);
 }
 
+/* Iteration 61 — Privacy mode: blur sensitive text */
+body.privacy-mode .agent-card-project,
+body.privacy-mode .agent-card-name,
+body.privacy-mode .agent-signal-line,
+body.privacy-mode .detail-work-preview,
+body.privacy-mode .detail-work-full pre,
+body.privacy-mode .activity-log .log-entry span:last-child,
+body.privacy-mode .toast-text,
+body.privacy-mode .insights-mvp-project,
+body.privacy-mode .insights-project-name,
+body.privacy-mode .project-agent-name,
+body.privacy-mode .project-agent-work,
+body.privacy-mode .project-task-subject,
+body.privacy-mode .insights-feed-row .insights-feed-text,
+body.privacy-mode .cp-title,
+body.privacy-mode .cp-title em,
+body.privacy-mode [data-privacy] {
+    filter: blur(4px);
+    transition: filter 0.18s ease;
+    user-select: none;
+}
+body.privacy-mode .agent-card-project:hover,
+body.privacy-mode .detail-work-preview:hover,
+body.privacy-mode .toast-text:hover,
+body.privacy-mode .insights-mvp-project:hover {
+    filter: blur(0);
+}
+
+.privacy-badge {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 8000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95));
+    color: #fff;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 8px 24px -8px rgba(99, 102, 241, 0.6);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.24s ease, transform 0.24s ease;
+}
+.privacy-badge.is-shown { opacity: 1; transform: translateY(0); }
+.privacy-badge iconify-icon { font-size: 16px; }
+.privacy-badge-close {
+    background: rgba(255,255,255,0.18);
+    border: 0;
+    color: inherit;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+}
+.privacy-badge-close:hover { background: rgba(255,255,255,0.32); }
+
 /* Iteration 60 — Command Palette (Ctrl+K / Cmd+K) */
 .cp-overlay {
     position: fixed;

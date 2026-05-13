@@ -213,6 +213,12 @@ function buildActions(query) {
             hint: "?",
             run: () => { try { document.getElementById("help-toggle")?.click(); } catch { /* ignore */ } },
         },
+        {
+            id: "privacy",
+            title: "프라이버시 모드 토글",
+            hint: "⇧P",
+            run: () => { try { window.aiTycoonPrivacy?.toggle?.(); } catch { /* ignore */ } },
+        },
     ];
     if (!query) return all.slice(0, 4);
     const q = query.toLowerCase();
