@@ -5,6 +5,19 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 33 — Cinema mode (Z key)
+- Single hotkey hides every canvas overlay (HUD, work stream, tip, mini-map, focus rail, perf, empty CTA)
+- Header + side panel fade to 6% opacity, restored on hover
+- Combine with `P` to capture clean office screenshots
+
+### Iteration 32 — Sound mute hotkey · "Reset all" option
+- `M` toggles sound effects, with on/off toast
+- Settings → Data → "Reset all preferences" wipes every `ai-tycoon-*` key + reloads
+
+### Iteration 31 — SW update prompt
+- New service-worker version emits an in-app toast with a "Refresh" action
+- Previous behaviour just logged to console
+
 ### Iteration 30 — A11y focus rings · hotkey hint badges · CHANGELOG sync
 - Visible `:focus-visible` outline (orange, 2.5px) for every focusable control
 - Tiny `data-hotkey` badges appear on hover for `,` `P` `I` `?` `D` toolbar buttons
