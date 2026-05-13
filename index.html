@@ -626,9 +626,17 @@
                             <span data-i18n="settings.timeOverride">시간대 강제</span>
                         </div>
                         <div class="settings-time-controls">
-                            <input id="settings-time-input" type="time" class="settings-time-input" oninput="settingsSetTimeOverride(this.value)">
-                            <button type="button" class="settings-time-clear" onclick="settingsClearTimeOverride()" data-i18n="settings.timeClear">실시간</button>
+                            <input id="settings-time-input" type="time" class="settings-time-input" oninput="settingsSetTimeOverride(this.value); settingsSyncTimeSlider();">
+                            <button type="button" class="settings-time-clear" onclick="settingsClearTimeOverride(); settingsSyncTimeSlider();" data-i18n="settings.timeClear">실시간</button>
                         </div>
+                    </div>
+                    <div class="settings-row settings-row-slider">
+                        <div class="settings-row-label">
+                            <iconify-icon id="settings-time-icon" icon="solar:clock-circle-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.timeScrub">시간 스크럽</span>
+                        </div>
+                        <input id="settings-time-slider" type="range" min="0" max="1439" step="5" class="settings-slider" oninput="settingsScrubTime(this.value)">
+                        <span id="settings-time-readout" class="settings-volume-num tabular-nums">--:--</span>
                     </div>
                     <p class="settings-help" data-i18n="settings.timeOverrideHelp">데모/스크린샷용으로 창밖 하늘과 분위기를 특정 시각으로 고정합니다.</p>
                     <div class="settings-row">
@@ -672,6 +680,14 @@
                             <iconify-icon icon="solar:question-circle-linear" aria-hidden="true"></iconify-icon>
                             <span data-i18n="settings.replayTips">팁 다시 켜기</span>
                         </button>
+                        <a class="settings-action" href="https://github.com/easygap/AI-Tycoon" target="_blank" rel="noopener noreferrer">
+                            <iconify-icon icon="solar:link-circle-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.viewSource">GitHub 저장소 열기</span>
+                        </a>
+                        <a class="settings-action" href="https://github.com/easygap/AI-Tycoon/issues/new" target="_blank" rel="noopener noreferrer">
+                            <iconify-icon icon="solar:bug-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.reportIssue">버그 / 요청 제보</span>
+                        </a>
                     </div>
                 </section>
 
@@ -975,6 +991,8 @@
         const tov = localStorage.getItem("ai-tycoon-time-override") || "";
         const tovInput = document.getElementById("settings-time-input");
         if (tovInput) tovInput.value = tov;
+        // Time scrubber
+        settingsSyncTimeSlider();
         // Demo mode
         const demoOn = window.aiTycoonDemo?.isEnabled() || false;
         const demoChk = document.getElementById("settings-demo");
@@ -1110,6 +1128,44 @@
         localStorage.removeItem("ai-tycoon-time-override");
         const input = document.getElementById("settings-time-input");
         if (input) input.value = "";
+    }
+    function settingsScrubTime(minsTotal) {
+        const m = parseInt(minsTotal, 10) || 0;
+        const hh = Math.floor(m / 60);
+        const mm = m % 60;
+        const hhmm = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+        localStorage.setItem("ai-tycoon-time-override", hhmm);
+        const input = document.getElementById("settings-time-input");
+        if (input) input.value = hhmm;
+        const readout = document.getElementById("settings-time-readout");
+        if (readout) readout.textContent = hhmm;
+        const icon = document.getElementById("settings-time-icon");
+        if (icon) {
+            const ic = hh < 5 ? "solar:moon-stars-linear"
+                : hh < 7 ? "solar:cloudy-sun-linear"
+                : hh < 11 ? "solar:sun-2-linear"
+                : hh < 17 ? "solar:sun-linear"
+                : hh < 20 ? "solar:sunset-linear"
+                : "solar:moon-linear";
+            icon.setAttribute("icon", ic);
+        }
+        if (window.aiTycoonForceRepaint) window.aiTycoonForceRepaint();
+    }
+    function settingsSyncTimeSlider() {
+        const slider = document.getElementById("settings-time-slider");
+        const readout = document.getElementById("settings-time-readout");
+        if (!slider || !readout) return;
+        const stored = localStorage.getItem("ai-tycoon-time-override");
+        let hh = 0, mm = 0;
+        if (stored && /^\d{1,2}:\d{2}$/.test(stored)) {
+            [hh, mm] = stored.split(":").map(Number);
+            readout.textContent = `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+        } else {
+            const now = new Date();
+            hh = now.getHours(); mm = now.getMinutes();
+            readout.textContent = `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")} · live`;
+        }
+        slider.value = String(hh * 60 + mm);
     }
     function settingsBackup() {
         if (window.aiTycoonBackup) window.aiTycoonBackup.download();
