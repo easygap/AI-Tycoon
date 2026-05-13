@@ -1254,6 +1254,13 @@
     function settingsExportCsv() {
         try {
             const days = window.aiTycoonStats?.recentDays?.(14) || [];
+            if (days.length === 0) {
+                const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                window.aiTycoonToasts?.show?.("info",
+                    lang === "en" ? "No stats yet" : "통계가 아직 없어요",
+                    lang === "en" ? "Keep the workspace open to gather data." : "작업실을 더 켜두면 데이터가 쌓여요.");
+                return;
+            }
             const header = "date,completedMax,agentsMax,joinedCount,events,platformsTop\n";
             const rows = days.map(d => {
                 const platforms = Object.entries(d.platforms || {})
@@ -1280,8 +1287,16 @@
             document.body.appendChild(a);
             a.click();
             setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 250);
+            const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+            window.aiTycoonToasts?.show?.("info",
+                lang === "en" ? "CSV exported" : "CSV 저장 완료",
+                `${days.length} ${lang === "en" ? "days" : "일자"}`);
         } catch (err) {
             console.error("[ai-tycoon] CSV export failed:", err);
+            const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+            window.aiTycoonToasts?.show?.("info",
+                lang === "en" ? "Export failed" : "내보내기 실패",
+                String(err?.message || err));
         }
     }
 
