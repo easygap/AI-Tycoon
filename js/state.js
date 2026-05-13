@@ -200,3 +200,17 @@ export function spawnHearts(x, y, n) {
         });
     }
 }
+
+/** Yawn emote ('z' floating up) for idle / resting agents. */
+export function spawnYawn(x, y) {
+    if (S.heartParticles.length >= MAX_HEARTS - 1) S.heartParticles.shift();
+    S.heartParticles.push({
+        x: x + (Math.random() - 0.5) * 6,
+        y: y,
+        vy: -0.18 - Math.random() * 0.12,
+        life: 70 + Math.floor(Math.random() * 25),
+        char: "z",
+        color: "rgba(160,170,200,0.65)",
+        size: 2.8 + Math.random() * 1.2,
+    });
+}
