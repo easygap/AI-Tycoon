@@ -5,6 +5,31 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 40 — Typing dots above coding agents
+- Three small bouncing dots above any agent currently `coding`, tinted with their platform colour
+- Hidden when a speech bubble is up to avoid visual collision
+
+### Iteration 39 — Daily mood line in Insights
+- Friendly sentence describing today's pace: 조용한 오피스 / 여유로운 하루 / 꾸준한 흐름 / 활발한 하루 / 마라톤 모드 / 불타는 하루
+- Emoji + colour-coded background + task count chip on the right
+
+### Iteration 38 — Live agent count in tab title
+- `(N) AI Tycoon` (or `(N) {workspace} · AI Tycoon`) refreshed every 5 s
+
+### Iteration 37 — README refresh
+- Highlights section synced with new features
+- Dedicated shortcuts table (14 keys + Konami)
+
+### Iteration 36 — J/K agent cycling
+- `J` next agent, `K` previous, auto-engages director mode
+- Toast feedback with project name + N/M position
+
+### Iteration 35 — Sound preview buttons
+- Four colour-coded preview buttons in Settings → Sound (join/leave/done/review)
+- Auto-enables sound if currently off so the first tap actually plays
+
+### Iteration 34 — CHANGELOG sync · SW v7
+
 ### Iteration 33 — Cinema mode (Z key)
 - Single hotkey hides every canvas overlay (HUD, work stream, tip, mini-map, focus rail, perf, empty CTA)
 - Header + side panel fade to 6% opacity, restored on hover
