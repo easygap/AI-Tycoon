@@ -1580,6 +1580,34 @@
                 if (typeof toggleCinemaMode === "function") toggleCinemaMode();
             }, 600);
         }
+        // ?theme= : classic / cafe / forest / midnight / sakura / ocean
+        const themeParam = params.get("theme");
+        if (themeParam && ["classic","cafe","forest","midnight","sakura","ocean"].includes(themeParam)) {
+            try { localStorage.setItem("ai-tycoon-theme", themeParam); } catch { /* ignore */ }
+            if (typeof window.aiTycoonForceRepaint === "function") {
+                setTimeout(window.aiTycoonForceRepaint, 200);
+            }
+        }
+        // ?lang=ko/en
+        const langParam = params.get("lang");
+        if (langParam === "ko" || langParam === "en") {
+            try { localStorage.setItem("ai-tycoon-lang", langParam); } catch { /* ignore */ }
+            if (window.aiTycoonI18n) {
+                setTimeout(() => window.aiTycoonI18n.setLang(langParam), 200);
+            }
+        }
+        // ?dark=1/0 — explicit dark mode override
+        const darkParam = params.get("dark");
+        if (darkParam === "1" || darkParam === "0") {
+            try { localStorage.setItem("ai-tycoon-dark", darkParam === "1" ? "true" : "false"); } catch { /* ignore */ }
+            document.body.classList.toggle("dark", darkParam === "1");
+        }
+        // ?demo=1 — auto-enable synthetic agent demo
+        if (params.get("demo") === "1") {
+            setTimeout(() => {
+                if (window.aiTycoonDemo) window.aiTycoonDemo.setEnabled(true);
+            }, 400);
+        }
     });
 
     // ── Service worker (PWA offline support) ──
