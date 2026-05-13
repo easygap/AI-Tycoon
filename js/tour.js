@@ -34,6 +34,12 @@ const STEPS = [
         en: { title: "Shortcuts", body: "Press ? for the full cheatsheet. You can do 80% of things with the keyboard." },
         placement: "bottom",
     },
+    {
+        target: "#agent-search",
+        ko: { title: "명령 팔레트 (Ctrl+K)", body: "Ctrl+K 또는 Cmd+K로 어디서든 빠르게 에이전트 검색, 테마·필터·설정 전환을 한 번에 — VS Code 스타일." },
+        en: { title: "Command palette (Ctrl+K)", body: "Press Ctrl/Cmd+K anywhere to search agents and run actions like theme switch, filters, settings — VS Code style." },
+        placement: "left",
+    },
 ];
 
 let stepIdx = 0;

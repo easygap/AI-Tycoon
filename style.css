@@ -3038,7 +3038,7 @@ body.dark .activity-log-mini {
 .agent-search-shell {
     min-height: 42px;
     display: grid;
-    grid-template-columns: 18px minmax(0, 1fr) 32px;
+    grid-template-columns: 18px minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 7px;
     padding: 5px 6px 5px 11px;
@@ -3049,6 +3049,55 @@ body.dark .activity-log-mini {
     transition-property: border-color, background-color, box-shadow;
     transition-duration: 180ms;
     transition-timing-function: var(--ease-out);
+}
+
+/* Iteration 64 — Ctrl+K hint chip inside the search shell */
+.agent-search-cmdk {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 6px;
+    border-radius: 5px;
+    background: rgba(24,27,31,0.04);
+    border: 1px solid rgba(24,27,31,0.08);
+    color: #6b7280;
+    transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+    cursor: pointer;
+    font-family: inherit;
+}
+.agent-search-cmdk:hover {
+    background: rgba(47,128,237,0.06);
+    border-color: rgba(47,128,237,0.32);
+    color: #2f80ed;
+}
+.agent-search-cmdk:active { transform: scale(0.96); }
+.agent-search-cmdk kbd {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1px 4px;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(24,27,31,0.08);
+    border-radius: 3px;
+    color: inherit;
+    line-height: 1;
+}
+body.dark .agent-search-cmdk {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.08);
+    color: #a89c8e;
+}
+body.dark .agent-search-cmdk:hover {
+    background: rgba(99,102,241,0.18);
+    border-color: rgba(99,102,241,0.55);
+    color: #a5b4fc;
+}
+body.dark .agent-search-cmdk kbd {
+    background: rgba(0,0,0,0.32);
+    border-color: rgba(255,255,255,0.08);
+}
+@media (max-width: 480px) {
+    .agent-search-cmdk { display: none; }
 }
 
 .agent-search-shell:focus-within {
