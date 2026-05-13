@@ -49,6 +49,18 @@ export function connectWS() {
                     updateLiveHud();
                 }
             }
+            else if (msg.type === "server_shutdown") {
+                // Server is going down gracefully — show a friendly toast & log
+                try {
+                    const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                    const title = lang === "en" ? "Server shutting down" : "서버가 종료됩니다";
+                    const body = msg.message || (lang === "en"
+                        ? "Reconnecting automatically when it comes back."
+                        : "다시 켜지면 자동으로 연결할게요.");
+                    showToast("system", title, body, { duration: 6000 });
+                } catch { /* ignore */ }
+                addLog("서버가 종료됩니다 — 재시작되면 자동 재연결할게요.", "system");
+            }
         } catch (err) { console.error("[AI Tycoon] State error:", err); }
     };
     S.ws.onclose = () => {

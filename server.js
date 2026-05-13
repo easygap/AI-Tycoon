@@ -45,6 +45,9 @@ let lastStateJSON = ""; // diff baseline for broadcast gating
 let lastGoodProcesses = []; // cache: last successful process detection result
 let lastGoodExternalAIs = []; // cache: last successful external AI detection
 let lastDiagnostics = null; // lightweight detector health shared through heartbeat
+let pollTimer = null; // setInterval handle so shutdown can stop it
+let heartbeatTimer = null; // setInterval handle for heartbeat
+let isShuttingDown = false;
 
 // ── Per-session sticky state (prevents oscillation) ──
 // sessionId → { role, roleVotes: {role: count}, status, statusHoldUntil }
@@ -263,7 +266,7 @@ function broadcast(msg) {
 
 /** Heartbeat — lets client detect stale connections */
 function startHeartbeat() {
-    setInterval(() => {
+    heartbeatTimer = setInterval(() => {
         const msg = JSON.stringify({
             type: "heartbeat",
             ts: Date.now(),
@@ -1229,7 +1232,7 @@ httpServer.listen(PORT, () => {
     console.log("");
 
     pollAndBroadcast();
-    setInterval(pollAndBroadcast, POLL_INTERVAL);
+    pollTimer = setInterval(pollAndBroadcast, POLL_INTERVAL);
     startHeartbeat();
     watchSessions();
     watchTasks();
@@ -1238,15 +1241,52 @@ httpServer.listen(PORT, () => {
 });
 
 // ── Graceful shutdown ────────────────────────────────────────
-process.on("SIGTERM", () => {
-    console.log("[SERVER] Shutting down...");
-    wss.close();
-    httpServer.close();
-    process.exit(0);
+function gracefulShutdown(signal) {
+    if (isShuttingDown) return; // idempotent: double Ctrl+C shouldn't crash
+    isShuttingDown = true;
+    console.log(`\n[SERVER] ${signal} received, shutting down gracefully...`);
+
+    // 1. Stop background loops so we don't fire new broadcasts mid-shutdown
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+    if (watchDebounceTimer) { clearTimeout(watchDebounceTimer); watchDebounceTimer = null; }
+
+    // 2. Notify all connected clients so the UI can show a friendly toast
+    const farewell = JSON.stringify({
+        type: "server_shutdown",
+        ts: Date.now(),
+        message: "서버가 잠시 후 종료됩니다. 곧 다시 연결을 시도할게요.",
+    });
+    clients.forEach(ws => {
+        try {
+            safeSend(ws, farewell);
+            ws.close(1001, "Server shutting down");
+        } catch (e) { /* ignore */ }
+    });
+
+    // 3. Close the WS + HTTP server, then exit
+    wss.close(() => {
+        httpServer.close(() => {
+            console.log("[SERVER] All connections closed. Bye! 👋");
+            process.exit(0);
+        });
+    });
+
+    // 4. Force-exit safeguard if something hangs (e.g. lingering sockets)
+    setTimeout(() => {
+        console.warn("[SERVER] Forced shutdown after 3s timeout.");
+        process.exit(1);
+    }, 3000).unref();
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+// Catch uncaught errors so the process doesn't die silently
+process.on("uncaughtException", (err) => {
+    console.error("[SERVER] Uncaught exception:", err);
+    gracefulShutdown("uncaughtException");
 });
-process.on("SIGINT", () => {
-    console.log("[SERVER] Interrupted, shutting down...");
-    wss.close();
-    httpServer.close();
-    process.exit(0);
+process.on("unhandledRejection", (reason) => {
+    console.error("[SERVER] Unhandled rejection:", reason);
 });

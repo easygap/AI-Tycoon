@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 54 — Graceful server shutdown + client toast
+- `SIGTERM` / `SIGINT` now stops poll & heartbeat intervals first, then broadcasts a `server_shutdown` JSON message to every WS client so the UI can show a friendly toast before the socket closes
+- Uses `wss.close()` → `httpServer.close()` for clean drains, with a 3-second safety-net `setTimeout` that force-exits if anything hangs
+- New `uncaughtException` / `unhandledRejection` handlers route through the same shutdown path so a crash doesn't leave half-broadcast state behind
+- Client side: ws.js shows a 6 s "system" toast (`서버가 종료됩니다 — 다시 켜지면 자동 재연결할게요`) and logs the event; toasts.js gains a `system` kind (slate icon) + optional `duration` override
+
 ### Iteration 40 — Typing dots above coding agents
 - Three small bouncing dots above any agent currently `coding`, tinted with their platform colour
 - Hidden when a speech bubble is up to avoid visual collision
