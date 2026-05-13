@@ -133,10 +133,12 @@ npm start
 http://localhost:3777
 ```
 
-환경 변수로 포트와 폴링 주기를 변경할 수 있습니다.
+환경 변수로 포트와 폴링 주기, 로그 출력을 조절할 수 있습니다.
 
 ```bash
 PORT=8080 POLL_INTERVAL=3000 npm start
+QUIET=1 npm start                          # 폴링/WS 로그 억제
+LOG_LEVEL=warn npm start                   # 위와 동일
 ```
 
 스타일을 수정한 뒤 Tailwind 유틸리티를 다시 생성하려면:
