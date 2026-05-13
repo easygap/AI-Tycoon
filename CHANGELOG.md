@@ -5,6 +5,26 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 27 — HUD visibility toggles · CHANGELOG sync
+- Toggle live HUD and work-stream overlays from Settings → Appearance
+- Both persisted in localStorage + cross-tab synced
+- KO/EN labels
+
+### Iteration 26 — Time-scrub slider · GitHub help links
+- Settings → Demo: time scrubber slider (0-1439 minutes, 5-min steps)
+- Slider icon auto-shifts: moon-stars → cloudy-sun → sun → sunset → moon
+- Bidirectional sync with time input + "real-time" reset
+- Settings → Help: GitHub repo link + bug-report link
+- Anchor styling compatible with `.settings-action`
+
+### Iteration 25 — Sakura + Ocean themes · CI workflow
+- 6 office themes total (Classic / Cafe / Forest / Midnight / Sakura / Ocean)
+- Sakura: cherry-blossom pinks + ivory floor + green plants
+- Ocean: teal/cyan with deep-blue dark mode
+- GitHub Actions CI on push/PR for Node 18/20/22 (`npm test`)
+- README badges (CI, MIT, Node ≥18, PWA)
+- `.gitignore` expanded (editor/OS/test/env), `engines.node = ">=18"`
+
 ### Iteration 22 — Console branding · Konami egg · friendly 404
 - Boot banner in DevTools console with helper-API hints
 - ↑↑↓↓←→←→BA easter egg — 60-piece confetti + body filter shift + Hidden achievement (21 total)
