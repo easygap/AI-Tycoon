@@ -807,6 +807,7 @@
                     <ul class="shortcuts-list">
                         <li><span class="shortcuts-keys"><kbd>D</kbd></span><span data-i18n="shortcuts.darkToggle">다크 모드 전환</span></li>
                         <li><span class="shortcuts-keys"><kbd>F</kbd></span><span data-i18n="shortcuts.focusActive">가장 활발한 직원 포커스</span></li>
+                        <li><span class="shortcuts-keys"><kbd>J</kbd> / <kbd>K</kbd></span><span data-i18n="shortcuts.cycleAgents">다음 / 이전 직원</span></li>
                         <li><span class="shortcuts-keys"><kbd>H</kbd></span><span data-i18n="shortcuts.resetView">전체 보기로 리셋</span></li>
                         <li><span class="shortcuts-keys"><kbd>?</kbd></span><span data-i18n="shortcuts.help">이 도움말 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>I</kbd></span><span data-i18n="shortcuts.insights">인사이트 열기</span></li>
@@ -1128,6 +1129,27 @@
     // screenshot or just zen-watch the office.  Toggled with `Z` or by
     // calling toggleCinemaMode() from the console.
     let _cinemaMode = false;
+    function cycleAgentFocus(direction) {
+        const S = window.S;
+        if (!S || !S.liveAgents || S.liveAgents.length === 0) return;
+        const running = S.liveAgents.filter(a => a.isRunning);
+        if (running.length === 0) return;
+        const ids = running.map(a => String(a.pid));
+        const current = String(S.directorFocusPid || S.selectedPid || ids[0]);
+        let idx = ids.indexOf(current);
+        if (idx < 0) idx = 0;
+        const nextIdx = (idx + direction + ids.length) % ids.length;
+        const nextPid = ids[nextIdx];
+        S.directorFocusPid = nextPid;
+        S.directorMode = true;
+        S.selectedPid = nextPid;
+        S.detailPid = nextPid;
+        const next = running[nextIdx];
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        window.aiTycoonToasts?.show?.("info",
+            next.projectName || next.platformName || "Agent",
+            `${nextIdx + 1} / ${ids.length} · ${lang === "en" ? "agent focused" : "에이전트 포커스"}`);
+    }
     function toggleCinemaMode() {
         _cinemaMode = !_cinemaMode;
         document.body.classList.toggle("cinema-mode", _cinemaMode);
@@ -1490,6 +1512,8 @@
             event.preventDefault();
             toggleCinemaMode();
         }
+        else if (k === "j" || k === "J") { event.preventDefault(); cycleAgentFocus(+1); }
+        else if (k === "k" || k === "K") { event.preventDefault(); cycleAgentFocus(-1); }
         else if (k === "d" || k === "D") { event.preventDefault(); toggleDarkMode(); }
         else if (k === "h" || k === "H") {
             event.preventDefault();
