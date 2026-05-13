@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 55 — "자리 비운 사이" 요약 토스트
+- New `js/awaySummary.js`: listens to `visibilitychange`, snapshots the work-event tally when the tab hides, and on return (after ≥ 30 s away) shows a single concise toast — e.g. `완료 2 · 검토 요청 1 · 출근 1` — so users don't miss what happened while they were elsewhere
+- Bilingual: KO `자리 비운 사이 (3분)` / EN `While you were away (3 min)`
+- Toggle via `aiTycoonAwaySummary.setEnabled(false)` or localStorage `ai-tycoon-away-summary`; on by default
+- SW bumped to v9; smoke test now exercises 32 endpoints
+
 ### Iteration 54 — Graceful server shutdown + client toast
 - `SIGTERM` / `SIGINT` now stops poll & heartbeat intervals first, then broadcasts a `server_shutdown` JSON message to every WS client so the UI can show a friendly toast before the socket closes
 - Uses `wss.close()` → `httpServer.close()` for clean drains, with a 3-second safety-net `setTimeout` that force-exits if anything hangs
