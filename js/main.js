@@ -2,7 +2,7 @@
 //  AI TYCOON — Entry Point (init, loop, input, visual AI)
 // ============================================================
 
-import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts, bossQueueEntry, bossQueueAdd, bossQueueRemove, bossQueueResolve } from "./state.js";
+import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts, spawnYawn, bossQueueEntry, bossQueueAdd, bossQueueRemove, bossQueueResolve } from "./state.js";
 import {
     TILE, COLS, ROWS,
     ZOOM_MIN, ZOOM_MAX, ZOOM_STEP,
@@ -692,6 +692,16 @@ function updateVisuals() {
         if (v.speechTimer > 0) v.speechTimer--;
         // Clear chatPartner when speech ends
         if (v.chatPartner && v.speechTimer <= 0) v.chatPartner = null;
+
+        // Periodic yawn for resting agents (idle or offline) — about every 8-15s per agent
+        if ((status === "idle" || status === "offline") && !v.moving) {
+            // pid + animTick produces a stable but spread schedule across agents
+            const seed = (parseInt(String(agent.pid).replace(/\D/g, "") || "1", 10)) % 173;
+            const period = 480 + seed * 3;        // ~8-13 seconds at 60 fps
+            if (v.animTick > 60 && (v.animTick % period) === 0) {
+                spawnYawn(v.x, v.y - 14);
+            }
+        }
 
         // React to status change
         if (status !== v.prevStatus) {
