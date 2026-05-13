@@ -3505,6 +3505,28 @@ body.dark .boss-q-no {
         rgba(255,255,255,0.92);
 }
 
+/* Iteration 59 — Stable project color dot on each agent card */
+.agent-project-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1.5px rgba(255,255,255,0.85), 0 0 0 2.5px rgba(0,0,0,0.08);
+}
+body.dark .agent-project-dot {
+    box-shadow: 0 0 0 1.5px rgba(18,18,22,0.85), 0 0 0 2.5px rgba(255,255,255,0.06);
+}
+.agent-card-name { flex-shrink: 0; }
+.agent-card-sep { color: rgba(0,0,0,0.25); flex-shrink: 0; }
+body.dark .agent-card-sep { color: rgba(255,255,255,0.25); }
+.agent-card-project {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Iteration 58 — Agent-list status summary chips */
 .agents-status-summary {
     display: flex;

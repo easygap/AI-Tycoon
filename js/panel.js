@@ -1581,7 +1581,12 @@ export function updatePanel() {
                         <iconify-icon icon="${meta.icon}" style="color:${theme.body};" class="text-sm"></iconify-icon>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="text-[13px] font-bold text-zinc-800 truncate">${theme.name} · ${esc(agent.projectName)}</div>
+                        <div class="text-[13px] font-bold text-zinc-800 truncate flex items-center gap-1.5">
+                            <span class="agent-card-name">${esc(theme.name)}</span>
+                            <span class="agent-card-sep" aria-hidden="true">·</span>
+                            <span class="agent-project-dot" style="background:${projectColor(agent.projectName)}" title="${esc(agent.projectName || "")}" aria-hidden="true"></span>
+                            <span class="agent-card-project truncate">${esc(agent.projectName)}</span>
+                        </div>
                         <div class="text-[11px] text-zinc-400 tabular-nums font-medium flex items-center gap-1">
                             <span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badge}</span>
                             ${agent.role && ROLE_META[agent.role] ? `<span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${ROLE_META[agent.role].color}20;color:${ROLE_META[agent.role].color}">${ROLE_META[agent.role].badge}</span>` : ""}
@@ -2020,6 +2025,20 @@ function platformColor(platform) {
 }
 function platformLabel(platform) {
     return PLATFORM_META[platform]?.label || platform || "Unknown";
+}
+
+/** Stable HSL color for a project name — same name always → same dot. */
+function projectColor(name) {
+    if (!name) return "#94a3b8";
+    let hash = 0;
+    const s = String(name);
+    for (let i = 0; i < s.length; i++) {
+        hash = (hash * 31 + s.charCodeAt(i)) | 0;
+    }
+    // Avoid muddy/blueish tones near the agent theme accents; bias to warm + cool spread
+    const hue = Math.abs(hash) % 360;
+    // Mid-saturation, slightly desaturated lightness keeps the dot readable on both themes
+    return `hsl(${hue}, 62%, 56%)`;
 }
 function statusLabelI18n(statusKey) {
     const key = `status.${statusKey}`;
