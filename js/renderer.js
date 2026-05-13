@@ -1139,19 +1139,30 @@ function drawAgent(agent, v) {
         ctx.globalAlpha = 1;
     }
 
-    // Typing dots when actively coding (and not currently speaking)
-    if (agent.isRunning && status === "coding" && !(v.speechTimer > 0 && v.speechText)) {
+    // Typing / thinking dots when actively coding or thinking
+    // (and not currently speaking)
+    const showDots = agent.isRunning &&
+        (status === "coding" || status === "thinking") &&
+        !(v.speechTimer > 0 && v.speechText);
+    if (showDots) {
         const tdy = by - 18;
+        const isThinking = status === "thinking";
         const dots = 3;
         const pmetaTint = PLATFORM_META[agent.platform];
-        const dotColor = pmetaTint?.color || "#059669";
+        const codingColor = pmetaTint?.color || "#059669";
+        // Thinking dots: slower, amber tone, slightly larger
+        const dotColor = isThinking ? "#d97706" : codingColor;
+        const speed    = isThinking ? 0.09 : 0.18;
+        const offset   = isThinking ? 0.75 : 0.55;
+        const radius   = isThinking ? 1.15 : 0.95;
+        const lift     = isThinking ? 1.1 : 1.6;
         for (let i = 0; i < dots; i++) {
-            const phase = (t * 0.18) - i * 0.55;
-            const bouncY = Math.max(0, Math.sin(phase) * 1.6);
+            const phase = (t * speed) - i * offset;
+            const bouncY = Math.max(0, Math.sin(phase) * lift);
             ctx.fillStyle = dotColor;
             ctx.globalAlpha = 0.35 + Math.max(0, Math.sin(phase)) * 0.55;
             ctx.beginPath();
-            ctx.arc(x - 4 + i * 4, tdy - bouncY, 0.95, 0, Math.PI * 2);
+            ctx.arc(x - 4 + i * 4, tdy - bouncY, radius, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.globalAlpha = 1;
