@@ -37,6 +37,7 @@ const DICT = {
         "shortcuts.snapshot": "스냅샷 PNG 저장",
         "shortcuts.perfHud": "성능 오버레이 토글",
         "shortcuts.muteSound": "사운드 음소거 토글",
+        "shortcuts.cinema": "시네마 모드 (오버레이 숨김)",
         // Settings modal
         "settings.kicker": "설정",
         "settings.title": "취향대로 작업실 꾸미기",
@@ -224,6 +225,7 @@ const DICT = {
         "shortcuts.snapshot": "Save snapshot PNG",
         "shortcuts.perfHud": "Toggle performance overlay",
         "shortcuts.muteSound": "Toggle sound mute",
+        "shortcuts.cinema": "Cinema mode (hide overlays)",
         "settings.kicker": "SETTINGS",
         "settings.title": "Tune your workspace",
         "settings.appearance": "Appearance",
