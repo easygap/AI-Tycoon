@@ -259,6 +259,14 @@ function collectWorkEvents(prevAgentsByPid) {
                     const title = lang === "en" ? `${theme.name} finished a task` : `${theme.name} 태스크 완료`;
                     showToast("task-done", title, taskText, { pid: agent.pid });
                 } catch { /* ignore */ }
+                // Visual celebration at the agent's desk: a small hearts burst
+                try {
+                    const v = S.visualAgents[agent.pid];
+                    if (v) {
+                        spawnHearts(v.x, v.y - 12, 4);
+                        spawnParticles(v.x, v.y - 4, "#10b981", 8);
+                    }
+                } catch { /* ignore */ }
             }
         });
     });
