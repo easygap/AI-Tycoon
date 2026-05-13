@@ -6428,6 +6428,50 @@ body.dark .about-name { color: #f4f4f5; }
 body.dark .about-version { color: #fdba74; }
 body.dark .about-line { color: #a89c8e; }
 
+/* Sound preview grid (4 colour-coded buttons) */
+.sound-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    width: 100%;
+}
+.sound-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(217,170,120,0.25);
+    border-radius: 9px;
+    padding: 8px 4px;
+    cursor: pointer;
+    color: #5a4438;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+}
+.sound-preview iconify-icon { font-size: 18px; }
+.sound-preview:nth-child(1) { color: #10b981; }
+.sound-preview:nth-child(2) { color: #94a3b8; }
+.sound-preview:nth-child(3) { color: #0ea5e9; }
+.sound-preview:nth-child(4) { color: #f97316; }
+.sound-preview:hover {
+    background: rgba(255,255,255,0.92);
+    transform: translateY(-1px);
+    border-color: rgba(217,119,87,0.4);
+}
+.sound-preview:active { transform: translateY(0); }
+
+body.dark .sound-preview {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.06);
+}
+body.dark .sound-preview:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(253,186,116,0.32);
+}
+
 /* Settings modal — theme picker */
 .theme-picker {
     display: grid;
