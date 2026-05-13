@@ -1966,6 +1966,42 @@ export function refreshInsights() {
     const totalRam = agents.reduce((s, a) => s + (a.memoryMB || 0), 0);
 
     const el = (id) => document.getElementById(id);
+    // Friendly mood line — categorises today's pace based on completed tasks
+    const moodEl = el("insights-mood");
+    if (moodEl) {
+        const today = todayStats();
+        const tc = today?.completedMax || 0;
+        const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+        let label, emoji, tone;
+        if (tc === 0 && activeCount === 0) {
+            label = lang === "en" ? "Office is quiet — no one's here yet" : "조용한 오피스 · 아직 출근 전이에요";
+            emoji = "🌿";
+            tone = "calm";
+        } else if (tc < 6 && activeCount > 0) {
+            label = lang === "en" ? "Easy pace today" : "여유로운 하루";
+            emoji = "☕";
+            tone = "calm";
+        } else if (tc < 20) {
+            label = lang === "en" ? "Steady rhythm" : "꾸준한 흐름";
+            emoji = "✍️";
+            tone = "steady";
+        } else if (tc < 50) {
+            label = lang === "en" ? "Busy day" : "활발한 하루";
+            emoji = "⚡";
+            tone = "busy";
+        } else if (tc < 100) {
+            label = lang === "en" ? "Marathon mode" : "마라톤 모드";
+            emoji = "🏃";
+            tone = "intense";
+        } else {
+            label = lang === "en" ? "On fire" : "불타는 하루";
+            emoji = "🔥";
+            tone = "intense";
+        }
+        moodEl.dataset.tone = tone;
+        moodEl.innerHTML = `<span class="insights-mood-emoji">${emoji}</span><span>${esc(label)}</span><span class="insights-mood-num tabular-nums">${tc} ${lang === "en" ? "tasks" : "태스크"}</span>`;
+    }
+
     if (el("insights-agents")) el("insights-agents").textContent = activeCount;
     if (el("insights-completed")) el("insights-completed").textContent = totalCompleted;
     if (el("insights-ongoing")) el("insights-ongoing").textContent = totalOngoing;

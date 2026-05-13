@@ -1,5 +1,10 @@
 # AI Tycoon
 
+[![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+[![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
+[![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
+
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
 
@@ -61,15 +66,21 @@ AI Tycoon은 현재 내 컴퓨터에서 돌아가는 AI 작업을 **게임처럼
 - **URL 단축 라우팅** — `?action=insights` / `?action=settings`
 
 ### 🎯 UX 폴리시
-- **첫 실행 환영 카드** — 픽셀 아트 미리보기 + 4가지 핵심 안내
-- **"혹시 알고 계셨나요?" 팁 카드** — 10개 팁 회전 (5초 후 등장, 30초 회전, dismiss 영속)
-- **단축키 모달** (`?` 키) — `I/D/F/H/P/,/Ctrl+Shift+P` 등 12+ 키
-- **PNG 스냅샷** (`P` 키) — Canvas + Pixi 합성 다운로드
-- **성능 HUD** (`Ctrl+Shift+P`) — FPS, 메모리, 스프라이트 카운트
+- **첫 실행 환영 카드** + 4-step 스포트라이트 투어 + 회전 "혹시 알고 계셨나요?" 팁
+- **단축키 모달** (`?` 키) — 16+ 글로벌 단축키 정리
+- **PNG 스냅샷** (`P`) — Canvas + Pixi 합성 다운로드
+- **시네마 모드** (`Z`) — 모든 오버레이 숨김 (클린 스크린샷용)
+- **사운드 토글** (`M`) — 한 키로 음소거 on/off
+- **에이전트 순회** (`J`/`K`) — vim 스타일 prev/next 포커스
+- **인사이트 모달** (`I`), **설정 모달** (`,`), **성능 HUD** (`Ctrl+Shift+P`)
 - **미니맵** — 줌 1.1x 이상 시 자동 노출, 클릭→패닝
-- **통합 설정 모달** (`,` 키) — 다크/언어/밀도/테마/효과음/볼륨/알림/시즌/시간 강제/백업/복원
+- **통합 설정 모달** — 다크/언어/밀도/테마/HUD/사운드/볼륨/알림/시즌/시간 강제/백업/복원/모두 초기화
+- **사운드 미리듣기** — 4종 효과음 즉시 시청
+- **작업실 이름** — 페이지 타이틀과 HUD에 사용자 정의 이름
 - **백업/복원** — 모든 prefs·통계·업적 JSON export/import
-- **시간대 강제** — 데모/스크린샷용 시각 고정
+- **CSV 통계 받기** — 일자별 14일 데이터 다운로드
+- **시간 스크럽 슬라이더** — 0~23:59 데모/스크린샷용 시각 강제
+- **자동 SW 업데이트 알림** — 새 버전 감지 시 토스트 + Refresh 액션
 
 ### 📱 모바일
 - 핀치 줌, 한 손가락 패닝
@@ -192,6 +203,27 @@ ai-tycoon/
 이 상태를 WebSocket으로 브라우저에 전달하고, 클라이언트에서는 각 상태에 맞는 캐릭터 행동과 UI를 렌더링합니다.
 
 상태 전환이 너무 자주 깜빡이지 않도록 상위 전환은 즉시, 하위 전환은 일정 시간 유지 후 적용하는 hold 로직이 포함되어 있습니다.
+
+---
+
+## 단축키 (`?` 키로 언제든 확인)
+
+| 키 | 동작 |
+|---|---|
+| `?` | 단축키 도움말 |
+| `,` | 설정 모달 |
+| `I` | 인사이트 |
+| `P` | PNG 스냅샷 |
+| `D` | 다크 모드 |
+| `M` | 사운드 음소거 토글 |
+| `Z` | 시네마 모드 (오버레이 숨김) |
+| `F` | 가장 활발한 직원 포커스 |
+| `J` / `K` | 다음 / 이전 직원 |
+| `H` · `0` | 전체 보기로 리셋 |
+| `/` · `Ctrl+K` | 에이전트 검색 |
+| `Ctrl+Shift+P` | 성능 HUD |
+| `Esc` | 모달 / 검색 닫기 |
+| ↑↑↓↓←→←→BA | 히든 업적 🎮 |
 
 ---
 

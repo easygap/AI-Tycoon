@@ -304,6 +304,77 @@ body.dark .tip-close:hover { background: rgba(255,255,255,0.06); color: #f4f4f5;
     50%      { box-shadow: 0 0 0 4px rgba(239,68,68,0.08); }
 }
 
+/* ── Cinema mode — hide everything except the canvas for clean screenshots ── */
+body.cinema-mode #live-hud,
+body.cinema-mode #work-stream,
+body.cinema-mode #tip-card,
+body.cinema-mode #mini-map,
+body.cinema-mode #agent-focus-rail,
+body.cinema-mode #mobile-priority-dock,
+body.cinema-mode #empty-cta,
+body.cinema-mode #perf-hud {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.32s ease;
+}
+body.cinema-mode .app-header,
+body.cinema-mode .side-panel {
+    opacity: 0.06;
+    pointer-events: none;
+    transition: opacity 0.32s ease;
+}
+body.cinema-mode .app-header:hover,
+body.cinema-mode .side-panel:hover {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ── A11y: visible keyboard focus rings (only via :focus-visible) ── */
+*:focus { outline: none; }
+*:focus-visible {
+    outline: 2.5px solid #ff8a4c;
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+.welcome-primary:focus-visible,
+.empty-cta-btn:focus-visible,
+.tour-next:focus-visible {
+    outline-color: #fff;
+    outline-offset: 3px;
+}
+body.dark *:focus-visible { outline-color: #fdba74; }
+@media (prefers-reduced-motion: reduce) {
+    *:focus-visible { transition: none !important; }
+}
+
+/* Keyboard shortcut hint badge on toolbar icons */
+.toolbar-icon[data-hotkey]::before {
+    content: attr(data-hotkey);
+    position: absolute;
+    bottom: -3px;
+    right: -3px;
+    background: rgba(40,30,20,0.85);
+    color: #fff;
+    font-size: 8.5px;
+    font-weight: 700;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 3px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    box-shadow: 0 0 0 1.5px rgba(255,255,255,0.4);
+}
+.toolbar-icon[data-hotkey]:hover::before,
+.toolbar-icon[data-hotkey]:focus-visible::before {
+    opacity: 1;
+}
+body.dark .toolbar-icon[data-hotkey]::before {
+    background: rgba(255,255,255,0.92);
+    color: #2a1a10;
+    box-shadow: 0 0 0 1.5px rgba(40,40,55,0.6);
+}
+
 /* ── PWA install button (appears only when beforeinstallprompt fires) ── */
 .pwa-install-btn {
     display: inline-flex;
@@ -5165,6 +5236,65 @@ body.dark .welcome-secondary:hover { background: rgba(255,255,255,0.06); color: 
     flex: 1;
 }
 
+/* Insights — daily mood line */
+.insights-mood {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    margin-bottom: 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #2a1a10;
+    background: linear-gradient(135deg, rgba(255,232,200,0.55), rgba(255,210,170,0.35));
+    border: 1px solid rgba(217,170,120,0.28);
+}
+.insights-mood:empty { display: none; }
+.insights-mood-emoji {
+    font-size: 22px;
+    line-height: 1;
+}
+.insights-mood-num {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: #d97757;
+    background: rgba(217,119,87,0.14);
+    padding: 3px 10px;
+    border-radius: 999px;
+}
+.insights-mood[data-tone="steady"] {
+    background: linear-gradient(135deg, rgba(186,230,253,0.45), rgba(125,211,252,0.28));
+    border-color: rgba(56,189,248,0.32);
+}
+.insights-mood[data-tone="busy"] {
+    background: linear-gradient(135deg, rgba(255,200,150,0.55), rgba(255,140,90,0.35));
+    border-color: rgba(255,138,76,0.45);
+}
+.insights-mood[data-tone="intense"] {
+    background: linear-gradient(135deg, rgba(252,165,165,0.55), rgba(220,38,38,0.32));
+    border-color: rgba(220,38,38,0.45);
+    color: #fff;
+}
+.insights-mood[data-tone="intense"] .insights-mood-num {
+    color: #fff;
+    background: rgba(255,255,255,0.22);
+}
+body.dark .insights-mood {
+    background: linear-gradient(135deg, rgba(253,186,116,0.16), rgba(217,119,87,0.1));
+    border-color: rgba(253,186,116,0.28);
+    color: #f4f4f5;
+}
+body.dark .insights-mood[data-tone="steady"] {
+    background: linear-gradient(135deg, rgba(56,189,248,0.2), rgba(14,165,233,0.12));
+    border-color: rgba(56,189,248,0.3);
+}
+body.dark .insights-mood[data-tone="busy"] {
+    background: linear-gradient(135deg, rgba(255,138,76,0.24), rgba(217,119,87,0.16));
+}
+body.dark .insights-mood-num { color: #fdba74; background: rgba(253,186,116,0.18); }
+
 /* Insights — top stats row */
 .insights-overview {
     display: grid;
@@ -6077,6 +6207,22 @@ body.dark .tour-card-step { color: #fdba74; }
     justify-content: center;
     padding: 0;
 }
+.toast-action {
+    background: var(--toast-color, #3b82f6);
+    color: #fff;
+    border: none;
+    padding: 5px 11px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    flex-shrink: 0;
+    transition: filter 0.15s ease, transform 0.1s ease;
+    box-shadow: 0 2px 6px -1px rgba(0,0,0,0.18);
+}
+.toast-action:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.toast-action:active { transform: translateY(0); }
 .toast-close:hover {
     background: rgba(0,0,0,0.05);
     color: #2a1a10;
@@ -6341,12 +6487,59 @@ body.dark .about-name { color: #f4f4f5; }
 body.dark .about-version { color: #fdba74; }
 body.dark .about-line { color: #a89c8e; }
 
-/* Settings modal — theme picker */
-.theme-picker {
+/* Sound preview grid (4 colour-coded buttons) */
+.sound-preview-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 6px;
     width: 100%;
+}
+.sound-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.6);
+    border: 1px solid rgba(217,170,120,0.25);
+    border-radius: 9px;
+    padding: 8px 4px;
+    cursor: pointer;
+    color: #5a4438;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: background 0.15s ease, transform 0.1s ease, border-color 0.15s ease;
+}
+.sound-preview iconify-icon { font-size: 18px; }
+.sound-preview:nth-child(1) { color: #10b981; }
+.sound-preview:nth-child(2) { color: #94a3b8; }
+.sound-preview:nth-child(3) { color: #0ea5e9; }
+.sound-preview:nth-child(4) { color: #f97316; }
+.sound-preview:hover {
+    background: rgba(255,255,255,0.92);
+    transform: translateY(-1px);
+    border-color: rgba(217,119,87,0.4);
+}
+.sound-preview:active { transform: translateY(0); }
+
+body.dark .sound-preview {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.06);
+}
+body.dark .sound-preview:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(253,186,116,0.32);
+}
+
+/* Settings modal — theme picker */
+.theme-picker {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: 100%;
+}
+@media (min-width: 561px) {
+    .theme-picker { grid-template-columns: repeat(6, 1fr); }
 }
 .theme-swatch {
     background: rgba(255,255,255,0.55);
@@ -6398,6 +6591,8 @@ body.dark .about-line { color: #a89c8e; }
 .theme-preview-cafe    { --theme-bg: linear-gradient(180deg, #EBE2D3 0%, #C68863 100%); --theme-desk: #6F4A33; }
 .theme-preview-forest  { --theme-bg: linear-gradient(180deg, #E6EBD9 0%, #A8B690 100%); --theme-desk: #6E8458; }
 .theme-preview-midnight{ --theme-bg: linear-gradient(180deg, #DAE2F2 0%, #7A8AAE 100%); --theme-desk: #5A6B8E; }
+.theme-preview-sakura  { --theme-bg: linear-gradient(180deg, #FBE6EE 0%, #E4A0B8 100%); --theme-desk: #C68C9C; }
+.theme-preview-ocean   { --theme-bg: linear-gradient(180deg, #D5EAEE 0%, #7AB4C0 100%); --theme-desk: #3F7E92; }
 .theme-swatch-label {
     font-size: 11px;
     font-weight: 600;
@@ -6652,6 +6847,8 @@ body.dark .theme-swatch-label { color: #d4d4d8; }
     cursor: pointer;
     transition: background 0.15s ease, transform 0.1s ease;
     flex: 1;
+    text-decoration: none;
+    font-family: inherit;
 }
 .settings-action:hover { background: rgba(217,119,87,0.18); }
 .settings-action:active { transform: scale(0.98); }

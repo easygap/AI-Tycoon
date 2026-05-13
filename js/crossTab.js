@@ -39,6 +39,9 @@ const SYNCED_KEYS = new Set([
     "ai-tycoon-sort",
     "ai-tycoon-agent-search",
     "ai-tycoon-director",
+    "ai-tycoon-hud",
+    "ai-tycoon-workstream",
+    "ai-tycoon-workspace-name",
 ]);
 
 let channel = null;
