@@ -787,6 +787,7 @@
                         <li><span class="shortcuts-keys"><kbd>?</kbd></span><span data-i18n="shortcuts.help">이 도움말 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>I</kbd></span><span data-i18n="shortcuts.insights">인사이트 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>M</kbd></span><span data-i18n="shortcuts.muteSound">사운드 음소거 토글</span></li>
+                        <li><span class="shortcuts-keys"><kbd>Z</kbd></span><span data-i18n="shortcuts.cinema">시네마 모드 (오버레이 숨김)</span></li>
                         <li><span class="shortcuts-keys"><kbd>,</kbd></span><span data-i18n="shortcuts.settings">설정 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>P</kbd></span><span data-i18n="shortcuts.snapshot">스냅샷 저장</span></li>
                         <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></span><span data-i18n="shortcuts.perfHud">성능 오버레이</span></li>
@@ -1098,6 +1099,22 @@
         localStorage.setItem("ai-tycoon-workstream", on ? "true" : "false");
         const ws = document.getElementById("work-stream");
         if (ws) ws.style.display = on ? "" : "none";
+    }
+    // Cinema mode: hide every canvas overlay so users can take a clean
+    // screenshot or just zen-watch the office.  Toggled with `Z` or by
+    // calling toggleCinemaMode() from the console.
+    let _cinemaMode = false;
+    function toggleCinemaMode() {
+        _cinemaMode = !_cinemaMode;
+        document.body.classList.toggle("cinema-mode", _cinemaMode);
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        window.aiTycoonToasts?.show?.("info",
+            _cinemaMode
+                ? (lang === "en" ? "Cinema mode" : "시네마 모드 ON")
+                : (lang === "en" ? "Cinema mode off" : "시네마 모드 OFF"),
+            _cinemaMode
+                ? (lang === "en" ? "All overlays hidden. Press Z to bring back." : "오버레이를 모두 숨겼어요. Z 키로 복귀.")
+                : "");
     }
     function applyHudVisibility() {
         const hudOn = localStorage.getItem("ai-tycoon-hud") !== "false";
@@ -1426,6 +1443,10 @@
                     on ? (lang === "en" ? "Sound on" : "사운드 켜짐")
                        : (lang === "en" ? "Muted" : "음소거"));
             }
+        }
+        else if (k === "z" || k === "Z") {
+            event.preventDefault();
+            toggleCinemaMode();
         }
         else if (k === "d" || k === "D") { event.preventDefault(); toggleDarkMode(); }
         else if (k === "h" || k === "H") {

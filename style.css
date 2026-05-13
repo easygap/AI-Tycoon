@@ -304,6 +304,31 @@ body.dark .tip-close:hover { background: rgba(255,255,255,0.06); color: #f4f4f5;
     50%      { box-shadow: 0 0 0 4px rgba(239,68,68,0.08); }
 }
 
+/* ── Cinema mode — hide everything except the canvas for clean screenshots ── */
+body.cinema-mode #live-hud,
+body.cinema-mode #work-stream,
+body.cinema-mode #tip-card,
+body.cinema-mode #mini-map,
+body.cinema-mode #agent-focus-rail,
+body.cinema-mode #mobile-priority-dock,
+body.cinema-mode #empty-cta,
+body.cinema-mode #perf-hud {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.32s ease;
+}
+body.cinema-mode .app-header,
+body.cinema-mode .side-panel {
+    opacity: 0.06;
+    pointer-events: none;
+    transition: opacity 0.32s ease;
+}
+body.cinema-mode .app-header:hover,
+body.cinema-mode .side-panel:hover {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 /* ── A11y: visible keyboard focus rings (only via :focus-visible) ── */
 *:focus { outline: none; }
 *:focus-visible {
