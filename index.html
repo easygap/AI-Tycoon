@@ -535,6 +535,13 @@
                             <option value="rich" data-i18n="density.rich">풍부</option>
                         </select>
                     </div>
+                    <div class="settings-row settings-row-vertical">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:tag-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.workspaceName">작업실 이름</span>
+                        </div>
+                        <input id="settings-workspace-name" type="text" class="settings-time-input" style="width: 100%;" maxlength="40" placeholder="예: 서준의 작업실 / Jay's office" oninput="settingsSetWorkspaceName(this.value)">
+                    </div>
                     <div class="settings-row">
                         <div class="settings-row-label">
                             <iconify-icon icon="solar:widget-3-linear" aria-hidden="true"></iconify-icon>
@@ -724,6 +731,10 @@
                                 <span data-i18n="settings.restore">백업 가져오기</span>
                             </button>
                         </div>
+                        <button type="button" class="settings-action" onclick="settingsExportCsv()">
+                            <iconify-icon icon="solar:document-text-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.exportCsv">일자별 통계 CSV 받기</span>
+                        </button>
                         <input id="settings-restore-input" type="file" accept="application/json,.json" hidden onchange="settingsRestoreFile(this.files[0])">
                         <p class="settings-help" data-i18n="settings.backupHelp">현재 환경설정·통계·업적을 JSON 파일로 내보내거나, 같은 형식의 파일을 불러와 복원합니다.</p>
                         <div class="settings-button-pair">
@@ -1034,6 +1045,10 @@
             }
             if (n) n.textContent = `Node ${info.nodeVersion} · ${info.platform}`;
         }).catch(() => {});
+        // Workspace name
+        const wsName = localStorage.getItem("ai-tycoon-workspace-name") || "";
+        const wsNameInput = document.getElementById("settings-workspace-name");
+        if (wsNameInput) wsNameInput.value = wsName;
         // HUD + work stream visibility
         const hudOn = localStorage.getItem("ai-tycoon-hud") !== "false";
         const wsOn = localStorage.getItem("ai-tycoon-workstream") !== "false";
@@ -1213,6 +1228,63 @@
         }
         slider.value = String(hh * 60 + mm);
     }
+    function settingsSetWorkspaceName(v) {
+        const name = String(v || "").trim().slice(0, 40);
+        if (name) localStorage.setItem("ai-tycoon-workspace-name", name);
+        else localStorage.removeItem("ai-tycoon-workspace-name");
+        applyWorkspaceName();
+    }
+    function applyWorkspaceName() {
+        const name = localStorage.getItem("ai-tycoon-workspace-name") || "";
+        // Update page title
+        document.title = name ? `${name} · AI Tycoon` : "AI Tycoon";
+        // Reflect into the HUD if there's a title element
+        const hudTitle = document.querySelector(".hud-title");
+        if (hudTitle && !hudTitle.dataset.userTitle) {
+            hudTitle.dataset.userTitle = "true";
+        }
+        if (hudTitle) {
+            const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+            const base = lang === "en" ? "Live workspace" : "실시간 작업실";
+            hudTitle.textContent = name || base;
+        }
+    }
+    document.addEventListener("DOMContentLoaded", () => setTimeout(applyWorkspaceName, 80));
+
+    function settingsExportCsv() {
+        try {
+            const days = window.aiTycoonStats?.recentDays?.(14) || [];
+            const header = "date,completedMax,agentsMax,joinedCount,events,platformsTop\n";
+            const rows = days.map(d => {
+                const platforms = Object.entries(d.platforms || {})
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3)
+                    .map(([k, v]) => `${k}:${v}`)
+                    .join("|");
+                return [
+                    d.date,
+                    d.completedMax || 0,
+                    d.agentsMax || 0,
+                    d.joinedCount || 0,
+                    d.events || 0,
+                    `"${platforms}"`,
+                ].join(",");
+            }).join("\n");
+            const csv = header + rows + "\n";
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            const ts = new Date().toISOString().slice(0, 10);
+            a.href = url;
+            a.download = `ai-tycoon-stats-${ts}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 250);
+        } catch (err) {
+            console.error("[ai-tycoon] CSV export failed:", err);
+        }
+    }
+
     function settingsBackup() {
         if (window.aiTycoonBackup) window.aiTycoonBackup.download();
     }
