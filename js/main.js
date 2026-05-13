@@ -32,6 +32,7 @@ import "./tour.js";
 import "./crossTab.js";
 import "./konami.js";
 import "./awaySummary.js";
+import "./commandPalette.js";
 
 // ── Console branding (devtools welcome) ──
 if (typeof console !== "undefined") {
@@ -137,7 +138,10 @@ function isTypingTarget(target) {
 function handleGlobalShortcuts(event) {
     const key = event.key;
     const typing = isTypingTarget(event.target);
-    if ((key === "/" && !typing) || ((event.ctrlKey || event.metaKey) && key.toLowerCase() === "k")) {
+    // "/" focuses the side-panel search box. Ctrl/Cmd+K is owned by the
+    // command palette (see js/commandPalette.js) and is no longer routed
+    // here so the two shortcuts feel like distinct tools.
+    if (key === "/" && !typing) {
         event.preventDefault();
         window.focusAgentSearch?.();
         return;

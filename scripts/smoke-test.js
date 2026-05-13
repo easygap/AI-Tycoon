@@ -42,6 +42,7 @@ const SHELL = [
     { url: "/js/crossTab.js", contains: "BroadcastChannel", label: "crossTab.js" },
     { url: "/js/konami.js", contains: "SEQUENCE", label: "konami.js" },
     { url: "/js/awaySummary.js", contains: "isAwaySummaryEnabled", label: "awaySummary.js" },
+    { url: "/js/commandPalette.js", contains: "command-palette-overlay", label: "commandPalette.js" },
     { url: "/nope-404-test", contains: "Not found", label: "custom 404", expectStatus: 404 },
 ];
 
