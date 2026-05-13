@@ -36,6 +36,7 @@ const DICT = {
         "header.installLabel": "설치",
         "shortcuts.snapshot": "스냅샷 PNG 저장",
         "shortcuts.perfHud": "성능 오버레이 토글",
+        "shortcuts.muteSound": "사운드 음소거 토글",
         // Settings modal
         "settings.kicker": "설정",
         "settings.title": "취향대로 작업실 꾸미기",
@@ -85,6 +86,7 @@ const DICT = {
         "settings.backupHelp": "현재 환경설정·통계·업적을 JSON 파일로 내보내거나, 같은 형식의 파일을 불러와 복원합니다.",
         "settings.resetStats": "통계 초기화",
         "settings.resetAchievements": "업적 초기화",
+        "settings.resetAll": "모든 환경설정 초기화",
         "shortcuts.settings": "설정 열기",
         // Density menu
         "density.auto": "자동",
@@ -221,6 +223,7 @@ const DICT = {
         "header.installLabel": "Install",
         "shortcuts.snapshot": "Save snapshot PNG",
         "shortcuts.perfHud": "Toggle performance overlay",
+        "shortcuts.muteSound": "Toggle sound mute",
         "settings.kicker": "SETTINGS",
         "settings.title": "Tune your workspace",
         "settings.appearance": "Appearance",
@@ -269,6 +272,7 @@ const DICT = {
         "settings.backupHelp": "Export your preferences, stats and achievements as a JSON file, or import a previously-saved file to restore.",
         "settings.resetStats": "Reset stats",
         "settings.resetAchievements": "Reset achievements",
+        "settings.resetAll": "Reset all preferences",
         "shortcuts.settings": "Open settings",
         "density.auto": "Auto",
         "density.minimal": "Minimal",

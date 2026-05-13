@@ -747,6 +747,10 @@
                                 <span data-i18n="settings.resetAchievements">업적 초기화</span>
                             </button>
                         </div>
+                        <button type="button" class="settings-danger" onclick="settingsResetAll()" style="margin-top: 4px;">
+                            <iconify-icon icon="solar:refresh-square-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.resetAll">모든 환경설정 초기화</span>
+                        </button>
                     </div>
                 </section>
             </div>
@@ -782,6 +786,7 @@
                         <li><span class="shortcuts-keys"><kbd>H</kbd></span><span data-i18n="shortcuts.resetView">전체 보기로 리셋</span></li>
                         <li><span class="shortcuts-keys"><kbd>?</kbd></span><span data-i18n="shortcuts.help">이 도움말 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>I</kbd></span><span data-i18n="shortcuts.insights">인사이트 열기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>M</kbd></span><span data-i18n="shortcuts.muteSound">사운드 음소거 토글</span></li>
                         <li><span class="shortcuts-keys"><kbd>,</kbd></span><span data-i18n="shortcuts.settings">설정 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>P</kbd></span><span data-i18n="shortcuts.snapshot">스냅샷 저장</span></li>
                         <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></span><span data-i18n="shortcuts.perfHud">성능 오버레이</span></li>
@@ -1335,6 +1340,16 @@
         if (window.aiTycoonAchievements?.reset) window.aiTycoonAchievements.reset();
         if (window.refreshInsights) window.refreshInsights();
     }
+    function settingsResetAll() {
+        if (!confirm("모든 환경설정·통계·업적이 사라집니다. 계속하시겠습니까?\nThis will wipe all preferences, stats, and achievements. Continue?")) return;
+        const toDelete = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith("ai-tycoon-")) toDelete.push(k);
+        }
+        toDelete.forEach(k => localStorage.removeItem(k));
+        location.reload();
+    }
 
     function openInsights() {
         const overlay = document.getElementById("insights-overlay");
@@ -1400,6 +1415,18 @@
         else if (k === ",") { event.preventDefault(); openSettings(); }
         else if (k === "p" || k === "P") { event.preventDefault(); takeOfficeSnapshot(); }
         else if (k === "i" || k === "I") { event.preventDefault(); openInsights(); }
+        else if (k === "m" || k === "M") {
+            event.preventDefault();
+            if (window.aiTycoonSound) {
+                window.aiTycoonSound.toggle();
+                if (typeof syncSoundIcon === "function") syncSoundIcon();
+                const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                const on = window.aiTycoonSound.isEnabled();
+                window.aiTycoonToasts?.show?.("info",
+                    on ? (lang === "en" ? "Sound on" : "사운드 켜짐")
+                       : (lang === "en" ? "Muted" : "음소거"));
+            }
+        }
         else if (k === "d" || k === "D") { event.preventDefault(); toggleDarkMode(); }
         else if (k === "h" || k === "H") {
             event.preventDefault();
