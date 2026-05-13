@@ -1590,7 +1590,14 @@ export function updatePanel() {
                         <div class="text-[11px] text-zinc-400 tabular-nums font-medium flex items-center gap-1">
                             <span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badge}</span>
                             ${agent.role && ROLE_META[agent.role] ? `<span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${ROLE_META[agent.role].color}20;color:${ROLE_META[agent.role].color}">${ROLE_META[agent.role].badge}</span>` : ""}
-                            <span>${agent.memoryMB}MB${agent.processCount > 1 ? ` · ${agent.processCount}p` : ""}</span>
+                            <span>${agent.memoryMB}MB${agent.processCount > 1 ? ` · ${agent.processCount}p` : ""}${(() => {
+                                const t = memoryTrend(agent);
+                                if (t.dir === "flat") return "";
+                                const arrow = t.dir === "up" ? "▲" : "▼";
+                                const color = t.dir === "up" ? "#ef4444" : "#10b981";
+                                const sign = t.dir === "up" ? "+" : "";
+                                return ` <span class="mem-trend" style="color:${color}" title="30초 전 대비 ${sign}${t.deltaMB}MB" aria-label="메모리 ${t.dir === "up" ? "증가" : "감소"} ${sign}${t.deltaMB}MB">${arrow}</span>`;
+                            })()}</span>
                         </div>
                         <div class="agent-signal-line" title="${esc(signal.sourceLabel)}">
                             <iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon>
@@ -2025,6 +2032,24 @@ function platformColor(platform) {
 }
 function platformLabel(platform) {
     return PLATFORM_META[platform]?.label || platform || "Unknown";
+}
+
+/** Compare current memoryMB against ~30 s ago to spot trends.
+ *  Returns { dir: "up"|"down"|"flat", deltaMB: number }. */
+function memoryTrend(agent) {
+    const hist = S.memoryHistory?.[agent.pid] || [];
+    if (hist.length < 4) return { dir: "flat", deltaMB: 0 };
+    const cur = hist[hist.length - 1]?.mb ?? agent.memoryMB ?? 0;
+    // Walk back ~30 seconds. Polls run every 2 s → roughly 15 samples back.
+    const targetTs = Date.now() - 30000;
+    let past = hist[0];
+    for (let i = hist.length - 1; i >= 0; i--) {
+        if ((hist[i].ts || 0) <= targetTs) { past = hist[i]; break; }
+    }
+    const delta = cur - (past?.mb || cur);
+    // Threshold: 30 MB is the noise floor below which we call it "flat"
+    if (Math.abs(delta) < 30) return { dir: "flat", deltaMB: delta };
+    return { dir: delta > 0 ? "up" : "down", deltaMB: delta };
 }
 
 /** Stable HSL color for a project name — same name always → same dot. */

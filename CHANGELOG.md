@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 63 — 메모리 추세 화살표 (▲ / ▼)
+- 에이전트 카드의 메모리 옆에 30초 전 대비 추세 화살표 표시
+- ▲ 빨강 = +30MB 이상 증가, ▼ 초록 = -30MB 이상 감소, 그 사이는 표시 없음
+- `memoryTrend(agent)` 헬퍼: S.memoryHistory에서 timestamp로 ~30초 전 샘플 검색
+- 호버 시 정확한 증감량을 툴팁으로 (`+45MB` 등), aria-label 도 포함
+- 가벼운 ‑ 카드 레이아웃에 영향 없음 (8px 인라인 텍스트)
+
 ### Iteration 62 — 명령 팔레트 명령 22종 확장
 - 6개 카테고리 × 22명령으로 확장: Display (다크/프라이버시/시네마), Modal (인사이트/설정/도움말), Filter (전체/코딩/대기/오프라인), Theme (6종), Language (한/영), Tools (데모/스냅샷/백업/음소거)
 - 빈 검색 시 자주 쓰는 6개 기본 표시, 입력 시 22개 전체에서 매칭

@@ -3737,6 +3737,17 @@ body.dark .cp-foot { background: rgba(0,0,0,0.25); border-top-color: rgba(255,25
     .cp-card { width: 96vw; }
 }
 
+/* Iteration 63 — Memory trend arrow (▲ / ▼) next to MB display */
+.mem-trend {
+    display: inline-block;
+    font-size: 8px;
+    margin-left: 2px;
+    transform: translateY(-1px);
+    line-height: 1;
+    font-weight: 800;
+    cursor: help;
+}
+
 /* Iteration 59 — Stable project color dot on each agent card */
 .agent-project-dot {
     display: inline-block;
