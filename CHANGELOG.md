@@ -5,6 +5,22 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 30 — A11y focus rings · hotkey hint badges · CHANGELOG sync
+- Visible `:focus-visible` outline (orange, 2.5px) for every focusable control
+- Tiny `data-hotkey` badges appear on hover for `,` `P` `I` `?` `D` toolbar buttons
+- Synced CHANGELOG for iterations 28-30
+
+### Iteration 29 — Platform-tinted monitors · CSV feedback
+- Each agent's monitor screen glows in their platform brand colour
+- Blinking 1-pixel cursor on active screens
+- CSV export now shows a toast ("CSV 저장 완료 · N 일자") and gracefully handles empty stats
+
+### Iteration 28 — Workspace name · CSV stats export
+- Settings → Appearance "Workspace name" input customises page title + HUD label
+- Settings → Data "Export daily stats CSV" downloads a 14-day rollup as CSV
+  (columns: date, completedMax, agentsMax, joinedCount, events, platformsTop)
+- New key added to cross-tab sync list
+
 ### Iteration 27 — HUD visibility toggles · CHANGELOG sync
 - Toggle live HUD and work-stream overlays from Settings → Appearance
 - Both persisted in localStorage + cross-tab synced
