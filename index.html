@@ -616,6 +616,30 @@
                         <input id="settings-volume" type="range" min="0" max="100" step="5" oninput="settingsSetVolume(this.value)" class="settings-slider">
                         <span id="settings-volume-num" class="settings-volume-num tabular-nums">60%</span>
                     </div>
+                    <div class="settings-row settings-row-vertical">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:music-note-2-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.soundPreview">사운드 미리듣기</span>
+                        </div>
+                        <div class="sound-preview-grid">
+                            <button type="button" class="sound-preview" onclick="settingsPreviewSound('join')" title="Join">
+                                <iconify-icon icon="solar:login-2-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.soundJoin">출근</span>
+                            </button>
+                            <button type="button" class="sound-preview" onclick="settingsPreviewSound('leave')" title="Leave">
+                                <iconify-icon icon="solar:logout-2-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.soundLeave">퇴근</span>
+                            </button>
+                            <button type="button" class="sound-preview" onclick="settingsPreviewSound('done')" title="Task done">
+                                <iconify-icon icon="solar:check-circle-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.soundDone">완료</span>
+                            </button>
+                            <button type="button" class="sound-preview" onclick="settingsPreviewSound('review')" title="Review">
+                                <iconify-icon icon="solar:bell-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.soundReview">리뷰</span>
+                            </button>
+                        </div>
+                    </div>
                 </section>
 
                 <section class="settings-section">
@@ -1163,6 +1187,24 @@
         window.aiTycoonSound?.setVolume(f);
         const numEl = document.getElementById("settings-volume-num");
         if (numEl) numEl.textContent = `${Math.round(f * 100)}%`;
+    }
+    function settingsPreviewSound(kind) {
+        if (!window.aiTycoonSound) return;
+        // Auto-enable sound for the preview if it's currently off — otherwise
+        // the user gets zero feedback and thinks the buttons are broken.
+        if (!window.aiTycoonSound.isEnabled()) {
+            window.aiTycoonSound.setEnabled(true);
+            const chk = document.getElementById("settings-sound");
+            if (chk) chk.checked = true;
+            if (typeof syncSoundIcon === "function") syncSoundIcon();
+        }
+        const sfx = {
+            join: window.aiTycoonSound.sfxJoin,
+            leave: window.aiTycoonSound.sfxLeave,
+            done: window.aiTycoonSound.sfxTaskDone,
+            review: window.aiTycoonSound.sfxReview,
+        };
+        try { sfx[kind]?.(); } catch (err) { void err; }
     }
     async function settingsToggleNotify(on) {
         if (!window.aiTycoonNotify) return;
