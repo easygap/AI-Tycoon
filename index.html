@@ -535,6 +535,26 @@
                             <option value="rich" data-i18n="density.rich">풍부</option>
                         </select>
                     </div>
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:widget-3-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.liveHud">실시간 HUD</span>
+                        </div>
+                        <label class="settings-switch">
+                            <input id="settings-hud" type="checkbox" checked onchange="settingsToggleHud(this.checked)">
+                            <span></span>
+                        </label>
+                    </div>
+                    <div class="settings-row">
+                        <div class="settings-row-label">
+                            <iconify-icon icon="solar:stream-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.workStream">작업 스트림</span>
+                        </div>
+                        <label class="settings-switch">
+                            <input id="settings-workstream" type="checkbox" checked onchange="settingsToggleWorkStream(this.checked)">
+                            <span></span>
+                        </label>
+                    </div>
                     <div class="settings-row settings-row-vertical">
                         <div class="settings-row-label">
                             <iconify-icon icon="solar:palette-linear" aria-hidden="true"></iconify-icon>
@@ -1014,6 +1034,13 @@
             }
             if (n) n.textContent = `Node ${info.nodeVersion} · ${info.platform}`;
         }).catch(() => {});
+        // HUD + work stream visibility
+        const hudOn = localStorage.getItem("ai-tycoon-hud") !== "false";
+        const wsOn = localStorage.getItem("ai-tycoon-workstream") !== "false";
+        const hudChk = document.getElementById("settings-hud");
+        const wsChk = document.getElementById("settings-workstream");
+        if (hudChk) hudChk.checked = hudOn;
+        if (wsChk) wsChk.checked = wsOn;
         // Office theme
         const themeNow = localStorage.getItem("ai-tycoon-theme") || "classic";
         document.querySelectorAll(".theme-swatch").forEach(s => {
@@ -1042,6 +1069,25 @@
         if (window.setPixiDensityFromMenu) window.setPixiDensityFromMenu(v);
         else localStorage.setItem("ai-tycoon-pixi-density", v);
     }
+    function settingsToggleHud(on) {
+        localStorage.setItem("ai-tycoon-hud", on ? "true" : "false");
+        const hud = document.getElementById("live-hud");
+        if (hud) hud.style.display = on ? "" : "none";
+    }
+    function settingsToggleWorkStream(on) {
+        localStorage.setItem("ai-tycoon-workstream", on ? "true" : "false");
+        const ws = document.getElementById("work-stream");
+        if (ws) ws.style.display = on ? "" : "none";
+    }
+    function applyHudVisibility() {
+        const hudOn = localStorage.getItem("ai-tycoon-hud") !== "false";
+        const wsOn = localStorage.getItem("ai-tycoon-workstream") !== "false";
+        const hud = document.getElementById("live-hud");
+        const ws = document.getElementById("work-stream");
+        if (hud) hud.style.display = hudOn ? "" : "none";
+        if (ws) ws.style.display = wsOn ? "" : "none";
+    }
+    document.addEventListener("DOMContentLoaded", () => setTimeout(applyHudVisibility, 50));
     function settingsPickTheme(theme) {
         localStorage.setItem("ai-tycoon-theme", theme);
         document.querySelectorAll(".theme-swatch").forEach(s => {
