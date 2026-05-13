@@ -116,6 +116,35 @@ const httpServer = http.createServer((req, res) => {
         return;
     }
 
+    // /api/agents — JSON snapshot of currently detected agents (for integrations)
+    if (urlPath === "/api/agents") {
+        const agents = (lastState?.agents || []).map(a => ({
+            pid: a.pid,
+            platform: a.platform,
+            platformName: a.platformName,
+            projectName: a.projectName,
+            role: a.role,
+            status: a.status,
+            isRunning: a.isRunning,
+            memoryMB: a.memoryMB,
+            needsReview: a.needsReview,
+            totalTasks: a.totalTasks,
+            completedTasks: a.completedTasks,
+            currentTask: a.currentTask ? {
+                id: a.currentTask.id,
+                subject: a.currentTask.subject,
+                status: a.currentTask.status,
+            } : null,
+        }));
+        res.writeHead(200, {
+            "Content-Type": "application/json; charset=utf-8",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Access-Control-Allow-Origin": "*",
+        });
+        res.end(JSON.stringify({ ok: true, count: agents.length, agents }, null, 2));
+        return;
+    }
+
     // /api/health — JSON status endpoint for monitoring & "About" panel
     if (urlPath === "/api/health") {
         const agents = (lastState?.agents) || [];

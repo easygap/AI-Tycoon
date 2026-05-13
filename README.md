@@ -153,6 +153,13 @@ npm run build
 npm test
 ```
 
+REST API 엔드포인트 (모니터링·통합용):
+
+```bash
+curl http://localhost:3777/api/health     # 버전·가동시간·에이전트 통계
+curl http://localhost:3777/api/agents     # 현재 활성 에이전트 JSON 스냅샷
+```
+
 ---
 
 ## 프로젝트 구조
