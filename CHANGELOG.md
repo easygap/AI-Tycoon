@@ -5,6 +5,15 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 60 — 명령 팔레트 (Ctrl+K / Cmd+K)
+- 새 `js/commandPalette.js` — VS Code 스타일 빠른 검색 모달
+- 입력 즉시 에이전트 이름 / 프로젝트 / 플랫폼 / 현재 작업 텍스트 / PID 를 다중 토큰으로 매칭, 상위 8명 표시
+- 추가로 글로벌 명령 6종 (다크 토글, 데모 토글, 인사이트, 스냅샷, 설정, 도움말) 결과
+- ↑↓ 키 네비게이션 + Enter 실행 + Esc 닫기 + 클릭 + 호버 미리보기
+- 카드는 18% 위에서 페이드인, 라이트/다크 양쪽 톤 매칭, 모바일 96vw 너비 대응
+- 기존 Ctrl+K (검색바 포커스)는 / 단축키로 분리, Ctrl+K 는 팔레트 전용
+- SW v10, smoke test 33개로 확장
+
 ### Iteration 59 — 프로젝트별 일관된 색상 닷
 - 에이전트 카드 헤더에 프로젝트 이름 앞 작은 8px 컬러 닷 추가
 - `projectColor(name)` 헬퍼: 프로젝트 이름의 32-bit 해시 → HSL 360° 분포 → 안정적 색상
