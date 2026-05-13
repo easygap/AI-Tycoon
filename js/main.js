@@ -31,6 +31,7 @@ import "./toasts.js";
 import "./tour.js";
 import "./crossTab.js";
 import "./konami.js";
+import "./awaySummary.js";
 
 // ── Console branding (devtools welcome) ──
 if (typeof console !== "undefined") {
