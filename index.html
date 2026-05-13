@@ -816,6 +816,7 @@
                         <li><span class="shortcuts-keys"><kbd>/</kbd></span><span data-i18n="shortcuts.searchFocus">에이전트 검색 포커스</span></li>
                         <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>K</kbd></span><span data-i18n="shortcuts.searchAlt">에이전트 검색 (대체)</span></li>
                         <li><span class="shortcuts-keys"><kbd>Esc</kbd></span><span data-i18n="shortcuts.escClose">검색·모달 닫기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>/</kbd></span><span data-i18n="shortcuts.helpAlt">단축키 도움말 (대체)</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
@@ -1517,6 +1518,16 @@
         if (project && !project.hidden) { closeProject(); event.stopPropagation(); return; }
         const insights = document.getElementById("insights-overlay");
         if (insights && !insights.hidden) { closeInsights(); event.stopPropagation(); return; }
+    });
+
+    // Combined modifier shortcuts (Ctrl+/ for shortcuts help — i18n keyboard friendly)
+    document.addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey) {
+            if (event.key === "/") {
+                event.preventDefault();
+                openShortcuts();
+            }
+        }
     });
 
     // Global single-letter shortcuts (only when not typing)
