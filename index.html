@@ -1322,8 +1322,9 @@
     }
     function applyWorkspaceName() {
         const name = localStorage.getItem("ai-tycoon-workspace-name") || "";
-        // Update page title
+        // Update page title (count is appended in refreshTabCount)
         document.title = name ? `${name} · AI Tycoon` : "AI Tycoon";
+        refreshTabCount();
         // Reflect into the HUD if there's a title element
         const hudTitle = document.querySelector(".hud-title");
         if (hudTitle && !hudTitle.dataset.userTitle) {
@@ -1335,6 +1336,14 @@
             hudTitle.textContent = name || base;
         }
     }
+    function refreshTabCount() {
+        const agents = (window.__aiTycoonAgents || []).filter(a => a.isRunning);
+        const name = localStorage.getItem("ai-tycoon-workspace-name") || "";
+        const base = name ? `${name} · AI Tycoon` : "AI Tycoon";
+        document.title = agents.length > 0 ? `(${agents.length}) ${base}` : base;
+    }
+    // Refresh tab title roughly every 5 seconds to track running agent count
+    setInterval(refreshTabCount, 5000);
     document.addEventListener("DOMContentLoaded", () => setTimeout(applyWorkspaceName, 80));
 
     function settingsExportCsv() {
