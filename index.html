@@ -1442,6 +1442,7 @@
         location.reload();
     }
 
+    let _insightsRefreshTimer = null;
     function openInsights() {
         const overlay = document.getElementById("insights-overlay");
         if (window.refreshInsights) window.refreshInsights();
@@ -1460,8 +1461,16 @@
                 window.aiTycoonAchievements.markAllSeen();
             }
         }
+        // Live-refresh while the modal is open so numbers stay accurate
+        if (_insightsRefreshTimer) clearInterval(_insightsRefreshTimer);
+        _insightsRefreshTimer = setInterval(() => {
+            if (overlay && !overlay.hidden && window.refreshInsights) window.refreshInsights();
+        }, 5000);
     }
-    function closeInsights() { closeModalOverlay(document.getElementById("insights-overlay")); }
+    function closeInsights() {
+        closeModalOverlay(document.getElementById("insights-overlay"));
+        if (_insightsRefreshTimer) { clearInterval(_insightsRefreshTimer); _insightsRefreshTimer = null; }
+    }
     function openShortcuts() { openModalOverlay(document.getElementById("shortcuts-overlay")); }
     function closeShortcuts() { closeModalOverlay(document.getElementById("shortcuts-overlay")); }
     function openProject(name) {
