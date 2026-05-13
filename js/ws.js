@@ -312,6 +312,7 @@ export function handleState(state) {
                 prevStatus: null,
                 behaviorTimer: 80 + Math.floor(Math.random() * 200),
                 chatPartner: null,
+                joinedAt: Date.now(), // timestamp for "just joined" UI pulse
             };
             if (!prevPids.has(pidKey(agent.pid))) {
                 addLog(`${theme.name} (${agent.projectName}) 출근했어요!`, "join");

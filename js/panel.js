@@ -1441,8 +1441,11 @@ export function updatePanel() {
         const pinned = isAgentPinned(agent);
         const action = getAgentNextAction(agent);
 
+        // "Just joined" pulse — first 60 s after the visual agent was created
+        const visual = S.visualAgents[agent.pid];
+        const justJoined = visual && visual.joinedAt && (Date.now() - visual.joinedAt) < 60000;
         const card = document.createElement("div");
-        card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}`;
+        card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}`;
         card.dataset.action = action.key;
         card.setAttribute("role", "button");
         card.setAttribute("tabindex", "0");

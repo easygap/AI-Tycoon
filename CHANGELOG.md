@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 57 — "방금 출근" 펄스 + NEW 배지
+- 새로 등장한 에이전트 카드는 60초 동안 초록 보더 펄스 + 우측 상단 NEW 칩
+- `S.visualAgents[pid].joinedAt`를 ws.js에서 기록해 두고 panel.js 에서 `(now - joinedAt) < 60s` 일 때 `.is-new` 클래스 부여
+- `agentJoinPulse` (그림자 링 확산) + `agentJoinBadge` (페이드인-아웃) keyframes
+- `prefers-reduced-motion` 사용자는 정적 상태로 표시
+- 다크모드는 더 진한 emerald 보더로 톤 매칭
+
 ### Iteration 56 — Insights 모달에 "오늘의 MVP" 카드
 - 새 섹션이 Insights 모달의 플랫폼 분포와 Top 5 프로젝트 사이에 등장
 - 점수 = (완료 태스크 × 3) + 최근 work-event 개수 + (실행 중이면 +1) 으로 가장 활발한 에이전트 1명을 선정
