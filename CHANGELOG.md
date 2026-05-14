@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 121 — 사이드바 카드 본문의 '대기 중' / '개 태스크' 다국어
+- 작업 텍스트 fallback 인 `대기 중` → `Idle`
+- 태스크 카운트 `${n}개 태스크` → `${n} task(s)` (단수/복수 처리)
+- 디테일 패널에 이어 카드 본문 텍스트도 KO/EN 모두 자연스럽게
+
 ### Iteration 120 — 디테일 패널의 신호/이벤트 영역도 KO/EN 분기
 - `인식 근거 → Detection basis`, `최근 신호 → Recent signals`
 - `최근 ${age} → Last ${age}`

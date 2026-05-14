@@ -1635,17 +1635,22 @@ export function updatePanel() {
         };
 
         // Show current work from latest prompt, falling back to tasks
+        const lgCard = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const idleText = lgCard === "en" ? "Idle" : "대기 중";
+        const taskCountText = (n) => lgCard === "en"
+            ? `${n} task${n > 1 ? "s" : ""}`
+            : `${n}개 태스크`;
         let task;
         if (agent.currentWork && agent.currentWork.prompt) {
             const cleaned = agent.currentWork.prompt.replace(/\[Pasted text[^\]]*\]/g, "").trim();
             const firstLine = cleaned.split("\n")[0].trim();
             task = firstLine.length > 3
                 ? firstLine.substring(0, 50)
-                : (agent.currentTask ? agent.currentTask.subject : "대기 중");
+                : (agent.currentTask ? agent.currentTask.subject : idleText);
         } else if (agent.currentTask) {
             task = agent.currentTask.subject;
         } else {
-            task = agent.tasks?.length > 0 ? `${agent.tasks.length}개 태스크` : "대기 중";
+            task = agent.tasks?.length > 0 ? taskCountText(agent.tasks.length) : idleText;
         }
         const age = workAge(agent);
         const signal = agentSignalInfo(agent);
