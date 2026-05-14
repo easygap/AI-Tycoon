@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 114 — Strict 프라이버시 모드 (호버 미리보기 차단)
+- `Shift+P` 빠르게 두 번 (600ms 이내) → strict 모드 토글
+- strict 일 때는 `body.privacy-strict` 클래스로 hover 시 unblur 비활성화 → 화면 녹화/공유 시 완전 안전
+- 배지 색감 더 진한 인디고/바이올렛 그라데이션 + 텍스트 `프라이버시 (Strict)` 표시
+- 명령 팔레트에 `Strict 프라이버시 (호버 미리보기 차단)` 항목 추가
+- `localStorage` `ai-tycoon-privacy-strict` 키로 영속, KO/EN 토스트 안내
+
 ### Iteration 113 — 명령 팔레트 푸터에 결과 개수 표시
 - 푸터 우측에 `5개 결과` 형식의 카운트 칩 추가 (auto margin 으로 우측 정렬)
 - 결과 3개 미만일 때는 시각 잡음 줄이려고 빈 문자열

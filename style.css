@@ -4167,6 +4167,18 @@ body.privacy-mode .insights-mvp-project:hover {
     filter: blur(0);
 }
 
+/* Strict 프라이버시 — hover 시에도 unblur 풀리지 않음 (화면 녹화·공유 안전) */
+body.privacy-mode.privacy-strict .agent-card-project:hover,
+body.privacy-mode.privacy-strict .detail-work-preview:hover,
+body.privacy-mode.privacy-strict .toast-text:hover,
+body.privacy-mode.privacy-strict .insights-mvp-project:hover {
+    filter: blur(4px);
+}
+/* Strict 배지는 더 진한 보라색으로 구분 */
+body.privacy-strict .privacy-badge {
+    background: linear-gradient(135deg, rgba(67, 56, 202, 0.96), rgba(91, 33, 182, 0.96));
+}
+
 .privacy-badge {
     position: fixed;
     right: 16px;

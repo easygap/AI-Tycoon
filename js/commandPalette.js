@@ -276,6 +276,7 @@ function buildActions(query) {
         // ── Display ──
         { id: "theme-toggle", group: "display", title: "다크 / 라이트 토글", hint: "D", run: () => { try { document.body.classList.toggle("dark"); localStorage.setItem("ai-tycoon-dark", document.body.classList.contains("dark") ? "true" : "false"); } catch { /* ignore */ } } },
         { id: "privacy", group: "display", title: "프라이버시 모드 토글", hint: "⇧P", run: () => { try { window.aiTycoonPrivacy?.toggle?.(); } catch { /* ignore */ } } },
+        { id: "privacy-strict", group: "display", title: "Strict 프라이버시 (호버 미리보기 차단)", hint: "⇧P⇧P", run: () => { try { window.aiTycoonPrivacy?.setStrict?.(!window.aiTycoonPrivacy?.isStrict?.()); } catch { /* ignore */ } } },
         { id: "cinema", group: "display", title: "시네마 모드 (오버레이 숨김)", hint: "Z", run: () => { try { window.toggleCinemaMode?.(); } catch { /* ignore */ } } },
         // ── Modals ──
         { id: "insights", group: "modal", title: "인사이트 모달 열기", hint: "I", run: () => { try { window.openInsights?.(); } catch { /* ignore */ } } },
