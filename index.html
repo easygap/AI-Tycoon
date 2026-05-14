@@ -279,7 +279,7 @@
                     </div>
                     <div class="agent-search-shell mb-2">
                         <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon>
-                        <input id="agent-search" class="agent-search-input" type="search" placeholder="직원, 프로젝트, 작업 검색" data-i18n-placeholder="panel.searchPlaceholder" aria-label="에이전트 검색" autocomplete="off" oninput="setAgentSearch(this.value)" onkeydown="if(event.key==='Escape'&&this.value){clearAgentSearch();event.stopPropagation();}">
+                        <input id="agent-search" class="agent-search-input" type="search" placeholder="직원, 프로젝트, 작업 검색" data-i18n-placeholder="panel.searchPlaceholder" aria-label="에이전트 검색" autocomplete="off" oninput="if(!this._imeComposing)setAgentSearch(this.value)" oncompositionstart="this._imeComposing=true" oncompositionend="this._imeComposing=false;setAgentSearch(this.value)" onkeydown="if(event.key==='Escape'&&this.value){clearAgentSearch();event.stopPropagation();}">
                         <button id="agent-search-clear" type="button" class="agent-search-clear" onclick="clearAgentSearch()" aria-label="검색어 지우기" hidden>
                             <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                         </button>
