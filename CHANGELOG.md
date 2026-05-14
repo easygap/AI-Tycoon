@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 135 — 검색어 매치 부분 노란 마커로 하이라이트
+- 새 `highlightTokens(safeText, query)` 헬퍼 — `esc()` 처리된 텍스트만 받아 매칭 부분을 `<mark class="search-match">` 로 감쌈
+- 카드의 에이전트 이름 / 프로젝트명 / 작업 텍스트 3곳에 적용
+- 검색어가 어디에 매치됐는지 즉시 시각 확인 가능
+- 정규식 메타 문자 이스케이프, 다중 토큰(OR) 지원, 대소문자 무시
+- 다크모드 색감 별도 (`amber-300/32%`)
+
 ### Iteration 134 — 디테일 패널 메모리 스파크라인 좌측 시간 라벨도 KO/EN
 - SVG sparkline 의 좌측에 표시되는 `Nm ago / N분 전` 라벨을 다국어 분기
 - 영어 모드에서 그래프 좌측에 한국어 '분 전' 이 뜨던 자잘한 leak 정리
