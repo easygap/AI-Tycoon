@@ -4461,6 +4461,21 @@ body.dark .cp-foot { background: rgba(0,0,0,0.25); border-top-color: rgba(255,25
     cursor: help;
 }
 
+/* Iteration 135 — 검색어 매치 하이라이트 */
+mark.search-match {
+    background: rgba(250, 204, 21, 0.42);
+    color: inherit;
+    padding: 0 2px;
+    border-radius: 3px;
+    font-weight: inherit;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+body.dark mark.search-match {
+    background: rgba(250, 204, 21, 0.32);
+    color: #fef3c7;
+}
+
 /* Iteration 59 — Stable project color dot on each agent card */
 .agent-project-dot {
     display: inline-block;

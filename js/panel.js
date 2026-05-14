@@ -132,6 +132,29 @@ function normalizeSearch(value) {
     return String(value ?? "").toLocaleLowerCase("ko-KR").replace(/\s+/g, " ").trim();
 }
 
+/** 검색어 토큰을 `<mark>` 로 감싸 하이라이트. esc() 처리된 안전한 텍스트만 받음.
+ *  소문자 비교지만 원본 대소문자는 보존. 토큰 없으면 입력 그대로 반환. */
+function highlightTokens(safeText, query) {
+    if (!safeText || !query) return safeText;
+    const tokens = String(query)
+        .toLocaleLowerCase("ko-KR")
+        .split(/\s+/)
+        .filter(Boolean)
+        .filter(t => t.length >= 1);
+    if (tokens.length === 0) return safeText;
+    // 정규식 메타 문자 이스케이프 후 OR 패턴
+    const reSrc = tokens
+        .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+        .join("|");
+    if (!reSrc) return safeText;
+    try {
+        const re = new RegExp(`(${reSrc})`, "ig");
+        return safeText.replace(re, '<mark class="search-match">$1</mark>');
+    } catch {
+        return safeText;
+    }
+}
+
 function agentSearchText(agent) {
     const theme = getAgentTheme(agent);
     const status = agent.isRunning ? agent.status : "offline";
@@ -1739,6 +1762,9 @@ export function updatePanel() {
             `</div>`;
         }
 
+        // 검색어가 있으면 카드의 이름/프로젝트/태스크 텍스트에 매칭 부분 하이라이트
+        const searchQ = normalizeSearch(S.agentSearchQuery);
+        const hl = (safe) => highlightTokens(safe, searchQ);
         card.innerHTML = `
             <div class="agent-card-inner">
                 <div class="flex items-center gap-2.5 mb-2">
@@ -1747,10 +1773,10 @@ export function updatePanel() {
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="text-[13px] font-bold text-zinc-800 truncate flex items-center gap-1.5">
-                            <span class="agent-card-name">${esc(theme.name)}</span>
+                            <span class="agent-card-name">${hl(esc(theme.name))}</span>
                             <span class="agent-card-sep" aria-hidden="true">·</span>
                             <span class="agent-project-dot" style="background:${projectColor(agent.projectName)}" title="${esc(agent.projectName || "")}" aria-hidden="true"></span>
-                            <span class="agent-card-project truncate">${esc(agent.projectName)}</span>
+                            <span class="agent-card-project truncate">${hl(esc(agent.projectName))}</span>
                         </div>
                         <div class="text-[11px] text-zinc-400 tabular-nums font-medium flex items-center gap-1">
                             <span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badge}</span>
@@ -1790,7 +1816,7 @@ export function updatePanel() {
                     </span>
                     <span class="status-badge badge-${status}">${meta.label}</span>
                 </div>
-                <div class="text-[12px] text-zinc-500 truncate mb-1" style="word-break:keep-all;" title="${esc(task)}">${esc(task)}</div>
+                <div class="text-[12px] text-zinc-500 truncate mb-1" style="word-break:keep-all;" title="${esc(task)}">${hl(esc(task))}</div>
                 ${age ? `<div class="text-[10px] text-zinc-400 mb-1">최근 ${age}</div>` : ""}
                 ${agent.totalTasks > 0 ? `
                 <div class="progress-track">
