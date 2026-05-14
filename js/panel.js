@@ -481,9 +481,13 @@ function renderSystemHealth(active, working, review) {
     const diagnostics = health.diagnostics;
     const detectorStatus = health.detectorStatus;
     const connection = connectionHealth();
+    const lgH = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const labels = lgH === "en"
+        ? { processes: "Processes", external: "AI apps", session: "Sessions", proc: "Processes", kicker: "System status", copy: "Copy diagnostics", reload: "Reload" }
+        : { processes: "프로세스", external: "AI 앱", session: "세션", proc: "프로세스", kicker: "시스템 상태", copy: "진단 복사", reload: "새로고침" };
     const detectorRows = [
-        ["processes", "프로세스"],
-        ["external", "AI 앱"],
+        ["processes", labels.processes],
+        ["external", labels.external],
         ["codex", "Codex"],
         ["cursor", "Cursor"],
     ].map(([key, label]) => {
@@ -497,8 +501,8 @@ function renderSystemHealth(active, working, review) {
     }).join("");
 
     const statRows = [
-        ["세션", numeric(diagnostics.sessionCount, S.serverState?.totalSessions || 0)],
-        ["프로세스", numeric(diagnostics.processCount, S.serverState?.totalProcesses || 0)],
+        [labels.session, numeric(diagnostics.sessionCount, S.serverState?.totalSessions || 0)],
+        [labels.proc, numeric(diagnostics.processCount, S.serverState?.totalProcesses || 0)],
         ["Codex", numeric(diagnostics.codexSessionCount, 0)],
         ["Cursor", numeric(diagnostics.cursorWorkspaceCount, 0)],
     ].map(([label, value]) => `
@@ -512,7 +516,7 @@ function renderSystemHealth(active, working, review) {
     panel.innerHTML = `
         <div class="health-head">
             <div>
-                <span class="health-kicker">시스템 상태</span>
+                <span class="health-kicker">${esc(labels.kicker)}</span>
                 <strong>${esc(health.title)}</strong>
             </div>
             <span class="health-age">${esc(health.ageLabel)}</span>
@@ -528,11 +532,11 @@ function renderSystemHealth(active, working, review) {
         <div class="health-actions">
             <button type="button" class="health-action" data-health-action="copy">
                 <iconify-icon icon="solar:copy-linear" aria-hidden="true"></iconify-icon>
-                <span>진단 복사</span>
+                <span>${esc(labels.copy)}</span>
             </button>
             <button type="button" class="health-action" data-health-action="reload">
                 <iconify-icon icon="solar:refresh-linear" aria-hidden="true"></iconify-icon>
-                <span>새로고침</span>
+                <span>${esc(labels.reload)}</span>
             </button>
         </div>
     `;

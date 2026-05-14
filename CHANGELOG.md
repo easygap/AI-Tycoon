@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 131 — 시스템 헬스 패널 라벨 모두 KO/EN
+- 사이드 패널 상단의 시스템 상태 카드: `시스템 상태 / 프로세스 / AI 앱 / 세션 / 진단 복사 / 새로고침`
+- 영어: `System status / Processes / AI apps / Sessions / Copy diagnostics / Reload`
+- detector / stat / button 영역 모두 동시에 분기
+- 헤더 영역은 그대로 (Codex/Cursor 같은 고유 명은 유지)
+
 ### Iteration 130 — '운영 브리핑' 헤드라인 7종도 KO/EN 분기
 - `briefHeadline()` 의 7가지 상태별 title + detail 모두 다국어
 - 연결 대기 / 검토 우선 / 신호 확인 / 고정 직원 추적 / 작업 흐름 정상 / 대기 직원 확인 / 직원 감지 대기
