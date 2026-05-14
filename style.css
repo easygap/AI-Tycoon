@@ -3333,6 +3333,32 @@ body.agents-compact .agent-card .text-[11px].text-zinc-400 { font-size: 9.5px; }
 body.agents-compact .agent-card-inner .flex.items-center.gap-2\\.5.mb-2 { margin-bottom: 0; }
 body.agents-compact .agent-pin-btn { width: 22px; height: 22px; flex: 0 0 22px; }
 
+/* Iteration 84 — 브라우저 스토리지 사용량 표시 */
+.storage-usage {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    margin-top: 4px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(217, 170, 120, 0.18);
+    border-radius: 8px;
+    font-size: 11px;
+    color: #6b5747;
+}
+.storage-usage iconify-icon { color: #b8956c; font-size: 14px; }
+.storage-usage strong {
+    color: #2a1a10;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+body.dark .storage-usage {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.06);
+    color: #a89c8e;
+}
+body.dark .storage-usage strong { color: #fef3c7; }
+
 /* Iteration 66 — "What's new" section inside the Settings modal */
 .whatsnew-card {
     background: linear-gradient(135deg, rgba(252, 211, 77, 0.12), rgba(255, 222, 180, 0.42));

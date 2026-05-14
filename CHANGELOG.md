@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 84 — 설정 → 데이터에 브라우저 저장 공간 사용량 표시
+- `ai-tycoon-*` 키 개수와 합산 바이트(KB) 를 백업 안내 문구 바로 아래에 노출
+- 다국어 (KO `브라우저 저장 공간: 28개 키 · 14.2 KB`, EN `Browser storage: 28 keys · 14.2 KB`)
+- 백업 / 초기화 누르기 전에 얼마나 쌓였는지 가늠 가능
+- 다크 모드 별도 톤, 아이콘 + tabular-nums
+
 ### Iteration 83 — HUD 작업실 타이틀 인라인 편집 (더블클릭 / Enter)
 - HUD 상단의 "실시간 작업실" 타이틀을 더블클릭 또는 포커스 후 Enter 키로 즉시 인라인 입력 전환
 - Enter → 저장, Esc → 취소, blur → 저장 (트리플 안전)
