@@ -3333,6 +3333,47 @@ body.agents-compact .agent-card .text-[11px].text-zinc-400 { font-size: 9.5px; }
 body.agents-compact .agent-card-inner .flex.items-center.gap-2\\.5.mb-2 { margin-bottom: 0; }
 body.agents-compact .agent-pin-btn { width: 22px; height: 22px; flex: 0 0 22px; }
 
+/* Iteration 86 — 사이드 패널 '위로' 부유 버튼 */
+.agents-scroll-top-btn {
+    position: sticky;
+    bottom: 8px;
+    left: 100%;
+    margin-left: -36px;
+    margin-top: -36px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(217, 119, 87, 0.32);
+    color: #d97757;
+    box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.18);
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 5;
+}
+.agents-scroll-top-btn.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+.agents-scroll-top-btn:hover {
+    background: rgba(255, 222, 180, 0.95);
+    transform: translateY(-2px);
+}
+.agents-scroll-top-btn iconify-icon { font-size: 16px; }
+body.dark .agents-scroll-top-btn {
+    background: rgba(40, 32, 28, 0.92);
+    border-color: rgba(253, 186, 116, 0.42);
+    color: #fbbf24;
+    box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.55);
+}
+
 /* Iteration 84 — 브라우저 스토리지 사용량 표시 */
 .storage-usage {
     display: flex;
