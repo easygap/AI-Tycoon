@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 127 — 작업 이벤트 라벨/알림 메시지 KO/EN 분기
+- `addAgentEvent` 의 라벨 5종 (검토 요청 / 새 작업 / 태스크 시작 / 태스크 시작 / 완료) → `Review / New work / Task start / Done`
+- 검토 요청 fallback 텍스트 `확인이 필요해요` → `Needs review`
+- 데스크탑 알림 (`notify`) 의 `검토 요청: ${text}` / `완료!` 도 영어 분기 (`Review needed:` / `done!`)
+- 사이드 패널의 'work stream' 영역이 KO/EN 모두 자연스럽게
+
 ### Iteration 126 — 활동 로그(`addLog`) 메시지 7개도 KO/EN
 - `ws.js` 안에서 `addLog()` 호출 7곳을 모두 다국어 분기
 - 서버 연결/종료/응답 없음, 에이전트 출근/퇴근, 태스크 시작, 출근/퇴근 이벤트 라벨까지
