@@ -1512,8 +1512,9 @@ export function updatePanel() {
         // "Just joined" pulse — first 60 s after the visual agent was created
         const visual = S.visualAgents[agent.pid];
         const justJoined = visual && visual.joinedAt && (Date.now() - visual.joinedAt) < 60000;
+        const hasNote = !!getAgentNote(agent);
         const card = document.createElement("div");
-        card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}`;
+        card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}${hasNote ? " has-note" : ""}`;
         card.dataset.action = action.key;
         card.setAttribute("role", "button");
         card.setAttribute("tabindex", "0");
@@ -1926,6 +1927,22 @@ export function updateDetailPanel() {
 
         ${tasks.length > 0 ? `<div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mt-3 mb-2">태스크 (${agent.completedTasks}/${agent.totalTasks})</div>
         <div class="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">${taskHtml}</div>` : ""}
+
+        <div class="detail-section-title mt-3">개인 메모</div>
+        <div class="detail-note-card">
+            <textarea
+                id="detail-note-input"
+                class="detail-note-input"
+                rows="2"
+                placeholder="이 에이전트에 대한 메모… (예: 인증 리팩터링 중)"
+                aria-label="에이전트 개인 메모"
+                maxlength="500"
+                data-privacy>${esc(getAgentNote(agent) || "")}</textarea>
+            <div class="detail-note-foot">
+                <span class="detail-note-hint">로컬에만 저장 · ${esc(String(getAgentNote(agent)?.length || 0))}/500</span>
+                <button type="button" class="detail-note-clear" data-detail-note-clear ${!getAgentNote(agent) ? "hidden" : ""}>지우기</button>
+            </div>
+        </div>
     `;
 
     container.querySelectorAll(".detail-event[data-pid]").forEach(item => {
@@ -1937,6 +1954,30 @@ export function updateDetailPanel() {
         });
     });
     container.querySelector("[data-detail-pin]")?.addEventListener("click", () => toggleAgentPin(agent));
+
+    // Notes wiring (debounced save)
+    const noteInput = container.querySelector("#detail-note-input");
+    const noteClear = container.querySelector("[data-detail-note-clear]");
+    const noteHint  = container.querySelector(".detail-note-hint");
+    if (noteInput) {
+        let saveTimer = null;
+        noteInput.addEventListener("input", () => {
+            if (saveTimer) clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                setAgentNote(agent, noteInput.value);
+                if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
+                if (noteHint) noteHint.textContent = `로컬에만 저장 · ${noteInput.value.length}/500`;
+            }, 220);
+        });
+    }
+    if (noteClear) {
+        noteClear.addEventListener("click", () => {
+            setAgentNote(agent, "");
+            if (noteInput) noteInput.value = "";
+            noteClear.setAttribute("hidden", "");
+            if (noteHint) noteHint.textContent = `로컬에만 저장 · 0/500`;
+        });
+    }
 }
 
 // ── Tooltip (mouse hover on canvas) ──
@@ -2032,6 +2073,31 @@ function platformColor(platform) {
 }
 function platformLabel(platform) {
     return PLATFORM_META[platform]?.label || platform || "Unknown";
+}
+
+// ── Per-agent personal notes (localStorage, keyed by sessionId or pid) ──
+// Keyed by sessionId when available (stable across restarts) else PID.
+const NOTE_KEY = "ai-tycoon-agent-notes";
+function noteKeyFor(agent) {
+    return String(agent?.sessionId || agent?.pid || "");
+}
+function loadAllNotes() {
+    try { return JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+    catch { return {}; }
+}
+function getAgentNote(agent) {
+    const key = noteKeyFor(agent);
+    if (!key) return "";
+    return loadAllNotes()[key] || "";
+}
+function setAgentNote(agent, value) {
+    const key = noteKeyFor(agent);
+    if (!key) return;
+    const all = loadAllNotes();
+    const trimmed = String(value || "").slice(0, 500);
+    if (trimmed) all[key] = trimmed;
+    else delete all[key];
+    try { localStorage.setItem(NOTE_KEY, JSON.stringify(all)); } catch { /* quota */ }
 }
 
 /** Compare current memoryMB against ~30 s ago to spot trends.
