@@ -1719,8 +1719,22 @@ export function updatePanel() {
             updatePanel();
             updateDetailPanel();
         };
-        card.onclick = selectAgent;
+        // 카드 클릭 — 기본은 select, Shift+클릭이면 핀 토글 (작은 핀 버튼 안 찾고 빠르게)
+        card.onclick = (event) => {
+            if (event.shiftKey) {
+                event.preventDefault();
+                toggleAgentPin(agent);
+                return;
+            }
+            selectAgent();
+        };
         card.onkeydown = (event) => {
+            // Shift+Enter/Space 도 동일하게 핀 토글
+            if ((event.key === "Enter" || event.key === " ") && event.shiftKey) {
+                event.preventDefault();
+                toggleAgentPin(agent);
+                return;
+            }
             if (event.key !== "Enter" && event.key !== " ") return;
             event.preventDefault();
             selectAgent();
