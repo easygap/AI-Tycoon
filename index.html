@@ -848,7 +848,10 @@
                         placeholder="단축키 또는 동작 검색…"
                         data-i18n-placeholder="shortcuts.searchPlaceholder"
                         aria-label="단축키 검색"
-                        oninput="filterShortcuts(this.value)" autocomplete="off">
+                        oninput="if(!this._imeComposing)filterShortcuts(this.value)"
+                        oncompositionstart="this._imeComposing=true"
+                        oncompositionend="this._imeComposing=false;filterShortcuts(this.value)"
+                        autocomplete="off">
                 </div>
                 <div id="shortcuts-empty" class="shortcuts-empty" hidden>검색 결과가 없습니다.</div>
                 <section class="shortcuts-group">

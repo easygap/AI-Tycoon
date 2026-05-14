@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 97 — 단축키 모달 검색 input 도 한글 IME 조합 보류
+- 사이드바 / Ctrl+K 와 동일한 패턴: `compositionstart`/`compositionend` 으로 조합 플래그
+- 단축키 검색에서 한글 키워드 입력 시 자모 단위 필터링 깜빡임 제거
+- 앱 전반의 입력 UX 가 한글 사용자에게 일관되게 부드러워짐
+
 ### Iteration 96 — 명령 팔레트 input 도 한글 IME 조합 보류
 - 사이드바 검색(iter 95)과 동일한 패턴: `compositionstart` → `_imeComposing=true`, `compositionend` → `false` 후 한 번에 `render()`
 - Ctrl+K 열고 한글로 빠르게 타이핑할 때 자모 단위 결과 깜빡임 사라짐
