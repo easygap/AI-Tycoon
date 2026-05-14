@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 138 — 명령 팔레트 액션 결과의 그룹별 좌측 색상 strip
+- 22개 명령이 6 그룹(display/modal/filter/theme/lang/tools) 으로 분류돼 있어 시각 구분 필요
+- 각 액션 결과 줄 좌측에 3×22px 색상 strip 추가
+  - display 보라 / modal 시안 / filter 연두 / theme 주황 / lang 노랑 / tools 회색
+- 부제 `명령` → 그룹 이름(`display`, `tools` 등) 으로 변경해 검색·필터에도 도움
+- `data-group` 속성으로 깔끔하게 분리
+
 ### Iteration 137 — 명령 팔레트 결과 아바타에 상태 색상 dot
 - 결과 줄 아바타 우하단에 10px 둥근 dot 으로 status meta color 표시 (coding=초록, idle=회색, offline=흐릿한 회색 등)
 - 흰색/검정 보더 링으로 라이트/다크 모드 모두 또렷하게

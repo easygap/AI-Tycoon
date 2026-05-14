@@ -358,12 +358,13 @@ function render() {
                 <kbd class="cp-row-hint">↵</kbd>
             </li>`;
         }
-        // action
-        return `<li class="cp-row cp-row-action${i === 0 ? " is-active" : ""}" role="option" data-index="${i}">
+        // action — 그룹별로 좌측 strip 색상이 다르게 (display/modal/filter/theme/lang/tools)
+        const group = r.group || "tools";
+        return `<li class="cp-row cp-row-action${i === 0 ? " is-active" : ""}" role="option" data-index="${i}" data-group="${esc(group)}">
             <span class="cp-avatar cp-avatar-action"><iconify-icon icon="solar:command-square-bold"></iconify-icon></span>
             <div class="cp-info">
                 <div class="cp-title">${highlight(esc(r.title), hlQ)}</div>
-                <div class="cp-sub">명령</div>
+                <div class="cp-sub">${esc(group)}</div>
             </div>
             ${r.hint ? `<kbd class="cp-row-hint">${esc(r.hint)}</kbd>` : ""}
         </li>`;
