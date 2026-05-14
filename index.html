@@ -842,6 +842,15 @@
                 </button>
             </header>
             <div class="modal-body">
+                <div class="shortcuts-search-shell">
+                    <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon>
+                    <input id="shortcuts-search" type="search" class="shortcuts-search-input"
+                        placeholder="단축키 또는 동작 검색…"
+                        data-i18n-placeholder="shortcuts.searchPlaceholder"
+                        aria-label="단축키 검색"
+                        oninput="filterShortcuts(this.value)" autocomplete="off">
+                </div>
+                <div id="shortcuts-empty" class="shortcuts-empty" hidden>검색 결과가 없습니다.</div>
                 <section class="shortcuts-group">
                     <h3 class="shortcuts-group-title" data-i18n="shortcuts.navGroup">탐색</h3>
                     <ul class="shortcuts-list">
@@ -1694,8 +1703,33 @@
         closeModalOverlay(document.getElementById("insights-overlay"));
         if (_insightsRefreshTimer) { clearInterval(_insightsRefreshTimer); _insightsRefreshTimer = null; }
     }
-    function openShortcuts() { openModalOverlay(document.getElementById("shortcuts-overlay")); }
+    function openShortcuts() {
+        openModalOverlay(document.getElementById("shortcuts-overlay"));
+        // 열 때마다 검색 박스 리셋해서 항상 전체 목록부터 보이게
+        const inp = document.getElementById("shortcuts-search");
+        if (inp) { inp.value = ""; filterShortcuts(""); setTimeout(() => inp.focus({ preventScroll: true }), 80); }
+    }
     function closeShortcuts() { closeModalOverlay(document.getElementById("shortcuts-overlay")); }
+    // 단축키 모달 안의 항목을 키워드로 필터링.
+    // 키캡 텍스트와 동작 설명 모두에서 매칭 (공백 분리한 토큰 AND).
+    function filterShortcuts(query) {
+        const q = (query || "").trim().toLowerCase();
+        const tokens = q.split(/\s+/).filter(Boolean);
+        let totalVisible = 0;
+        document.querySelectorAll("#shortcuts-overlay .shortcuts-group").forEach(section => {
+            let groupVisible = 0;
+            section.querySelectorAll(".shortcuts-list li").forEach(li => {
+                const text = li.textContent.toLowerCase();
+                const match = tokens.length === 0 || tokens.every(t => text.includes(t));
+                li.style.display = match ? "" : "none";
+                if (match) groupVisible++;
+            });
+            section.style.display = groupVisible > 0 ? "" : "none";
+            totalVisible += groupVisible;
+        });
+        const empty = document.getElementById("shortcuts-empty");
+        if (empty) empty.hidden = totalVisible > 0;
+    }
     function openProject(name) {
         if (!name || !window.refreshProject) return;
         window.refreshProject(name);
