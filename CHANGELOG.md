@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 78 — macOS 사용자에게 Ctrl 대신 ⌘ 자동 표시
+- `<kbd>` 요소 중 `data-mod-key` 속성을 가진 것들을 macOS 에서는 `⌘` 로 갈아끼움
+- 검색바 Ctrl+K 칩, 단축키 도움말 모달의 Ctrl 키 모두 자동 변환
+- `navigator.platform` 으로 Mac/iPad/iPhone 감지, 그 외에는 그대로 Ctrl
+- DOMContentLoaded + 400ms 추가 호출로 헬프 모달이 늦게 그려져도 반영
+
 ### Iteration 77 — 멈춘 에이전트 수를 브라우저 탭 제목에 노출
 - `refreshTabCount` 가 stuck 에이전트도 계산해 `⚠ N · (M) 작업실 · AI Tycoon` 형식으로 제목 갱신
 - 다른 탭에서 작업하다 페이지 안 봐도 멈춤 상태를 즉시 인지
