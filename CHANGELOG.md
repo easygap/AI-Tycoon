@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 99 — 서버 부팅 배너에 버전 + Node 표기
+- ASCII 박스 아래쪽 부분에 `v1.1.0` 줄과 `Platform: win32 · Node v22.x` 한 줄 보강
+- `VERSION` 상수를 그대로 가져오므로 다음 릴리즈부터 자동 갱신
+- 운영 환경에서 어떤 빌드가 떴는지 SSH 로 봐도 즉시 식별
+
 ### Iteration 98 — 에이전트 메모 textarea 도 IME 조합 처리
 - 메모 자동저장(디바운스 220ms)이 한글 IME 조합 중에는 자모 단위로 박힐 수 있어 막음
 - `compositionend` 시점에는 디바운스 무시하고 즉시 저장 + '저장됨' 피드백
