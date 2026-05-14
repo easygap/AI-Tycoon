@@ -271,6 +271,7 @@ function buildActions(query) {
         { id: "snapshot", group: "tools", title: "스냅샷 저장", hint: "P", run: () => { try { window.aiTycoonSnapshot?.download?.(); } catch { /* ignore */ } } },
         { id: "backup", group: "tools", title: "설정 백업 (JSON)", run: () => { try { window.aiTycoonBackup?.download?.(); } catch { /* ignore */ } } },
         { id: "standup", group: "tools", title: "일일 리포트 (Markdown)", run: () => { try { window.aiTycoonStandup?.download?.(); } catch { /* ignore */ } } },
+        { id: "notes-export", group: "tools", title: "에이전트 메모 내보내기 (Markdown)", run: () => { try { window.aiTycoonNotes?.download?.(); } catch { /* ignore */ } } },
         { id: "mute", group: "tools", title: "사운드 음소거 토글", hint: "M", run: () => { try { window.aiTycoonSound?.toggle?.(); } catch { /* ignore */ } } },
     ];
     if (!query) {

@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 79 — 에이전트 메모 일괄 Markdown 내보내기
+- `buildNotesMarkdown` / `downloadNotesMarkdown` 함수 추가 (`standupExport.js`)
+- 저장된 모든 `ai-tycoon-agent-notes` 항목을 sessionId/PID 별로 묶어 Markdown 헤더 + 본문 출력
+- 현재 살아있는 에이전트와 매칭되면 이름/프로젝트도 헤더에 포함
+- 명령 팔레트에 "에이전트 메모 내보내기 (Markdown)" 항목
+- 메모가 0개일 때도 안전하게 빈 안내 출력, KO/EN 다국어
+
 ### Iteration 78 — macOS 사용자에게 Ctrl 대신 ⌘ 자동 표시
 - `<kbd>` 요소 중 `data-mod-key` 속성을 가진 것들을 macOS 에서는 `⌘` 로 갈아끼움
 - 검색바 Ctrl+K 칩, 단축키 도움말 모달의 Ctrl 키 모두 자동 변환
