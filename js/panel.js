@@ -1584,12 +1584,20 @@ export function updatePanel() {
         // "Just joined" pulse — first 60 s after the visual agent was created
         const visual = S.visualAgents[agent.pid];
         const justJoined = visual && visual.joinedAt && (Date.now() - visual.joinedAt) < 60000;
-        const hasNote = !!getAgentNote(agent);
+        const noteText = getAgentNote(agent) || "";
+        const hasNote = !!noteText;
         const stuck = isAgentStuck(agent);
         // 처음 stuck으로 전환된 순간에만 토스트 한 번
         maybeFireStuckToast(agent);
         const card = document.createElement("div");
         card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}${hasNote ? " has-note" : ""}${stuck ? " is-stuck" : ""}`;
+        // 메모 있으면 카드에 native title 로 미리보기 — hover 시 OS 툴팁
+        // (디테일 패널 안 열고도 첫 문장 확인 가능)
+        if (hasNote) {
+            const preview = noteText.replace(/\s+/g, " ").trim().slice(0, 140);
+            card.dataset.notePreview = preview;
+            card.title = `📝 ${preview}`;
+        }
         card.dataset.action = action.key;
         card.setAttribute("role", "button");
         card.setAttribute("tabindex", "0");

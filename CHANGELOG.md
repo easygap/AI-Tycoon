@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 107 — 메모 있는 카드 hover 시 미리보기 툴팁
+- `has-note` 카드의 `title` 속성에 `📝 메모 첫 140자` 박아두기
+- 디테일 패널 열지 않고도 OS 네이티브 툴팁으로 메모 확인 가능
+- 공백은 단일 스페이스로 정규화, 최대 140자 컷
+- `dataset.notePreview` 도 함께 박아 다른 모듈에서 활용 가능
+
 ### Iteration 106 — 명령 팔레트 결과에서 핀된 에이전트 우선 + 별 표시
 - `agentPriority.isAgentPinned` 를 import 해서 결과 빌더에서 핀 확인
 - 같은 검색어에서 핀된 에이전트는 점수 `+2` 가산 → 상단으로 정렬
