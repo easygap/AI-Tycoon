@@ -884,14 +884,19 @@ function uniqueAgents(list) {
 
 function workEventMeta(event) {
     const fallback = STATUS_META[event.status] || STATUS_META.idle;
+    // 라벨이 이미 들어와 있으면(ws.js 에서 이미 i18n 분기) 그대로 쓰고, 없을 때만 현재 언어로 기본값.
+    const lgW = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const labels = lgW === "en"
+        ? { join: "Joined", leave: "Left", work: "New work", review: "Review", start: "Task start", done: "Done" }
+        : { join: "출근", leave: "퇴근", work: "새 작업", review: "검토 요청", start: "태스크 시작", done: "완료" };
     const byType = {
-        join: { label: event.label || "출근", icon: "solar:login-2-linear" },
-        leave: { label: event.label || "퇴근", icon: "solar:logout-2-linear" },
+        join: { label: event.label || labels.join, icon: "solar:login-2-linear" },
+        leave: { label: event.label || labels.leave, icon: "solar:logout-2-linear" },
         status: { label: event.label || fallback.label, icon: fallback.icon },
-        work: { label: event.label || "새 작업", icon: "solar:bolt-circle-linear" },
-        review: { label: event.label || "검토 요청", icon: "solar:clipboard-check-linear" },
-        "task-start": { label: event.label || "태스크 시작", icon: "solar:play-circle-linear" },
-        "task-done": { label: event.label || "완료", icon: "solar:check-circle-linear" },
+        work: { label: event.label || labels.work, icon: "solar:bolt-circle-linear" },
+        review: { label: event.label || labels.review, icon: "solar:clipboard-check-linear" },
+        "task-start": { label: event.label || labels.start, icon: "solar:play-circle-linear" },
+        "task-done": { label: event.label || labels.done, icon: "solar:check-circle-linear" },
     };
     return byType[event.type] || { label: event.label || fallback.label, icon: fallback.icon };
 }
