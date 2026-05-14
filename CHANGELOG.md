@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 116 — F1 키도 단축키 도움말 열기에 매핑
+- 기존 `?` / `Ctrl+/` 외에 표준 도움말 키인 `F1` 추가
+- `preventDefault()` 로 브라우저 기본 도움말 가로채기 방지
+- 단축키 모달 cheatsheet 에 `F1 — 단축키 도움말 (F1 표준)` 한 줄 추가
+- KO/EN i18n 키 `shortcuts.helpF1`
+
 ### Iteration 115 — 헤더 프라이버시 칩이 Strict 일 때 색·라벨 강조
 - `aiTycoonPrivacy.isStrict()` 결과를 `refreshDemoChip` 사이클에서 함께 확인
 - 칩에 `.is-strict` 클래스 부여 → 더 진한 인디고/바이올렛 색감

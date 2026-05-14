@@ -889,6 +889,7 @@
                         <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>K</kbd></span><span data-i18n="shortcuts.cmdPalette">명령 팔레트 (Cmd+K)</span></li>
                         <li><span class="shortcuts-keys"><kbd>Esc</kbd></span><span data-i18n="shortcuts.escClose">검색·모달 닫기</span></li>
                         <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>/</kbd></span><span data-i18n="shortcuts.helpAlt">단축키 도움말 (대체)</span></li>
+                        <li><span class="shortcuts-keys"><kbd>F1</kbd></span><span data-i18n="shortcuts.helpF1">단축키 도움말 (F1 표준)</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
@@ -1837,12 +1838,17 @@
     });
 
     // Combined modifier shortcuts (Ctrl+/ for shortcuts help — i18n keyboard friendly)
+    // F1 도 표준적인 도움말 키라서 함께 매핑 (브라우저 기본 도움말 가로채지 않도록 preventDefault)
     document.addEventListener("keydown", (event) => {
         if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey) {
             if (event.key === "/") {
                 event.preventDefault();
                 openShortcuts();
             }
+        }
+        if (event.key === "F1" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            event.preventDefault();
+            openShortcuts();
         }
     });
 
