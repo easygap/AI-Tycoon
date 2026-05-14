@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 142 — 카드 Shift+클릭으로 핀 토글
+- 사이드바 카드의 작은 핀 버튼 안 찾고 카드 본문 어디나 Shift+클릭으로 핀 토글
+- Shift+Enter / Shift+Space 도 동일 동작 (키보드 사용자도)
+- 단축키 모달에 `Shift+Click — 카드 Shift+클릭으로 핀 토글` 한 줄 추가, KO/EN 분기
+
 ### Iteration 141 — 명령 팔레트 푸터/placeholder 도 KO/EN
 - `↑↓ 이동 / enter 선택 / esc 닫기` 푸터 라벨을 `move / select / close` 영어 분기
 - `data-foot-tx` 속성으로 깔끔하게 동기화, 매 render 마다 갱신해 언어 전환 즉시 반영
