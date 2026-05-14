@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 136 — 명령 팔레트 결과에도 동일한 검색 하이라이트
+- 사이드바와 동일한 패턴으로 결과 행의 에이전트 이름/프로젝트, 명령 제목에 매칭 부분 노란 마커
+- `<mark class="search-match">` CSS 를 공통 사용해 시각 일관성 유지
+- 에이전트와 명령 두 결과 타입 모두 적용
+- 빈 검색 시에는 자연스럽게 표시 안 됨 (query 없으면 헬퍼가 원본 그대로 반환)
+
 ### Iteration 135 — 검색어 매치 부분 노란 마커로 하이라이트
 - 새 `highlightTokens(safeText, query)` 헬퍼 — `esc()` 처리된 텍스트만 받아 매칭 부분을 `<mark class="search-match">` 로 감쌈
 - 카드의 에이전트 이름 / 프로젝트명 / 작업 텍스트 3곳에 적용
