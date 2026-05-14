@@ -4205,6 +4205,25 @@ body.privacy-mode .insights-mvp-project:hover {
 }
 .privacy-badge-close:hover { background: rgba(255,255,255,0.32); }
 
+/* Iteration 106 — 팔레트 결과에 핀 별 표시 */
+.cp-avatar { position: relative; }
+.cp-pin-star {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fde047;
+    color: #92400e;
+    font-size: 10px;
+    line-height: 14px;
+    text-align: center;
+    box-shadow: 0 2px 4px -1px rgba(0,0,0,0.18);
+    font-weight: 700;
+}
+body.dark .cp-pin-star { background: #facc15; color: #422006; }
+
 /* Iteration 72 — 명령 팔레트 최근 방문 칩 */
 .cp-recent-chip {
     display: inline-block;
