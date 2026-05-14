@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 98 — 에이전트 메모 textarea 도 IME 조합 처리
+- 메모 자동저장(디바운스 220ms)이 한글 IME 조합 중에는 자모 단위로 박힐 수 있어 막음
+- `compositionend` 시점에는 디바운스 무시하고 즉시 저장 + '저장됨' 피드백
+- 영문 입력은 기존 디바운스 그대로 (이벤트 미발생)
+- 사이드바 / Ctrl+K / 단축키 모달에 이어 4개 입력 모두 일관된 IME 처리
+
 ### Iteration 97 — 단축키 모달 검색 input 도 한글 IME 조합 보류
 - 사이드바 / Ctrl+K 와 동일한 패턴: `compositionstart`/`compositionend` 으로 조합 플래그
 - 단축키 검색에서 한글 키워드 입력 시 자모 단위 필터링 깜빡임 제거
