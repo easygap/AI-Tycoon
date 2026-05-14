@@ -67,6 +67,12 @@
                 <span id="conn-text" data-i18n="conn.connecting">연결 중</span>
             </div>
 
+            <!-- 데모 모드 활성 시에만 표시 — 가짜 데이터 본다는 걸 명확히 -->
+            <div id="header-demo-chip" class="header-demo-chip" title="데모 모드 (합성 직원 표시 중)" aria-label="데모 모드 활성" hidden>
+                <iconify-icon icon="solar:play-bold" aria-hidden="true"></iconify-icon>
+                <span data-i18n="header.demoLabel">데모</span>
+            </div>
+
             <!-- 멈춘 에이전트 카운트 (있을 때만 표시) -->
             <button id="header-stuck-chip" type="button" class="header-stuck-chip"
                 onclick="focusFirstStuckAgent()"
@@ -1488,7 +1494,14 @@
             hudTitle.textContent = name || base;
         }
     }
+    function refreshDemoChip() {
+        const chip = document.getElementById("header-demo-chip");
+        if (!chip) return;
+        const on = !!window.aiTycoonDemo?.isEnabled?.();
+        chip.hidden = !on;
+    }
     function refreshTabCount() {
+        refreshDemoChip();
         const all = window.__aiTycoonAgents || [];
         const agents = all.filter(a => a.isRunning);
         const name = localStorage.getItem("ai-tycoon-workspace-name") || "";
