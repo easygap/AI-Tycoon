@@ -411,28 +411,32 @@ function detectorTone(status) {
 }
 
 function detectorLabel(status) {
+    const lg = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lg === "en";
     return {
-        fresh: "정상",
-        cached: "캐시",
-        timeout: "지연",
-    }[status] || "대기";
+        fresh: en ? "OK" : "정상",
+        cached: en ? "cached" : "캐시",
+        timeout: en ? "slow" : "지연",
+    }[status] || (en ? "wait" : "대기");
 }
 
 function connectionHealth() {
     const age = Math.max(0, Date.now() - numeric(S.lastHeartbeat, Date.now()));
+    const lg = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lg === "en";
     if (!S.connected) {
         return {
             tone: "bad",
-            label: "재연결",
-            detail: `${S.reconnectAttempt || 0}회 시도`,
+            label: en ? "Reconnect" : "재연결",
+            detail: en ? `${S.reconnectAttempt || 0} attempts` : `${S.reconnectAttempt || 0}회 시도`,
             ageLabel: formatTimeAgo(age),
         };
     }
     if (age > 22000) {
-        return { tone: "bad", label: "응답 없음", detail: formatTimeAgo(age), ageLabel: formatTimeAgo(age) };
+        return { tone: "bad", label: en ? "No response" : "응답 없음", detail: formatTimeAgo(age), ageLabel: formatTimeAgo(age) };
     }
     if (age > 12000) {
-        return { tone: "warn", label: "느림", detail: formatTimeAgo(age), ageLabel: formatTimeAgo(age) };
+        return { tone: "warn", label: en ? "Slow" : "느림", detail: formatTimeAgo(age), ageLabel: formatTimeAgo(age) };
     }
     return { tone: "ok", label: "Live", detail: formatTimeAgo(age), ageLabel: formatTimeAgo(age) };
 }
@@ -443,31 +447,39 @@ function healthSnapshot(active, working, review) {
     const hasDiagnostics = Object.keys(diagnostics).length > 0;
     const delayed = Object.values(detectorStatus).some(status => status === "cached" || status === "timeout");
     const lastSignalAt = numeric(diagnostics.lastPollAt, S.lastStateAt || S.lastHeartbeat || 0);
-    const ageLabel = lastSignalAt > 0 ? formatTimeAgo(Math.max(0, Date.now() - lastSignalAt)) : "수집 중";
+    const lgHS = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lgHS === "en";
+    const ageLabel = lastSignalAt > 0 ? formatTimeAgo(Math.max(0, Date.now() - lastSignalAt)) : (en ? "collecting" : "수집 중");
 
     let state = "ready";
-    let title = "탐지 정상";
-    let hint = `${active.length}명 감지 · ${working.length}명 작업 중`;
+    let title = en ? "Detection OK" : "탐지 정상";
+    let hint = en
+        ? `${active.length} detected · ${working.length} working`
+        : `${active.length}명 감지 · ${working.length}명 작업 중`;
     if (!S.connected) {
         state = "offline";
-        title = "서버 연결 대기";
-        hint = `재연결 ${S.reconnectAttempt || 0}회 시도 중입니다.`;
+        title = en ? "Waiting for server" : "서버 연결 대기";
+        hint = en
+            ? `Reconnecting (${S.reconnectAttempt || 0} attempts).`
+            : `재연결 ${S.reconnectAttempt || 0}회 시도 중입니다.`;
     } else if (!hasDiagnostics) {
         state = "scanning";
-        title = "진단 수집 중";
-        hint = "탐지기가 첫 상태를 보내는 중입니다.";
+        title = en ? "Collecting diagnostics" : "진단 수집 중";
+        hint = en ? "Detectors are sending their first state." : "탐지기가 첫 상태를 보내는 중입니다.";
     } else if (delayed) {
         state = "degraded";
-        title = "탐지 일부 지연";
-        hint = "마지막 정상 값을 유지하고 있습니다.";
+        title = en ? "Some detectors delayed" : "탐지 일부 지연";
+        hint = en ? "Keeping the last good values." : "마지막 정상 값을 유지하고 있습니다.";
     } else if (S.liveAgents.length === 0) {
         state = "empty";
-        title = "직원 감지 대기";
-        hint = "AI 세션을 실행하면 자동으로 작업실에 나타납니다.";
+        title = en ? "Waiting for agents" : "직원 감지 대기";
+        hint = en ? "Launch any AI session and it'll show up here." : "AI 세션을 실행하면 자동으로 작업실에 나타납니다.";
     } else if (review.length > 0) {
         state = "attention";
-        title = "검토 필요";
-        hint = `${review.length}명의 직원이 확인을 기다립니다.`;
+        title = en ? "Review needed" : "검토 필요";
+        hint = en
+            ? `${review.length} agent${review.length > 1 ? "s" : ""} waiting for review.`
+            : `${review.length}명의 직원이 확인을 기다립니다.`;
     }
 
     return { diagnostics, detectorStatus, hasDiagnostics, delayed, lastSignalAt, ageLabel, state, title, hint };
