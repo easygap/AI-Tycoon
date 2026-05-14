@@ -3,10 +3,27 @@
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
+[![Version](https://img.shields.io/badge/version-1.1.0-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
 
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
+
+### 🆕 v1.1.0 새 소식 (요약)
+- **명령 팔레트** (`Ctrl/Cmd+K`) — 22개 명령 + 에이전트 fuzzy 검색
+- **프라이버시 모드** (`Shift+P`) — 프롬프트·프로젝트명 즉시 블러 (화면 공유 안전)
+- **에이전트별 개인 메모** — 디테일 패널에 500자 메모, 카드에 황금 점 표시
+- **컴팩트 카드 뷰** — 10명 이상에서 한 화면에 더 많이
+- **신선도 색상 코드** — 1분/5분/30분 임계값으로 카드 활동성 직관 표시
+- **멈춘 에이전트 감지** — 5분 무신호 → 칩 + 토스트 + 탭 제목 ⚠ 배지
+- **오늘의 MVP 카드 · 자리 비운 사이 요약** — Insights 모달과 토스트로 자동 정리
+- **HUD 작업실 타이틀 인라인 편집** — 더블클릭으로 즉시 수정
+- **macOS ⌘ 키 자동 표시** · **단축키 모달 검색** · **위로 부유 버튼**
+- **일일 리포트 / 메모 일괄 export** (`.md`) — 스탠드업·아카이브 친화
+- **서버 graceful shutdown** — SIGTERM/SIGINT 시 WS 클라이언트에 작별 인사
+- 업적 21 → **24개**, smoke 테스트 32 → **38개**
+
+자세한 변경 내역은 [`CHANGELOG.md`](./CHANGELOG.md) 참고.
 
 Claude Code · Cursor · Codex 같은 AI 에이전트가 지금 어떤 작업을 하고 있는지 자동으로 감지하고, 픽셀 아트 오피스 안의 캐릭터로 보여줍니다.
 
