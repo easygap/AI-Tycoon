@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 92 — 사이드바 검색이 개인 메모 텍스트도 매칭
+- `agentSearchText(agent)` 가 `getAgentNote(agent)` 결과를 haystack 에 포함
+- 메모에 "리팩터링", "디자인 작업" 같은 단서를 적어두면 그 키워드로 빠르게 에이전트 찾기
+- 빈 메모는 자동으로 필터링되어 노이즈 없음
+- 단순 한 줄 변경이지만 메모 + 검색 두 기능을 연결해 활용도 ↑
+
 ### Iteration 91 — Insights 모달의 완료 태스크에 '어제 대비' 델타 칩
 - "완료 태스크" 카드 숫자 옆에 `+5` / `-2` / `±0` 형식의 작은 칩 추가
 - `yesterdayStats()` 가 있는 날부터만 표시 — 첫날엔 자연스럽게 숨김

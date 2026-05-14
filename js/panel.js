@@ -145,6 +145,9 @@ function agentSearchText(agent) {
         ...(agent.tasks || []).flatMap(task => [task.subject, task.activeForm, task.status]),
     ].filter(Boolean).join(" ");
 
+    // 내가 직접 단 메모도 검색 대상에 포함 — "리팩터링" 같은 단서로 빠르게 찾을 수 있게.
+    const note = getAgentNote(agent) || "";
+
     return normalizeSearch([
         theme.name,
         agent.projectName,
@@ -157,6 +160,7 @@ function agentSearchText(agent) {
         meta.label,
         status,
         taskText,
+        note,
     ].filter(Boolean).join(" "));
 }
 
