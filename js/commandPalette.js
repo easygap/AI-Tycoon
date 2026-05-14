@@ -100,6 +100,8 @@ function open() {
     const input = document.getElementById(INPUT_ID);
     if (input) { input.value = ""; input.focus(); }
     render();
+    // 업적 카운터 증분 (한 번 열 때마다)
+    try { window.aiTycoonAchievements?.bumpCounter?.("paletteOpens"); } catch { /* ignore */ }
 }
 
 function close() {

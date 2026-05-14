@@ -153,6 +153,27 @@ const ACHIEVEMENTS = [
         en: { title: "Hidden: Konami", desc: "↑ ↑ ↓ ↓ ← → ← → B A — the secret combo" },
         check: ({ konami }) => konami === true,
     },
+    {
+        id: "cmdk-wizard",
+        icon: "solar:command-square-bold",
+        ko: { title: "단축 마법사", desc: "명령 팔레트(Ctrl+K)를 5번 열어봤어요" },
+        en: { title: "Palette Wizard", desc: "Opened the command palette (Ctrl+K) 5 times" },
+        check: ({ paletteOpens }) => paletteOpens >= 5,
+    },
+    {
+        id: "note-keeper",
+        icon: "solar:notebook-bookmark-bold",
+        ko: { title: "메모장이", desc: "에이전트 메모를 3개 이상 저장했어요" },
+        en: { title: "Note Keeper", desc: "Saved notes on 3+ agents" },
+        check: ({ notesCount }) => notesCount >= 3,
+    },
+    {
+        id: "incognito",
+        icon: "solar:eye-closed-bold",
+        ko: { title: "조용한 모드", desc: "프라이버시 모드를 처음 켜봤어요" },
+        en: { title: "Incognito", desc: "Toggled privacy mode for the first time" },
+        check: ({ privacyEverOn }) => privacyEverOn === true,
+    },
 ];
 
 function loadUnlocked() {
@@ -221,6 +242,12 @@ function gatherContext() {
     const platforms = new Set(running.map(a => a.platform).filter(Boolean));
     const peak = days.reduce((m, d) => Math.max(m, d.agentsMax || 0), 0);
     const weekTotal = days.slice(-7).reduce((s, d) => s + (d.completedMax || 0), 0);
+    // 신규 업적용: 저장된 메모 개수, 명령 팔레트 열린 횟수, 프라이버시 모드 사용 여부
+    let notesCount = 0;
+    try {
+        const notes = JSON.parse(localStorage.getItem("ai-tycoon-agent-notes") || "{}");
+        notesCount = Object.keys(notes || {}).filter(k => (notes[k] || "").trim().length > 0).length;
+    } catch { /* ignore */ }
     return {
         connected: typeof window !== "undefined" && window.__aiTycoonConnected === true,
         today: t,
@@ -239,6 +266,9 @@ function gatherContext() {
         snapshots: state.counters.snapshots || 0,
         projectOpens: state.counters.projectOpens || 0,
         konami: !!state.counters.konami,
+        paletteOpens: state.counters.paletteOpens || 0,
+        notesCount,
+        privacyEverOn: !!state.counters.privacyEverOn,
     };
 }
 
@@ -409,5 +439,7 @@ if (typeof window !== "undefined") {
         reset: resetAchievements,
         unseenCount,
         markAllSeen,
+        bumpCounter,
+        setFlag,
     };
 }

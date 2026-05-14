@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 81 — 신규 기능 연계 업적 3종 추가
+- **단축 마법사** (`cmdk-wizard`): 명령 팔레트(Ctrl+K)를 5번 열기 — `bumpCounter("paletteOpens")`
+- **메모장이** (`note-keeper`): 3개 이상 에이전트에 메모 저장 — localStorage 직접 카운트
+- **조용한 모드** (`incognito`): 프라이버시 모드 처음 켜기 — `setFlag("privacyEverOn", true)`
+- `window.aiTycoonAchievements`에 `bumpCounter`/`setFlag` 노출해 다른 모듈에서 호출
+- 업적 총 24개 (기존 21개 → 24개)
+
 ### Iteration 80 — 메모 자동 저장 시 '저장됨' 시각 피드백
 - 디테일 패널 메모를 220ms 디바운스로 저장하는데, 저장 시점이 안 보여서 사용자가 헷갈릴 수 있었음
 - 저장 직후 푸터 힌트를 1.2초간 초록색 "저장됨 · N/500" 으로 강조 후 원래 문구로 복귀
