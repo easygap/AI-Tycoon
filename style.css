@@ -4376,12 +4376,20 @@ body.dark .cp-recent-chip {
 .cp-foot {
     display: flex;
     gap: 14px;
+    align-items: center;
     padding: 8px 18px;
     border-top: 1px solid rgba(217, 170, 120, 0.18);
     font-size: 11px;
     color: #8a7160;
     background: rgba(255, 240, 220, 0.4);
 }
+.cp-foot-count {
+    margin-left: auto;
+    font-variant-numeric: tabular-nums;
+    color: #6b5747;
+    font-weight: 600;
+}
+body.dark .cp-foot-count { color: #c4b8aa; }
 .cp-foot kbd {
     font-family: ui-monospace, "SF Mono", Menlo, monospace;
     font-size: 10px;

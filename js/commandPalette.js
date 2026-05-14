@@ -81,6 +81,7 @@ function ensureRoot() {
                 <span><kbd>↑</kbd><kbd>↓</kbd> 이동</span>
                 <span><kbd>enter</kbd> 선택</span>
                 <span><kbd>esc</kbd> 닫기</span>
+                <span class="cp-foot-count" id="cp-foot-count" aria-live="polite"></span>
             </div>
         </div>
     `;
@@ -320,6 +321,12 @@ function render() {
     const actions = buildActions(q).map(a => ({ kind: KIND_ACTION, score: 1, ...a, action: a.run }));
     results = [...agents, ...actions];
     highlightedIndex = 0;
+
+    // 결과 개수 푸터에 표시 (3개 이상일 때만 — 적으면 시각적 잡음만 됨)
+    const countEl = document.getElementById("cp-foot-count");
+    if (countEl) {
+        countEl.textContent = results.length >= 3 ? `${results.length}개 결과` : "";
+    }
 
     if (results.length === 0) {
         list.innerHTML = `<li class="cp-empty">결과 없음 — 다른 검색어를 입력해 보세요.</li>`;
