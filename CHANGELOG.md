@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 126 — 활동 로그(`addLog`) 메시지 7개도 KO/EN
+- `ws.js` 안에서 `addLog()` 호출 7곳을 모두 다국어 분기
+- 서버 연결/종료/응답 없음, 에이전트 출근/퇴근, 태스크 시작, 출근/퇴근 이벤트 라벨까지
+- 재연결 카운터(`재연결 (3) → Reconnect (3)`) 와 연결 끊김 안내 툴팁/aria-label 도 분기
+- 이제 사이드 패널 하단 활동 로그가 영어 모드에서도 자연스럽게 영문으로
+
 ### Iteration 125 — 사이드바 가시성 요약(visibility summary) 줄도 KO/EN
 - `전체 보기 / N명 / 고정 N / 작업 N / 검토 N / 최근 N` 모두 KO/EN 분기
 - 영어 모드: `Show all / N people / Pinned N / Working N / Review N / Recent N`
