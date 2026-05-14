@@ -743,6 +743,7 @@
                             <div class="about-version" id="settings-about-version">v—</div>
                             <div class="about-line" id="settings-about-uptime">—</div>
                             <div class="about-line" id="settings-about-node">—</div>
+                            <div class="about-line" id="settings-about-sw">—</div>
                         </div>
                     </div>
                 </section>
@@ -1149,6 +1150,19 @@
             }
             if (n) n.textContent = `Node ${info.nodeVersion} · ${info.platform}`;
         }).catch(() => {});
+        // Service Worker cache version — fetch the SW file and extract VERSION constant
+        const swEl = document.getElementById("settings-about-sw");
+        if (swEl) {
+            const langNow = window.aiTycoonI18n?.getLang?.() || "ko";
+            swEl.textContent = langNow === "en" ? "SW: checking…" : "SW: 확인 중…";
+            fetch("/sw.js", { cache: "no-store" }).then(r => r.ok ? r.text() : "").then(text => {
+                const m = text.match(/VERSION\s*=\s*["']([^"']+)["']/);
+                const ver = m ? m[1] : "unknown";
+                swEl.textContent = `SW: ${ver}`;
+            }).catch(() => {
+                swEl.textContent = "SW: —";
+            });
+        }
         // Workspace name
         const wsName = localStorage.getItem("ai-tycoon-workspace-name") || "";
         const wsNameInput = document.getElementById("settings-workspace-name");

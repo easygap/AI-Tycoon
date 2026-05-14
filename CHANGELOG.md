@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 70 — About 카드에 Service Worker 버전 표시
+- 설정 → 정보 카드에 SW 캐시 버전 줄 추가 (`SW: ai-tycoon-shell-v11`)
+- `/sw.js`를 `cache: no-store` 옵션으로 fetch 해서 VERSION 상수를 정규식으로 추출
+- 사용자가 캐시가 최신인지, 새 SW 가 잘 활성화됐는지 한눈에 확인 가능
+- 라이브 서버 API + SW 정적 자산 두 출처를 모두 표시해 디버깅 친화
+
 ### Iteration 69 — README 대규모 업데이트 (iter 54-68 반영)
 - "UX 폴리시" 섹션 상단에 11개 신규 기능 강조: 명령 팔레트, 프라이버시 모드, 메모, 컴팩트 뷰, 상태 칩, 프로젝트 닷, NEW 펄스, MVP 카드, 자리 비운 사이, 메모리 추세, 5-step 투어
 - 단축키 표 갱신: `Shift+P`(프라이버시), `Ctrl+K`(팔레트) 분리, `/`(검색)·`Ctrl+/`(도움말 대체) 명확화
