@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 137 — 명령 팔레트 결과 아바타에 상태 색상 dot
+- 결과 줄 아바타 우하단에 10px 둥근 dot 으로 status meta color 표시 (coding=초록, idle=회색, offline=흐릿한 회색 등)
+- 흰색/검정 보더 링으로 라이트/다크 모드 모두 또렷하게
+- hover 시 status 라벨 툴팁
+- 결과 줄에서 핀 ★, 메모 📝, 상태 ● 3가지 시각 신호가 한꺼번에 정리됨
+
 ### Iteration 136 — 명령 팔레트 결과에도 동일한 검색 하이라이트
 - 사이드바와 동일한 패턴으로 결과 행의 에이전트 이름/프로젝트, 명령 제목에 매칭 부분 노란 마커
 - `<mark class="search-match">` CSS 를 공통 사용해 시각 일관성 유지

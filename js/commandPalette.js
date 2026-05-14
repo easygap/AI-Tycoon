@@ -347,8 +347,10 @@ function render() {
             const noteChip = noteText
                 ? `<span class="cp-note-chip" title="${esc(noteText.slice(0, 140))}" aria-label="메모 있음">📝</span>`
                 : "";
+            // 상태 색상 점 — 아바타 우하단에 배치해서 살아있는지 한눈에 인지
+            const statusDot = `<span class="cp-status-dot" style="background:${meta.color}" title="${esc(meta.label)}" aria-hidden="true"></span>`;
             return `<li class="cp-row${i === 0 ? " is-active" : ""}${r.pinned ? " is-pinned" : ""}" role="option" data-index="${i}">
-                <span class="cp-avatar" style="background:${r.theme.body}">${esc(r.theme.name.charAt(0))}${pinStar}</span>
+                <span class="cp-avatar" style="background:${r.theme.body}">${esc(r.theme.name.charAt(0))}${pinStar}${statusDot}</span>
                 <div class="cp-info">
                     <div class="cp-title">${highlight(esc(r.theme.name), hlQ)} <em>· ${highlight(esc(a.projectName || ""), hlQ)}</em>${recentChip}${noteChip}</div>
                     <div class="cp-sub">${esc(meta.label)} · ${esc(platform)} · ${a.memoryMB || 0}MB</div>
