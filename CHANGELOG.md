@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 103 — 데모 모드 활성 시 헤더에 'DEMO' 보라색 칩
+- `aiTycoonDemo.isEnabled()` 결과를 5초마다 polling 해서 헤더 칩 표시
+- 보라/인디고 그라데이션 칩 + ▶ 아이콘으로 '재생 중' 느낌
+- 데모 모드 종료 시 즉시 숨김 (`refreshDemoChip()` 가 `refreshTabCount` 안에서 같이 호출)
+- KO "데모" / EN "DEMO" 다국어
+- 가짜 직원 보고 있다는 걸 항상 명확히 인지
+
 ### Iteration 102 — 헤더 stuck 칩에 i18n 적용
 - 라벨 / title / aria-label 을 `header.stuckLabel` · `header.stuckTitle` · `header.stuckAria` 3개 키로 분리
 - KO 그대로 "멈춤" 유지, EN "stuck" / "Jump to the most-stuck agent" / "Jump to stuck agent" 로 자연스럽게

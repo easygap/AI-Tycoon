@@ -3333,6 +3333,28 @@ body.agents-compact .agent-card .text-[11px].text-zinc-400 { font-size: 9.5px; }
 body.agents-compact .agent-card-inner .flex.items-center.gap-2\\.5.mb-2 { margin-bottom: 0; }
 body.agents-compact .agent-pin-btn { width: 22px; height: 22px; flex: 0 0 22px; }
 
+/* Iteration 103 — 헤더 DEMO 활성 칩 */
+.header-demo-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.18), rgba(99, 102, 241, 0.18));
+    color: #6366f1;
+    border: 1px solid rgba(99, 102, 241, 0.42);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+.header-demo-chip iconify-icon { font-size: 11px; }
+body.dark .header-demo-chip {
+    color: #a5b4fc;
+    border-color: rgba(165, 180, 252, 0.52);
+}
+
 /* Iteration 101 — 헤더 stuck 카운트 칩 */
 .header-stuck-chip {
     display: inline-flex;
