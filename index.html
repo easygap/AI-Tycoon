@@ -67,11 +67,14 @@
                 <span id="conn-text" data-i18n="conn.connecting">연결 중</span>
             </div>
 
-            <!-- 데모 모드 활성 시에만 표시 — 가짜 데이터 본다는 걸 명확히 -->
-            <div id="header-demo-chip" class="header-demo-chip" title="데모 모드 (합성 직원 표시 중)" aria-label="데모 모드 활성" hidden>
+            <!-- 데모 모드 활성 시에만 표시 — 가짜 데이터 본다는 걸 명확히. 클릭하면 데모 종료. -->
+            <button id="header-demo-chip" type="button" class="header-demo-chip"
+                onclick="window.aiTycoonDemo?.toggle?.()"
+                data-i18n-attr="title:header.demoTitle,aria-label:header.demoAria"
+                title="데모 모드 — 클릭하면 종료" aria-label="데모 모드 종료" hidden>
                 <iconify-icon icon="solar:play-bold" aria-hidden="true"></iconify-icon>
                 <span data-i18n="header.demoLabel">데모</span>
-            </div>
+            </button>
 
             <!-- 멈춘 에이전트 카운트 (있을 때만 표시) -->
             <button id="header-stuck-chip" type="button" class="header-stuck-chip"

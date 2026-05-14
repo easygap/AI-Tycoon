@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 104 — 헤더 DEMO 칩 클릭으로 데모 즉시 종료
+- `<div>` 였던 데모 칩을 `<button>` 으로 바꾸고 `aiTycoonDemo.toggle()` 핸들러 연결
+- 호버 시 배경 진해지고 살짝 위로 떠오름, active 시 원래대로
+- `header.demoTitle` / `header.demoAria` i18n 키로 KO/EN 동작 안내
+- 표시만 하던 칩이 액션 가능한 컨트롤이 됨
+
 ### Iteration 103 — 데모 모드 활성 시 헤더에 'DEMO' 보라색 칩
 - `aiTycoonDemo.isEnabled()` 결과를 5초마다 polling 해서 헤더 칩 표시
 - 보라/인디고 그라데이션 칩 + ▶ 아이콘으로 '재생 중' 느낌
