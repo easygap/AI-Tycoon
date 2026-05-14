@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 94 — 사이드바 검색 입력 120ms 디바운스
+- `setAgentSearch()` 가 빈 문자열일 때만 즉시 반영, 그 외엔 120ms 디바운스
+- 빠른 타이핑 + 한글 IME 조합 시 매 키스트로크마다 풀 패널 렌더링 부담을 줄임
+- 검색어는 localStorage 에 즉시 저장 (탭 닫혀도 보존)
+- X 버튼 클릭이나 ESC 로 검색 비우는 경우는 디바운스 우회
+
 ### Iteration 93 — 명령 팔레트도 메모 매칭에 포함
 - `commandPalette.js` 의 `scoreAgent()` haystack 에 메모 본문 추가
 - 사이드바 검색과 동일한 키워드(예: "리팩터링", "디자인") 로 Ctrl+K 에서도 즉시 도달
