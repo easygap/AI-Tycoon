@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 69 — README 대규모 업데이트 (iter 54-68 반영)
+- "UX 폴리시" 섹션 상단에 11개 신규 기능 강조: 명령 팔레트, 프라이버시 모드, 메모, 컴팩트 뷰, 상태 칩, 프로젝트 닷, NEW 펄스, MVP 카드, 자리 비운 사이, 메모리 추세, 5-step 투어
+- 단축키 표 갱신: `Shift+P`(프라이버시), `Ctrl+K`(팔레트) 분리, `/`(검색)·`Ctrl+/`(도움말 대체) 명확화
+- 테마 개수 4→6 (사쿠라/바다 포함), 업적 14→21 (콘도드 등)
+- English 섹션 동기화 + Polish 카테고리 확장
+
 ### Iteration 68 — 에이전트별 개인 메모
 - 디테일 패널 하단에 "개인 메모" 텍스트 영역 — 최대 500자
 - 입력 220ms 디바운스 → `localStorage` (`ai-tycoon-agent-notes`) 에 sessionId/PID 키로 저장

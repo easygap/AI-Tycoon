@@ -35,7 +35,7 @@ AI Tycoon은 현재 내 컴퓨터에서 돌아가는 AI 작업을 **게임처럼
 - **시간대 조명** — 시계 시간에 맞춰 창밖 하늘이 새벽·낮·황혼·밤으로 자동 전환 (Pixi 앰비언트 틴트 + 윈도우 별/달/태양 궤도)
 - **빗방울 날씨** — 시간당 8% 확률로 비 효과
 - **백그라운드 NPC** — 청소 로봇, 종이비행기, 휴게실 고양이, 야간 보안 순찰, 배송 NPC
-- **오피스 테마 4종** — 클래식 / 카페 / 숲속 / 심야 (light/dark 양쪽 팔레트)
+- **오피스 테마 6종** — 클래식 / 카페 / 숲속 / 심야 / 사쿠라 / 바다 (light/dark 양쪽 팔레트)
 - **자동 시즌 장식** — 12월 크리스마스 트리+눈, 10-11월 잭오랜턴+거미줄, 3-4월 벚꽃
 - **인테리어 디테일** — 책상별 램프(저녁 글로우), 커피잔/포스트잇/식물/책 변형, 캘린더·CAFE 네온·모티브 포스터
 
@@ -49,7 +49,7 @@ AI Tycoon은 현재 내 컴퓨터에서 돌아가는 AI 작업을 **게임처럼
 - **차트 hover 툴팁** — 5가지 지표(태스크/직원/출근/이벤트) 풍부한 정보
 
 ### 🏆 게임화
-- **업적 14종** — 첫 연결, 10/50태스크, 멀티플랫폼, 야간 작업, 3/7일 연속, 5+ 동시 등
+- **업적 21종** — 첫 연결, 10/50태스크, 멀티플랫폼, 야간 작업, 3/7일 연속, 5+ 동시, 콘도드 등
 - **컨페티 폭발** + 토스트 팝업 + 헤더 미해제 카운트 뱃지
 
 ### 🌐 i18n & 접근성
@@ -66,21 +66,32 @@ AI Tycoon은 현재 내 컴퓨터에서 돌아가는 AI 작업을 **게임처럼
 - **URL 단축 라우팅** — `?action=insights` / `?action=settings`
 
 ### 🎯 UX 폴리시
-- **첫 실행 환영 카드** + 4-step 스포트라이트 투어 + 회전 "혹시 알고 계셨나요?" 팁
-- **단축키 모달** (`?` 키) — 16+ 글로벌 단축키 정리
+- **명령 팔레트** (`Ctrl/Cmd+K`) — VS Code 스타일, 에이전트·22개 명령(필터·테마·언어·도구) fuzzy 검색
+- **프라이버시 모드** (`Shift+P`) — 프롬프트·프로젝트명·태스크를 즉시 블러, 화면 공유 안전
+- **에이전트별 개인 메모** — 디테일 패널에 500자 메모, sessionId/PID 키로 영속, 카드에 황금 닷 표시
+- **컴팩트 뷰 토글** — 정렬 옆 리스트 아이콘으로 카드 슬림화, 10+ 에이전트 운영에 유리
+- **상태별 요약 칩** — 사이드 패널 상단에 6/2/1/3 (코딩/생각/검토/대기) 한눈에, 클릭 시 필터
+- **프로젝트별 색상 닷** — 같은 프로젝트의 모든 에이전트가 같은 색상으로 묶임
+- **"NEW" 펄스** — 방금 출근한 에이전트에 60초간 초록 보더 + 칩 강조
+- **"오늘의 MVP" 카드** — Insights 모달에서 가장 활발한 에이전트 1명 자동 선정
+- **"자리 비운 사이" 요약** — 탭을 30초+ 떠나 있다 돌아오면 그동안 일어난 일 한 줄 요약 토스트
+- **메모리 추세 화살표** — 30초 전 대비 ▲/▼ 화살표로 증감 표시 (호버 시 정확한 MB)
+- **첫 실행 환영 카드** + 5-step 스포트라이트 투어 + 회전 "혹시 알고 계셨나요?" 팁
+- **단축키 모달** (`?` 키) — 18+ 글로벌 단축키 정리
 - **PNG 스냅샷** (`P`) — Canvas + Pixi 합성 다운로드
 - **시네마 모드** (`Z`) — 모든 오버레이 숨김 (클린 스크린샷용)
 - **사운드 토글** (`M`) — 한 키로 음소거 on/off
 - **에이전트 순회** (`J`/`K`) — vim 스타일 prev/next 포커스
 - **인사이트 모달** (`I`), **설정 모달** (`,`), **성능 HUD** (`Ctrl+Shift+P`)
 - **미니맵** — 줌 1.1x 이상 시 자동 노출, 클릭→패닝
-- **통합 설정 모달** — 다크/언어/밀도/테마/HUD/사운드/볼륨/알림/시즌/시간 강제/백업/복원/모두 초기화
+- **통합 설정 모달** — 다크/언어/밀도/테마/HUD/사운드/볼륨/알림/시즌/시간 강제/백업/복원/모두 초기화 + "새 소식" 인라인 changelog
 - **사운드 미리듣기** — 4종 효과음 즉시 시청
 - **작업실 이름** — 페이지 타이틀과 HUD에 사용자 정의 이름
 - **백업/복원** — 모든 prefs·통계·업적 JSON export/import
 - **CSV 통계 받기** — 일자별 14일 데이터 다운로드
 - **시간 스크럽 슬라이더** — 0~23:59 데모/스크린샷용 시각 강제
 - **자동 SW 업데이트 알림** — 새 버전 감지 시 토스트 + Refresh 액션
+- **서버 graceful shutdown** — SIGTERM/SIGINT 시 WS 클라이언트에 작별 인사 후 깔끔하게 종료
 
 ### 📱 모바일
 - 핀치 줌, 한 손가락 패닝
@@ -233,17 +244,19 @@ ai-tycoon/
 
 | 키 | 동작 |
 |---|---|
-| `?` | 단축키 도움말 |
+| `?` · `Ctrl+/` | 단축키 도움말 |
 | `,` | 설정 모달 |
 | `I` | 인사이트 |
 | `P` | PNG 스냅샷 |
+| `Shift+P` | 프라이버시 모드 (블러) |
 | `D` | 다크 모드 |
 | `M` | 사운드 음소거 토글 |
 | `Z` | 시네마 모드 (오버레이 숨김) |
 | `F` | 가장 활발한 직원 포커스 |
 | `J` / `K` | 다음 / 이전 직원 |
 | `H` · `0` | 전체 보기로 리셋 |
-| `/` · `Ctrl+K` | 에이전트 검색 |
+| `/` | 에이전트 검색바 포커스 |
+| `Ctrl+K` · `Cmd+K` | 명령 팔레트 |
 | `Ctrl+Shift+P` | 성능 HUD |
 | `Esc` | 모달 / 검색 닫기 |
 | ↑↑↓↓←→←→BA | 히든 업적 🎮 |
@@ -275,7 +288,7 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 #### Visual richness
 - **Time-of-day lighting** — sky, sun/moon, stars and ambient tint follow the real clock; sunrise/sunset/midnight palettes
 - **Weather** — occasional rain (8%/hour)
-- **4 office themes** — Classic / Cafe / Forest / Midnight, light & dark each
+- **6 office themes** — Classic / Cafe / Forest / Midnight / Sakura / Ocean, light & dark each
 - **Seasonal decor** — Christmas tree + snow (Dec), jack-o-lantern + spider web (Oct/Nov), cherry blossoms (Mar/Apr)
 - **Background NPCs** — cleaning robot, paper airplane, breakroom cat, night security guard, delivery courier
 - **Desk personalities** — lamps that glow at night, coffee mugs / sticky notes / succulents / book stacks
@@ -287,7 +300,7 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 - **Rich hover tooltips** on every chart
 
 #### Gamification
-- **14 achievements** — first connect, 10/50 tasks, multi-platform, night owl, streaks, full house, …
+- **21 achievements** — first connect, 10/50 tasks, multi-platform, night owl, streaks, full house, Konami code, …
 - **Confetti** + toast popups + header unseen-count badge
 
 #### i18n & accessibility
@@ -303,14 +316,24 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 - **URL shortcuts** — `?action=insights` / `?action=settings`
 
 #### Polish
-- First-run welcome card with pixel-art preview
-- Rotating "Did you know?" tips
+- **Command palette** (`Ctrl/Cmd+K`) — VS-Code-style fuzzy search across agents + 22 commands (filter / theme / lang / tools)
+- **Privacy mode** (`Shift+P`) — blur prompts, project names, tasks — safe for screen sharing
+- **Per-agent personal notes** — 500-char textarea in detail panel, persists across reloads; cards with notes get a golden dot
+- **Compact view toggle** — slim cards for 10+ agents
+- **Status summary chips** — "6 coding · 2 thinking · 1 review · 3 idle" above the agent list, click to filter
+- **Per-project color dots** — agents on the same project share a stable HSL color
+- **"NEW" pulse** — freshly joined agents pulse green for 60 s
+- **"Today's MVP" card** — top agent of the day highlighted in Insights
+- **"While you were away"** — recap toast when you return after 30+ s
+- **Memory trend arrows ▲/▼** — quick visual cue vs 30 s ago
+- First-run welcome card + 5-step spotlight tour + rotating "Did you know?" tips
 - Keyboard shortcuts modal (`?`)
 - **PNG snapshot export** (`P`) — Canvas + Pixi composite download
 - **Performance HUD** (`Ctrl+Shift+P`) — FPS, heap, sprite count
 - **Mini-map** — appears when zoomed in, click to pan
-- **Settings modal** (`,`) — dark / lang / density / theme / sound / notify / season / time / backup / reset
+- **Settings modal** (`,`) — dark / lang / density / theme / sound / notify / season / time / backup / reset + inline "What's new" panel
 - **Backup & restore** — full JSON export/import of prefs, stats, achievements
+- **Graceful server shutdown** — SIGTERM/SIGINT broadcasts farewell to all WS clients
 - Pinch-zoom, single-finger pan, mobile priority dock
 
 ### Run
