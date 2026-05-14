@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 83 — HUD 작업실 타이틀 인라인 편집 (더블클릭 / Enter)
+- HUD 상단의 "실시간 작업실" 타이틀을 더블클릭 또는 포커스 후 Enter 키로 즉시 인라인 입력 전환
+- Enter → 저장, Esc → 취소, blur → 저장 (트리플 안전)
+- 호버 시 점선 outline 으로 클릭 가능 신호, focus-visible 시 키보드 사용자도 인지
+- 설정 모달 들어가지 않고도 헤더에서 바로 워크스페이스 이름 변경
+- 다크 모드 별도 색감, 입력 시 호박색 보더 + 그림자
+
 ### Iteration 82 — 설정 → 데이터 섹션에 스탠드업/메모 export 버튼
 - 명령 팔레트에만 있던 두 export 기능을 설정 모달에서도 두 버튼으로 노출
 - `일일 리포트 (.md)` + `에이전트 메모 (.md)` 한 쌍으로 CSV 옆에 배치

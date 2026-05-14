@@ -203,7 +203,7 @@
                             <span id="hud-live-dot" class="live-dot"></span>
                             <span id="hud-conn-text" data-i18n="hud.waiting">연결 중</span>
                         </div>
-                        <div class="hud-title" data-i18n="hud.realtimeOffice">실시간 작업실</div>
+                        <div class="hud-title" id="hud-title" data-i18n="hud.realtimeOffice" title="더블클릭으로 작업실 이름 편집" tabindex="0" role="button" aria-label="작업실 이름 편집 (더블클릭 또는 Enter)">실시간 작업실</div>
                         <div class="hud-metrics">
                             <div>
                                 <span id="hud-active">0</span>
@@ -1462,6 +1462,50 @@
     // Refresh tab title roughly every 5 seconds to track running agent count
     setInterval(refreshTabCount, 5000);
     document.addEventListener("DOMContentLoaded", () => setTimeout(applyWorkspaceName, 80));
+
+    // HUD 타이틀 더블클릭 → 그 자리에서 작업실 이름을 바꿀 수 있게.
+    // 설정 모달 들어갔다 나오는 거 번거로우니까 즉석 편집.
+    function startHudTitleEdit() {
+        const el = document.getElementById("hud-title");
+        if (!el || el.querySelector("input")) return;
+        const current = localStorage.getItem("ai-tycoon-workspace-name") || "";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = current;
+        input.maxLength = 40;
+        input.className = "hud-title-input";
+        input.placeholder = "예: 서준의 작업실";
+        const finish = (commit) => {
+            const val = (input.value || "").trim().slice(0, 40);
+            if (commit) {
+                if (val) localStorage.setItem("ai-tycoon-workspace-name", val);
+                else localStorage.removeItem("ai-tycoon-workspace-name");
+                applyWorkspaceName();
+            } else {
+                applyWorkspaceName();
+            }
+        };
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") { e.preventDefault(); finish(true); }
+            else if (e.key === "Escape") { e.preventDefault(); finish(false); }
+        });
+        input.addEventListener("blur", () => finish(true));
+        el.textContent = "";
+        el.appendChild(input);
+        input.focus();
+        input.select();
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        const el = document.getElementById("hud-title");
+        if (!el) return;
+        el.addEventListener("dblclick", startHudTitleEdit);
+        el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !el.querySelector("input")) {
+                e.preventDefault();
+                startHudTitleEdit();
+            }
+        });
+    });
 
     // macOS 사용자에게는 Ctrl 대신 ⌘ 키로 표기 — 키 자체는 동일(metaKey/ctrlKey 양쪽 처리)
     // data-mod-key 속성이 붙은 <kbd> 만 갈아끼움. 헬프 모달이 늦게 그려져도 한 번 더 돌리도록.

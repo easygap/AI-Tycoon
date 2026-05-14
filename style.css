@@ -942,6 +942,43 @@ body {
     letter-spacing: 0;
     text-shadow: var(--overlay-readability);
     text-wrap: balance;
+    cursor: text;
+    border-radius: 4px;
+    padding: 1px 3px;
+    margin-left: -3px;
+    transition: background 0.15s ease, outline-color 0.15s ease;
+    outline: 1px dashed transparent;
+    outline-offset: 2px;
+}
+.hud-title:hover {
+    background: rgba(255, 255, 255, 0.22);
+    outline-color: rgba(217, 119, 87, 0.32);
+}
+.hud-title:focus-visible {
+    outline: 2px solid #d97757;
+    outline-offset: 2px;
+}
+body.dark .hud-title:hover { background: rgba(255, 255, 255, 0.08); }
+
+/* Iteration 83 — HUD 타이틀 인라인 입력 */
+.hud-title-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1.5px solid #d97757;
+    border-radius: 6px;
+    padding: 1px 6px;
+    color: var(--ink);
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.08;
+    font-family: inherit;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.18);
+}
+.hud-title-input::placeholder { color: #b8956c; font-weight: 600; }
+body.dark .hud-title-input {
+    background: rgba(20, 20, 25, 0.9);
+    color: #fef3c7;
 }
 
 .hud-metrics {
