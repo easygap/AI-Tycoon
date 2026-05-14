@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 90 — README 상단에 v1.1.0 새 소식 요약 배너
+- README 최상단에 버전 배지 추가 (`version-1.1.0`)
+- "🆕 v1.1.0 새 소식 (요약)" 섹션으로 핵심 신기능 12개 한 줄씩 정리
+- 자세한 변경은 `CHANGELOG.md` 링크로 안내
+- 처음 저장소에 들어오는 사람도 최신 변경 사항을 즉시 인지
+
 ## [1.1.0] — Iter 54-88 모음 릴리즈
 - 명령 팔레트(Ctrl/Cmd+K), 프라이버시 모드(Shift+P), 에이전트 메모, 컴팩트 뷰,
   '오늘의 MVP' 카드, '자리 비운 사이' 토스트, 멈춤 감지, 신선도 색상 코딩,
