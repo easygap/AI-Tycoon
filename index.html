@@ -67,6 +67,15 @@
                 <span id="conn-text" data-i18n="conn.connecting">연결 중</span>
             </div>
 
+            <!-- 프라이버시 모드 활성 시에만 — 헤더에서도 한눈에 인지. 클릭하면 종료. -->
+            <button id="header-privacy-chip" type="button" class="header-privacy-chip"
+                onclick="window.aiTycoonPrivacy?.toggle?.()"
+                data-i18n-attr="title:header.privacyTitle,aria-label:header.privacyAria"
+                title="프라이버시 모드 — 클릭하면 종료" aria-label="프라이버시 모드 종료" hidden>
+                <iconify-icon icon="solar:eye-closed-bold" aria-hidden="true"></iconify-icon>
+                <span data-i18n="header.privacyLabel">프라이버시</span>
+            </button>
+
             <!-- 데모 모드 활성 시에만 표시 — 가짜 데이터 본다는 걸 명확히. 클릭하면 데모 종료. -->
             <button id="header-demo-chip" type="button" class="header-demo-chip"
                 onclick="window.aiTycoonDemo?.toggle?.()"
@@ -1499,9 +1508,9 @@
     }
     function refreshDemoChip() {
         const chip = document.getElementById("header-demo-chip");
-        if (!chip) return;
-        const on = !!window.aiTycoonDemo?.isEnabled?.();
-        chip.hidden = !on;
+        if (chip) chip.hidden = !window.aiTycoonDemo?.isEnabled?.();
+        const pchip = document.getElementById("header-privacy-chip");
+        if (pchip) pchip.hidden = !window.aiTycoonPrivacy?.isEnabled?.();
     }
     function refreshTabCount() {
         refreshDemoChip();
