@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 128 — '연결 종료' / '작업실에서 나갔어요' 도 KO/EN
+- 상태가 `offline` 으로 떨어졌을 때 work-event 라벨/본문을 다국어로
+- `연결 종료` → `Disconnected`, `작업실에서 나갔어요` → `Left the office`
+- (퇴근 이벤트와는 별개 이벤트, 같은 문구지만 분기 위치 다름)
+
 ### Iteration 127 — 작업 이벤트 라벨/알림 메시지 KO/EN 분기
 - `addAgentEvent` 의 라벨 5종 (검토 요청 / 새 작업 / 태스크 시작 / 태스크 시작 / 완료) → `Review / New work / Task start / Done`
 - 검토 요청 fallback 텍스트 `확인이 필요해요` → `Needs review`
