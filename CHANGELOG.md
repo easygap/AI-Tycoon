@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 118 — 디테일 패널 메모 UI 다국어 처리
+- 메모 섹션 제목 / placeholder / aria-label / 글자 카운터 / `저장됨` 토스트 / `지우기` 버튼 모두 KO/EN 분기
+- IIFE 로 한 번에 합성해 렌더링 분기 깔끔하게
+- KO: `개인 메모 / 이 에이전트에 대한 메모… / 저장됨 / 지우기`
+- EN: `Personal note / Anything to remember about this agent… / Saved / Clear`
+
 ### Iteration 117 — 메모 textarea 의 Cmd/Ctrl+S 즉시 저장
 - 220ms 디바운스 기다리지 않고 명시적으로 저장하고 싶을 때 표준 단축키 지원
 - 브라우저의 '페이지 저장' 기본 동작은 textarea 안에서만 막음 (다른 곳에서는 그대로)

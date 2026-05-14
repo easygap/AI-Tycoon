@@ -2044,21 +2044,33 @@ export function updateDetailPanel() {
         ${tasks.length > 0 ? `<div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mt-3 mb-2">태스크 (${agent.completedTasks}/${agent.totalTasks})</div>
         <div class="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">${taskHtml}</div>` : ""}
 
-        <div class="detail-section-title mt-3">개인 메모</div>
+        ${(() => {
+            const langN = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const noteTitle = langN === "en" ? "Personal note" : "개인 메모";
+            const placeholder = langN === "en"
+                ? "Anything to remember about this agent… (e.g. auth refactor in progress)"
+                : "이 에이전트에 대한 메모… (예: 인증 리팩터링 중)";
+            const ariaLabel = langN === "en" ? "Agent personal note" : "에이전트 개인 메모";
+            const noteVal = getAgentNote(agent) || "";
+            const hintPrefix = langN === "en" ? "Local only" : "로컬에만 저장";
+            const clearLabel = langN === "en" ? "Clear" : "지우기";
+            return `
+        <div class="detail-section-title mt-3">${esc(noteTitle)}</div>
         <div class="detail-note-card">
             <textarea
                 id="detail-note-input"
                 class="detail-note-input"
                 rows="2"
-                placeholder="이 에이전트에 대한 메모… (예: 인증 리팩터링 중)"
-                aria-label="에이전트 개인 메모"
+                placeholder="${esc(placeholder)}"
+                aria-label="${esc(ariaLabel)}"
                 maxlength="500"
-                data-privacy>${esc(getAgentNote(agent) || "")}</textarea>
+                data-privacy>${esc(noteVal)}</textarea>
             <div class="detail-note-foot">
-                <span class="detail-note-hint">로컬에만 저장 · ${esc(String(getAgentNote(agent)?.length || 0))}/500</span>
-                <button type="button" class="detail-note-clear" data-detail-note-clear ${!getAgentNote(agent) ? "hidden" : ""}>지우기</button>
+                <span class="detail-note-hint">${esc(hintPrefix)} · ${esc(String(noteVal.length))}/500</span>
+                <button type="button" class="detail-note-clear" data-detail-note-clear ${!noteVal ? "hidden" : ""}>${esc(clearLabel)}</button>
             </div>
-        </div>
+        </div>`;
+        })()}
     `;
 
     container.querySelectorAll(".detail-event[data-pid]").forEach(item => {
@@ -2093,13 +2105,15 @@ export function updateDetailPanel() {
     // 저장 직후 1.2초간 'saved' 상태 표시 — 디바운스 때문에 사라진 글자가 어디로 갔나 헷갈리지 않게.
     const flashSaved = () => {
         if (!noteHint) return;
-        const prev = noteHint.textContent;
+        const langN = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const savedTxt = langN === "en" ? "Saved" : "저장됨";
+        const hintTxt = langN === "en" ? "Local only" : "로컬에만 저장";
         noteHint.classList.add("is-saved");
-        noteHint.textContent = "저장됨 · " + (noteInput?.value.length || 0) + "/500";
+        noteHint.textContent = `${savedTxt} · ${(noteInput?.value.length || 0)}/500`;
         clearTimeout(noteHint._flashTimer);
         noteHint._flashTimer = setTimeout(() => {
             noteHint.classList.remove("is-saved");
-            noteHint.textContent = `로컬에만 저장 · ${(noteInput?.value.length || 0)}/500`;
+            noteHint.textContent = `${hintTxt} · ${(noteInput?.value.length || 0)}/500`;
         }, 1200);
     };
     if (noteInput) {
