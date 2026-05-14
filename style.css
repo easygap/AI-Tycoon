@@ -4543,6 +4543,22 @@ select:focus-visible {
     font-style: normal;
 }
 
+/* Iteration 88 — signal-line의 첫 텍스트(최근 N분)에 신선도 색상 적용
+   fresh < 1분(emerald) · recent < 5분(amber) · warm < 30분(neutral) · stale 이상(zinc) */
+.agent-signal-line[data-freshness="fresh"] iconify-icon { color: #10b981; }
+.agent-signal-line[data-freshness="fresh"] > span { color: #059669; }
+.agent-signal-line[data-freshness="recent"] iconify-icon { color: #f59e0b; }
+.agent-signal-line[data-freshness="recent"] > span { color: #b45309; }
+.agent-signal-line[data-freshness="warm"] iconify-icon { color: #94a3b8; }
+.agent-signal-line[data-freshness="warm"] > span { color: #64748b; }
+.agent-signal-line[data-freshness="stale"] iconify-icon { color: #cbd5e1; }
+.agent-signal-line[data-freshness="stale"] > span { color: #94a3b8; }
+
+body.dark .agent-signal-line[data-freshness="fresh"] > span { color: #34d399; }
+body.dark .agent-signal-line[data-freshness="recent"] > span { color: #fbbf24; }
+body.dark .agent-signal-line[data-freshness="warm"] > span { color: #94a3b8; }
+body.dark .agent-signal-line[data-freshness="stale"] > span { color: #6b7280; }
+
 .detail-section-title {
     color: #667085;
     font-size: 11px;
