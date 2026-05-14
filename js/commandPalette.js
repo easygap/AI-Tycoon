@@ -77,10 +77,10 @@ function ensureRoot() {
                 <kbd class="cp-hint">esc</kbd>
             </div>
             <ul id="${LIST_ID}" class="cp-list" role="listbox" aria-label="검색 결과"></ul>
-            <div class="cp-foot">
-                <span><kbd>↑</kbd><kbd>↓</kbd> 이동</span>
-                <span><kbd>enter</kbd> 선택</span>
-                <span><kbd>esc</kbd> 닫기</span>
+            <div class="cp-foot" id="cp-foot">
+                <span><kbd>↑</kbd><kbd>↓</kbd> <span class="cp-foot-tx" data-foot-tx="move">이동</span></span>
+                <span><kbd>enter</kbd> <span class="cp-foot-tx" data-foot-tx="select">선택</span></span>
+                <span><kbd>esc</kbd> <span class="cp-foot-tx" data-foot-tx="close">닫기</span></span>
                 <span class="cp-foot-count" id="cp-foot-count" aria-live="polite"></span>
             </div>
         </div>
@@ -107,7 +107,12 @@ function open() {
     requestAnimationFrame(() => root.classList.add("is-open"));
     highlightedIndex = 0;
     const input = document.getElementById(INPUT_ID);
-    if (input) { input.value = ""; input.focus(); }
+    if (input) {
+        input.value = "";
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        input.placeholder = lang === "en" ? "Agents, projects, commands…" : "에이전트, 프로젝트, 명령…";
+        input.focus();
+    }
     render();
     // 업적 카운터 증분 (한 번 열 때마다)
     try { window.aiTycoonAchievements?.bumpCounter?.("paletteOpens"); } catch { /* ignore */ }
@@ -322,6 +327,16 @@ function render() {
     const actions = buildActions(q).map(a => ({ kind: KIND_ACTION, score: 1, ...a, action: a.run }));
     results = [...agents, ...actions];
     highlightedIndex = 0;
+
+    // 푸터 안내 문구 i18n — 매 render 마다 동기화 (언어 전환 즉시 반영)
+    const langCp = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const footTx = langCp === "en"
+        ? { move: "move", select: "select", close: "close" }
+        : { move: "이동", select: "선택", close: "닫기" };
+    document.querySelectorAll("#cp-foot .cp-foot-tx").forEach(el => {
+        const k = el.dataset.footTx;
+        if (k && footTx[k]) el.textContent = footTx[k];
+    });
 
     // 결과 개수 푸터에 표시 — 에이전트 / 명령 별도 카운트로 분리
     const countEl = document.getElementById("cp-foot-count");

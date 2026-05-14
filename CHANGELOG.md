@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 141 — 명령 팔레트 푸터/placeholder 도 KO/EN
+- `↑↓ 이동 / enter 선택 / esc 닫기` 푸터 라벨을 `move / select / close` 영어 분기
+- `data-foot-tx` 속성으로 깔끔하게 동기화, 매 render 마다 갱신해 언어 전환 즉시 반영
+- 입력 placeholder `에이전트, 프로젝트, 명령…` → `Agents, projects, commands…`
+- 팔레트 안의 모든 텍스트가 이제 KO/EN 일관
+
 ### Iteration 140 — 팔레트 결과 카운트를 에이전트/명령 별도로 분리
 - 푸터 카운트가 `5개 결과` 단일 숫자에서 `3 agents · 2 cmds` 형식으로
 - 검색을 좁히면서 어느 카테고리에서 매칭됐는지 즉시 인지
