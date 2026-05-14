@@ -4237,6 +4237,29 @@ body.privacy-strict .privacy-badge {
 }
 .cp-note-chip:hover { opacity: 1; }
 
+/* Iteration 138 — 명령 팔레트 액션 결과의 그룹별 좌측 strip + 라벨 톤
+   display(보라) / modal(시안) / filter(연두) / theme(주황) / lang(노랑) / tools(회색) */
+.cp-row-action { position: relative; }
+.cp-row-action::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 22px;
+    border-radius: 2px;
+    background: #94a3b8;
+    pointer-events: none;
+}
+.cp-row-action[data-group="display"]::before { background: #a78bfa; }
+.cp-row-action[data-group="modal"]::before   { background: #22d3ee; }
+.cp-row-action[data-group="filter"]::before  { background: #34d399; }
+.cp-row-action[data-group="theme"]::before   { background: #fb923c; }
+.cp-row-action[data-group="lang"]::before    { background: #facc15; }
+.cp-row-action[data-group="tools"]::before   { background: #94a3b8; }
+.cp-row-action .cp-sub { text-transform: lowercase; letter-spacing: 0.04em; }
+
 /* Iteration 137 — 팔레트 결과 아바타에 상태 색상 dot */
 .cp-status-dot {
     position: absolute;
