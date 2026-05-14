@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 76 — 빈 상태 카드에 지원 AI 도구 8종 + 데모 CTA
+- 에이전트가 0명일 때 단순한 텍스트 대신 지원 플랫폼 8개를 컬러 칩으로 나열
+- Claude · Codex · Cursor · Copilot · Ollama · LM Studio · Jan · GPT4All
+- "데모 모드로 미리 보기" 그라데이션 버튼으로 처음 보는 사용자가 빈 화면이 아니라 살아있는 작업실을 즉시 체험 가능
+- KO/EN 다국어 분기
+- 다크 모드 톤 분리
+
 ### Iteration 75 — 멈춤 감지 1회 토스트 알림
 - 에이전트가 처음으로 stuck 상태(`isAgentStuck` true)로 전환되는 순간 한 번만 토스트
 - 클릭하면 해당 에이전트로 포커스 (review 톤 사용)

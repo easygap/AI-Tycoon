@@ -1517,10 +1517,40 @@ export function updatePanel() {
     const filteredAgents = getFilteredSortedAgents();
     updateSearchControls(filteredAgents);
     if (S.liveAgents.length === 0) {
-        list.innerHTML = `<div class="agent-empty-state">
+        // 빈 상태 카드 + 지원 AI 도구 8종 로고 줄
+        // 처음 보는 사용자가 "어떤 도구를 켜면 잡히는지" 한눈에 알 수 있게.
+        const supported = [
+            { id: "claude",   label: "Claude Code" },
+            { id: "codex",    label: "Codex" },
+            { id: "cursor",   label: "Cursor" },
+            { id: "copilot",  label: "Copilot" },
+            { id: "ollama",   label: "Ollama" },
+            { id: "lmstudio", label: "LM Studio" },
+            { id: "jan",      label: "Jan" },
+            { id: "gpt4all",  label: "GPT4All" },
+        ];
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const title = lang === "en" ? "Waiting for agents" : "직원을 기다리는 중";
+        const sub = lang === "en"
+            ? "Launch any of the AI tools below and they'll show up here automatically."
+            : "아래 AI 도구 중 아무거나 켜면 자동으로 책상에 앉아요.";
+        const demoLabel = lang === "en" ? "Try demo mode" : "데모 모드로 미리 보기";
+        const platformChips = supported.map(p => {
+            const meta = PLATFORM_META[p.id] || PLATFORM_META.claude;
+            return `<span class="empty-platform-chip" style="background:${meta.badgeBg};color:${meta.color};border-color:${meta.color}55">
+                <span class="empty-platform-dot" style="background:${meta.color}"></span>
+                <span>${esc(p.label)}</span>
+            </span>`;
+        }).join("");
+        list.innerHTML = `<div class="agent-empty-state agent-empty-rich">
             <iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon>
-            <strong>직원을 기다리는 중</strong>
-            <span>Claude, Codex, Cursor 같은 AI 세션이 감지되면 자동으로 나타납니다.</span>
+            <strong>${esc(title)}</strong>
+            <span>${esc(sub)}</span>
+            <div class="empty-platforms" aria-label="${esc(lang === "en" ? "Supported AI platforms" : "지원 플랫폼")}">${platformChips}</div>
+            <button type="button" class="empty-demo-btn" onclick="window.aiTycoonDemo?.toggle?.()">
+                <iconify-icon icon="solar:play-circle-bold" aria-hidden="true"></iconify-icon>
+                <span>${esc(demoLabel)}</span>
+            </button>
         </div>`;
         return;
     }
