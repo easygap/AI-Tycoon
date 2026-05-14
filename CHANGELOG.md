@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 122 — 캔버스 hover 툴팁 다국어 처리
+- 캔버스에서 에이전트에 마우스 올렸을 때 뜨는 툴팁의 8개 라벨을 KO/EN 분기
+- 상태/메모리/태스크/서브/경로/완료 → Status/Memory/Task/Sub/Path/Done
+- `대기 중` → `Idle`, `N개 활성` → `N active`
+- 영문 사용자가 호버해도 더 이상 한국어 라벨 안 보임
+
 ### Iteration 121 — 사이드바 카드 본문의 '대기 중' / '개 태스크' 다국어
 - 작업 텍스트 fallback 인 `대기 중` → `Idle`
 - 태스크 카운트 `${n}개 태스크` → `${n} task(s)` (단수/복수 처리)
