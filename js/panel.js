@@ -555,59 +555,74 @@ function renderSystemHealth(active, working, review) {
 }
 
 function briefHeadline(active, working, review, pinned, stale) {
+    const lgB = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lgB === "en";
+    // 짧은 문구 모음 — 운영 브리핑이라 한 줄짜리 카드 헤드라인 + 부가 디테일
     if (!S.connected) {
         return {
             tone: "offline",
             icon: "solar:plug-circle-linear",
-            title: "연결 대기",
-            detail: `재연결 ${S.reconnectAttempt || 0}회`,
+            title: en ? "Connecting…" : "연결 대기",
+            detail: en
+                ? `Reconnect ${S.reconnectAttempt || 0}x`
+                : `재연결 ${S.reconnectAttempt || 0}회`,
         };
     }
     if (review.length > 0) {
         return {
             tone: "attention",
             icon: "solar:clipboard-check-linear",
-            title: "검토 우선",
-            detail: `${review.length}명 확인 대기`,
+            title: en ? "Review first" : "검토 우선",
+            detail: en
+                ? `${review.length} waiting for review`
+                : `${review.length}명 확인 대기`,
         };
     }
     if (stale.length > 0) {
         return {
             tone: "warn",
             icon: "solar:radar-2-linear",
-            title: "신호 확인",
-            detail: `${stale.length}명 갱신 지연`,
+            title: en ? "Signal check" : "신호 확인",
+            detail: en
+                ? `${stale.length} stale signals`
+                : `${stale.length}명 갱신 지연`,
         };
     }
     if (pinned.length > 0) {
         return {
             tone: "pinned",
             icon: "solar:star-bold",
-            title: "고정 직원 추적",
-            detail: `${pinned.length}명 상단 유지`,
+            title: en ? "Tracking pinned" : "고정 직원 추적",
+            detail: en
+                ? `${pinned.length} kept on top`
+                : `${pinned.length}명 상단 유지`,
         };
     }
     if (working.length > 0) {
         return {
             tone: "live",
             icon: "solar:bolt-circle-linear",
-            title: "작업 흐름 정상",
-            detail: `${working.length}명 집중 중`,
+            title: en ? "All flowing" : "작업 흐름 정상",
+            detail: en
+                ? `${working.length} in focus`
+                : `${working.length}명 집중 중`,
         };
     }
     if (active.length > 0) {
         return {
             tone: "ready",
             icon: "solar:users-group-rounded-linear",
-            title: "대기 직원 확인",
-            detail: `${active.length}명 활성`,
+            title: en ? "Standing by" : "대기 직원 확인",
+            detail: en
+                ? `${active.length} active`
+                : `${active.length}명 활성`,
         };
     }
     return {
         tone: "empty",
         icon: "solar:radar-2-linear",
-        title: "직원 감지 대기",
-        detail: "세션 대기 중",
+        title: en ? "Waiting for agents" : "직원 감지 대기",
+        detail: en ? "Listening for sessions" : "세션 대기 중",
     };
 }
 
