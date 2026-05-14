@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 105 — 헤더에 프라이버시 모드 활성 칩
+- 프라이버시 모드 ON 상태일 때만 헤더에 회색-슬레이트 칩 표시 + 닫힌 눈 아이콘
+- 클릭하면 `aiTycoonPrivacy.toggle()` 로 즉시 해제
+- 좌하단 보라색 배지(iter 61)에 더해 헤더에도 같은 정보가 있어 어디서든 한눈에 인지
+- DEMO 칩과 동일한 구조/스타일로 헤더 일관성
+- KO `프라이버시` / EN `Privacy` 다국어
+
 ### Iteration 104 — 헤더 DEMO 칩 클릭으로 데모 즉시 종료
 - `<div>` 였던 데모 칩을 `<button>` 으로 바꾸고 `aiTycoonDemo.toggle()` 핸들러 연결
 - 호버 시 배경 진해지고 살짝 위로 떠오름, active 시 원래대로
