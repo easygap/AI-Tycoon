@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 133 — HUD 진단(`renderDetectorHealth`) 영역도 KO/EN
+- HUD 좌상단 진단 라인 / 칩 / 힌트 모두 다국어
+- 6가지 state title (탐지 준비 중/서버 연결 대기/수집 중/일부 지연/정상/준비 완료) → 영어
+- 5가지 hint (근무/재연결/지연/시작 안내) 영어
+- 칩 라벨 (Claude, 세션/프로세스/AI 신호, 준비/대기) 영어 분기
+- 호버 ageLabel 도 `갱신` → `updated` 형식
+
 ### Iteration 132 — 시스템 헬스 상태/감지기/연결 라벨 추가 KO/EN
 - `detectorLabel`: 정상/캐시/지연/대기 → OK/cached/slow/wait
 - `connectionHealth`: 재연결/응답 없음/느림 → Reconnect/No response/Slow (Live는 유지)
