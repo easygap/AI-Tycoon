@@ -98,8 +98,14 @@ export function getWorkText(agent) {
     return null;
 }
 
-/** Format time ago in Korean */
+/** 경과 시간 사람 친화적 포맷 — 현재 언어에 맞춰 KO/EN 분기 */
 export function formatTimeAgo(ms) {
+    const lang = (typeof window !== "undefined" && window.aiTycoonI18n?.getLang?.()) || "ko";
+    if (lang === "en") {
+        if (ms < 60000) return "just now";
+        if (ms < 3600000) return `${Math.floor(ms / 60000)}m ago`;
+        return `${Math.floor(ms / 3600000)}h ago`;
+    }
     if (ms < 60000) return "방금 전";
     if (ms < 3600000) return `${Math.floor(ms / 60000)}분 전`;
     return `${Math.floor(ms / 3600000)}시간 전`;
