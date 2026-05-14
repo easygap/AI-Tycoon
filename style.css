@@ -3198,6 +3198,16 @@ body.dark .detail-project-chip:hover {
     font-size: 10px;
     color: #8a7160;
 }
+.detail-note-hint {
+    transition: color 0.18s ease;
+}
+.detail-note-hint.is-saved {
+    color: #10b981;
+    font-weight: 700;
+}
+body.dark .detail-note-hint.is-saved {
+    color: #34d399;
+}
 .detail-note-clear {
     background: rgba(245, 158, 11, 0.12);
     border: 1px solid rgba(245, 158, 11, 0.32);

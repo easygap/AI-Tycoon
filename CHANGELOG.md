@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 80 — 메모 자동 저장 시 '저장됨' 시각 피드백
+- 디테일 패널 메모를 220ms 디바운스로 저장하는데, 저장 시점이 안 보여서 사용자가 헷갈릴 수 있었음
+- 저장 직후 푸터 힌트를 1.2초간 초록색 "저장됨 · N/500" 으로 강조 후 원래 문구로 복귀
+- "지우기" 버튼 클릭 시에도 동일 피드백
+- `is-saved` 클래스 + CSS 트랜지션, 다크 모드 별도 톤
+
 ### Iteration 79 — 에이전트 메모 일괄 Markdown 내보내기
 - `buildNotesMarkdown` / `downloadNotesMarkdown` 함수 추가 (`standupExport.js`)
 - 저장된 모든 `ai-tycoon-agent-notes` 항목을 sessionId/PID 별로 묶어 Markdown 헤더 + 본문 출력
