@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 117 — 메모 textarea 의 Cmd/Ctrl+S 즉시 저장
+- 220ms 디바운스 기다리지 않고 명시적으로 저장하고 싶을 때 표준 단축키 지원
+- 브라우저의 '페이지 저장' 기본 동작은 textarea 안에서만 막음 (다른 곳에서는 그대로)
+- 저장 후 `flashSaved()` 로 1.2초 초록 '저장됨' 피드백 동일하게 발화
+- 디바운스 타이머도 함께 클리어해 중복 저장 방지
+
 ### Iteration 116 — F1 키도 단축키 도움말 열기에 매핑
 - 기존 `?` / `Ctrl+/` 외에 표준 도움말 키인 `F1` 추가
 - `preventDefault()` 로 브라우저 기본 도움말 가로채기 방지
