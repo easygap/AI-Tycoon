@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 123 — 캔버스 서브 에이전트(태스크) hover 툴팁도 KO/EN
+- 서브 에이전트 / 부모 / 상태 / 활동 / 설명 / 대기 라벨 + `작업 중 / 완료 / 대기` 상태값 모두 분기
+- `Sub agent / Parent / Status / Activity / Desc / Wait / Working / Done / Pending`
+- "Task X 완료 필요" → "Task X needs to complete"
+- 캔버스 부유 툴팁 두 종류(에이전트/서브태스크) 모두 다국어 완료
+
 ### Iteration 122 — 캔버스 hover 툴팁 다국어 처리
 - 캔버스에서 에이전트에 마우스 올렸을 때 뜨는 툴팁의 8개 라벨을 KO/EN 분기
 - 상태/메모리/태스크/서브/경로/완료 → Status/Memory/Task/Sub/Path/Done
