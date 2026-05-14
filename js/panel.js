@@ -1912,7 +1912,15 @@ export function updateDetailPanel() {
         </div>
         <div class="flex items-center gap-1.5 mb-1">
             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).label}</span>
-            <span class="text-[12px] text-zinc-600">${esc(agent.projectName)}</span>
+            <button type="button"
+                class="detail-project-chip"
+                data-detail-project
+                title="이 프로젝트만 보기"
+                aria-label="이 프로젝트만 필터링">
+                <span class="agent-project-dot" style="background:${projectColor(agent.projectName)}" aria-hidden="true"></span>
+                <span>${esc(agent.projectName)}</span>
+                <iconify-icon icon="solar:filter-linear" aria-hidden="true"></iconify-icon>
+            </button>
         </div>
         <div class="text-[10px] text-zinc-400 truncate mb-3">${esc(agent.cwd || agent.platformName || "")}</div>
         ${detailMetaHtml}
@@ -1954,6 +1962,21 @@ export function updateDetailPanel() {
         });
     });
     container.querySelector("[data-detail-pin]")?.addEventListener("click", () => toggleAgentPin(agent));
+
+    // 프로젝트 칩 클릭 → 검색창에 프로젝트명 박아 넣어서 동일 프로젝트만 보이게
+    // (이미 동일 검색어면 토글로 해제)
+    container.querySelector("[data-detail-project]")?.addEventListener("click", () => {
+        const name = agent.projectName || "";
+        if (!name) return;
+        const cur = (S.agentSearchQuery || "").trim();
+        if (cur === name) {
+            window.clearAgentSearch?.();
+        } else if (typeof window.setAgentSearch === "function") {
+            window.setAgentSearch(name);
+            const input = document.getElementById("agent-search");
+            if (input) input.value = name;
+        }
+    });
 
     // Notes wiring (debounced save)
     const noteInput = container.querySelector("#detail-note-input");

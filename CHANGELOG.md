@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 73 — 디테일 패널 프로젝트 칩 클릭 시 동일 프로젝트만 필터
+- 디테일 패널 상단의 프로젝트 이름을 클릭 가능한 칩으로 변경
+- 클릭하면 검색창에 프로젝트명이 자동 입력 → 같은 프로젝트의 다른 에이전트만 노출
+- 이미 동일한 검색어 상태면 한 번 더 누를 때 해제 (토글)
+- 색상 닷 + 필터 아이콘으로 클릭 가능함을 시각적으로 안내
+- 다크/라이트 별도 톤
+
 ### Iteration 72 — 명령 팔레트 최근 방문 기억
 - Ctrl+K 열고 빈 입력 상태일 때 최근 방문한 에이전트 최대 5명을 상단에 노출
 - LRU 큐로 `ai-tycoon-cmdk-recent` localStorage 키에 sessionId/pid 저장
