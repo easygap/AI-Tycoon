@@ -5,6 +5,14 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 67 — 컴팩트 에이전트 카드 모드 (토글)
+- 정렬 드롭다운 옆 작은 리스트 아이콘 버튼 → 클릭 시 컴팩트 보기 토글
+- 컴팩트 모드: 카드 패딩 축소, 서브태스크 리스트 숨김, 신호 라인 제거, 보더 슬림화
+- 많은 에이전트(10+) 운영 시 한 화면에 더 많이 표시
+- 상태는 `ai-tycoon-agents-compact` localStorage 키로 영속
+- 토글 시 토스트로 ON/OFF 피드백, 다크 모드 별도 색감
+- `aria-pressed` 접근성 + 활성 시 보라색 강조
+
 ### Iteration 66 — 설정 모달의 "새 소식" (What's new) 패널
 - 설정 모달에 최근 12개 변경 사항 중 상위 6개를 인라인 표시
 - 다국어 (KO/EN), 아이콘별 색감 (ok/feature/highlight/design/stable 5톤)

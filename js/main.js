@@ -347,6 +347,37 @@ function init() {
         requestAnimationFrame(focusInput);
     };
     window.setSortOrder = (s) => { S.sortOrder = s; localStorage.setItem("ai-tycoon-sort", s); updatePanel(); };
+    // Compact agents list toggle — slim, single-line cards for power users
+    window.toggleAgentsCompact = () => {
+        const cur = localStorage.getItem("ai-tycoon-agents-compact") === "true";
+        const next = !cur;
+        localStorage.setItem("ai-tycoon-agents-compact", next ? "true" : "false");
+        document.body.classList.toggle("agents-compact", next);
+        const btn = document.getElementById("agents-compact-toggle");
+        if (btn) {
+            btn.setAttribute("aria-pressed", next ? "true" : "false");
+            btn.classList.toggle("is-active", next);
+        }
+        try {
+            const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+            window.aiTycoonToasts?.show?.("info",
+                next ? (lang === "en" ? "Compact view" : "컴팩트 보기 ON")
+                     : (lang === "en" ? "Default view" : "기본 보기"),
+                next ? (lang === "en" ? "Slim agent cards" : "에이전트 카드를 좁게 표시") : "");
+        } catch { /* ignore */ }
+    };
+    // Apply initial compact state on boot
+    (function bootAgentsCompact() {
+        const compact = localStorage.getItem("ai-tycoon-agents-compact") === "true";
+        if (compact) {
+            document.body.classList.add("agents-compact");
+            const btn = document.getElementById("agents-compact-toggle");
+            if (btn) {
+                btn.setAttribute("aria-pressed", "true");
+                btn.classList.add("is-active");
+            }
+        }
+    })();
     window.setPixiDensity = (mode = "auto") => {
         if (!PIXI_DENSITY_MODES.includes(mode)) return;
         S.pixiDensity = mode;
