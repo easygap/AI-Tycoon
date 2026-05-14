@@ -21,6 +21,11 @@
 
 import { S } from "./state.js";
 import { AGENT_THEMES, STATUS_META, PLATFORM_META } from "./constants.js";
+import { isAgentPinned as _isAgentPinned } from "./agentPriority.js";
+
+function isPinned(agent) {
+    return _isAgentPinned(agent, S.pinnedAgentKeys || []);
+}
 
 const ROOT_ID = "command-palette-overlay";
 const INPUT_ID = "command-palette-input";
@@ -204,9 +209,12 @@ function buildAgentResults(query) {
     const out = [];
     (S.liveAgents || []).forEach((agent, idx) => {
         const theme = AGENT_THEMES[(S.visualAgents[agent.pid] ? AGENT_THEMES.indexOf(S.visualAgents[agent.pid].theme) : idx) % AGENT_THEMES.length] || AGENT_THEMES[0];
-        const score = scoreAgent(agent, theme, query);
+        let score = scoreAgent(agent, theme, query);
         if (score <= 0) return;
-        out.push({ kind: KIND_AGENT, score, agent, theme });
+        // 핀된 에이전트는 약간 가산 — 검색어가 동등하면 핀된 친구가 위로 올라옴.
+        const pinned = isPinned(agent);
+        if (pinned) score += 2;
+        out.push({ kind: KIND_AGENT, score, agent, theme, pinned });
     });
 
     // 검색어 없을 때: 최근 방문한 에이전트를 우선 노출하여 자주 보는 작업을 빠르게 다시 찾도록
@@ -319,8 +327,10 @@ function render() {
             const platform = (PLATFORM_META[a.platform] || PLATFORM_META.claude || {}).badge || "?";
             // 최근 방문 칩은 빈 검색 + recent 플래그 둘 다 있을 때만 표시
             const recentChip = r.recent ? `<span class="cp-recent-chip">최근</span>` : "";
-            return `<li class="cp-row${i === 0 ? " is-active" : ""}" role="option" data-index="${i}">
-                <span class="cp-avatar" style="background:${r.theme.body}">${esc(r.theme.name.charAt(0))}</span>
+            // 핀 별 표시 (아바타 좌상단)
+            const pinStar = r.pinned ? `<span class="cp-pin-star" title="고정됨" aria-label="고정됨">★</span>` : "";
+            return `<li class="cp-row${i === 0 ? " is-active" : ""}${r.pinned ? " is-pinned" : ""}" role="option" data-index="${i}">
+                <span class="cp-avatar" style="background:${r.theme.body}">${esc(r.theme.name.charAt(0))}${pinStar}</span>
                 <div class="cp-info">
                     <div class="cp-title">${esc(r.theme.name)} <em>· ${esc(a.projectName || "")}</em>${recentChip}</div>
                     <div class="cp-sub">${esc(meta.label)} · ${esc(platform)} · ${a.memoryMB || 0}MB</div>
