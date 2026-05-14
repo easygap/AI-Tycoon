@@ -3051,6 +3051,36 @@ body.dark .activity-log-mini {
     transition-timing-function: var(--ease-out);
 }
 
+/* Iteration 74 — 멈춘 에이전트(stuck) 표시: 카드 보더 + 칩 */
+.agent-card.is-stuck {
+    border-color: rgba(245, 158, 11, 0.48);
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.18) inset, var(--shadow-sm);
+}
+.agent-stuck-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.32);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.45;
+    letter-spacing: 0.02em;
+    cursor: help;
+}
+.agent-stuck-chip iconify-icon { font-size: 10px; }
+body.dark .agent-card.is-stuck {
+    border-color: rgba(251, 191, 36, 0.48);
+}
+body.dark .agent-stuck-chip {
+    background: rgba(251, 191, 36, 0.14);
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.42);
+}
+
 /* Iteration 73 — 디테일 패널의 클릭 가능한 프로젝트 칩 */
 .detail-project-chip {
     display: inline-flex;

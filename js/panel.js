@@ -283,6 +283,17 @@ function agentSignalInfo(agent) {
     return { sources, sourceLabel, ageLabel, seenAt, activityAt, age };
 }
 
+/** 작업 중(또는 생각/검토 중) 상태에서 N분간 활동 신호가 없으면 'stuck'으로 본다.
+ *  세션이 끊긴 건 아닌데 프롬프트 답을 기다리며 멈춰있는 경우를 잡아내려고. */
+const STUCK_THRESHOLD_MS = 5 * 60 * 1000;
+function isAgentStuck(agent) {
+    if (!agent?.isRunning) return false;
+    const activeStatuses = ["coding", "thinking", "searching", "reviewing"];
+    if (!activeStatuses.includes(agent.status)) return false;
+    const info = agentSignalInfo(agent);
+    return info.age > STUCK_THRESHOLD_MS;
+}
+
 function renderDiagnosticChip(label, value, tone = "neutral") {
     return `<span class="diag-chip" data-tone="${tone}">
         <span class="diag-value">${esc(value)}</span>
@@ -1513,8 +1524,9 @@ export function updatePanel() {
         const visual = S.visualAgents[agent.pid];
         const justJoined = visual && visual.joinedAt && (Date.now() - visual.joinedAt) < 60000;
         const hasNote = !!getAgentNote(agent);
+        const stuck = isAgentStuck(agent);
         const card = document.createElement("div");
-        card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}${hasNote ? " has-note" : ""}`;
+        card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}${hasNote ? " has-note" : ""}${stuck ? " is-stuck" : ""}`;
         card.dataset.action = action.key;
         card.setAttribute("role", "button");
         card.setAttribute("tabindex", "0");
@@ -1591,6 +1603,7 @@ export function updatePanel() {
                         <div class="text-[11px] text-zinc-400 tabular-nums font-medium flex items-center gap-1">
                             <span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badge}</span>
                             ${agent.role && ROLE_META[agent.role] ? `<span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${ROLE_META[agent.role].color}20;color:${ROLE_META[agent.role].color}">${ROLE_META[agent.role].badge}</span>` : ""}
+                            ${stuck ? `<span class="agent-stuck-chip" title="5분 이상 활동 신호 없음 — 멈춘 것 같아요"><iconify-icon icon="solar:hourglass-line-linear" aria-hidden="true"></iconify-icon>멈춤?</span>` : ""}
                             <span>${agent.memoryMB}MB${agent.processCount > 1 ? ` · ${agent.processCount}p` : ""}${(() => {
                                 const t = memoryTrend(agent);
                                 if (t.dir === "flat") return "";
