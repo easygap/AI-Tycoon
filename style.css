@@ -4237,6 +4237,21 @@ body.privacy-strict .privacy-badge {
 }
 .cp-note-chip:hover { opacity: 1; }
 
+/* Iteration 137 — 팔레트 결과 아바타에 상태 색상 dot */
+.cp-status-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.92);
+    pointer-events: none;
+}
+body.dark .cp-status-dot {
+    box-shadow: 0 0 0 2px rgba(20,20,25,0.92);
+}
+
 /* Iteration 106 — 팔레트 결과에 핀 별 표시 */
 .cp-avatar { position: relative; }
 .cp-pin-star {
