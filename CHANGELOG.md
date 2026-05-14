@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 74 — 멈춘 에이전트 감지 칩 (5분 무신호 + 작업중 상태)
+- `isAgentStuck(agent)` 헬퍼: 상태가 coding/thinking/searching/reviewing 인데 신호 age > 5분이면 `true`
+- 해당 카드에 `.is-stuck` 클래스로 호박색 보더, 헤더 행에 `멈춤?` 칩 표시
+- 호버 시 "5분 이상 활동 신호 없음 — 멈춘 것 같아요" 툴팁
+- 다크 모드 별도 색감, 모래시계 아이콘으로 직관적
+- 프롬프트 입력 기다리며 멈춘 세션을 빠르게 발견할 수 있음
+
 ### Iteration 73 — 디테일 패널 프로젝트 칩 클릭 시 동일 프로젝트만 필터
 - 디테일 패널 상단의 프로젝트 이름을 클릭 가능한 칩으로 변경
 - 클릭하면 검색창에 프로젝트명이 자동 입력 → 같은 프로젝트의 다른 에이전트만 노출
