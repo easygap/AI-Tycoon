@@ -1939,17 +1939,24 @@ export function updateDetailPanel() {
                 <small>${esc(formatTimeAgo(Math.max(0, Date.now() - (event.ts || Date.now()))))}</small>
             </button>`;
         }).join("")
-        : `<div class="detail-event-empty">최근 이벤트 수집 중</div>`;
+        : (() => {
+            const lge = (window.aiTycoonI18n?.getLang?.() || "ko");
+            return `<div class="detail-event-empty">${lge === "en" ? "Collecting recent events" : "최근 이벤트 수집 중"}</div>`;
+        })();
+    const lgSig = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const sigTitle1 = lgSig === "en" ? "Detection basis" : "인식 근거";
+    const sigTitle2 = lgSig === "en" ? "Recent signals" : "최근 신호";
+    const sigRecent = lgSig === "en" ? "Last" : "최근";
     const signalHtml = `
-        <div class="detail-section-title">인식 근거</div>
+        <div class="detail-section-title">${esc(sigTitle1)}</div>
         <div class="signal-proof">
             <div class="signal-proof-head">
-                <span><iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon> 최근 ${esc(signal.ageLabel)}</span>
+                <span><iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon> ${esc(sigRecent)} ${esc(signal.ageLabel)}</span>
                 <em>${esc(signal.sourceLabel)}</em>
             </div>
             <div class="signal-proof-pills">${signalPills}</div>
         </div>
-        <div class="detail-section-title mt-3">최근 신호</div>
+        <div class="detail-section-title mt-3">${esc(sigTitle2)}</div>
         <div class="detail-event-list">${signalEventsHtml}</div>
     `;
 

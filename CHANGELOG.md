@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 120 — 디테일 패널의 신호/이벤트 영역도 KO/EN 분기
+- `인식 근거 → Detection basis`, `최근 신호 → Recent signals`
+- `최근 ${age} → Last ${age}`
+- `최근 이벤트 수집 중 → Collecting recent events`
+- 디테일 패널의 거의 모든 라벨이 이제 다국어 완비
+
 ### Iteration 119 — 디테일 패널의 메모리/태스크/메타 라벨 KO/EN 분기
 - 메모리 사용량 / 태스크 / "데이터 수집 중" / "등록된 태스크 없음" / "+N개 더" 모두 KO/EN
 - 메타 행 라벨 (PID / 세션 / 경로) → (PID / Session / Path) 분기
