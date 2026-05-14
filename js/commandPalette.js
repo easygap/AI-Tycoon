@@ -217,33 +217,39 @@ function buildAgentResults(query) {
         out.push({ kind: KIND_AGENT, score, agent, theme, pinned });
     });
 
-    // 검색어 없을 때: 최근 방문한 에이전트를 우선 노출하여 자주 보는 작업을 빠르게 다시 찾도록
+    // 검색어 없을 때: 최근 방문 > 핀 > 나머지 순으로 자동 정렬.
+    // 자주 보는 친구가 항상 상단에 위치하도록.
     if (!query) {
         const recent = loadRecent();
-        if (recent.length > 0) {
-            const recentMap = new Map();
-            out.forEach(item => {
-                const key1 = String(item.agent.sessionId || "");
-                const key2 = String(item.agent.pid || "");
-                if (key1) recentMap.set(key1, item);
-                if (key2) recentMap.set(key2, item);
-            });
-            const ordered = [];
-            const seen = new Set();
-            // 최근 방문한 것부터 차례대로
-            recent.forEach(key => {
-                const it = recentMap.get(key);
-                if (it && !seen.has(it.agent.pid)) {
-                    ordered.push({ ...it, recent: true });
-                    seen.add(it.agent.pid);
-                }
-            });
-            // 나머지는 그 뒤에
-            out.forEach(item => {
-                if (!seen.has(item.agent.pid)) ordered.push(item);
-            });
-            return ordered.slice(0, 8);
-        }
+        const recentMap = new Map();
+        out.forEach(item => {
+            const key1 = String(item.agent.sessionId || "");
+            const key2 = String(item.agent.pid || "");
+            if (key1) recentMap.set(key1, item);
+            if (key2) recentMap.set(key2, item);
+        });
+        const ordered = [];
+        const seen = new Set();
+        // 1) 최근 방문 (가장 최신 순)
+        recent.forEach(key => {
+            const it = recentMap.get(key);
+            if (it && !seen.has(it.agent.pid)) {
+                ordered.push({ ...it, recent: true });
+                seen.add(it.agent.pid);
+            }
+        });
+        // 2) 핀된 에이전트 (최근에 없던 친구만)
+        out.forEach(item => {
+            if (item.pinned && !seen.has(item.agent.pid)) {
+                ordered.push(item);
+                seen.add(item.agent.pid);
+            }
+        });
+        // 3) 나머지 — 점수 내림차순 (기존 score 가 이미 핀 +2 포함이지만 여기선 이미 핀 처리됨)
+        out.sort((a, b) => b.score - a.score).forEach(item => {
+            if (!seen.has(item.agent.pid)) ordered.push(item);
+        });
+        return ordered.slice(0, 8);
     }
     return out.sort((a, b) => b.score - a.score).slice(0, 8);
 }
