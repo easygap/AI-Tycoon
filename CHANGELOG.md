@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 87 — 단축키 모달에 키워드 검색 입력
+- 모달 상단에 검색바 추가, 공백으로 분리된 토큰 모두 매칭(AND) 되는 항목만 표시
+- 매칭이 없는 그룹 헤더는 자동으로 숨김, 결과 0건이면 안내 문구
+- 모달 열 때마다 검색어 자동 리셋 + 80ms 후 포커스 — 즉시 타이핑 가능
+- KO `단축키 또는 동작 검색…` / EN `Search shortcuts or actions…`
+- 단축키 18+ 개가 쌓여서 빠르게 찾는 게 어려웠던 문제 해소
+
 ### Iteration 86 — 사이드 패널 '위로' 부유 버튼
 - 에이전트 리스트 스크롤이 240px 이상 내려가면 우하단에 작은 ↑ 버튼이 등장
 - 클릭하면 `behavior: "smooth"` 로 부드럽게 최상단 복귀
