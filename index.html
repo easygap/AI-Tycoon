@@ -68,10 +68,13 @@
             </div>
 
             <!-- 멈춘 에이전트 카운트 (있을 때만 표시) -->
-            <button id="header-stuck-chip" type="button" class="header-stuck-chip" onclick="focusFirstStuckAgent()" title="가장 오래 멈춘 에이전트로 이동" aria-label="멈춘 에이전트 이동" hidden>
+            <button id="header-stuck-chip" type="button" class="header-stuck-chip"
+                onclick="focusFirstStuckAgent()"
+                data-i18n-attr="title:header.stuckTitle,aria-label:header.stuckAria"
+                title="가장 오래 멈춘 에이전트로 이동" aria-label="멈춘 에이전트 이동" hidden>
                 <iconify-icon icon="solar:hourglass-line-linear" aria-hidden="true"></iconify-icon>
                 <span id="header-stuck-count">0</span>
-                <span class="header-stuck-label">멈춤</span>
+                <span class="header-stuck-label" data-i18n="header.stuckLabel">멈춤</span>
             </button>
 
             <!-- Clock + time-of-day band -->

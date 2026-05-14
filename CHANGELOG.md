@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 102 — 헤더 stuck 칩에 i18n 적용
+- 라벨 / title / aria-label 을 `header.stuckLabel` · `header.stuckTitle` · `header.stuckAria` 3개 키로 분리
+- KO 그대로 "멈춤" 유지, EN "stuck" / "Jump to the most-stuck agent" / "Jump to stuck agent" 로 자연스럽게
+- 영어 사용자에게도 통일된 헤더 경험 제공
+
 ### Iteration 101 — 헤더에 멈춤 카운트 칩 + 한 번에 포커스
 - 헤더 연결 상태 옆에 호박색 `⏳ N 멈춤` 칩, stuck 0명이면 자동 숨김
 - 5초 인터벌(`refreshTabCount`)에 함께 갱신되어 항상 신선
