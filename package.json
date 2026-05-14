@@ -1,9 +1,34 @@
 {
   "name": "ai-tycoon",
   "version": "1.1.0",
-  "description": "Pixel Art Office - Real-time Claude Code Agent Visualizer",
+  "description": "내 컴퓨터에서 돌아가는 AI 에이전트(Claude Code / Cursor / Codex / Copilot / Ollama / LM Studio / Jan / GPT4All)를 픽셀 아트 오피스로 시각화하는 실시간 대시보드.",
   "license": "MIT",
   "main": "server.js",
+  "homepage": "https://github.com/easygap/AI-Tycoon#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/easygap/AI-Tycoon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/easygap/AI-Tycoon/issues"
+  },
+  "keywords": [
+    "claude-code",
+    "ai-agent",
+    "dashboard",
+    "visualization",
+    "pixel-art",
+    "real-time",
+    "websocket",
+    "pwa",
+    "cursor",
+    "codex",
+    "copilot",
+    "ollama",
+    "lm-studio",
+    "monitoring",
+    "developer-tools"
+  ],
   "engines": {
     "node": ">=18"
   },

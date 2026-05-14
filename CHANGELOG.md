@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 100 — package.json 메타데이터 보강 (출시 준비)
+- `description` 을 영문 → 한국어 + 지원 플랫폼 8종 명시로 갱신
+- `homepage` / `repository` / `bugs` URL 명시
+- `keywords` 15종 추가: claude-code, ai-agent, dashboard, pixel-art, real-time, websocket, pwa, cursor, codex, copilot, ollama, lm-studio, monitoring, developer-tools 등
+- 향후 npm 검색이나 GitHub topic 노출 시 발견성 ↑
+- JSON 파싱 / smoke 테스트(38/38) 정상 통과 확인
+
 ### Iteration 99 — 서버 부팅 배너에 버전 + Node 표기
 - ASCII 박스 아래쪽 부분에 `v1.1.0` 줄과 `Platform: win32 · Node v22.x` 한 줄 보강
 - `VERSION` 상수를 그대로 가져오므로 다음 릴리즈부터 자동 갱신
