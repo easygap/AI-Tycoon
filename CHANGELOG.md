@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 75 — 멈춤 감지 1회 토스트 알림
+- 에이전트가 처음으로 stuck 상태(`isAgentStuck` true)로 전환되는 순간 한 번만 토스트
+- 클릭하면 해당 에이전트로 포커스 (review 톤 사용)
+- 다시 움직이면 `_stuckNotified` Set 에서 제거 → 다음에 또 멈추면 한 번 더 알림
+- 패널을 안 보고 있어도 책상에서 일하다 알 수 있음
+- KO/EN 다국어 메시지
+
 ### Iteration 74 — 멈춘 에이전트 감지 칩 (5분 무신호 + 작업중 상태)
 - `isAgentStuck(agent)` 헬퍼: 상태가 coding/thinking/searching/reviewing 인데 신호 age > 5분이면 `true`
 - 해당 카드에 `.is-stuck` 클래스로 호박색 보더, 헤더 행에 `멈춤?` 칩 표시

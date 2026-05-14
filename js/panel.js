@@ -294,6 +294,33 @@ function isAgentStuck(agent) {
     return info.age > STUCK_THRESHOLD_MS;
 }
 
+// 한 번 알린 에이전트는 다시 안 알림 (해제됐다가 다시 멈출 때만 한 번 더)
+const _stuckNotified = new Set();
+function maybeFireStuckToast(agent) {
+    if (typeof window === "undefined") return;
+    const key = String(agent?.pid || "");
+    if (!key) return;
+    const stuck = isAgentStuck(agent);
+    if (stuck && !_stuckNotified.has(key)) {
+        _stuckNotified.add(key);
+        try {
+            const idx = (S.liveAgents || []).indexOf(agent);
+            const theme = AGENT_THEMES[(idx >= 0 ? idx : 0) % AGENT_THEMES.length];
+            const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+            const title = lang === "en"
+                ? `${theme.name} looks stuck`
+                : `${theme.name} 멈춘 것 같아요`;
+            const body = lang === "en"
+                ? `${agent.projectName || ""} · No signals for 5+ min`
+                : `${agent.projectName || ""} · 5분+ 무신호`;
+            window.aiTycoonToasts?.show?.("review", title, body, { pid: agent.pid });
+        } catch { /* 알림 실패는 치명적이지 않음 */ }
+    } else if (!stuck && _stuckNotified.has(key)) {
+        // 다시 움직였으면 상태 초기화 → 다음에 또 멈추면 한 번 더 알림
+        _stuckNotified.delete(key);
+    }
+}
+
 function renderDiagnosticChip(label, value, tone = "neutral") {
     return `<span class="diag-chip" data-tone="${tone}">
         <span class="diag-value">${esc(value)}</span>
@@ -1525,6 +1552,8 @@ export function updatePanel() {
         const justJoined = visual && visual.joinedAt && (Date.now() - visual.joinedAt) < 60000;
         const hasNote = !!getAgentNote(agent);
         const stuck = isAgentStuck(agent);
+        // 처음 stuck으로 전환된 순간에만 토스트 한 번
+        maybeFireStuckToast(agent);
         const card = document.createElement("div");
         card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}${hasNote ? " has-note" : ""}${stuck ? " is-stuck" : ""}`;
         card.dataset.action = action.key;
