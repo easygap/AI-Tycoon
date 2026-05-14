@@ -87,7 +87,10 @@ function ensureRoot() {
     });
 
     const input = root.querySelector(`#${INPUT_ID}`);
-    input.addEventListener("input", () => render());
+    // 한글 IME 조합 중에는 검색 보류 (자모 단위 매칭으로 깜빡이지 않게)
+    input.addEventListener("compositionstart", () => { input._imeComposing = true; });
+    input.addEventListener("compositionend", () => { input._imeComposing = false; render(); });
+    input.addEventListener("input", () => { if (!input._imeComposing) render(); });
     input.addEventListener("keydown", onInputKey);
     return root;
 }

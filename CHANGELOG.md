@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 96 — 명령 팔레트 input 도 한글 IME 조합 보류
+- 사이드바 검색(iter 95)과 동일한 패턴: `compositionstart` → `_imeComposing=true`, `compositionend` → `false` 후 한 번에 `render()`
+- Ctrl+K 열고 한글로 빠르게 타이핑할 때 자모 단위 결과 깜빡임 사라짐
+- 영문 입력에는 영향 없음
+
 ### Iteration 95 — 검색 input 의 한글 IME 조합 중 검색 보류
 - `compositionstart` 에 `_imeComposing=true`, `compositionend` 에 `false` 플래그 토글
 - `oninput` 은 조합 중이 아닐 때만 `setAgentSearch` 호출 → 자모 단위 매칭으로 인한 깜빡임 방지
