@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 143 — 보고 대기열(Boss queue) UI 도 KO/EN 분기
+- 사이드 패널 상단의 보고 대기열 패널: 헤딩/카운트/단계 라벨/액션 버튼 모두 다국어
+- 단계: 보고 중/이동 중/처리됨/대기 중 → reporting/walking/handled/waiting
+- 버튼: 승인/반려 → Approve/Deny
+- `N건 → N items` 단위도 분기
+- 이제 사이드 패널의 모든 영역(헬스/브리핑/대기열/카드 리스트/활동) 이 KO/EN 일관
+
 ### Iteration 142 — 카드 Shift+클릭으로 핀 토글
 - 사이드바 카드의 작은 핀 버튼 안 찾고 카드 본문 어디나 Shift+클릭으로 핀 토글
 - Shift+Enter / Shift+Space 도 동일 동작 (키보드 사용자도)

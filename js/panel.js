@@ -1918,6 +1918,17 @@ export function updateBossQueueUI() {
     }
     container.classList.remove("hidden");
 
+    const lgB = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lgB === "en";
+    const phaseTxt = {
+        active:    en ? "🎯 reporting" : "🎯 보고 중",
+        walking:   en ? "🚶 walking"   : "🚶 이동 중",
+        resolved:  en ? "✅ handled"   : "✅ 처리됨",
+        waiting:   en ? "⏳ waiting"   : "⏳ 대기 중",
+    };
+    const approveLabel = en ? "Approve" : "승인";
+    const denyLabel    = en ? "Deny"    : "반려";
+
     const items = queue.map(entry => {
         const agent = S.liveAgents.find(a => a.pid === entry.pid);
         const v = S.visualAgents[entry.pid];
@@ -1926,13 +1937,12 @@ export function updateBossQueueUI() {
         const roleMeta = ROLE_META[agent.role] || ROLE_META.developer;
         const isActive = entry.phase === "activeReview";
         const isWaiting = entry.phase === "waitingAtBossArea" || entry.phase === "queuedForBoss";
-        const isWalking = entry.phase === "walkingToBoss";
         const workText = getWorkText(agent) || agent.projectName;
 
-        const phaseLabel = isActive ? "🎯 보고 중"
-            : entry.phase === "walkingToBoss" ? "🚶 이동 중"
-            : entry.phase === "reviewResolved" ? "✅ 처리됨"
-            : "⏳ 대기 중";
+        const phaseLabel = isActive ? phaseTxt.active
+            : entry.phase === "walkingToBoss" ? phaseTxt.walking
+            : entry.phase === "reviewResolved" ? phaseTxt.resolved
+            : phaseTxt.waiting;
 
         return `<div class="boss-q-item ${isActive ? "boss-q-active" : ""}">
             <div class="flex items-center gap-2 mb-1">
@@ -1944,10 +1954,10 @@ export function updateBossQueueUI() {
             <div class="text-[11px] text-zinc-500 truncate mb-1.5">${esc(workText)}</div>
             <div class="flex gap-1.5">
                 <button onclick="bossReviewAction('${entry.pid}','yes')" class="boss-q-btn boss-q-yes" ${isActive || isWaiting ? "" : "disabled"}>
-                    <iconify-icon icon="solar:check-circle-linear" class="text-xs"></iconify-icon> 승인
+                    <iconify-icon icon="solar:check-circle-linear" class="text-xs"></iconify-icon> ${esc(approveLabel)}
                 </button>
                 <button onclick="bossReviewAction('${entry.pid}','no')" class="boss-q-btn boss-q-no" ${isActive || isWaiting ? "" : "disabled"}>
-                    <iconify-icon icon="solar:close-circle-linear" class="text-xs"></iconify-icon> 반려
+                    <iconify-icon icon="solar:close-circle-linear" class="text-xs"></iconify-icon> ${esc(denyLabel)}
                 </button>
             </div>
         </div>`;
@@ -1956,8 +1966,8 @@ export function updateBossQueueUI() {
     container.innerHTML = `
         <div class="flex items-center gap-2 mb-2">
             <iconify-icon icon="solar:clipboard-check-linear" class="text-amber-500 text-sm"></iconify-icon>
-            <h3 class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">보고 대기열</h3>
-            <span class="text-[10px] text-zinc-400 tabular-nums ml-auto">${queue.length}건</span>
+            <h3 class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">${en ? "Review queue" : "보고 대기열"}</h3>
+            <span class="text-[10px] text-zinc-400 tabular-nums ml-auto">${queue.length}${en ? " items" : "건"}</span>
         </div>
         <div class="flex flex-col gap-2">${items}</div>
     `;
