@@ -2236,18 +2236,23 @@ export function onMouseMove(e) {
         S.canvas.style.cursor = "pointer";
         const meta = (STATUS_META[hov.isRunning ? hov.status : "offline"] || STATUS_META.idle);
         const theme = AGENT_THEMES[S.liveAgents.indexOf(hov) % AGENT_THEMES.length];
-        const taskText = getWorkText(hov) || (hov.currentTask ? hov.currentTask.subject : "대기 중");
+        const lgT = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const labels = lgT === "en"
+            ? { idle: "Idle", status: "Status", mem: "Memory", task: "Task", sub: "Sub", cwd: "Path", done: "Done", active: "active" }
+            : { idle: "대기 중", status: "상태", mem: "메모리", task: "태스크", sub: "서브", cwd: "경로", done: "완료", active: "개 활성" };
+        const taskText = getWorkText(hov) || (hov.currentTask ? hov.currentTask.subject : labels.idle);
         const memClass = hov.memoryMB > 1000 ? "mem-high" : hov.memoryMB > 500 ? "mem-mid" : "mem-low";
         const subCount = (hov.tasks || []).filter(t => t.status !== "completed").length;
+        const subValue = lgT === "en" ? `${subCount} ${labels.active}` : `${subCount}${labels.active}`;
         tt.innerHTML = `
             <b style="color:${theme.bodyDark}">${esc(theme.name)} · ${esc(hov.projectName)}</b>
             <div class="tt-row"><span class="tt-label">PID</span><span class="tt-value">${hov.pid}</span></div>
-            <div class="tt-row"><span class="tt-label">상태</span><span class="tt-value" style="color:${meta.color}">${meta.label}</span></div>
-            <div class="tt-row"><span class="tt-label">메모리</span><span class="tt-value ${memClass}">${hov.memoryMB}MB</span></div>
-            <div class="tt-row"><span class="tt-label">태스크</span><span class="tt-value">${esc(taskText)}</span></div>
-            ${subCount > 0 ? `<div class="tt-row"><span class="tt-label">서브</span><span class="tt-value" style="color:#059669">${subCount}개 활성</span></div>` : ""}
-            <div class="tt-row"><span class="tt-label">경로</span><span class="tt-value" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(hov.cwd || "")}</span></div>
-            <div class="tt-row"><span class="tt-label">완료</span><span class="tt-value">${hov.completedTasks}/${hov.totalTasks}</span></div>
+            <div class="tt-row"><span class="tt-label">${esc(labels.status)}</span><span class="tt-value" style="color:${meta.color}">${meta.label}</span></div>
+            <div class="tt-row"><span class="tt-label">${esc(labels.mem)}</span><span class="tt-value ${memClass}">${hov.memoryMB}MB</span></div>
+            <div class="tt-row"><span class="tt-label">${esc(labels.task)}</span><span class="tt-value">${esc(taskText)}</span></div>
+            ${subCount > 0 ? `<div class="tt-row"><span class="tt-label">${esc(labels.sub)}</span><span class="tt-value" style="color:#059669">${esc(subValue)}</span></div>` : ""}
+            <div class="tt-row"><span class="tt-label">${esc(labels.cwd)}</span><span class="tt-value" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(hov.cwd || "")}</span></div>
+            <div class="tt-row"><span class="tt-label">${esc(labels.done)}</span><span class="tt-value">${hov.completedTasks}/${hov.totalTasks}</span></div>
         `;
         tt.className = "";
         tt.style.left = (e.clientX + 14) + "px";
