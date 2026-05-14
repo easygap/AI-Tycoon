@@ -285,7 +285,8 @@ function agentSignalInfo(agent) {
     const activityAt = numeric(signals.lastActivityAt, timestampValue(agent));
     const basis = activityAt || seenAt;
     const age = basis > 0 ? Math.max(0, Date.now() - basis) : 0;
-    const ageLabel = basis > 0 ? formatTimeAgo(age) : "수집 중";
+    const lg = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const ageLabel = basis > 0 ? formatTimeAgo(age) : (lg === "en" ? "collecting" : "수집 중");
     const sourceLabel = sources.length
         ? sources.slice(0, 3).map(source => SIGNAL_LABELS[source] || source).join("/")
         : (agent?.platform || "signal");
@@ -352,43 +353,52 @@ function renderDetectorHealth(active, working) {
     const codexSignals = numeric(diagnostics.codexSessionCount, 0) + numeric(diagnostics.cursorWorkspaceCount, 0);
 
     const lastSignalAt = numeric(diagnostics.lastPollAt, S.lastStateAt || S.lastHeartbeat || 0);
-    const ageLabel = lastSignalAt > 0 ? `${formatTimeAgo(Math.max(0, Date.now() - lastSignalAt))} 갱신` : "수집 중";
+    const lgDH = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lgDH === "en";
+    const ageLabel = lastSignalAt > 0
+        ? (en ? `updated ${formatTimeAgo(Math.max(0, Date.now() - lastSignalAt))}` : `${formatTimeAgo(Math.max(0, Date.now() - lastSignalAt))} 갱신`)
+        : (en ? "collecting" : "수집 중");
 
     let state = "scanning";
-    let title = "탐지 준비 중";
+    let title = en ? "Preparing detection" : "탐지 준비 중";
     if (!S.connected) {
         state = "offline";
-        title = "서버 연결 대기";
+        title = en ? "Waiting for server" : "서버 연결 대기";
     } else if (!hasDiagnostics) {
         state = "scanning";
-        title = "탐지 수집 중";
+        title = en ? "Collecting detection" : "탐지 수집 중";
     } else if (delayed) {
         state = "degraded";
-        title = "탐지 일부 지연";
+        title = en ? "Some detectors delayed" : "탐지 일부 지연";
     } else if (S.liveAgents.length > 0) {
         state = "live";
-        title = "탐지 정상";
+        title = en ? "Detection OK" : "탐지 정상";
     } else {
         state = "ready";
-        title = "시작 준비 완료";
+        title = en ? "Ready to start" : "시작 준비 완료";
     }
 
-    let hint = `${active.length}명 근무 중 · ${working.length}명 집중 처리 중`;
+    let hint = en
+        ? `${active.length} on duty · ${working.length} focused`
+        : `${active.length}명 근무 중 · ${working.length}명 집중 처리 중`;
     if (!S.connected) {
-        hint = "서버 신호를 다시 붙이는 중입니다";
+        hint = en ? "Reconnecting to the server signal…" : "서버 신호를 다시 붙이는 중입니다";
     } else if (delayed) {
-        hint = "마지막 정상 탐지 값을 유지하고 있습니다";
+        hint = en ? "Keeping the last good values" : "마지막 정상 탐지 값을 유지하고 있습니다";
     } else if (S.liveAgents.length === 0 && !diagnostics.claudeDirExists && externalCount === 0) {
-        hint = "AI 세션을 실행하면 작업실에 자동으로 나타납니다";
+        hint = en ? "Launch any AI session and it'll show up here" : "AI 세션을 실행하면 작업실에 자동으로 나타납니다";
     } else if (S.liveAgents.length === 0) {
-        hint = "탐지기는 준비됐고 실시간 활동을 기다리는 중입니다";
+        hint = en ? "Detectors ready, waiting for live activity" : "탐지기는 준비됐고 실시간 활동을 기다리는 중입니다";
     }
 
+    const claudeChip = en
+        ? (diagnostics.claudeDirExists ? "ready" : "wait")
+        : (diagnostics.claudeDirExists ? "준비" : "대기");
     const chips = [
-        renderDiagnosticChip("Claude", diagnostics.claudeDirExists ? "준비" : "대기", diagnostics.claudeDirExists ? "ok" : "warn"),
-        renderDiagnosticChip("세션", sessionCount.toLocaleString(), sessionCount > 0 ? "ok" : "neutral"),
-        renderDiagnosticChip("프로세스", processCount.toLocaleString(), processCount > 0 ? "ok" : "neutral"),
-        renderDiagnosticChip("AI 신호", (externalCount + codexSignals).toLocaleString(), externalCount + codexSignals > 0 ? "ok" : "neutral"),
+        renderDiagnosticChip("Claude", claudeChip, diagnostics.claudeDirExists ? "ok" : "warn"),
+        renderDiagnosticChip(en ? "Sessions" : "세션", sessionCount.toLocaleString(), sessionCount > 0 ? "ok" : "neutral"),
+        renderDiagnosticChip(en ? "Processes" : "프로세스", processCount.toLocaleString(), processCount > 0 ? "ok" : "neutral"),
+        renderDiagnosticChip(en ? "AI signals" : "AI 신호", (externalCount + codexSignals).toLocaleString(), externalCount + codexSignals > 0 ? "ok" : "neutral"),
     ].join("");
 
     el.dataset.state = state;
