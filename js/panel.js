@@ -2077,7 +2077,17 @@ export function updateDetailPanel() {
     };
     if (noteInput) {
         let saveTimer = null;
+        // 한글 IME 조합 중에는 저장 보류 — 자모 단위로 저장되면 의미 없는 텍스트만 박힘
+        noteInput.addEventListener("compositionstart", () => { noteInput._imeComposing = true; });
+        noteInput.addEventListener("compositionend", () => {
+            noteInput._imeComposing = false;
+            // 조합 끝나면 즉시 한 번 저장 (디바운스 무시)
+            setAgentNote(agent, noteInput.value);
+            if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
+            flashSaved();
+        });
         noteInput.addEventListener("input", () => {
+            if (noteInput._imeComposing) return;
             if (saveTimer) clearTimeout(saveTimer);
             saveTimer = setTimeout(() => {
                 setAgentNote(agent, noteInput.value);
