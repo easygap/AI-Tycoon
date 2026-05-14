@@ -5,6 +5,14 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 68 — 에이전트별 개인 메모
+- 디테일 패널 하단에 "개인 메모" 텍스트 영역 — 최대 500자
+- 입력 220ms 디바운스 → `localStorage` (`ai-tycoon-agent-notes`) 에 sessionId/PID 키로 저장
+- 메모가 있는 에이전트 카드 좌상단에 황금색 점 표시 (`.has-note::before`)
+- 디테일 패널의 footer에 글자 수 카운터 + "지우기" 버튼
+- `data-privacy` 속성으로 프라이버시 모드에서도 자동 블러 처리
+- 같은 에이전트를 다음에 열 때 메모가 그대로 — 컨텍스트 유지
+
 ### Iteration 67 — 컴팩트 에이전트 카드 모드 (토글)
 - 정렬 드롭다운 옆 작은 리스트 아이콘 버튼 → 클릭 시 컴팩트 보기 토글
 - 컴팩트 모드: 카드 패딩 축소, 서브태스크 리스트 숨김, 신호 라인 제거, 보더 슬림화
