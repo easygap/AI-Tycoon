@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 77 — 멈춘 에이전트 수를 브라우저 탭 제목에 노출
+- `refreshTabCount` 가 stuck 에이전트도 계산해 `⚠ N · (M) 작업실 · AI Tycoon` 형식으로 제목 갱신
+- 다른 탭에서 작업하다 페이지 안 봐도 멈춤 상태를 즉시 인지
+- 5초 인터벌 그대로 사용, 추가 코드 없이 기존 카운터에 한 줄만 더함
+- 임계값(5분)은 `panel.js` 의 `isAgentStuck` 과 동일하게 유지
+
 ### Iteration 76 — 빈 상태 카드에 지원 AI 도구 8종 + 데모 CTA
 - 에이전트가 0명일 때 단순한 텍스트 대신 지원 플랫폼 8개를 컬러 칩으로 나열
 - Claude · Codex · Cursor · Copilot · Ollama · LM Studio · Jan · GPT4All

@@ -1429,10 +1429,25 @@
         }
     }
     function refreshTabCount() {
-        const agents = (window.__aiTycoonAgents || []).filter(a => a.isRunning);
+        const all = window.__aiTycoonAgents || [];
+        const agents = all.filter(a => a.isRunning);
         const name = localStorage.getItem("ai-tycoon-workspace-name") || "";
         const base = name ? `${name} · AI Tycoon` : "AI Tycoon";
-        document.title = agents.length > 0 ? `(${agents.length}) ${base}` : base;
+
+        // 멈춘 친구 수도 함께 노출 — 다른 탭에 있어도 알아챌 수 있게.
+        // panel.js 의 isAgentStuck 과 동일 임계값 (5분) 사용.
+        const STUCK_MS = 5 * 60 * 1000;
+        const stuckCount = agents.filter(a => {
+            const active = ["coding", "thinking", "searching", "reviewing"].includes(a.status);
+            if (!active) return false;
+            const ts = a?.signals?.lastActivityAt || a?.signals?.lastSeenAt || 0;
+            return ts > 0 && (Date.now() - ts) > STUCK_MS;
+        }).length;
+
+        let title = base;
+        if (agents.length > 0) title = `(${agents.length}) ${title}`;
+        if (stuckCount > 0) title = `⚠ ${stuckCount} · ${title}`;
+        document.title = title;
     }
     // Refresh tab title roughly every 5 seconds to track running agent count
     setInterval(refreshTabCount, 5000);
