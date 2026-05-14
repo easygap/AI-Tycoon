@@ -3333,6 +3333,38 @@ body.agents-compact .agent-card .text-[11px].text-zinc-400 { font-size: 9.5px; }
 body.agents-compact .agent-card-inner .flex.items-center.gap-2\\.5.mb-2 { margin-bottom: 0; }
 body.agents-compact .agent-pin-btn { width: 22px; height: 22px; flex: 0 0 22px; }
 
+/* Iteration 91 — Insights 완료 태스크 옆 '어제 대비' 델타 칩 */
+.insights-delta {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    vertical-align: middle;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.6;
+    cursor: help;
+}
+.insights-delta[data-tone="up"] {
+    background: rgba(16, 185, 129, 0.16);
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.32);
+}
+.insights-delta[data-tone="down"] {
+    background: rgba(239, 68, 68, 0.14);
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, 0.32);
+}
+.insights-delta[data-tone="flat"] {
+    background: rgba(148, 163, 184, 0.16);
+    color: #475569;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+}
+body.dark .insights-delta[data-tone="up"] { color: #34d399; background: rgba(52, 211, 153, 0.14); }
+body.dark .insights-delta[data-tone="down"] { color: #fca5a5; background: rgba(239, 68, 68, 0.18); }
+body.dark .insights-delta[data-tone="flat"] { color: #94a3b8; background: rgba(148, 163, 184, 0.18); }
+
 /* Iteration 87 — 단축키 모달 검색 입력 */
 .shortcuts-search-shell {
     display: flex;

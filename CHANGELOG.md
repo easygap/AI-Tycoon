@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 91 — Insights 모달의 완료 태스크에 '어제 대비' 델타 칩
+- "완료 태스크" 카드 숫자 옆에 `+5` / `-2` / `±0` 형식의 작은 칩 추가
+- `yesterdayStats()` 가 있는 날부터만 표시 — 첫날엔 자연스럽게 숨김
+- tone (up/down/flat) 별로 emerald · rose · slate 색상 분기, 다크 모드 별도
+- 호버 시 `어제 대비: +5` 툴팁
+- 어제와 비교하면서 "오늘 더 일했나" 즉시 가늠 가능
+
 ### Iteration 90 — README 상단에 v1.1.0 새 소식 요약 배너
 - README 최상단에 버전 배지 추가 (`version-1.1.0`)
 - "🆕 v1.1.0 새 소식 (요약)" 섹션으로 핵심 신기능 12개 한 줄씩 정리

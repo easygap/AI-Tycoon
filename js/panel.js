@@ -2296,7 +2296,24 @@ export function refreshInsights() {
     }
 
     if (el("insights-agents")) el("insights-agents").textContent = activeCount;
-    if (el("insights-completed")) el("insights-completed").textContent = totalCompleted;
+    if (el("insights-completed")) {
+        // 완료 태스크 옆에 어제와 비교한 ±N 칩. 처음 사용 등으로 어제 데이터 없으면 숨김.
+        const completedEl = el("insights-completed");
+        const yest = yesterdayStats();
+        const yc = yest?.completedMax || 0;
+        const todayC = todayStats()?.completedMax || 0;
+        const delta = todayC - yc;
+        const langNow = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const yLabel = langNow === "en" ? "vs yesterday" : "어제 대비";
+        // 어제 데이터 자체가 없으면 칩 숨김
+        if (!yest) {
+            completedEl.textContent = String(totalCompleted);
+        } else {
+            const sign = delta > 0 ? "+" : (delta < 0 ? "" : "±");
+            const tone = delta > 0 ? "up" : (delta < 0 ? "down" : "flat");
+            completedEl.innerHTML = `${totalCompleted}<span id="insights-completed-delta" class="insights-delta" data-tone="${tone}" title="${esc(yLabel)}: ${sign}${delta}">${sign}${delta}</span>`;
+        }
+    }
     if (el("insights-ongoing")) el("insights-ongoing").textContent = totalOngoing;
     if (el("insights-ram")) {
         el("insights-ram").innerHTML = totalRam.toLocaleString() + '<span class="insights-unit">MB</span>';
