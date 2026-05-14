@@ -323,10 +323,19 @@ function render() {
     results = [...agents, ...actions];
     highlightedIndex = 0;
 
-    // 결과 개수 푸터에 표시 (3개 이상일 때만 — 적으면 시각적 잡음만 됨)
+    // 결과 개수 푸터에 표시 — 에이전트 / 명령 별도 카운트로 분리
     const countEl = document.getElementById("cp-foot-count");
     if (countEl) {
-        countEl.textContent = results.length >= 3 ? `${results.length}개 결과` : "";
+        const agentCount = results.filter(r => r.kind === KIND_AGENT).length;
+        const actionCount = results.filter(r => r.kind === KIND_ACTION).length;
+        if (results.length < 3) {
+            countEl.textContent = "";
+        } else {
+            const parts = [];
+            if (agentCount > 0) parts.push(`${agentCount} agents`);
+            if (actionCount > 0) parts.push(`${actionCount} cmds`);
+            countEl.textContent = parts.join(" · ");
+        }
     }
 
     if (results.length === 0) {

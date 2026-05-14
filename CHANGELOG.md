@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 140 — 팔레트 결과 카운트를 에이전트/명령 별도로 분리
+- 푸터 카운트가 `5개 결과` 단일 숫자에서 `3 agents · 2 cmds` 형식으로
+- 검색을 좁히면서 어느 카테고리에서 매칭됐는지 즉시 인지
+- 3개 미만일 때는 잡음 줄이려 빈 문자열 유지 (기존 동작)
+
 ### Iteration 139 — 워크 이벤트 클릭 시 사이드바 카드로도 자동 스크롤
 - 데스크탑에서 캔버스 좌하단 work-stream 또는 활동 타임라인의 이벤트를 클릭하면
   카메라뿐 아니라 사이드바 에이전트 카드까지 부드럽게 스크롤되어 보임
