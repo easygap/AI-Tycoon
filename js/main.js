@@ -34,6 +34,7 @@ import "./konami.js";
 import "./awaySummary.js";
 import "./commandPalette.js";
 import "./privacyMode.js";
+import "./standupExport.js";
 
 // ── Console branding (devtools welcome) ──
 if (typeof console !== "undefined") {

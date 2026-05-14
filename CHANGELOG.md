@@ -5,6 +5,14 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 71 — 일일 스탠드업 리포트 Markdown 내보내기
+- 새 `js/standupExport.js`: 오늘 작업을 Markdown 형식으로 정리해서 다운로드
+- 구조: `한눈에` (활성/완료/진행) → `에이전트별 작업` (이름/프로젝트/플랫폼/완료/진행 + 현재 작업) → `최근 이벤트` (10건)
+- KO/EN 다국어, 파일명 `ai-tycoon-standup-YYYY-MM-DD.md`
+- 명령 팔레트에 "일일 리포트 (Markdown)" 항목 추가
+- 일일 스탠드업 / 데일리 리포트 / 주간 보고에 그대로 붙여넣기 가능
+- SW v12, smoke test 38개로 확장
+
 ### Iteration 70 — About 카드에 Service Worker 버전 표시
 - 설정 → 정보 카드에 SW 캐시 버전 줄 추가 (`SW: ai-tycoon-shell-v11`)
 - `/sw.js`를 `cache: no-store` 옵션으로 fetch 해서 VERSION 상수를 정규식으로 추출
