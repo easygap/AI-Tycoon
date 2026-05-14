@@ -3051,6 +3051,67 @@ body.dark .activity-log-mini {
     transition-timing-function: var(--ease-out);
 }
 
+/* Iteration 66 — "What's new" section inside the Settings modal */
+.whatsnew-card {
+    background: linear-gradient(135deg, rgba(252, 211, 77, 0.12), rgba(255, 222, 180, 0.42));
+    border: 1px solid rgba(217, 119, 87, 0.22);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.whatsnew-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.whatsnew-item {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 12.5px;
+    color: #5a4438;
+    line-height: 1.35;
+}
+.whatsnew-item iconify-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+    background: #94a3b8;
+}
+.whatsnew-item[data-tone="ok"] iconify-icon { background: linear-gradient(135deg, #34d399, #10b981); }
+.whatsnew-item[data-tone="feature"] iconify-icon { background: linear-gradient(135deg, #a78bfa, #6366f1); }
+.whatsnew-item[data-tone="highlight"] iconify-icon { background: linear-gradient(135deg, #fbbf24, #d97706); }
+.whatsnew-item[data-tone="design"] iconify-icon { background: linear-gradient(135deg, #f472b6, #ec4899); }
+.whatsnew-item[data-tone="stable"] iconify-icon { background: linear-gradient(135deg, #60a5fa, #2563eb); }
+.whatsnew-foot {
+    align-self: flex-end;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #d97757;
+    text-decoration: none;
+    transition: color 0.15s ease, transform 0.1s ease;
+}
+.whatsnew-foot:hover { color: #b75c3d; transform: translateX(2px); }
+body.dark .whatsnew-card {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(217, 119, 87, 0.14));
+    border-color: rgba(253, 186, 116, 0.28);
+}
+body.dark .whatsnew-item { color: #c4b8aa; }
+body.dark .whatsnew-foot { color: #fbbf24; }
+body.dark .whatsnew-foot:hover { color: #fef3c7; }
+
 /* Iteration 64 — Ctrl+K hint chip inside the search shell */
 .agent-search-cmdk {
     display: inline-flex;

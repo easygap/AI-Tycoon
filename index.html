@@ -745,6 +745,11 @@
                 </section>
 
                 <section class="settings-section">
+                    <h3 class="settings-section-title" data-i18n="settings.whatsNew">새 소식</h3>
+                    <div id="settings-whatsnew" class="whatsnew-card" aria-live="polite"></div>
+                </section>
+
+                <section class="settings-section">
                     <h3 class="settings-section-title" data-i18n="settings.help">도움말</h3>
                     <div class="settings-row settings-row-vertical">
                         <button type="button" class="settings-action" onclick="closeSettings(); setTimeout(openShortcuts, 280);">
@@ -1037,6 +1042,41 @@
         overlay.classList.remove("is-visible");
         setTimeout(() => { overlay.hidden = true; }, 240);
     }
+    // ── What's new (recent release notes inline) ──
+    // Hand-maintained: keep in sync with the top of CHANGELOG.md so users
+    // can see recent improvements without leaving the app.
+    const WHATSNEW_ENTRIES = [
+        { ko: "Smoke 테스트가 /api/health · /api/agents JSON 계약까지 검증", en: "Smoke tests now validate /api/health & /api/agents JSON shape", icon: "solar:test-tube-bold", tone: "ok" },
+        { ko: "명령 팔레트 검색바 힌트 + 투어 안내로 발견성 ↑", en: "Cmd palette discoverability via search-bar chip + tour", icon: "solar:command-square-bold", tone: "feature" },
+        { ko: "메모리 추세 화살표 ▲ / ▼ (30초 비교)", en: "Memory trend arrows on agent cards (30 s window)", icon: "solar:arrow-up-linear", tone: "feature" },
+        { ko: "명령 팔레트 22종 명령 (테마·필터·언어 등)", en: "Command palette expanded to 22 commands", icon: "solar:command-bold", tone: "feature" },
+        { ko: "프라이버시 모드 (Shift+P) — 화면 공유용 블러", en: "Privacy mode (Shift+P) — blur sensitive text", icon: "solar:eye-closed-bold", tone: "feature" },
+        { ko: "명령 팔레트 (Ctrl/Cmd+K) — VS Code 스타일 빠른 이동", en: "Command palette (Ctrl/Cmd+K)", icon: "solar:command-bold", tone: "highlight" },
+        { ko: "프로젝트별 일관된 색상 닷 (같은 프로젝트끼리 시각 그룹)", en: "Per-project color dots — visual grouping", icon: "solar:palette-bold", tone: "design" },
+        { ko: "사이드 패널 상단 상태별 요약 칩", en: "Status summary chips above the agent list", icon: "solar:chart-bold", tone: "design" },
+        { ko: "신규 출근 에이전트 NEW 펄스 (60초)", en: "NEW pulse on freshly joined agents (60 s)", icon: "solar:user-plus-bold", tone: "design" },
+        { ko: "Insights 모달에 '오늘의 MVP' 카드", en: "'Today's MVP' card in the Insights modal", icon: "solar:cup-star-bold", tone: "feature" },
+        { ko: "탭 복귀 시 '자리 비운 사이' 요약 토스트", en: "'While you were away' summary on tab return", icon: "solar:bell-bold", tone: "feature" },
+        { ko: "서버 graceful shutdown — WS 클라이언트 작별 인사", en: "Server graceful shutdown with farewell to WS clients", icon: "solar:server-bold", tone: "stable" },
+    ];
+    function renderWhatsNew() {
+        const el = document.getElementById("settings-whatsnew");
+        if (!el) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        // Limit to top 6 for compactness
+        const items = WHATSNEW_ENTRIES.slice(0, 6).map(entry => {
+            const text = lang === "en" ? entry.en : entry.ko;
+            return `<li class="whatsnew-item" data-tone="${entry.tone}">
+                <iconify-icon icon="${entry.icon}" aria-hidden="true"></iconify-icon>
+                <span>${text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+            </li>`;
+        }).join("");
+        const footHref = "https://github.com/easygap/AI-Tycoon/blob/main/CHANGELOG.md";
+        const footText = lang === "en" ? "View full changelog →" : "전체 변경 사항 보기 →";
+        el.innerHTML = `<ul class="whatsnew-list">${items}</ul>
+            <a class="whatsnew-foot" href="${footHref}" target="_blank" rel="noopener noreferrer">${footText}</a>`;
+    }
+
     // ── Settings modal ──
     function openSettings() {
         const overlay = document.getElementById("settings-overlay");
@@ -1128,6 +1168,8 @@
         const seasonNow = localStorage.getItem("ai-tycoon-season") || "auto";
         const seasonSel = document.getElementById("settings-season");
         if (seasonSel) seasonSel.value = seasonNow;
+        // What's new
+        renderWhatsNew();
 
         openModalOverlay(overlay);
     }
