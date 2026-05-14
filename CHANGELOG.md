@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 125 — 사이드바 가시성 요약(visibility summary) 줄도 KO/EN
+- `전체 보기 / N명 / 고정 N / 작업 N / 검토 N / 최근 N` 모두 KO/EN 분기
+- 영어 모드: `Show all / N people / Pinned N / Working N / Review N / Recent N`
+- "명" 은 한국어에서 붙여 쓰고, "people" 은 영어에서 띄어 쓰도록 자연어 조사 처리
+- 검색 위 한 줄짜리 요약 띠가 영어 사용자에게도 자연스러움
+
 ### Iteration 124 — 포커스 레일(focus rail) 안내 문구 KO/EN 분기
 - 포커스된 에이전트가 있을 때 `추적 중` 라벨 → `Tracking`
 - 없을 때 `대기 중 / 새 에이전트 활동을 기다리는 중 / 서버 연결을 기다리는 중`

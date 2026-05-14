@@ -219,18 +219,23 @@ function updateSearchControls(filteredAgents) {
     const review = filteredAgents.filter(agent => agent.needsReview || agent.status === "reviewing").length;
     const pinned = filteredAgents.filter(isAgentPinned).length;
     const recent = filteredAgents.filter(agent => Date.now() - timestampValue(agent) < 10 * 60 * 1000).length;
+    const lgV = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const labels = lgV === "en"
+        ? { all: "Show all", count: "people", view: "view", pinned: "Pinned", working: "Working", review: "Review", recent: "Recent" }
+        : { all: "전체 보기", count: "명", view: "보기", pinned: "고정", working: "작업", review: "검토", recent: "최근" };
     const searchLabel = normalizedQuery
         ? `<span class="visibility-query">"${esc(query)}"</span>`
-        : `<span>전체 보기</span>`;
+        : `<span>${esc(labels.all)}</span>`;
+    const countSuffix = lgV === "en" ? ` ${labels.count}` : labels.count; // "명" 은 붙여 쓰고 "people" 은 띄움
 
     summary.innerHTML = `
         <span>${searchLabel}</span>
-        <span class="tabular-nums">${visible}/${total}명</span>
-        ${actionMeta && actionMeta.key !== "all" ? `<span class="action-visibility">${esc(actionMeta.label)} 보기</span>` : ""}
-        ${pinned ? `<span class="pinned-visibility tabular-nums">고정 ${pinned}</span>` : ""}
-        <span class="tabular-nums">작업 ${working}</span>
-        ${review ? `<span class="needs-attention tabular-nums">검토 ${review}</span>` : ""}
-        ${recent ? `<span class="tabular-nums">최근 ${recent}</span>` : ""}
+        <span class="tabular-nums">${visible}/${total}${countSuffix}</span>
+        ${actionMeta && actionMeta.key !== "all" ? `<span class="action-visibility">${esc(actionMeta.label)} ${esc(labels.view)}</span>` : ""}
+        ${pinned ? `<span class="pinned-visibility tabular-nums">${esc(labels.pinned)} ${pinned}</span>` : ""}
+        <span class="tabular-nums">${esc(labels.working)} ${working}</span>
+        ${review ? `<span class="needs-attention tabular-nums">${esc(labels.review)} ${review}</span>` : ""}
+        ${recent ? `<span class="tabular-nums">${esc(labels.recent)} ${recent}</span>` : ""}
     `;
 }
 
