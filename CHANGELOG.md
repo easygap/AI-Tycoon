@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 115 — 헤더 프라이버시 칩이 Strict 일 때 색·라벨 강조
+- `aiTycoonPrivacy.isStrict()` 결과를 `refreshDemoChip` 사이클에서 함께 확인
+- 칩에 `.is-strict` 클래스 부여 → 더 진한 인디고/바이올렛 색감
+- 라벨 텍스트가 자동으로 `Strict` 로 바뀜 (원래 라벨은 `data-origText` 에 보존했다가 strict 해제 시 복원)
+- 다크 모드 별도 색감
+- iter 114 strict 모드 도입 후 헤더에서도 즉시 구분 가능
+
 ### Iteration 114 — Strict 프라이버시 모드 (호버 미리보기 차단)
 - `Shift+P` 빠르게 두 번 (600ms 이내) → strict 모드 토글
 - strict 일 때는 `body.privacy-strict` 클래스로 hover 시 unblur 비활성화 → 화면 녹화/공유 시 완전 안전
