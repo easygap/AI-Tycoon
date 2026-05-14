@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 108 — 작업 스트림 빈 상태 메시지 다국어 처리
+- 활동 타임라인이 비어있을 때 표시되는 "활동 수집 중" 메시지를 KO/EN 분기
+- 영어 사용자에게 `Collecting activity…` + `Events show up here as agents start working.` 노출
+- 그 외에는 기존 한국어 그대로
+
 ### Iteration 107 — 메모 있는 카드 hover 시 미리보기 툴팁
 - `has-note` 카드의 `title` 속성에 `📝 메모 첫 140자` 박아두기
 - 디테일 패널 열지 않고도 OS 네이티브 툴팁으로 메모 확인 가능

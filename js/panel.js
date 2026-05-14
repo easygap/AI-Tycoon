@@ -977,11 +977,16 @@ function renderActivityTimeline(now) {
     if (count) count.textContent = events.length ? `${events.length}` : "";
     timeline.classList.toggle("is-empty", events.length === 0);
     if (events.length === 0) {
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const title = lang === "en" ? "Collecting activity…" : "활동 수집 중";
+        const body  = lang === "en"
+            ? "Events show up here as agents start working."
+            : "직원이 작업을 시작하면 여기에 시간순으로 쌓입니다";
         timeline.innerHTML = `
             <div class="activity-empty">
                 <iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon>
-                <strong>활동 수집 중</strong>
-                <span>직원이 작업을 시작하면 여기에 시간순으로 쌓입니다</span>
+                <strong>${esc(title)}</strong>
+                <span>${esc(body)}</span>
             </div>`;
         return;
     }
