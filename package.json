@@ -1,6 +1,6 @@
 {
   "name": "ai-tycoon",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Pixel Art Office - Real-time Claude Code Agent Visualizer",
   "license": "MIT",
   "main": "server.js",
