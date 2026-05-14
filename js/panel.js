@@ -1969,15 +1969,22 @@ export function updateDetailPanel() {
                 </div>
             </div>`;
         }).join("");
-        if (tasks.length > 10) taskHtml += `<div class="text-[10px] text-zinc-400">+${tasks.length - 10}개 더</div>`;
+        const lgT = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const moreLabel = lgT === "en" ? `+${tasks.length - 10} more` : `+${tasks.length - 10}개 더`;
+        if (tasks.length > 10) taskHtml += `<div class="text-[10px] text-zinc-400">${moreLabel}</div>`;
     } else {
-        taskHtml = `<div class="text-[11px] text-zinc-400">등록된 태스크 없음</div>`;
+        const lgE = (window.aiTycoonI18n?.getLang?.() || "ko");
+        taskHtml = `<div class="text-[11px] text-zinc-400">${lgE === "en" ? "No tasks registered" : "등록된 태스크 없음"}</div>`;
     }
 
+    const lgM = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const labels = lgM === "en"
+        ? { session: "Session", cwd: "Path", copySuffix: "copy" }
+        : { session: "세션", cwd: "경로", copySuffix: "복사" };
     const metaRows = [
         ["PID", agent.pid, "pid"],
-        agent.sessionId ? ["세션", agent.sessionId, "session"] : null,
-        agent.cwd ? ["경로", agent.cwd, "cwd"] : null,
+        agent.sessionId ? [labels.session, agent.sessionId, "session"] : null,
+        agent.cwd ? [labels.cwd, agent.cwd, "cwd"] : null,
     ].filter(Boolean);
     const detailMetaHtml = metaRows.length
         ? `<div class="detail-meta-grid">
@@ -1985,7 +1992,7 @@ export function updateDetailPanel() {
                 <div class="detail-meta-row">
                     <span>${esc(label)}</span>
                     <code>${esc(value)}</code>
-                    <button type="button" class="detail-copy-btn icon-only" data-copy-kind="${esc(kind)}" aria-label="${esc(label)} 복사">
+                    <button type="button" class="detail-copy-btn icon-only" data-copy-kind="${esc(kind)}" aria-label="${esc(label)} ${esc(labels.copySuffix)}">
                         <iconify-icon icon="solar:copy-linear" aria-hidden="true"></iconify-icon>
                     </button>
                 </div>
@@ -2033,16 +2040,23 @@ export function updateDetailPanel() {
         <div class="text-[10px] text-zinc-400 truncate mb-3">${esc(agent.cwd || agent.platformName || "")}</div>
         ${detailMetaHtml}
 
-        <div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mb-1">메모리 사용량</div>
-        <div class="text-[10px] text-zinc-400 mb-1">PID ${agent.pid} · ${agent.memoryMB}MB</div>
-        ${memGraph || '<div class="text-[10px] text-zinc-400">데이터 수집 중...</div>'}
+        ${(() => {
+            const lg = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const memTitle  = lg === "en" ? "Memory usage" : "메모리 사용량";
+            const collecting = lg === "en" ? "Collecting data…" : "데이터 수집 중…";
+            const tasksTitle = lg === "en" ? "Tasks" : "태스크";
+            return `
+        <div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mb-1">${esc(memTitle)}</div>
+        <div class="text-[10px] text-zinc-400 mb-1">PID ${esc(String(agent.pid))} · ${agent.memoryMB}MB</div>
+        ${memGraph || `<div class="text-[10px] text-zinc-400">${esc(collecting)}</div>`}
 
         ${currentWorkHtml}
 
         ${signalHtml}
 
-        ${tasks.length > 0 ? `<div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mt-3 mb-2">태스크 (${agent.completedTasks}/${agent.totalTasks})</div>
-        <div class="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">${taskHtml}</div>` : ""}
+        ${tasks.length > 0 ? `<div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mt-3 mb-2">${esc(tasksTitle)} (${agent.completedTasks}/${agent.totalTasks})</div>
+        <div class="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">${taskHtml}</div>` : ""}`;
+        })()}
 
         ${(() => {
             const langN = (window.aiTycoonI18n?.getLang?.() || "ko");

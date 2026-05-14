@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 119 — 디테일 패널의 메모리/태스크/메타 라벨 KO/EN 분기
+- 메모리 사용량 / 태스크 / "데이터 수집 중" / "등록된 태스크 없음" / "+N개 더" 모두 KO/EN
+- 메타 행 라벨 (PID / 세션 / 경로) → (PID / Session / Path) 분기
+- copy 버튼의 aria-label suffix 도 KO `복사` / EN `copy` 자동 매칭
+- 영어 모드 디테일 패널이 완전히 자연스러워짐
+
 ### Iteration 118 — 디테일 패널 메모 UI 다국어 처리
 - 메모 섹션 제목 / placeholder / aria-label / 글자 카운터 / `저장됨` 토스트 / `지우기` 버튼 모두 KO/EN 분기
 - IIFE 로 한 번에 합성해 렌더링 분기 깔끔하게
