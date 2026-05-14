@@ -305,6 +305,9 @@
                             <option value="project">프로젝트순</option>
                             <option value="recent">최근 활동순</option>
                         </select>
+                        <button id="agents-compact-toggle" type="button" class="agents-compact-toggle" onclick="toggleAgentsCompact()" aria-pressed="false" title="컴팩트 보기" aria-label="컴팩트 보기 토글">
+                            <iconify-icon icon="solar:list-linear" aria-hidden="true"></iconify-icon>
+                        </button>
                     </div>
                     <div id="agents-status-summary" class="agents-status-summary" aria-label="상태별 에이전트 수" hidden></div>
                     <div id="agents-list" class="flex flex-col gap-2"></div>

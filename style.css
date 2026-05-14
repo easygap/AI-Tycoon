@@ -3051,6 +3051,50 @@ body.dark .activity-log-mini {
     transition-timing-function: var(--ease-out);
 }
 
+/* Iteration 67 — Compact agent list mode + toggle button */
+.agents-compact-toggle {
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    color: #98a2b3;
+    background: transparent;
+    border: 1px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+    margin-left: auto;
+}
+.agents-compact-toggle:hover {
+    background: rgba(24,27,31,0.06);
+    color: #344054;
+}
+.agents-compact-toggle.is-active {
+    background: rgba(99,102,241,0.12);
+    color: #6366f1;
+    border-color: rgba(99,102,241,0.32);
+}
+body.dark .agents-compact-toggle { color: #a89c8e; }
+body.dark .agents-compact-toggle:hover {
+    background: rgba(255,255,255,0.06);
+    color: #fef3c7;
+}
+body.dark .agents-compact-toggle.is-active {
+    background: rgba(165,180,252,0.18);
+    color: #a5b4fc;
+    border-color: rgba(165,180,252,0.42);
+}
+
+/* Compact mode reduces card padding, hides the sub-task list and signal line */
+body.agents-compact #agents-list { gap: 4px; }
+body.agents-compact .agent-card-inner { padding: 6px 8px; }
+body.agents-compact .agent-card .mt-2.flex.flex-col { display: none; }
+body.agents-compact .agent-signal-line { display: none; }
+body.agents-compact .agent-card .text-[11px].text-zinc-400 { font-size: 9.5px; }
+body.agents-compact .agent-card-inner .flex.items-center.gap-2\\.5.mb-2 { margin-bottom: 0; }
+body.agents-compact .agent-pin-btn { width: 22px; height: 22px; flex: 0 0 22px; }
+
 /* Iteration 66 — "What's new" section inside the Settings modal */
 .whatsnew-card {
     background: linear-gradient(135deg, rgba(252, 211, 77, 0.12), rgba(255, 222, 180, 0.42));
