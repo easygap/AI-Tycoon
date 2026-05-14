@@ -28,6 +28,25 @@ const LIST_ID = "command-palette-list";
 const KIND_AGENT = "agent";
 const KIND_ACTION = "action";
 
+// 최근 포커스한 에이전트 sessionId/pid 큐 (LRU, 최대 5개)
+// 빈 검색 상태에서 상단에 노출해 자주 보는 에이전트를 빠르게 다시 찾을 수 있게 함
+const RECENT_KEY = "ai-tycoon-cmdk-recent";
+const RECENT_MAX = 5;
+function loadRecent() {
+    try {
+        const arr = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+        return Array.isArray(arr) ? arr.slice(0, RECENT_MAX) : [];
+    } catch { return []; }
+}
+function pushRecent(pidOrSid) {
+    if (!pidOrSid) return;
+    const key = String(pidOrSid);
+    const cur = loadRecent().filter(k => k !== key);
+    cur.unshift(key);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(cur.slice(0, RECENT_MAX))); }
+    catch { /* localStorage 꽉 찬 경우 무시 */ }
+}
+
 let highlightedIndex = 0;
 let results = [];
 
@@ -127,6 +146,8 @@ function runHighlighted() {
         S.detailPid = pid;
         S.directorFocusPid = pid;
         S.directorMode = true;
+        // 최근 방문 기록 — sessionId 우선 (재시작 후에도 추적), 없으면 pid
+        pushRecent(item.agent.sessionId || pid);
     } else if (item.kind === KIND_ACTION && typeof item.action === "function") {
         item.action();
     }
@@ -172,6 +193,35 @@ function buildAgentResults(query) {
         if (score <= 0) return;
         out.push({ kind: KIND_AGENT, score, agent, theme });
     });
+
+    // 검색어 없을 때: 최근 방문한 에이전트를 우선 노출하여 자주 보는 작업을 빠르게 다시 찾도록
+    if (!query) {
+        const recent = loadRecent();
+        if (recent.length > 0) {
+            const recentMap = new Map();
+            out.forEach(item => {
+                const key1 = String(item.agent.sessionId || "");
+                const key2 = String(item.agent.pid || "");
+                if (key1) recentMap.set(key1, item);
+                if (key2) recentMap.set(key2, item);
+            });
+            const ordered = [];
+            const seen = new Set();
+            // 최근 방문한 것부터 차례대로
+            recent.forEach(key => {
+                const it = recentMap.get(key);
+                if (it && !seen.has(it.agent.pid)) {
+                    ordered.push({ ...it, recent: true });
+                    seen.add(it.agent.pid);
+                }
+            });
+            // 나머지는 그 뒤에
+            out.forEach(item => {
+                if (!seen.has(item.agent.pid)) ordered.push(item);
+            });
+            return ordered.slice(0, 8);
+        }
+    }
     return out.sort((a, b) => b.score - a.score).slice(0, 8);
 }
 
@@ -251,10 +301,12 @@ function render() {
             const a = r.agent;
             const meta = STATUS_META[a.isRunning ? a.status : "offline"] || STATUS_META.idle;
             const platform = (PLATFORM_META[a.platform] || PLATFORM_META.claude || {}).badge || "?";
+            // 최근 방문 칩은 빈 검색 + recent 플래그 둘 다 있을 때만 표시
+            const recentChip = r.recent ? `<span class="cp-recent-chip">최근</span>` : "";
             return `<li class="cp-row${i === 0 ? " is-active" : ""}" role="option" data-index="${i}">
                 <span class="cp-avatar" style="background:${r.theme.body}">${esc(r.theme.name.charAt(0))}</span>
                 <div class="cp-info">
-                    <div class="cp-title">${esc(r.theme.name)} <em>· ${esc(a.projectName || "")}</em></div>
+                    <div class="cp-title">${esc(r.theme.name)} <em>· ${esc(a.projectName || "")}</em>${recentChip}</div>
                     <div class="cp-sub">${esc(meta.label)} · ${esc(platform)} · ${a.memoryMB || 0}MB</div>
                 </div>
                 <kbd class="cp-row-hint">↵</kbd>

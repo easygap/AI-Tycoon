@@ -3799,6 +3799,26 @@ body.privacy-mode .insights-mvp-project:hover {
 }
 .privacy-badge-close:hover { background: rgba(255,255,255,0.32); }
 
+/* Iteration 72 — 명령 팔레트 최근 방문 칩 */
+.cp-recent-chip {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    font-size: 9.5px;
+    font-weight: 700;
+    background: rgba(99, 102, 241, 0.14);
+    color: #6366f1;
+    border: 1px solid rgba(99, 102, 241, 0.32);
+    border-radius: 999px;
+    vertical-align: middle;
+    letter-spacing: 0.04em;
+}
+body.dark .cp-recent-chip {
+    background: rgba(165, 180, 252, 0.18);
+    color: #a5b4fc;
+    border-color: rgba(165, 180, 252, 0.42);
+}
+
 /* Iteration 60 — Command Palette (Ctrl+K / Cmd+K) */
 .cp-overlay {
     position: fixed;
