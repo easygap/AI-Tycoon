@@ -1567,12 +1567,26 @@ export function updatePanel() {
         const hasSearch = normalizeSearch(S.agentSearchQuery);
         const hasActionFilter = S.activeActionFilter !== "all";
         const resetAction = hasSearch ? "clearAgentSearch()" : hasActionFilter ? "setActionFilter('all')" : "setFilter('all')";
-        const resetLabel = hasSearch ? "검색 지우기" : hasActionFilter ? "행동 필터 해제" : "전체 보기";
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const isEn = lang === "en";
+        const resetLabel = hasSearch
+            ? (isEn ? "Clear search" : "검색 지우기")
+            : hasActionFilter
+                ? (isEn ? "Reset action filter" : "행동 필터 해제")
+                : (isEn ? "Show all" : "전체 보기");
+        const titleStr = hasSearch
+            ? (isEn ? "No results" : "검색 결과가 없습니다")
+            : (isEn ? "No agents match the filter" : "필터에 맞는 에이전트가 없습니다");
+        const bodyStr = hasSearch
+            ? (isEn ? "Double-check the name, project, or work text." : "직원 이름, 프로젝트, 작업 문구를 다시 확인해 주세요.")
+            : hasActionFilter
+                ? (isEn ? "Pick a different action filter or go back to all." : "다른 다음 행동을 선택하거나 전체로 돌아갈 수 있습니다.")
+                : (isEn ? "Switch the filter back to All to see everyone." : "필터를 전체로 바꾸면 모든 직원을 볼 수 있습니다.");
         list.innerHTML = `<div class="agent-empty-state">
             <iconify-icon icon="${hasSearch ? "solar:magnifer-linear" : hasActionFilter ? "solar:bolt-circle-linear" : "solar:filter-linear"}" aria-hidden="true"></iconify-icon>
-            <strong>${hasSearch ? "검색 결과가 없습니다" : "필터에 맞는 에이전트가 없습니다"}</strong>
-            <span>${hasSearch ? "직원 이름, 프로젝트, 작업 문구를 다시 확인해 주세요." : hasActionFilter ? "다른 다음 행동을 선택하거나 전체로 돌아갈 수 있습니다." : "필터를 전체로 바꾸면 모든 직원을 볼 수 있습니다."}</span>
-            <button type="button" onclick="${resetAction}">${resetLabel}</button>
+            <strong>${esc(titleStr)}</strong>
+            <span>${esc(bodyStr)}</span>
+            <button type="button" onclick="${resetAction}">${esc(resetLabel)}</button>
         </div>`;
         return;
     }

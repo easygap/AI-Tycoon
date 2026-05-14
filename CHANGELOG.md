@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 109 — 필터/검색 결과 0건 카드도 KO/EN 분기
+- 사이드바에서 검색 또는 필터로 0건이 나올 때 표시되는 빈 카드의 제목/본문/리셋 버튼 모두 다국어
+- 검색 0건: `No results / Double-check the name, project, or work text. / Clear search`
+- 필터 0건: `No agents match the filter / Pick a different action filter or go back to all. / Reset action filter`
+- 전체 필터 안내: `Switch the filter back to All to see everyone. / Show all`
+
 ### Iteration 108 — 작업 스트림 빈 상태 메시지 다국어 처리
 - 활동 타임라인이 비어있을 때 표시되는 "활동 수집 중" 메시지를 KO/EN 분기
 - 영어 사용자에게 `Collecting activity…` + `Events show up here as agents start working.` 노출
