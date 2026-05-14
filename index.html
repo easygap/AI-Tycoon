@@ -67,6 +67,13 @@
                 <span id="conn-text" data-i18n="conn.connecting">연결 중</span>
             </div>
 
+            <!-- 멈춘 에이전트 카운트 (있을 때만 표시) -->
+            <button id="header-stuck-chip" type="button" class="header-stuck-chip" onclick="focusFirstStuckAgent()" title="가장 오래 멈춘 에이전트로 이동" aria-label="멈춘 에이전트 이동" hidden>
+                <iconify-icon icon="solar:hourglass-line-linear" aria-hidden="true"></iconify-icon>
+                <span id="header-stuck-count">0</span>
+                <span class="header-stuck-label">멈춤</span>
+            </button>
+
             <!-- Clock + time-of-day band -->
             <div class="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-50 ring-1 ring-zinc-200/60 shrink-0">
                 <iconify-icon id="game-time-icon" icon="solar:clock-circle-linear" class="text-amber-400 text-xs"></iconify-icon>
@@ -1487,18 +1494,46 @@
         // 멈춘 친구 수도 함께 노출 — 다른 탭에 있어도 알아챌 수 있게.
         // panel.js 의 isAgentStuck 과 동일 임계값 (5분) 사용.
         const STUCK_MS = 5 * 60 * 1000;
-        const stuckCount = agents.filter(a => {
+        const stuckAgents = agents.filter(a => {
             const active = ["coding", "thinking", "searching", "reviewing"].includes(a.status);
             if (!active) return false;
             const ts = a?.signals?.lastActivityAt || a?.signals?.lastSeenAt || 0;
             return ts > 0 && (Date.now() - ts) > STUCK_MS;
-        }).length;
+        });
+        const stuckCount = stuckAgents.length;
 
         let title = base;
         if (agents.length > 0) title = `(${agents.length}) ${title}`;
         if (stuckCount > 0) title = `⚠ ${stuckCount} · ${title}`;
         document.title = title;
+
+        // 헤더 칩 갱신 — stuck 0명이면 숨김
+        const chip = document.getElementById("header-stuck-chip");
+        const countEl = document.getElementById("header-stuck-count");
+        if (chip && countEl) {
+            chip.hidden = stuckCount === 0;
+            countEl.textContent = String(stuckCount);
+        }
+        window.__aiTycoonStuckAgents = stuckAgents;
     }
+    // 헤더 칩 클릭 시 가장 오래 멈춰있던 친구로 포커스 이동
+    function focusFirstStuckAgent() {
+        const list = window.__aiTycoonStuckAgents || [];
+        if (list.length === 0) return;
+        // age 가 가장 큰 (= ts 가 가장 작은) 친구를 우선
+        const sorted = [...list].sort((a, b) => {
+            const at = a?.signals?.lastActivityAt || a?.signals?.lastSeenAt || 0;
+            const bt = b?.signals?.lastActivityAt || b?.signals?.lastSeenAt || 0;
+            return at - bt;
+        });
+        const target = sorted[0];
+        if (!target || !window.S) return;
+        window.S.selectedPid = target.pid;
+        window.S.detailPid = target.pid;
+        window.S.directorFocusPid = target.pid;
+        window.S.directorMode = true;
+    }
+    window.focusFirstStuckAgent = focusFirstStuckAgent;
     // Refresh tab title roughly every 5 seconds to track running agent count
     setInterval(refreshTabCount, 5000);
     document.addEventListener("DOMContentLoaded", () => setTimeout(applyWorkspaceName, 80));
