@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 130 — '운영 브리핑' 헤드라인 7종도 KO/EN 분기
+- `briefHeadline()` 의 7가지 상태별 title + detail 모두 다국어
+- 연결 대기 / 검토 우선 / 신호 확인 / 고정 직원 추적 / 작업 흐름 정상 / 대기 직원 확인 / 직원 감지 대기
+- EN: Connecting / Review first / Signal check / Tracking pinned / All flowing / Standing by / Waiting for agents
+- 디테일도 `재연결 3회 → Reconnect 3x`, `5명 확인 대기 → 5 waiting for review` 등 일관 분기
+
 ### Iteration 129 — `workEventMeta` 기본값 라벨도 KO/EN
 - 이벤트 객체에 라벨이 비어있는 경우 사용되는 폴백 라벨 6종 (출근/퇴근/새 작업/검토/태스크 시작/완료) 다국어
 - 현재 언어 기준으로 사용해 사이드 패널 작업 스트림과 디테일 패널 모두 일관
