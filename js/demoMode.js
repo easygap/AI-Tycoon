@@ -171,10 +171,28 @@ export function stopDemo() {
 
 export function isDemoEnabled() { return enabled; }
 export async function setDemoEnabled(v) {
-    enabled = !!v;
+    const next = !!v;
+    const changed = next !== enabled;
+    enabled = next;
     try { localStorage.setItem(KEY, enabled ? "true" : "false"); } catch { /* ignore */ }
     if (enabled) startDemo();
     else stopDemo();
+    // 토글 한 번 누른 결과를 토스트로 알려줘서 "어, 진짜 직원이 합류한 건가?" 혼란 방지.
+    // 초기 자동 시작 (boot 시 enabled === true 인 경우) 에는 토스트 안 띄움.
+    if (changed && typeof window !== "undefined") {
+        try {
+            const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+            const title = enabled
+                ? (lang === "en" ? "Demo mode on" : "데모 모드 ON")
+                : (lang === "en" ? "Demo mode off" : "데모 모드 OFF");
+            const body = enabled
+                ? (lang === "en"
+                    ? "Fake agents will appear. Click again to stop."
+                    : "합성 직원이 등장합니다. 한 번 더 누르면 종료돼요.")
+                : (lang === "en" ? "Showing only real agents now." : "이제 실제 에이전트만 표시됩니다.");
+            window.aiTycoonToasts?.show?.("info", title, body);
+        } catch { /* 알림 실패 무시 */ }
+    }
 }
 export function toggleDemo() { return setDemoEnabled(!enabled); }
 

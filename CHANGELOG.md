@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 85 — 데모 모드 토글 시 안내 토스트
+- `setDemoEnabled` 에서 상태 변화가 있을 때만 토스트로 ON/OFF 안내
+- KO `데모 모드 ON / 합성 직원이 등장합니다. 한 번 더 누르면 종료돼요.`
+- EN `Demo mode on / Fake agents will appear. Click again to stop.`
+- 부팅 시 이전 상태 복원되는 경우(`enabled === true` 그대로)에는 발화하지 않음 — 시끄러움 방지
+- 처음 데모 모드를 켜는 사용자가 "진짜 합류한 직원인가?" 헷갈리지 않게
+
 ### Iteration 84 — 설정 → 데이터에 브라우저 저장 공간 사용량 표시
 - `ai-tycoon-*` 키 개수와 합산 바이트(KB) 를 백업 안내 문구 바로 아래에 노출
 - 다국어 (KO `브라우저 저장 공간: 28개 키 · 14.2 KB`, EN `Browser storage: 28 keys · 14.2 KB`)
