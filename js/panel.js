@@ -721,15 +721,27 @@ function renderOperatorBrief(active, working, review) {
         return info.age > 15 * 60 * 1000;
     });
     const headline = briefHeadline(activeSorted, working, reviewSorted, pinned, stale);
-    const actionLabels = {
-        review: "검토 대기",
-        focus: "포커스",
-        stale: "신호 지연",
-        pinned: "고정 직원",
-        working: "진행 작업",
-        recent: "최근 활동",
-        idle: "대기 직원",
-    };
+    const lgOB = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const enOB = lgOB === "en";
+    const actionLabels = enOB
+        ? {
+            review: "Pending review",
+            focus: "Focus",
+            stale: "Stale signal",
+            pinned: "Pinned",
+            working: "In progress",
+            recent: "Recent",
+            idle: "Standing by",
+        }
+        : {
+            review: "검토 대기",
+            focus: "포커스",
+            stale: "신호 지연",
+            pinned: "고정 직원",
+            working: "진행 작업",
+            recent: "최근 활동",
+            idle: "대기 직원",
+        };
     const actionGroups = new Map();
     activeSorted.forEach(agent => {
         const action = getAgentNextAction(agent);
@@ -765,8 +777,12 @@ function renderOperatorBrief(active, working, review) {
             key: "all",
             tone: "neutral",
             icon: "solar:list-check-linear",
-            label: activeSorted.length ? "전체 직원" : "대기 상태",
-            detail: activeSorted.length ? `${activeSorted.length}명 활성` : "탐지 준비 완료",
+            label: enOB
+                ? (activeSorted.length ? "All agents" : "Standing by")
+                : (activeSorted.length ? "전체 직원" : "대기 상태"),
+            detail: enOB
+                ? (activeSorted.length ? `${activeSorted.length} active` : "Ready to detect")
+                : (activeSorted.length ? `${activeSorted.length}명 활성` : "탐지 준비 완료"),
             value: activeSorted.length || "",
             filter: "all",
         });
@@ -782,13 +798,14 @@ function renderOperatorBrief(active, working, review) {
     });
 
     panel.dataset.tone = headline.tone;
+    const kicker = enOB ? "Operator brief" : "운영 브리핑";
     panel.innerHTML = `
         <div class="brief-head">
             <span class="brief-icon">
                 <iconify-icon icon="${esc(headline.icon)}" aria-hidden="true"></iconify-icon>
             </span>
             <div>
-                <span class="brief-kicker">운영 브리핑</span>
+                <span class="brief-kicker">${esc(kicker)}</span>
                 <strong>${esc(headline.title)}</strong>
             </div>
             <em>${esc(headline.detail)}</em>

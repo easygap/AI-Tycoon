@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 144 — 운영 브리핑 패널의 액션 라벨도 KO/EN
+- "운영 브리핑" kicker → "Operator brief"
+- 액션 라벨 7종 (검토 대기/포커스/신호 지연/고정 직원/진행 작업/최근 활동/대기 직원)
+  → Pending review/Focus/Stale signal/Pinned/In progress/Recent/Standing by
+- 빈 상태 fallback "전체 직원 · N명 활성" → "All agents · N active"
+- 헬스 + 브리핑 + 대기열 세 카드 모두 KO/EN 자연스럽게 정리 완료
+
 ### Iteration 143 — 보고 대기열(Boss queue) UI 도 KO/EN 분기
 - 사이드 패널 상단의 보고 대기열 패널: 헤딩/카운트/단계 라벨/액션 버튼 모두 다국어
 - 단계: 보고 중/이동 중/처리됨/대기 중 → reporting/walking/handled/waiting
