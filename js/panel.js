@@ -2122,6 +2122,17 @@ export function updateDetailPanel() {
                 flashSaved();
             }, 220);
         });
+        // Cmd/Ctrl+S 로 즉시 저장 — 디바운스 220ms 기다리기 답답할 때 명시적 저장.
+        // 브라우저 기본 '페이지 저장' 동작은 textarea 안에서만 막음.
+        noteInput.addEventListener("keydown", (e) => {
+            if ((e.ctrlKey || e.metaKey) && (e.key === "s" || e.key === "S")) {
+                e.preventDefault();
+                if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+                setAgentNote(agent, noteInput.value);
+                if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
+                flashSaved();
+            }
+        });
     }
     if (noteClear) {
         noteClear.addEventListener("click", () => {
