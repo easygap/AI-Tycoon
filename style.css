@@ -3348,7 +3348,15 @@ body.agents-compact .agent-pin-btn { width: 22px; height: 22px; flex: 0 0 22px; 
     line-height: 1.5;
     letter-spacing: 0.04em;
     flex-shrink: 0;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s ease, transform 0.1s ease;
 }
+.header-demo-chip:hover {
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.32), rgba(99, 102, 241, 0.32));
+    transform: translateY(-1px);
+}
+.header-demo-chip:active { transform: translateY(0); }
 .header-demo-chip iconify-icon { font-size: 11px; }
 body.dark .header-demo-chip {
     color: #a5b4fc;
