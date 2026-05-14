@@ -24,7 +24,8 @@ export function connectWS() {
         S.reconnectAttempt = 0;
         S.lastHeartbeat = Date.now();
         setConn(true);
-        addLog("서버 연결 완료!", "system");
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        addLog(lang === "en" ? "Connected to server" : "서버 연결 완료!", "system");
         if (typeof window !== "undefined") window.__aiTycoonConnected = true;
         try { checkAchievements(); } catch { /* ignore */ }
     };
@@ -59,7 +60,10 @@ export function connectWS() {
                         : "다시 켜지면 자동으로 연결할게요.");
                     showToast("system", title, body, { duration: 6000 });
                 } catch { /* ignore */ }
-                addLog("서버가 종료됩니다 — 재시작되면 자동 재연결할게요.", "system");
+                const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                addLog(lang === "en"
+                    ? "Server shutting down — will auto-reconnect when it returns."
+                    : "서버가 종료됩니다 — 재시작되면 자동 재연결할게요.", "system");
             }
         } catch (err) { console.error("[AI Tycoon] State error:", err); }
     };
@@ -94,14 +98,21 @@ export function scheduleReconnect() {
     const txt = document.getElementById("conn-text");
     const dot = document.getElementById("conn-dot");
     const badge = document.getElementById("conn-badge");
-    if (txt) txt.textContent = `재연결 (${S.reconnectAttempt})`;
+    const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+    if (txt) txt.textContent = lang === "en" ? `Reconnect (${S.reconnectAttempt})` : `재연결 (${S.reconnectAttempt})`;
     if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse";
     // After 3 failed retries, surface the actual server address and a hint
     if (S.reconnectAttempt >= 3 && badge) {
-        badge.title = `${WS_URL} 에 연결할 수 없어요. 서버가 실행 중인지 확인해주세요.`;
-        badge.setAttribute("aria-label", `재연결 ${S.reconnectAttempt}회 — ${WS_URL} 응답 없음. 서버가 실행 중인지 확인하세요.`);
+        badge.title = lang === "en"
+            ? `Cannot reach ${WS_URL}. Make sure the server is running.`
+            : `${WS_URL} 에 연결할 수 없어요. 서버가 실행 중인지 확인해주세요.`;
+        badge.setAttribute("aria-label", lang === "en"
+            ? `Reconnect ${S.reconnectAttempt} times — ${WS_URL} not responding. Check the server.`
+            : `재연결 ${S.reconnectAttempt}회 — ${WS_URL} 응답 없음. 서버가 실행 중인지 확인하세요.`);
         if (S.reconnectAttempt === 3) {
-            addLog(`서버 ${WS_URL} 응답 없음 — npm start 가 실행 중인지 확인해 주세요.`, "system");
+            addLog(lang === "en"
+                ? `Server ${WS_URL} not responding — make sure 'npm start' is running.`
+                : `서버 ${WS_URL} 응답 없음 — npm start 가 실행 중인지 확인해 주세요.`, "system");
         }
     }
     setTimeout(connectWS, delay);
@@ -315,11 +326,14 @@ export function handleState(state) {
                 joinedAt: Date.now(), // timestamp for "just joined" UI pulse
             };
             if (!prevPids.has(pidKey(agent.pid))) {
-                addLog(`${theme.name} (${agent.projectName}) 출근했어요!`, "join");
+                const langJ = window.aiTycoonI18n?.getLang?.() || "ko";
+                addLog(langJ === "en"
+                    ? `${theme.name} (${agent.projectName}) clocked in!`
+                    : `${theme.name} (${agent.projectName}) 출근했어요!`, "join");
                 addAgentEvent(agent, "join", {
                     theme,
-                    label: "출근",
-                    text: "작업실에 합류했어요",
+                    label: langJ === "en" ? "Joined" : "출근",
+                    text: langJ === "en" ? "Joined the office" : "작업실에 합류했어요",
                     key: `join|${agent.pid}`,
                 });
                 spawnParticles(dx, dy, theme.body, 12);
@@ -342,13 +356,16 @@ export function handleState(state) {
     Object.keys(S.visualAgents).forEach(pid => {
         if (!curPids.has(pid)) {
             const theme = S.visualAgents[pid].theme;
-            addLog(`${theme.name} 퇴근! 수고했어요~`, "leave");
+            const langL = window.aiTycoonI18n?.getLang?.() || "ko";
+            addLog(langL === "en"
+                ? `${theme.name} clocked out — well done!`
+                : `${theme.name} 퇴근! 수고했어요~`, "leave");
             const prevAgent = prevAgentsByPid.get(pid);
             if (prevAgent) {
                 addAgentEvent(prevAgent, "leave", {
                     theme,
-                    label: "퇴근",
-                    text: "작업실에서 나갔어요",
+                    label: langL === "en" ? "Left" : "퇴근",
+                    text: langL === "en" ? "Left the office" : "작업실에서 나갔어요",
                     key: `leave|${pid}`,
                 });
                 try { sfxLeave(); } catch { /* ignore */ }
@@ -385,7 +402,11 @@ export function handleState(state) {
                     bobPhase: Math.random() * Math.PI * 2,
                 };
                 if (task.status === "in_progress") {
-                    addLog(`[${agent.projectName}] ${(task.subject || "").substring(0, 18)} 시작`, "sub");
+                    const langS = window.aiTycoonI18n?.getLang?.() || "ko";
+                    const subText = (task.subject || "").substring(0, 18);
+                    addLog(langS === "en"
+                        ? `[${agent.projectName}] ${subText} started`
+                        : `[${agent.projectName}] ${subText} 시작`, "sub");
                 }
             }
             const sub = S.visualSubAgents[key];
