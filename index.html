@@ -796,6 +796,16 @@
                             <iconify-icon icon="solar:document-text-linear" aria-hidden="true"></iconify-icon>
                             <span data-i18n="settings.exportCsv">일자별 통계 CSV 받기</span>
                         </button>
+                        <div class="settings-button-pair">
+                            <button type="button" class="settings-action" onclick="window.aiTycoonStandup?.download?.()">
+                                <iconify-icon icon="solar:document-add-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.exportStandup">일일 리포트 (.md)</span>
+                            </button>
+                            <button type="button" class="settings-action" onclick="window.aiTycoonNotes?.download?.()">
+                                <iconify-icon icon="solar:notebook-bookmark-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.exportNotes">에이전트 메모 (.md)</span>
+                            </button>
+                        </div>
                         <input id="settings-restore-input" type="file" accept="application/json,.json" hidden onchange="settingsRestoreFile(this.files[0])">
                         <p class="settings-help" data-i18n="settings.backupHelp">현재 환경설정·통계·업적을 JSON 파일로 내보내거나, 같은 형식의 파일을 불러와 복원합니다.</p>
                         <div class="settings-button-pair">

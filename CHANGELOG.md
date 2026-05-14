@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 82 — 설정 → 데이터 섹션에 스탠드업/메모 export 버튼
+- 명령 팔레트에만 있던 두 export 기능을 설정 모달에서도 두 버튼으로 노출
+- `일일 리포트 (.md)` + `에이전트 메모 (.md)` 한 쌍으로 CSV 옆에 배치
+- `settings.exportStandup` / `settings.exportNotes` i18n 키 추가 (KO/EN)
+- 키보드 단축키를 모르는 사용자도 GUI 에서 자연스럽게 발견 가능
+
 ### Iteration 81 — 신규 기능 연계 업적 3종 추가
 - **단축 마법사** (`cmdk-wizard`): 명령 팔레트(Ctrl+K)를 5번 열기 — `bumpCounter("paletteOpens")`
 - **메모장이** (`note-keeper`): 3개 이상 에이전트에 메모 저장 — localStorage 직접 카운트
