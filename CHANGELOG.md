@@ -5,6 +5,16 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+## [1.1.0] — Iter 54-88 모음 릴리즈
+- 명령 팔레트(Ctrl/Cmd+K), 프라이버시 모드(Shift+P), 에이전트 메모, 컴팩트 뷰,
+  '오늘의 MVP' 카드, '자리 비운 사이' 토스트, 멈춤 감지, 신선도 색상 코딩,
+  HUD 타이틀 인라인 편집, 스토리지 사용량 표시, 데모/스탠드업/메모 export,
+  단축키 검색, macOS ⌘ 자동 표시, '위로' 부유 버튼 등 다수
+- 업적 21 → 24개로 확장
+- Smoke 테스트 32 → 38개로 확장 (API JSON 계약 검증 포함)
+- 서버 graceful shutdown 추가
+- `package.json` / `server.js` 의 VERSION 1.0.0 → 1.1.0 로 올림
+
 ### Iteration 88 — 카드 신호 라인에 신선도 색상 코딩
 - `.agent-signal-line` 에 `data-freshness` 속성 (fresh / recent / warm / stale)
 - `< 1분` 초록(emerald), `< 5분` 호박(amber), `< 30분` 회색(neutral), 그 이상 흐린 회색(zinc)
