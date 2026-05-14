@@ -209,9 +209,10 @@ function collectWorkEvents(prevAgentsByPid) {
                     key: `status|${agent.pid}|${currentStatus}`,
                 });
             } else if (currentStatus === "offline") {
+                const langCur = window.aiTycoonI18n?.getLang?.() || "ko";
                 addAgentEvent(agent, "leave", {
-                    label: "연결 종료",
-                    text: "작업실에서 나갔어요",
+                    label: langCur === "en" ? "Disconnected" : "연결 종료",
+                    text: langCur === "en" ? "Left the office" : "작업실에서 나갔어요",
                     key: `offline|${agent.pid}`,
                 });
             }
