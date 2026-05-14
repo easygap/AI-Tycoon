@@ -137,3 +137,85 @@ export function downloadMarkdown() {
 if (typeof window !== "undefined") {
     window.aiTycoonStandup = { build: buildMarkdown, download: downloadMarkdown };
 }
+
+// ── 메모 일괄 내보내기 ────────────────────────────────────────
+// 디테일 패널에서 모은 개인 메모를 한 번에 Markdown 으로 떨궈서
+// 다른 도구로 옮기거나 백업할 수 있도록.
+const NOTE_KEY = "ai-tycoon-agent-notes";
+function loadAllNotes() {
+    try { return JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+    catch { return {}; }
+}
+
+export function buildNotesMarkdown(lang = "ko") {
+    const notes = loadAllNotes();
+    const keys = Object.keys(notes);
+    const now = new Date();
+    const ymd = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const lines = [];
+    if (lang === "en") {
+        lines.push(`# AI Tycoon — Agent Notes (${ymd})`);
+        lines.push("");
+        if (keys.length === 0) {
+            lines.push("_No notes saved yet._");
+            return lines.join("\n");
+        }
+        lines.push(`_Exported ${keys.length} note${keys.length > 1 ? "s" : ""}._`);
+        lines.push("");
+    } else {
+        lines.push(`# AI Tycoon — 에이전트 메모 (${ymd})`);
+        lines.push("");
+        if (keys.length === 0) {
+            lines.push("_저장된 메모가 없습니다._");
+            return lines.join("\n");
+        }
+        lines.push(`_총 ${keys.length}개의 메모를 내보냈습니다._`);
+        lines.push("");
+    }
+
+    // 현재 살아있는 에이전트 중 매칭되는 게 있으면 이름·프로젝트도 함께 표기
+    const agents = S.liveAgents || [];
+    const BT = "`"; // 백틱을 템플릿 안에 안전하게 끼워넣기 위해 별도 변수로
+    keys.forEach(key => {
+        const matched = agents.find(a => String(a.sessionId || "") === key || String(a.pid || "") === key);
+        let label = `${BT}${key}${BT}`;
+        if (matched) {
+            const theme = themeFor(matched);
+            const project = matched.projectName || "—";
+            label = `**${theme.name}** · ${project} (${BT}${key}${BT})`;
+        }
+        lines.push(`### ${label}`);
+        lines.push("");
+        // 본문은 그대로 (Markdown 그대로 들어가도 큰 문제 없음, 단 ``` 차단)
+        const body = String(notes[key] || "").replace(/```/g, "''");
+        lines.push(body);
+        lines.push("");
+    });
+
+    return lines.join("\n");
+}
+
+export function downloadNotesMarkdown() {
+    const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+    const md = buildNotesMarkdown(lang);
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const ts = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `ai-tycoon-notes-${ts}.md`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 250);
+    try {
+        const count = Object.keys(loadAllNotes()).length;
+        const title = lang === "en" ? "Notes exported" : "메모 저장 완료";
+        const body = lang === "en" ? `${count} note${count !== 1 ? "s" : ""}` : `${count}개 메모`;
+        window.aiTycoonToasts?.show?.("info", title, body);
+    } catch { /* ignore */ }
+    return true;
+}
+
+if (typeof window !== "undefined") {
+    window.aiTycoonNotes = { build: buildNotesMarkdown, download: downloadNotesMarkdown };
+}
