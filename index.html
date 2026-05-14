@@ -271,7 +271,7 @@
                 <div id="detail-panel" class="hidden shrink-0 border-b border-amber-200/40 p-3 overflow-y-auto max-h-[50%]" tabindex="-1"></div>
 
                 <!-- Agents Section -->
-                <div class="flex-1 overflow-y-auto p-3">
+                <div class="flex-1 overflow-y-auto p-3" id="agents-scroll-container">
                     <div class="flex items-center gap-2 mb-2">
                         <iconify-icon icon="solar:users-group-rounded-linear" class="text-amber-500 text-sm"></iconify-icon>
                         <h3 id="agents-heading" class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase" data-i18n="panel.agents">에이전트</h3>
@@ -1490,6 +1490,32 @@
     // Refresh tab title roughly every 5 seconds to track running agent count
     setInterval(refreshTabCount, 5000);
     document.addEventListener("DOMContentLoaded", () => setTimeout(applyWorkspaceName, 80));
+
+    // 사이드 패널 에이전트 리스트가 충분히 스크롤되면 우하단에 '위로' 버튼 띄움.
+    // 카드가 많아져서 한참 내려갔을 때 다시 위로 올라오는 게 귀찮아서 추가.
+    function setupAgentsScrollTop() {
+        const cont = document.getElementById("agents-scroll-container");
+        if (!cont) return;
+        let btn = document.getElementById("agents-scroll-top-btn");
+        if (!btn) {
+            btn = document.createElement("button");
+            btn.id = "agents-scroll-top-btn";
+            btn.type = "button";
+            btn.className = "agents-scroll-top-btn";
+            btn.setAttribute("aria-label", "에이전트 목록 위로");
+            btn.title = "위로";
+            btn.innerHTML = '<iconify-icon icon="solar:arrow-up-linear" aria-hidden="true"></iconify-icon>';
+            btn.addEventListener("click", () => cont.scrollTo({ top: 0, behavior: "smooth" }));
+            cont.appendChild(btn);
+        }
+        const update = () => {
+            const visible = cont.scrollTop > 240;
+            btn.classList.toggle("is-visible", visible);
+        };
+        cont.addEventListener("scroll", update, { passive: true });
+        update();
+    }
+    document.addEventListener("DOMContentLoaded", () => setTimeout(setupAgentsScrollTop, 120));
 
     // HUD 타이틀 더블클릭 → 그 자리에서 작업실 이름을 바꿀 수 있게.
     // 설정 모달 들어갔다 나오는 거 번거로우니까 즉석 편집.

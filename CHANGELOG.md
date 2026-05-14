@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 86 — 사이드 패널 '위로' 부유 버튼
+- 에이전트 리스트 스크롤이 240px 이상 내려가면 우하단에 작은 ↑ 버튼이 등장
+- 클릭하면 `behavior: "smooth"` 로 부드럽게 최상단 복귀
+- position: sticky + 음수 margin 트릭으로 컨테이너 우하단 모서리에 고정
+- 다크 모드 호박색 톤, hover 시 살짝 위로 떠오름
+- 카드 10+ 누적 시 다시 올라오는 게 귀찮던 점 해소
+
 ### Iteration 85 — 데모 모드 토글 시 안내 토스트
 - `setDemoEnabled` 에서 상태 변화가 있을 때만 토스트로 ON/OFF 안내
 - KO `데모 모드 ON / 합성 직원이 등장합니다. 한 번 더 누르면 종료돼요.`
