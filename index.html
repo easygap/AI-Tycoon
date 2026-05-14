@@ -1510,7 +1510,16 @@
         const chip = document.getElementById("header-demo-chip");
         if (chip) chip.hidden = !window.aiTycoonDemo?.isEnabled?.();
         const pchip = document.getElementById("header-privacy-chip");
-        if (pchip) pchip.hidden = !window.aiTycoonPrivacy?.isEnabled?.();
+        if (pchip) {
+            const on = !!window.aiTycoonPrivacy?.isEnabled?.();
+            pchip.hidden = !on;
+            // strict 모드면 더 진한 색 + 'Strict' 라벨로 구분
+            const strict = !!window.aiTycoonPrivacy?.isStrict?.();
+            pchip.classList.toggle("is-strict", strict);
+            const labelEl = pchip.querySelector("span[data-i18n='header.privacyLabel']");
+            if (labelEl && !labelEl.dataset.origText) labelEl.dataset.origText = labelEl.textContent;
+            if (labelEl) labelEl.textContent = strict ? "Strict" : (labelEl.dataset.origText || "프라이버시");
+        }
     }
     function refreshTabCount() {
         refreshDemoChip();

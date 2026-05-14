@@ -3357,9 +3357,18 @@ body.agents-compact .agent-pin-btn { width: 22px; height: 22px; flex: 0 0 22px; 
     transform: translateY(-1px);
 }
 .header-privacy-chip:active { transform: translateY(0); }
+.header-privacy-chip.is-strict {
+    background: linear-gradient(135deg, rgba(91, 33, 182, 0.32), rgba(67, 56, 202, 0.32));
+    color: #5b21b6;
+    border-color: rgba(91, 33, 182, 0.55);
+}
 body.dark .header-privacy-chip {
     color: #94a3b8;
     border-color: rgba(148, 163, 184, 0.52);
+}
+body.dark .header-privacy-chip.is-strict {
+    color: #c4b5fd;
+    border-color: rgba(196, 181, 253, 0.55);
 }
 
 /* Iteration 103 — 헤더 DEMO 활성 칩 */
