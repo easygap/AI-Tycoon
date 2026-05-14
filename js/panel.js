@@ -2054,6 +2054,18 @@ export function updateDetailPanel() {
     const noteInput = container.querySelector("#detail-note-input");
     const noteClear = container.querySelector("[data-detail-note-clear]");
     const noteHint  = container.querySelector(".detail-note-hint");
+    // 저장 직후 1.2초간 'saved' 상태 표시 — 디바운스 때문에 사라진 글자가 어디로 갔나 헷갈리지 않게.
+    const flashSaved = () => {
+        if (!noteHint) return;
+        const prev = noteHint.textContent;
+        noteHint.classList.add("is-saved");
+        noteHint.textContent = "저장됨 · " + (noteInput?.value.length || 0) + "/500";
+        clearTimeout(noteHint._flashTimer);
+        noteHint._flashTimer = setTimeout(() => {
+            noteHint.classList.remove("is-saved");
+            noteHint.textContent = `로컬에만 저장 · ${(noteInput?.value.length || 0)}/500`;
+        }, 1200);
+    };
     if (noteInput) {
         let saveTimer = null;
         noteInput.addEventListener("input", () => {
@@ -2061,7 +2073,7 @@ export function updateDetailPanel() {
             saveTimer = setTimeout(() => {
                 setAgentNote(agent, noteInput.value);
                 if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
-                if (noteHint) noteHint.textContent = `로컬에만 저장 · ${noteInput.value.length}/500`;
+                flashSaved();
             }, 220);
         });
     }
@@ -2070,7 +2082,7 @@ export function updateDetailPanel() {
             setAgentNote(agent, "");
             if (noteInput) noteInput.value = "";
             noteClear.setAttribute("hidden", "");
-            if (noteHint) noteHint.textContent = `로컬에만 저장 · 0/500`;
+            flashSaved();
         });
     }
 }
