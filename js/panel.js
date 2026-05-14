@@ -1946,11 +1946,14 @@ export function updateDetailPanel() {
             const y = h - (p.mb / maxMB) * h;
             return `${x},${y}`;
         }).join(" ");
+        const ageMin = Math.round((Date.now() - (hist[0]?.ts || Date.now())) / 60000);
+        const lgMG = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const ageLabelMG = lgMG === "en" ? `${ageMin}m ago` : `${ageMin}분 전`;
         memGraph = `
             <svg width="${w}" height="${h}" class="mt-1">
                 <polyline points="${points}" fill="none" stroke="${theme.body}" stroke-width="1.5" stroke-linejoin="round"/>
                 <text x="${w}" y="10" text-anchor="end" fill="currentColor" font-size="9" class="text-zinc-400">${hist[hist.length-1]?.mb || 0}MB</text>
-                <text x="0" y="${h}" fill="currentColor" font-size="8" class="text-zinc-400">${Math.round((Date.now() - (hist[0]?.ts || Date.now())) / 60000)}분 전</text>
+                <text x="0" y="${h}" fill="currentColor" font-size="8" class="text-zinc-400">${esc(ageLabelMG)}</text>
             </svg>`;
     }
 

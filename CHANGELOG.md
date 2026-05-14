@@ -5,6 +5,10 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 134 — 디테일 패널 메모리 스파크라인 좌측 시간 라벨도 KO/EN
+- SVG sparkline 의 좌측에 표시되는 `Nm ago / N분 전` 라벨을 다국어 분기
+- 영어 모드에서 그래프 좌측에 한국어 '분 전' 이 뜨던 자잘한 leak 정리
+
 ### Iteration 133 — HUD 진단(`renderDetectorHealth`) 영역도 KO/EN
 - HUD 좌상단 진단 라인 / 칩 / 힌트 모두 다국어
 - 6가지 state title (탐지 준비 중/서버 연결 대기/수집 중/일부 지연/정상/준비 완료) → 영어
