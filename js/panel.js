@@ -1358,13 +1358,19 @@ export function updateLiveHud() {
         const status = focus.isRunning ? focus.status : "offline";
         const meta = STATUS_META[status] || STATUS_META.idle;
         const work = getWorkText(focus) || firstLine(focus.currentWork?.prompt, 56) || meta.label;
+        const lgF = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const trackingLabel = lgF === "en" ? "Tracking" : "추적 중";
         focusName.textContent = `${theme.name} · ${focus.projectName || focus.platformName || "Agent"}`;
-        focusWork.textContent = `${S.directorMode ? "추적 중" : meta.label} · ${work}`;
+        focusWork.textContent = `${S.directorMode ? trackingLabel : meta.label} · ${work}`;
         focusProgress.style.width = `${taskProgress(focus)}%`;
         focusProgress.style.background = `linear-gradient(90deg, ${theme.body}, ${meta.color})`;
     } else {
-        focusName.textContent = "대기 중";
-        focusWork.textContent = S.connected ? "새 에이전트 활동을 기다리는 중" : "서버 연결을 기다리는 중";
+        const lgF = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const idleHead = lgF === "en" ? "Standing by" : "대기 중";
+        const waitAct  = lgF === "en" ? "Waiting for new agent activity" : "새 에이전트 활동을 기다리는 중";
+        const waitConn = lgF === "en" ? "Waiting for the server connection" : "서버 연결을 기다리는 중";
+        focusName.textContent = idleHead;
+        focusWork.textContent = S.connected ? waitAct : waitConn;
         focusProgress.style.width = S.connected ? "18%" : "8%";
         focusProgress.style.background = "linear-gradient(90deg, #94a3b8, #cbd5e1)";
     }

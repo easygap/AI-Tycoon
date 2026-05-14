@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 124 — 포커스 레일(focus rail) 안내 문구 KO/EN 분기
+- 포커스된 에이전트가 있을 때 `추적 중` 라벨 → `Tracking`
+- 없을 때 `대기 중 / 새 에이전트 활동을 기다리는 중 / 서버 연결을 기다리는 중`
+  → `Standing by / Waiting for new agent activity / Waiting for the server connection`
+- 사이드 패널 상단 포커스 영역의 영어 모드도 자연스럽게
+
 ### Iteration 123 — 캔버스 서브 에이전트(태스크) hover 툴팁도 KO/EN
 - 서브 에이전트 / 부모 / 상태 / 활동 / 설명 / 대기 라벨 + `작업 중 / 완료 / 대기` 상태값 모두 분기
 - `Sub agent / Parent / Status / Activity / Desc / Wait / Working / Done / Pending`
