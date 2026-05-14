@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 139 — 워크 이벤트 클릭 시 사이드바 카드로도 자동 스크롤
+- 데스크탑에서 캔버스 좌하단 work-stream 또는 활동 타임라인의 이벤트를 클릭하면
+  카메라뿐 아니라 사이드바 에이전트 카드까지 부드럽게 스크롤되어 보임
+- 카드에 `data-card-pid` 속성 추가, `inspectWorkEvent` 가 60ms 후 `scrollIntoView`
+- `behavior: "smooth"`, `block: "nearest"` 로 자연스러운 이동
+- 모바일은 기존 동작(`openMobilePanel`) 그대로
+
 ### Iteration 138 — 명령 팔레트 액션 결과의 그룹별 좌측 색상 strip
 - 22개 명령이 6 그룹(display/modal/filter/theme/lang/tools) 으로 분류돼 있어 시각 구분 필요
 - 각 액션 결과 줄 좌측에 3×22px 색상 strip 추가

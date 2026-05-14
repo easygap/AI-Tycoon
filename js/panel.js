@@ -970,6 +970,16 @@ function inspectWorkEvent(pid, key) {
     S.inspectedEventKey = key || null;
     window.focusAgentByPid?.(pid);
     openMobilePanel("#detail-panel");
+    // 데스크탑에서 사이드 패널이 보일 때 해당 에이전트 카드까지 부드럽게 스크롤
+    // (보통 work-event 클릭하면 카메라는 옮겨가는데 사이드바는 그 자리 그대로라
+    //  어디 있는지 찾기 어려웠음.)
+    if (window.innerWidth > 480) {
+        setTimeout(() => {
+            const list = document.getElementById("agents-list");
+            const card = list?.querySelector(`[data-card-pid="${CSS.escape(String(pid))}"]`);
+            card?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+        }, 60);
+    }
 }
 
 function openMobilePanel(focusSelector) {
@@ -1690,6 +1700,8 @@ export function updatePanel() {
         maybeFireStuckToast(agent);
         const card = document.createElement("div");
         card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}${hasNote ? " has-note" : ""}${stuck ? " is-stuck" : ""}`;
+        // 워크 이벤트 클릭 시 해당 카드로 스크롤하기 위한 식별자
+        card.dataset.cardPid = String(agent.pid);
         // 메모 있으면 카드에 native title 로 미리보기 — hover 시 OS 툴팁
         // (디테일 패널 안 열고도 첫 문장 확인 가능)
         if (hasNote) {
