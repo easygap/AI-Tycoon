@@ -334,16 +334,15 @@ function render() {
         return;
     }
 
+    // 검색어가 있을 때 결과 줄에서 매칭 부분 하이라이트하기 위한 헬퍼
+    const hlQ = q;
     list.innerHTML = results.map((r, i) => {
         if (r.kind === KIND_AGENT) {
             const a = r.agent;
             const meta = STATUS_META[a.isRunning ? a.status : "offline"] || STATUS_META.idle;
             const platform = (PLATFORM_META[a.platform] || PLATFORM_META.claude || {}).badge || "?";
-            // 최근 방문 칩은 빈 검색 + recent 플래그 둘 다 있을 때만 표시
             const recentChip = r.recent ? `<span class="cp-recent-chip">최근</span>` : "";
-            // 핀 별 표시 (아바타 좌상단)
             const pinStar = r.pinned ? `<span class="cp-pin-star" title="고정됨" aria-label="고정됨">★</span>` : "";
-            // 메모 있으면 제목 줄 끝에 작은 노트 아이콘
             const noteText = (typeof noteFor === "function") ? noteFor(a) : "";
             const noteChip = noteText
                 ? `<span class="cp-note-chip" title="${esc(noteText.slice(0, 140))}" aria-label="메모 있음">📝</span>`
@@ -351,7 +350,7 @@ function render() {
             return `<li class="cp-row${i === 0 ? " is-active" : ""}${r.pinned ? " is-pinned" : ""}" role="option" data-index="${i}">
                 <span class="cp-avatar" style="background:${r.theme.body}">${esc(r.theme.name.charAt(0))}${pinStar}</span>
                 <div class="cp-info">
-                    <div class="cp-title">${esc(r.theme.name)} <em>· ${esc(a.projectName || "")}</em>${recentChip}${noteChip}</div>
+                    <div class="cp-title">${highlight(esc(r.theme.name), hlQ)} <em>· ${highlight(esc(a.projectName || ""), hlQ)}</em>${recentChip}${noteChip}</div>
                     <div class="cp-sub">${esc(meta.label)} · ${esc(platform)} · ${a.memoryMB || 0}MB</div>
                 </div>
                 <kbd class="cp-row-hint">↵</kbd>
@@ -361,7 +360,7 @@ function render() {
         return `<li class="cp-row cp-row-action${i === 0 ? " is-active" : ""}" role="option" data-index="${i}">
             <span class="cp-avatar cp-avatar-action"><iconify-icon icon="solar:command-square-bold"></iconify-icon></span>
             <div class="cp-info">
-                <div class="cp-title">${esc(r.title)}</div>
+                <div class="cp-title">${highlight(esc(r.title), hlQ)}</div>
                 <div class="cp-sub">명령</div>
             </div>
             ${r.hint ? `<kbd class="cp-row-hint">${esc(r.hint)}</kbd>` : ""}
@@ -384,6 +383,24 @@ function render() {
 
 function esc(str) {
     return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/** esc 처리된 안전한 텍스트에서 query 토큰을 <mark class="search-match">로 감쌈.
+ *  사이드바 카드의 highlightTokens 와 같은 동작 (스타일 일치). */
+function highlight(safeText, query) {
+    if (!safeText || !query) return safeText;
+    const tokens = String(query).toLowerCase().split(/\s+/).filter(Boolean);
+    if (tokens.length === 0) return safeText;
+    const reSrc = tokens
+        .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+        .join("|");
+    if (!reSrc) return safeText;
+    try {
+        const re = new RegExp(`(${reSrc})`, "ig");
+        return safeText.replace(re, '<mark class="search-match">$1</mark>');
+    } catch {
+        return safeText;
+    }
 }
 
 // ── Global hotkey ───────────────────────────────────────────
