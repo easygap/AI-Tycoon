@@ -283,8 +283,8 @@
                         <button id="agent-search-clear" type="button" class="agent-search-clear" onclick="clearAgentSearch()" aria-label="검색어 지우기" hidden>
                             <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                         </button>
-                        <button id="agent-search-cmdk" type="button" class="agent-search-cmdk" onclick="window.aiTycoonCommandPalette?.open?.()" title="명령 팔레트 (Ctrl+K)" aria-label="명령 팔레트 열기">
-                            <kbd>Ctrl</kbd><kbd>K</kbd>
+                        <button id="agent-search-cmdk" type="button" class="agent-search-cmdk" onclick="window.aiTycoonCommandPalette?.open?.()" title="명령 팔레트 (Ctrl+K / Cmd+K)" aria-label="명령 팔레트 열기">
+                            <kbd data-mod-key>Ctrl</kbd><kbd>K</kbd>
                         </button>
                     </div>
                     <div id="agent-visibility-summary" class="agent-visibility-summary mb-2" aria-live="polite"></div>
@@ -835,9 +835,9 @@
                     <h3 class="shortcuts-group-title" data-i18n="shortcuts.navGroup">탐색</h3>
                     <ul class="shortcuts-list">
                         <li><span class="shortcuts-keys"><kbd>/</kbd></span><span data-i18n="shortcuts.searchFocus">에이전트 검색 포커스</span></li>
-                        <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>K</kbd></span><span data-i18n="shortcuts.cmdPalette">명령 팔레트 (Cmd+K)</span></li>
+                        <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>K</kbd></span><span data-i18n="shortcuts.cmdPalette">명령 팔레트 (Cmd+K)</span></li>
                         <li><span class="shortcuts-keys"><kbd>Esc</kbd></span><span data-i18n="shortcuts.escClose">검색·모달 닫기</span></li>
-                        <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>/</kbd></span><span data-i18n="shortcuts.helpAlt">단축키 도움말 (대체)</span></li>
+                        <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>/</kbd></span><span data-i18n="shortcuts.helpAlt">단축키 도움말 (대체)</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
@@ -854,7 +854,7 @@
                         <li><span class="shortcuts-keys"><kbd>,</kbd></span><span data-i18n="shortcuts.settings">설정 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>P</kbd></span><span data-i18n="shortcuts.snapshot">스냅샷 저장</span></li>
                         <li><span class="shortcuts-keys"><kbd>Shift</kbd>+<kbd>P</kbd></span><span data-i18n="shortcuts.privacy">프라이버시 모드 토글</span></li>
-                        <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></span><span data-i18n="shortcuts.perfHud">성능 오버레이</span></li>
+                        <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></span><span data-i18n="shortcuts.perfHud">성능 오버레이</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
@@ -1452,6 +1452,15 @@
     // Refresh tab title roughly every 5 seconds to track running agent count
     setInterval(refreshTabCount, 5000);
     document.addEventListener("DOMContentLoaded", () => setTimeout(applyWorkspaceName, 80));
+
+    // macOS 사용자에게는 Ctrl 대신 ⌘ 키로 표기 — 키 자체는 동일(metaKey/ctrlKey 양쪽 처리)
+    // data-mod-key 속성이 붙은 <kbd> 만 갈아끼움. 헬프 모달이 늦게 그려져도 한 번 더 돌리도록.
+    function applyModKey() {
+        const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+        if (!isMac) return;
+        document.querySelectorAll("kbd[data-mod-key]").forEach(el => { el.textContent = "⌘"; });
+    }
+    document.addEventListener("DOMContentLoaded", () => { applyModKey(); setTimeout(applyModKey, 400); });
 
     function settingsExportCsv() {
         try {
