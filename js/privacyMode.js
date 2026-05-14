@@ -15,7 +15,12 @@
 // Hotkey: Shift+P toggles. Toggle state persists in localStorage.
 
 const KEY = "ai-tycoon-privacy-mode";
+// Strict 모드: hover 해도 unblur 안 되는 강력 모드 (화면 녹화/스크린샷 안전).
+// 기본은 false(=일반 프라이버시 모드)이며 토스트 모드 토글 시에는 그대로 둠.
+// 사용자가 직접 `aiTycoonPrivacy.setStrict(true)` 호출하거나 Shift+P 를 빠르게 두 번 누르면 strict 전환.
+const STRICT_KEY = "ai-tycoon-privacy-strict";
 let enabled = (typeof localStorage !== "undefined" && localStorage.getItem(KEY)) === "true";
+let strict = (typeof localStorage !== "undefined" && localStorage.getItem(STRICT_KEY)) === "true";
 
 function ensureBadge() {
     let badge = document.getElementById("privacy-badge");
@@ -37,9 +42,13 @@ function ensureBadge() {
 
 function applyClass() {
     document.body?.classList?.toggle("privacy-mode", enabled);
+    document.body?.classList?.toggle("privacy-strict", enabled && strict);
     if (enabled) {
         const badge = ensureBadge();
         requestAnimationFrame(() => badge.classList.add("is-shown"));
+        // strict 일 때 배지 텍스트 살짝 강조
+        const text = badge.querySelector(".privacy-badge-text");
+        if (text) text.textContent = strict ? "프라이버시 (Strict)" : "프라이버시 모드";
     } else {
         const badge = document.getElementById("privacy-badge");
         if (badge) {
@@ -78,6 +87,28 @@ export function setEnabled(v) {
 
 export function toggle() { setEnabled(!enabled); }
 
+export function isStrict() { return strict; }
+export function setStrict(v) {
+    strict = !!v;
+    try { localStorage.setItem(STRICT_KEY, strict ? "true" : "false"); } catch { /* ignore */ }
+    // strict 켤 때 자동으로 일반 프라이버시도 켬
+    if (strict && !enabled) {
+        setEnabled(true);
+        return;
+    }
+    applyClass();
+    try {
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const title = strict
+            ? (lang === "en" ? "Strict privacy on" : "Strict 프라이버시 ON")
+            : (lang === "en" ? "Strict privacy off" : "Strict 프라이버시 OFF");
+        const body = strict
+            ? (lang === "en" ? "Hover-to-reveal disabled — safe for recording" : "호버 미리보기 차단 — 화면 녹화/공유 안전")
+            : (lang === "en" ? "Hover-to-reveal restored" : "호버 미리보기 복구");
+        window.aiTycoonToasts?.show?.("info", title, body);
+    } catch { /* ignore */ }
+}
+
 // ── Apply on load + hotkey ──
 if (typeof document !== "undefined") {
     if (document.readyState === "loading") {
@@ -85,19 +116,26 @@ if (typeof document !== "undefined") {
     } else {
         applyClass();
     }
+    // Shift+P 한 번: 일반 토글 / 600ms 안에 한 번 더: Strict 모드 토글
+    let _lastShiftP = 0;
     document.addEventListener("keydown", (e) => {
         if (e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey && (e.key === "P" || e.key === "p")) {
-            // Don't hijack when typing
             const t = e.target;
             if (t && (t.matches?.("input, textarea, select") || t.isContentEditable)) return;
-            // Don't override the plain "P" snapshot — only Shift+P
-            // Note: snapshot uses lowercase "p" via keydown without shift; Shift+P is reserved here
             e.preventDefault();
-            toggle();
+            const now = Date.now();
+            if (now - _lastShiftP < 600) {
+                // 빠른 더블 — strict 토글
+                setStrict(!strict);
+                _lastShiftP = 0;
+            } else {
+                _lastShiftP = now;
+                toggle();
+            }
         }
     });
 }
 
 if (typeof window !== "undefined") {
-    window.aiTycoonPrivacy = { isEnabled: isPrivacyEnabled, setEnabled, toggle };
+    window.aiTycoonPrivacy = { isEnabled: isPrivacyEnabled, setEnabled, toggle, isStrict, setStrict };
 }
