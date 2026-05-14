@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 72 — 명령 팔레트 최근 방문 기억
+- Ctrl+K 열고 빈 입력 상태일 때 최근 방문한 에이전트 최대 5명을 상단에 노출
+- LRU 큐로 `ai-tycoon-cmdk-recent` localStorage 키에 sessionId/pid 저장
+- "최근" 칩으로 시각 구분, 같은 작업으로 다시 돌아갈 때 한 번 더 검색할 필요 없음
+- 다크 모드 전용 라벤더 톤, 모바일에서도 자연스럽게
+
 ### Iteration 71 — 일일 스탠드업 리포트 Markdown 내보내기
 - 새 `js/standupExport.js`: 오늘 작업을 Markdown 형식으로 정리해서 다운로드
 - 구조: `한눈에` (활성/완료/진행) → `에이전트별 작업` (이름/프로젝트/플랫폼/완료/진행 + 현재 작업) → `최근 이벤트` (10건)
