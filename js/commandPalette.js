@@ -156,6 +156,15 @@ function runHighlighted() {
     close();
 }
 
+/** 저장된 개인 메모를 sessionId/pid 기준으로 끌어옴 — 팔레트 검색 시 함께 매칭. */
+function noteFor(agent) {
+    try {
+        const all = JSON.parse(localStorage.getItem("ai-tycoon-agent-notes") || "{}") || {};
+        const key = String(agent?.sessionId || agent?.pid || "");
+        return key ? (all[key] || "") : "";
+    } catch { return ""; }
+}
+
 /** Score an agent against a query — higher is better, 0 means no match. */
 function scoreAgent(agent, theme, query) {
     if (!query) return 1; // empty query = show everything
@@ -167,6 +176,7 @@ function scoreAgent(agent, theme, query) {
         (agent.currentWork?.prompt || "").toLowerCase(),
         (agent.currentTask?.subject || "").toLowerCase(),
         String(agent.pid).toLowerCase(),
+        noteFor(agent).toLowerCase(),
     ];
     let total = 0;
     let matchedAll = true;
