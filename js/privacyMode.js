@@ -55,6 +55,10 @@ export function setEnabled(v) {
     enabled = !!v;
     try { localStorage.setItem(KEY, enabled ? "true" : "false"); } catch { /* ignore */ }
     applyClass();
+    // 업적: 한 번이라도 켜본 적 있으면 플래그 박아둠
+    if (enabled) {
+        try { window.aiTycoonAchievements?.setFlag?.("privacyEverOn", true); } catch { /* ignore */ }
+    }
     // Tell the cross-tab sync layer about it
     try {
         window.dispatchEvent(new CustomEvent("ai-tycoon-privacy-change", { detail: { enabled } }));
