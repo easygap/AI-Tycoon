@@ -3333,6 +3333,48 @@ body.agents-compact .agent-card .text-[11px].text-zinc-400 { font-size: 9.5px; }
 body.agents-compact .agent-card-inner .flex.items-center.gap-2\\.5.mb-2 { margin-bottom: 0; }
 body.agents-compact .agent-pin-btn { width: 22px; height: 22px; flex: 0 0 22px; }
 
+/* Iteration 101 — 헤더 stuck 카운트 칩 */
+.header-stuck-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.42);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: inherit;
+    transition: background 0.15s ease, transform 0.1s ease;
+    animation: stuckPulse 2.4s ease-in-out infinite;
+}
+.header-stuck-chip:hover {
+    background: rgba(245, 158, 11, 0.22);
+    transform: translateY(-1px);
+}
+.header-stuck-chip:active { transform: translateY(0); }
+.header-stuck-chip iconify-icon { font-size: 12px; }
+.header-stuck-label { font-weight: 600; opacity: 0.85; }
+@keyframes stuckPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18); }
+}
+@media (prefers-reduced-motion: reduce) { .header-stuck-chip { animation: none; } }
+body.dark .header-stuck-chip {
+    background: rgba(251, 191, 36, 0.18);
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.52);
+}
+body.dark .header-stuck-chip:hover { background: rgba(251, 191, 36, 0.28); }
+body.dark @keyframes stuckPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+    50% { box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.24); }
+}
+
 /* Iteration 91 — Insights 완료 태스크 옆 '어제 대비' 델타 칩 */
 .insights-delta {
     display: inline-block;

@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 101 — 헤더에 멈춤 카운트 칩 + 한 번에 포커스
+- 헤더 연결 상태 옆에 호박색 `⏳ N 멈춤` 칩, stuck 0명이면 자동 숨김
+- 5초 인터벌(`refreshTabCount`)에 함께 갱신되어 항상 신선
+- 클릭 시 `focusFirstStuckAgent()` 가 가장 오래 멈춰있던 친구로 포커스
+- 2.4초 주기 펄스 애니메이션, `prefers-reduced-motion` 사용자는 정적 표시
+- 다크 모드 별도 톤 (amber-400)
+
 ### Iteration 100 — package.json 메타데이터 보강 (출시 준비)
 - `description` 을 영문 → 한국어 + 지원 플랫폼 8종 명시로 갱신
 - `homepage` / `repository` / `bugs` URL 명시
