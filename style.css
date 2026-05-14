@@ -4205,6 +4205,17 @@ body.privacy-mode .insights-mvp-project:hover {
 }
 .privacy-badge-close:hover { background: rgba(255,255,255,0.32); }
 
+/* Iteration 111 — 팔레트 결과 메모 노트 아이콘 */
+.cp-note-chip {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 12px;
+    vertical-align: middle;
+    cursor: help;
+    opacity: 0.85;
+}
+.cp-note-chip:hover { opacity: 1; }
+
 /* Iteration 106 — 팔레트 결과에 핀 별 표시 */
 .cp-avatar { position: relative; }
 .cp-pin-star {
