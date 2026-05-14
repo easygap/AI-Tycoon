@@ -1218,6 +1218,7 @@ httpServer.listen(PORT, () => {
     console.log("");
     console.log("  ╔══════════════════════════════════════╗");
     console.log("  ║   AI TYCOON — Pixel Agent Office     ║");
+    console.log(`  ║   v${VERSION.padEnd(34)}║`);
     console.log("  ║                                      ║");
     console.log(`  ║   http://localhost:${PORT}              ║`);
     console.log("  ║   WebSocket: ws://localhost:" + PORT + "     ║");
@@ -1228,7 +1229,7 @@ httpServer.listen(PORT, () => {
     console.log(`  Claude Dir: ${CLAUDE_DIR}`);
     console.log(`  Sessions:   ${SESSIONS_DIR}`);
     console.log(`  Tasks:      ${TASKS_DIR}`);
-    console.log(`  Platform:   ${process.platform}`);
+    console.log(`  Platform:   ${process.platform} · Node ${process.version}`);
     console.log("");
 
     pollAndBroadcast();
