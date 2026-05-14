@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 66 — 설정 모달의 "새 소식" (What's new) 패널
+- 설정 모달에 최근 12개 변경 사항 중 상위 6개를 인라인 표시
+- 다국어 (KO/EN), 아이콘별 색감 (ok/feature/highlight/design/stable 5톤)
+- 그라데이션 카드 + "전체 변경 사항 보기 →" 링크 → GitHub CHANGELOG.md
+- 설정 열 때마다 자동 갱신, 다크모드 별도 색감
+
 ### Iteration 65 — Smoke test에 API JSON 계약 검증 추가
 - `/api/health` 응답을 JSON 으로 파싱하여 `ok / version / startedAt / uptimeMs / nodeVersion / platform / clients / agents.total / agents.running / pollIntervalMs` 9개 필드 존재 확인
 - `/api/agents` 응답 구조 검증 (`ok / count / agents[]`)
