@@ -2219,15 +2219,19 @@ export function onMouseMove(e) {
         const task = agent?.tasks?.find(t => t.id === hovSub.taskId);
         const parentTheme = S.visualAgents[hovSub.parentPid]?.theme;
         if (task && parentTheme) {
-            const statusLabel = task.status === "in_progress" ? "작업 중" : task.status === "completed" ? "완료" : "대기";
+            const lgS = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const labels = lgS === "en"
+                ? { head: "Sub agent", inProgress: "Working", done: "Done", pending: "Pending", parent: "Parent", status: "Status", activity: "Activity", desc: "Desc", waiting: "Wait", needs: "needs to complete" }
+                : { head: "서브 에이전트", inProgress: "작업 중", done: "완료", pending: "대기", parent: "부모", status: "상태", activity: "활동", desc: "설명", waiting: "대기", needs: "완료 필요" };
+            const statusLabel = task.status === "in_progress" ? labels.inProgress : task.status === "completed" ? labels.done : labels.pending;
             const statusColor = task.status === "in_progress" ? "#059669" : task.status === "completed" ? "#a1a1aa" : "#d97706";
             tt.innerHTML = `
-                <b style="color:${hovSub.color}">서브 에이전트 · ${esc((task.subject || "").substring(0, 25))}</b>
-                <div class="tt-row"><span class="tt-label">부모</span><span class="tt-value">${esc(parentTheme.name)} · ${esc(agent.projectName)}</span></div>
-                <div class="tt-row"><span class="tt-label">상태</span><span class="tt-value" style="color:${statusColor}">${statusLabel}</span></div>
-                ${task.activeForm ? `<div class="tt-row"><span class="tt-label">활동</span><span class="tt-value">${esc(task.activeForm.substring(0, 25))}</span></div>` : ""}
-                ${task.description ? `<div class="tt-row"><span class="tt-label">설명</span><span class="tt-value" style="max-width:160px;white-space:normal;font-size:11px;">${esc(task.description.substring(0, 60))}</span></div>` : ""}
-                ${task.blockedBy?.length ? `<div class="tt-row"><span class="tt-label">대기</span><span class="tt-value">Task ${task.blockedBy.join(", ")} 완료 필요</span></div>` : ""}
+                <b style="color:${hovSub.color}">${esc(labels.head)} · ${esc((task.subject || "").substring(0, 25))}</b>
+                <div class="tt-row"><span class="tt-label">${esc(labels.parent)}</span><span class="tt-value">${esc(parentTheme.name)} · ${esc(agent.projectName)}</span></div>
+                <div class="tt-row"><span class="tt-label">${esc(labels.status)}</span><span class="tt-value" style="color:${statusColor}">${statusLabel}</span></div>
+                ${task.activeForm ? `<div class="tt-row"><span class="tt-label">${esc(labels.activity)}</span><span class="tt-value">${esc(task.activeForm.substring(0, 25))}</span></div>` : ""}
+                ${task.description ? `<div class="tt-row"><span class="tt-label">${esc(labels.desc)}</span><span class="tt-value" style="max-width:160px;white-space:normal;font-size:11px;">${esc(task.description.substring(0, 60))}</span></div>` : ""}
+                ${task.blockedBy?.length ? `<div class="tt-row"><span class="tt-label">${esc(labels.waiting)}</span><span class="tt-value">Task ${task.blockedBy.join(", ")} ${esc(labels.needs)}</span></div>` : ""}
             `;
             tt.className = "";
             positionTooltip(tt, e.clientX, e.clientY);
