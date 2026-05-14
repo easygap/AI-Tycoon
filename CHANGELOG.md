@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 88 — 카드 신호 라인에 신선도 색상 코딩
+- `.agent-signal-line` 에 `data-freshness` 속성 (fresh / recent / warm / stale)
+- `< 1분` 초록(emerald), `< 5분` 호박(amber), `< 30분` 회색(neutral), 그 이상 흐린 회색(zinc)
+- 레이더 아이콘과 "최근 N분" 텍스트가 함께 색이 변해 한눈에 활동 신선도 파악
+- 다크 모드 별도 톤
+- 카드 하나하나 클릭하지 않아도 어느 친구가 방금 일했는지 색으로 즉시 인지
+
 ### Iteration 87 — 단축키 모달에 키워드 검색 입력
 - 모달 상단에 검색바 추가, 공백으로 분리된 토큰 모두 매칭(AND) 되는 항목만 표시
 - 매칭이 없는 그룹 헤더는 자동으로 숨김, 결과 0건이면 안내 문구

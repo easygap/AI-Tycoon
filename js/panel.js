@@ -1672,7 +1672,12 @@ export function updatePanel() {
                                 return ` <span class="mem-trend" style="color:${color}" title="30초 전 대비 ${sign}${t.deltaMB}MB" aria-label="메모리 ${t.dir === "up" ? "증가" : "감소"} ${sign}${t.deltaMB}MB">${arrow}</span>`;
                             })()}</span>
                         </div>
-                        <div class="agent-signal-line" title="${esc(signal.sourceLabel)}">
+                        <div class="agent-signal-line" title="${esc(signal.sourceLabel)}" data-freshness="${
+                            signal.age < 60_000 ? "fresh"
+                            : signal.age < 5 * 60_000 ? "recent"
+                            : signal.age < 30 * 60_000 ? "warm"
+                            : "stale"
+                        }">
                             <iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon>
                             <span>최근 ${esc(signal.ageLabel)}</span>
                             <em>${esc(signal.sourceLabel)}</em>
