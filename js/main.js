@@ -314,11 +314,23 @@ function init() {
         updatePanel();
         updateLiveHud();
     };
+    // 검색 입력 디바운스 — 한글 IME 와 빠른 타이핑 모두 매 키스트로크마다 풀 패널 렌더링이
+    // 부담스러워서 120ms 묶음 처리. 빈 문자열은 즉시 반영 (사용자가 X 버튼 누른 경우).
+    let _searchDebounceTimer = null;
     window.setAgentSearch = (value) => {
-        S.agentSearchQuery = String(value || "");
-        localStorage.setItem("ai-tycoon-agent-search", S.agentSearchQuery);
-        updatePanel();
-        updateLiveHud();
+        const str = String(value || "");
+        S.agentSearchQuery = str;
+        try { localStorage.setItem("ai-tycoon-agent-search", str); } catch { /* ignore */ }
+        if (_searchDebounceTimer) clearTimeout(_searchDebounceTimer);
+        if (str === "") {
+            updatePanel();
+            updateLiveHud();
+            return;
+        }
+        _searchDebounceTimer = setTimeout(() => {
+            updatePanel();
+            updateLiveHud();
+        }, 120);
     };
     window.clearAgentSearch = () => {
         S.agentSearchQuery = "";
