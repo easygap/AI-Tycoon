@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 93 — 명령 팔레트도 메모 매칭에 포함
+- `commandPalette.js` 의 `scoreAgent()` haystack 에 메모 본문 추가
+- 사이드바 검색과 동일한 키워드(예: "리팩터링", "디자인") 로 Ctrl+K 에서도 즉시 도달
+- 두 검색이 같은 데이터 소스를 보게 되어 사용자 멘탈 모델 일관성 ↑
+
 ### Iteration 92 — 사이드바 검색이 개인 메모 텍스트도 매칭
 - `agentSearchText(agent)` 가 `getAgentNote(agent)` 결과를 haystack 에 포함
 - 메모에 "리팩터링", "디자인 작업" 같은 단서를 적어두면 그 키워드로 빠르게 에이전트 찾기
