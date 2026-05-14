@@ -329,10 +329,15 @@ function render() {
             const recentChip = r.recent ? `<span class="cp-recent-chip">최근</span>` : "";
             // 핀 별 표시 (아바타 좌상단)
             const pinStar = r.pinned ? `<span class="cp-pin-star" title="고정됨" aria-label="고정됨">★</span>` : "";
+            // 메모 있으면 제목 줄 끝에 작은 노트 아이콘
+            const noteText = (typeof noteFor === "function") ? noteFor(a) : "";
+            const noteChip = noteText
+                ? `<span class="cp-note-chip" title="${esc(noteText.slice(0, 140))}" aria-label="메모 있음">📝</span>`
+                : "";
             return `<li class="cp-row${i === 0 ? " is-active" : ""}${r.pinned ? " is-pinned" : ""}" role="option" data-index="${i}">
                 <span class="cp-avatar" style="background:${r.theme.body}">${esc(r.theme.name.charAt(0))}${pinStar}</span>
                 <div class="cp-info">
-                    <div class="cp-title">${esc(r.theme.name)} <em>· ${esc(a.projectName || "")}</em>${recentChip}</div>
+                    <div class="cp-title">${esc(r.theme.name)} <em>· ${esc(a.projectName || "")}</em>${recentChip}${noteChip}</div>
                     <div class="cp-sub">${esc(meta.label)} · ${esc(platform)} · ${a.memoryMB || 0}MB</div>
                 </div>
                 <kbd class="cp-row-hint">↵</kbd>

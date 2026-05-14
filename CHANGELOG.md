@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 111 — 명령 팔레트 결과에 메모 노트 아이콘 (📝)
+- iter 93 에서 메모 매칭은 했는데, 결과 줄에 어떤 친구가 메모를 갖고 있는지 시각 표시는 없었음
+- 제목 줄 끝에 작은 노트 이모지 칩 추가, hover 시 메모 첫 140자 OS 툴팁
+- 핀 별(iter 106) + 최근 칩(iter 72) + 메모 노트(이번 iter) 3종으로 결과 한 줄에서 컨텍스트 즉시 파악
+
 ### Iteration 110 — `formatTimeAgo` 도 KO/EN 분기 (앱 전반 일관)
 - 카드/디테일 패널/이벤트 스트림 등에서 두루 쓰이는 `formatTimeAgo()` 가 한국어만 반환했음
 - 현재 언어가 `en` 이면 `just now / 3m ago / 2h ago` 형식으로 자연스럽게 출력
