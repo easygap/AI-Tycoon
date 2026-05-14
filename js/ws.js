@@ -217,19 +217,26 @@ function collectWorkEvents(prevAgentsByPid) {
             }
         }
 
+        const langWE = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const labelsWE = langWE === "en"
+            ? { review: "Review", reviewFallback: "Needs review", newWork: "New work", taskStart: "Task start", done: "Done" }
+            : { review: "검토 요청", reviewFallback: "확인이 필요해요", newWork: "새 작업", taskStart: "태스크 시작", done: "완료" };
+
         if (!prev.needsReview && agent.needsReview) {
             const theme = themeForAgent(agent);
-            const reviewText = getWorkText(agent) || firstLine(agent.currentWork?.prompt || agent.currentTask?.subject || "확인이 필요해요", 72);
+            const reviewText = getWorkText(agent) || firstLine(agent.currentWork?.prompt || agent.currentTask?.subject || labelsWE.reviewFallback, 72);
             addAgentEvent(agent, "review", {
-                label: "검토 요청",
+                label: labelsWE.review,
                 text: reviewText,
                 key: `review|${agent.pid}|${workSignature(agent)}`,
             });
             try { sfxReview(); } catch { /* ignore */ }
-            try { notify("review", `${theme.name} · ${agent.projectName}`, `검토 요청: ${reviewText}`, { tag: `review-${agent.pid}` }); } catch { /* ignore */ }
             try {
-                const lang = window.aiTycoonI18n?.getLang?.() || "ko";
-                const title = lang === "en" ? `${theme.name} needs review` : `${theme.name} 검토 요청`;
+                const notifyLabel = langWE === "en" ? `Review needed: ${reviewText}` : `검토 요청: ${reviewText}`;
+                notify("review", `${theme.name} · ${agent.projectName}`, notifyLabel, { tag: `review-${agent.pid}` });
+            } catch { /* ignore */ }
+            try {
+                const title = langWE === "en" ? `${theme.name} needs review` : `${theme.name} 검토 요청`;
                 showToast("review", title, reviewText, { pid: agent.pid });
             } catch { /* ignore */ }
         }
@@ -237,7 +244,7 @@ function collectWorkEvents(prevAgentsByPid) {
         if (agent.currentWork?.prompt && workSignature(agent) !== workSignature(prev)) {
             const work = firstLine(agent.currentWork.prompt, 78);
             addAgentEvent(agent, "work", {
-                label: "새 작업",
+                label: labelsWE.newWork,
                 text: work,
                 key: `work|${agent.pid}|${work}`,
             });
@@ -250,7 +257,7 @@ function collectWorkEvents(prevAgentsByPid) {
                 if (task.status === "in_progress") {
                     addAgentEvent(agent, "task-start", {
                         taskId: task.id,
-                        label: "태스크 시작",
+                        label: labelsWE.taskStart,
                         text: firstLine(task.activeForm || task.subject || `Task ${task.id}`, 72),
                         key: `task-start|${agent.pid}|${task.id}`,
                     });
@@ -262,7 +269,7 @@ function collectWorkEvents(prevAgentsByPid) {
             if (task.status === "in_progress") {
                 addAgentEvent(agent, "task-start", {
                     taskId: task.id,
-                    label: "태스크 시작",
+                    label: labelsWE.taskStart,
                     text: firstLine(task.activeForm || task.subject || `Task ${task.id}`, 72),
                     key: `task-start|${agent.pid}|${task.id}|${task.status}`,
                 });
@@ -271,12 +278,15 @@ function collectWorkEvents(prevAgentsByPid) {
                 const taskText = firstLine(task.subject || task.activeForm || `Task ${task.id}`, 72);
                 addAgentEvent(agent, "task-done", {
                     taskId: task.id,
-                    label: "완료",
+                    label: labelsWE.done,
                     text: taskText,
                     key: `task-done|${agent.pid}|${task.id}`,
                 });
                 try { sfxTaskDone(); } catch { /* ignore */ }
-                try { notify("task-done", `${theme.name} 완료!`, taskText, { tag: `done-${task.id}` }); } catch { /* ignore */ }
+                try {
+                    const notifyTitle = langWE === "en" ? `${theme.name} done!` : `${theme.name} 완료!`;
+                    notify("task-done", notifyTitle, taskText, { tag: `done-${task.id}` });
+                } catch { /* ignore */ }
                 try {
                     const lang = window.aiTycoonI18n?.getLang?.() || "ko";
                     const title = lang === "en" ? `${theme.name} finished a task` : `${theme.name} 태스크 완료`;
