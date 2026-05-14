@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 129 — `workEventMeta` 기본값 라벨도 KO/EN
+- 이벤트 객체에 라벨이 비어있는 경우 사용되는 폴백 라벨 6종 (출근/퇴근/새 작업/검토/태스크 시작/완료) 다국어
+- 현재 언어 기준으로 사용해 사이드 패널 작업 스트림과 디테일 패널 모두 일관
+- ws.js 에서 이미 라벨 박아주는 경우엔 그 라벨 우선 (regression 안전)
+
 ### Iteration 128 — '연결 종료' / '작업실에서 나갔어요' 도 KO/EN
 - 상태가 `offline` 으로 떨어졌을 때 work-event 라벨/본문을 다국어로
 - `연결 종료` → `Disconnected`, `작업실에서 나갔어요` → `Left the office`
