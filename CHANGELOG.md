@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 173 — 사이드바 검색 Enter 로 첫 결과 자동 선택
+- 검색 input 에 `Enter` 누르면 현재 보이는 첫 번째 카드를 자동 클릭 (selectAgent 효과)
+- 검색 → 좁힘 → Enter → 디테일 패널 열림 → `N` 으로 메모, 한 손 키보드 워크플로우
+- 한글 IME 조합 중에는 Enter 무시 (자모 결합용 Enter 와 충돌 방지)
+- Esc/clear 등 기존 동작은 그대로 유지
+- 새 `handleAgentSearchKey(event)` 헬퍼로 인라인 onkeydown 정리
+
 ### Iteration 172 — 명령 팔레트 placeholder 에도 '메모' 명시
 - iter 93 메모 매칭과 짝을 이루도록 팔레트 input placeholder 도 갱신
 - KO `에이전트, 프로젝트, 명령…` → `에이전트·프로젝트·메모·명령…`
