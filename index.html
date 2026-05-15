@@ -1307,22 +1307,50 @@
     function cycleAgentFocus(direction) {
         const S = window.S;
         if (!S || !S.liveAgents || S.liveAgents.length === 0) return;
-        const running = S.liveAgents.filter(a => a.isRunning);
-        if (running.length === 0) return;
-        const ids = running.map(a => String(a.pid));
-        const current = String(S.directorFocusPid || S.selectedPid || ids[0]);
+        // 사이드바에 실제로 표시된 카드 순서대로 순회 (필터/검색/정렬 반영).
+        // 빈 사이드바이면 fall back 으로 liveAgents 의 running 사용.
+        const cards = Array.from(document.querySelectorAll("#agents-list .agent-card"))
+            .filter(el => el.offsetParent !== null && el.dataset && el.dataset.cardPid);
+        let ids;
+        let cardByPid = null;
+        if (cards.length > 0) {
+            ids = cards.map(el => String(el.dataset.cardPid));
+            cardByPid = new Map(cards.map(el => [String(el.dataset.cardPid), el]));
+        } else {
+            const running = S.liveAgents.filter(a => a.isRunning);
+            if (running.length === 0) return;
+            ids = running.map(a => String(a.pid));
+        }
+        const current = String(S.detailPid || S.directorFocusPid || S.selectedPid || ids[0]);
         let idx = ids.indexOf(current);
-        if (idx < 0) idx = 0;
+        if (idx < 0) idx = direction > 0 ? -1 : 0; // 미선택 상태에선 다음=첫, 이전=마지막
         const nextIdx = (idx + direction + ids.length) % ids.length;
         const nextPid = ids[nextIdx];
         S.directorFocusPid = nextPid;
         S.directorMode = true;
         S.selectedPid = nextPid;
         S.detailPid = nextPid;
-        const next = running[nextIdx];
+        // 새로 선택된 카드를 사이드바에서 시야로 스크롤.
+        if (cardByPid) {
+            const card = cardByPid.get(nextPid);
+            if (card && typeof card.scrollIntoView === "function") {
+                card.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            }
+        }
+        // 즉시 패널/디테일 리렌더 — 다음 WS 틱 기다리지 않고 반응적으로.
+        if (typeof window.updatePanel === "function") {
+            try { window.updatePanel(); } catch { /* ignore */ }
+        }
+        if (typeof window.updateDetailPanel === "function") {
+            try { window.updateDetailPanel(); } catch { /* ignore */ }
+        }
+        const nextAgent = S.liveAgents.find(a => String(a.pid) === nextPid);
         const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const label = nextAgent
+            ? (nextAgent.projectName || nextAgent.platformName || "Agent")
+            : "Agent";
         window.aiTycoonToasts?.show?.("info",
-            next.projectName || next.platformName || "Agent",
+            label,
             `${nextIdx + 1} / ${ids.length} · ${lang === "en" ? "agent focused" : "에이전트 포커스"}`);
     }
     function toggleCinemaMode() {

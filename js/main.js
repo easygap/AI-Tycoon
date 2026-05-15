@@ -53,6 +53,10 @@ if (typeof window !== "undefined") {
     window.aiTycoonOverlayDebug = getPixiOverlayDebug;
     // Expose shared state for one-shot helpers (toasts, mini-map, etc.)
     window.S = S;
+    // index.html 의 cycleAgentFocus 등 인라인 핸들러에서 즉시 리렌더 호출할 수 있도록.
+    // ESM import 만으로는 window scope 에 노출되지 않아 명시적으로 바인딩.
+    window.updatePanel = updatePanel;
+    window.updateDetailPanel = updateDetailPanel;
 }
 
 const PANEL_FOCUSABLE = [
