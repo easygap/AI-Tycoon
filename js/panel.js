@@ -2028,6 +2028,7 @@ export function updateDetailPanel() {
 
     if (!S.detailPid) {
         container.classList.add("hidden");
+        container._lastRenderedPid = null;
         return;
     }
 
@@ -2035,7 +2036,18 @@ export function updateDetailPanel() {
     if (!agent) {
         container.classList.add("hidden");
         S.detailPid = null;
+        container._lastRenderedPid = null;
         return;
+    }
+
+    // 다른 에이전트로 전환된 경우 스크롤을 위로 초기화 — 이전 카드의 스크롤 위치가
+    // 남아있어서 새 카드 열어도 한참 아래쪽이 보이던 불편 해소.
+    const prevRendered = container._lastRenderedPid;
+    if (prevRendered !== agent.pid) {
+        // innerHTML 재구성 직전에 scrollTop 리셋 (innerHTML 으로 컨테이너가 비워지긴 하지만
+        // 일부 브라우저는 스크롤 위치를 부모에서 유지하기도 해서 명시적으로 0 처리)
+        container.scrollTop = 0;
+        container._lastRenderedPid = agent.pid;
     }
 
     container.classList.remove("hidden");
@@ -2225,7 +2237,7 @@ export function updateDetailPanel() {
                     aria-label="${esc(`${theme.name} ${pinned ? "고정 해제" : "고정"}`)}">
                     <iconify-icon icon="${pinned ? "solar:star-bold" : "solar:star-linear"}" aria-hidden="true"></iconify-icon>
                 </button>
-                <button onclick="closeDetail()" class="detail-close-btn" aria-label="상세 패널 닫기">
+                <button onclick="closeDetail()" class="detail-close-btn" aria-label="상세 패널 닫기" title="Esc">
                     <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                 </button>
             </div>
