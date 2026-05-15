@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 149 — `npm run lint` — 가벼운 syntax 일괄 점검
+- 새 `scripts/lint.js` — `js/`, `scripts/`, `server.js`, `sw.js` 의 모든 .js 파일을 `node --check` 로 일괄 검사
+- `package.json scripts.lint` 등록, `npm run lint` 한 줄로 35개 파일 검증
+- GitHub Actions CI 도 `npm run lint` 후 `npm test` 순으로 갱신 (Node 18/20/22 matrix 그대로)
+- ESLint 도입은 과해서 보류, 일단 syntax 회귀만이라도 확실히 잡음
+
 ### Iteration 148 — README 단축키 표 최신 단축키 5종 반영
 - F1 (도움말 표준) 추가, Shift+P 빠르게 두 번 누르면 Strict 안내
 - 명령 팔레트 32+ 명령 (현재 누적), Shift+Click 핀 토글, Cmd/Ctrl+S 메모 저장 항목 추가

@@ -37,6 +37,7 @@
     "build:css": "node scripts/build-css.js",
     "start": "node server.js",
     "dev": "npm run build:css && node server.js",
+    "lint": "node scripts/lint.js",
     "test": "node scripts/smoke-test.js"
   },
   "dependencies": {
