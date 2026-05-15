@@ -2308,12 +2308,18 @@ export function updateDetailPanel() {
     const noteClear = container.querySelector("[data-detail-note-clear]");
     const noteHint  = container.querySelector(".detail-note-hint");
     // 글자 수 임계값 도달 표시 — 450자 넘으면 amber, 500자 도달이면 진한 빨강 강조
+    // 'is-saved' 상태가 아닐 때만 카운터 숫자도 즉시 갱신 (저장됨 표시는 1.2초 유지)
     const applyLimitWarn = () => {
         if (!noteHint) return;
         const len = noteInput?.value.length || 0;
         if (len >= 480) noteHint.dataset.warn = "high";
         else if (len >= 420) noteHint.dataset.warn = "mid";
         else delete noteHint.dataset.warn;
+        if (!noteHint.classList.contains("is-saved")) {
+            const langN = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const hintTxt = langN === "en" ? "Local only" : "로컬에만 저장";
+            noteHint.textContent = `${hintTxt} · ${len}/500`;
+        }
     };
     // 저장 직후 1.2초간 'saved' 상태 표시 — 디바운스 때문에 사라진 글자가 어디로 갔나 헷갈리지 않게.
     const flashSaved = () => {
@@ -2343,6 +2349,8 @@ export function updateDetailPanel() {
             flashSaved();
         });
         noteInput.addEventListener("input", () => {
+            // 글자 수 강조는 디바운스 무시하고 즉시 — 사용자가 limit 다가오는 걸 바로 봐야 의미가 있음
+            applyLimitWarn();
             if (noteInput._imeComposing) return;
             if (saveTimer) clearTimeout(saveTimer);
             saveTimer = setTimeout(() => {
