@@ -6,6 +6,16 @@
    잠재해 있었음. 전역으로 한 번에 잡고 가는 게 안전. */
 [hidden] { display: none !important; }
 
+/* iter 163 — 새 WS state 들어올 때 conn-dot 에 짧게 ring pulse */
+#conn-dot.is-pulsing {
+    animation: conn-dot-pulse 800ms ease-out;
+}
+@keyframes conn-dot-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.55); }
+    100% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+}
+@media (prefers-reduced-motion: reduce) { #conn-dot.is-pulsing { animation: none; } }
+
 /* ── Empty-state Demo CTA (only visible when no agents) ── */
 .empty-cta {
     position: absolute;
