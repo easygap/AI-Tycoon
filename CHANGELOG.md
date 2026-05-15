@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 145 — 명령 팔레트에 reset/clear 명령 3종 추가
+- 화면이 검색/필터/핀으로 좁아졌을 때 한 번에 깨끗하게 정리할 수 있도록 추가
+- `검색 비우기` — `clearAgentSearch()` 호출
+- `필터 모두 초기화 (전체 보기)` — 상태/플랫폼/액션 필터 + 검색 모두 리셋
+- `모든 핀 해제` — `pinnedAgentKeys` 비우고 localStorage 정리, 토스트로 결과 안내
+- 모두 `filter` 그룹에 묶여 좌측 연두 strip + Ctrl+K 빠른 접근
+
 ### Iteration 144 — 운영 브리핑 패널의 액션 라벨도 KO/EN
 - "운영 브리핑" kicker → "Operator brief"
 - 액션 라벨 7종 (검토 대기/포커스/신호 지연/고정 직원/진행 작업/최근 활동/대기 직원)
