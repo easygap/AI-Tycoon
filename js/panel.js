@@ -1279,6 +1279,10 @@ function copyAgentValue(agent, kind) {
     if (kind === "session") return String(agent.sessionId || "");
     if (kind === "cwd") return String(agent.cwd || "");
     if (kind === "work") return String(agent.currentWork?.prompt || getWorkText(agent) || "");
+    if (kind === "started") {
+        const ts = typeof agent.startTime === "string" ? Date.parse(agent.startTime) : Number(agent.startTime);
+        return Number.isFinite(ts) && ts > 0 ? new Date(ts).toISOString() : "";
+    }
     return "";
 }
 
@@ -2143,11 +2147,24 @@ export function updateDetailPanel() {
 
     const lgM = (window.aiTycoonI18n?.getLang?.() || "ko");
     const labels = lgM === "en"
-        ? { session: "Session", cwd: "Path", copySuffix: "copy" }
-        : { session: "세션", cwd: "경로", copySuffix: "복사" };
+        ? { session: "Session", cwd: "Path", started: "Started", copySuffix: "copy" }
+        : { session: "세션", cwd: "경로", started: "출근", copySuffix: "복사" };
+    // 출근 시각 — 서버가 보내주는 startTime 을 'HH:MM' + 경과 시간 형태로 표시
+    let startedText = "";
+    if (agent.startTime) {
+        const ts = typeof agent.startTime === "string" ? Date.parse(agent.startTime) : Number(agent.startTime);
+        if (Number.isFinite(ts) && ts > 0) {
+            const d = new Date(ts);
+            const hh = String(d.getHours()).padStart(2, "0");
+            const mm = String(d.getMinutes()).padStart(2, "0");
+            const ago = formatTimeAgo(Math.max(0, Date.now() - ts));
+            startedText = `${hh}:${mm} · ${ago}`;
+        }
+    }
     const metaRows = [
         ["PID", agent.pid, "pid"],
         agent.sessionId ? [labels.session, agent.sessionId, "session"] : null,
+        startedText ? [labels.started, startedText, "started"] : null,
         agent.cwd ? [labels.cwd, agent.cwd, "cwd"] : null,
     ].filter(Boolean);
     const detailMetaHtml = metaRows.length
