@@ -5,6 +5,15 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 175 — Insights 시간대 히트맵 'now' 셀에 ▼ 마커
+- 기존엔 현재 시각 셀에 살짝 outline 만 들어가서 "지금이 어딘지" 한눈에 안 띔
+- 셀 상단에 작은 ▼ 삼각형 마커 + 1.8s 부드러운 바운스 애니메이션
+- bar gradient 도 emerald → 오렌지로 전환해 현재 시각임을 색으로도 강조
+- `aria-current="true"` + `aria-label="HH:00 · 지금"` 로 스크린리더 안내
+- `prefers-reduced-motion` 환경에서는 마커 애니메이션 정지
+- 다크 모드 대응 색상 (#fdba74 계열) 도 함께 추가
+- SW 캐시 v14 → v15 로 bump
+
 ### Iteration 174 — 디테일 패널 다른 에이전트로 전환 시 스크롤 위로 자동
 - 이전 카드의 스크롤 위치가 남아있어 새 카드 열어도 한참 아래가 보이던 불편 해소
 - `container._lastRenderedPid` 로 PID 변경 감지, 변경 시 `scrollTop = 0`
