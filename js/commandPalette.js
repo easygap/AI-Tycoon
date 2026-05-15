@@ -292,6 +292,29 @@ function buildActions(query) {
         { id: "filter-coding", group: "filter", title: "필터: 코딩 중", run: () => setFilter("coding") },
         { id: "filter-idle", group: "filter", title: "필터: 대기", run: () => setFilter("idle") },
         { id: "filter-offline", group: "filter", title: "필터: 오프라인", run: () => setFilter("offline") },
+        // 검색·필터·핀 빠른 초기화 — 화면이 너무 좁아졌을 때 한 번에 깨끗하게
+        { id: "reset-search", group: "filter", title: "검색 비우기", run: () => { try { window.clearAgentSearch?.(); } catch { /* ignore */ } } },
+        { id: "reset-filters", group: "filter", title: "필터 모두 초기화 (전체 보기)", run: () => {
+            try {
+                window.setFilter?.("all");
+                window.setPlatformFilter?.("all");
+                window.setActionFilter?.("all");
+                window.clearAgentSearch?.();
+            } catch { /* ignore */ }
+        } },
+        { id: "clear-pins", group: "filter", title: "모든 핀 해제", run: () => {
+            try {
+                S.pinnedAgentKeys = [];
+                localStorage.setItem("ai-tycoon-pinned-agents", "[]");
+                localStorage.setItem("ai-tycoon-pinned-pids", "[]");
+                // setFilter 호출하면 내부에서 updatePanel() 트리거됨 — 패널 즉시 갱신용
+                window.setFilter?.(S.activeFilter || "all");
+                const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                window.aiTycoonToasts?.show?.("info",
+                    lang === "en" ? "Pins cleared" : "고정 모두 해제",
+                    lang === "en" ? "All pinned agents released." : "고정된 에이전트가 모두 해제됐어요.");
+            } catch { /* ignore */ }
+        } },
         // ── Theme ──
         { id: "theme-classic", group: "theme", title: "테마: 클래식", run: () => setTheme("classic") },
         { id: "theme-cafe", group: "theme", title: "테마: 카페", run: () => setTheme("cafe") },
