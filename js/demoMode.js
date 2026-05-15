@@ -149,7 +149,10 @@ async function pushSyntheticState() {
 
 export function startDemo() {
     if (timer) return;
-    addLog("데모 모드 ON · 합성 에이전트 표시", "system");
+    const lang = (typeof window !== "undefined" && window.aiTycoonI18n?.getLang?.()) || "ko";
+    addLog(lang === "en"
+        ? "Demo mode on · showing synthetic agents"
+        : "데모 모드 ON · 합성 에이전트 표시", "system");
     pushSyntheticState();
     timer = setInterval(pushSyntheticState, 3000);
     if (typeof window !== "undefined") {
@@ -161,7 +164,8 @@ export function stopDemo() {
     if (!timer) return;
     clearInterval(timer);
     timer = null;
-    addLog("데모 모드 OFF", "system");
+    const lang = (typeof window !== "undefined" && window.aiTycoonI18n?.getLang?.()) || "ko";
+    addLog(lang === "en" ? "Demo mode off" : "데모 모드 OFF", "system");
     // Clear synthetic agents — real reconnection will resupply
     S.liveAgents = [];
     S.visualAgents = {};
