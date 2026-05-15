@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 168 — 'N' 단축키 — 선택된 에이전트 메모로 빠르게 포커스
+- 글로벌 단축키에 `N` 추가 — `#detail-note-input` 이 있으면 그 textarea 로 포커스 + 커서 끝으로
+- 디테일 패널이 없으면 토스트로 "에이전트를 먼저 선택해 주세요" 안내
+- 메모 작성 → Cmd+S 저장 → 또는 Cmd+Enter 저장+닫기 흐름의 시작점이 됨
+- 단축키 모달 cheatsheet + README 표 + i18n 키 모두 갱신
+
 ### Iteration 167 — 메모 textarea 의 Cmd/Ctrl+Enter — 저장 + 디테일 패널 닫기
 - iter 117 의 Cmd/Ctrl+S 즉시 저장에 더해, Cmd/Ctrl+Enter 면 저장 + 디테일 패널 즉시 닫힘
 - 메모 다 적었을 때 한 번의 키 조합으로 작업 완료
