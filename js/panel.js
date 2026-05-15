@@ -2307,6 +2307,14 @@ export function updateDetailPanel() {
     const noteInput = container.querySelector("#detail-note-input");
     const noteClear = container.querySelector("[data-detail-note-clear]");
     const noteHint  = container.querySelector(".detail-note-hint");
+    // 글자 수 임계값 도달 표시 — 450자 넘으면 amber, 500자 도달이면 진한 빨강 강조
+    const applyLimitWarn = () => {
+        if (!noteHint) return;
+        const len = noteInput?.value.length || 0;
+        if (len >= 480) noteHint.dataset.warn = "high";
+        else if (len >= 420) noteHint.dataset.warn = "mid";
+        else delete noteHint.dataset.warn;
+    };
     // 저장 직후 1.2초간 'saved' 상태 표시 — 디바운스 때문에 사라진 글자가 어디로 갔나 헷갈리지 않게.
     const flashSaved = () => {
         if (!noteHint) return;
@@ -2319,7 +2327,9 @@ export function updateDetailPanel() {
         noteHint._flashTimer = setTimeout(() => {
             noteHint.classList.remove("is-saved");
             noteHint.textContent = `${hintTxt} · ${(noteInput?.value.length || 0)}/500`;
+            applyLimitWarn();
         }, 1200);
+        applyLimitWarn();
     };
     if (noteInput) {
         let saveTimer = null;
@@ -2353,6 +2363,8 @@ export function updateDetailPanel() {
             }
         });
     }
+    // 초기 렌더 직후 한 번 — 저장된 메모가 이미 임계값 넘는 경우 강조 적용
+    applyLimitWarn();
     if (noteClear) {
         noteClear.addEventListener("click", () => {
             setAgentNote(agent, "");
