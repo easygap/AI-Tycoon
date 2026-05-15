@@ -2573,6 +2573,26 @@ export function refreshInsights() {
         }
         moodEl.dataset.tone = tone;
         moodEl.innerHTML = `<span class="insights-mood-emoji">${emoji}</span><span>${esc(label)}</span><span class="insights-mood-num tabular-nums">${tc} ${lang === "en" ? "tasks" : "태스크"}</span>`;
+        // 활성 직원이 있을 때 mood-line 클릭 가능 — 가장 활발한 친구로 포커스 + 모달 닫기
+        moodEl.style.cursor = activeCount > 0 ? "pointer" : "";
+        moodEl.title = activeCount > 0
+            ? (lang === "en" ? "Click to focus the most active agent" : "클릭하면 가장 활발한 직원으로 포커스")
+            : "";
+        moodEl.onclick = activeCount > 0 ? () => {
+            try {
+                const top = [...agents].filter(a => a.isRunning).sort(agentSortByLivePriority)[0];
+                if (!top) return;
+                S.selectedPid = top.pid;
+                S.detailPid = top.pid;
+                S.directorFocusPid = top.pid;
+                S.directorMode = true;
+                document.getElementById("insights-overlay")?.classList?.remove("is-visible");
+                setTimeout(() => {
+                    const ov = document.getElementById("insights-overlay");
+                    if (ov) ov.hidden = true;
+                }, 280);
+            } catch { /* ignore */ }
+        } : null;
     }
 
     if (el("insights-agents")) el("insights-agents").textContent = activeCount;
