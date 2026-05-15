@@ -1009,6 +1009,8 @@
         if (dp) dp.classList.add("hidden");
         if (window.__clearDetailPid) window.__clearDetailPid();
     }
+    // 외부 모듈에서도 호출 가능하도록 노출 (메모 Cmd+Enter 등)
+    window.closeDetail = closeDetail;
     function toggleSidePanel() {
         const panel = document.getElementById("side-panel");
         if (!panel) return;
