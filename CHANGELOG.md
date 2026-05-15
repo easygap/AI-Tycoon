@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 151 — Insights '완료 태스크' 라벨 옆 '7일 누적' 칩
+- 라벨 줄에 작은 라벤더 칩 추가 (`7일 · 42` / `7d · 42`)
+- `recentDays(7)` 합산으로 최근 7일간 누적 완료 태스크 표시
+- 합이 0이면 자연스럽게 숨김
+- hover 시 `최근 7일 누적: N개 완료` 툴팁
+- 어제 대비 ±N 칩과 함께 시간 비교 두 축 (어제 vs 주간) 모두 제공
+
 ## [1.2.0] — iter 90-149 누적 릴리즈
 - 명령 팔레트 22 → 32+ 명령으로 확장 (정렬·리셋·컴팩트·메모/스탠드업/백업 export 등)
 - Strict 프라이버시 모드 (Shift+P 더블탭) — hover unblur 차단으로 화면 녹화 완전 안전
