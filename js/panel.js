@@ -251,15 +251,28 @@ function updateSearchControls(filteredAgents) {
         : `<span>${esc(labels.all)}</span>`;
     const countSuffix = lgV === "en" ? ` ${labels.count}` : labels.count; // "명" 은 붙여 쓰고 "people" 은 띄움
 
+    // 핀/검토/최근 같은 카운트 칩을 클릭 가능한 액션 필터 트리거로
     summary.innerHTML = `
         <span>${searchLabel}</span>
         <span class="tabular-nums">${visible}/${total}${countSuffix}</span>
         ${actionMeta && actionMeta.key !== "all" ? `<span class="action-visibility">${esc(actionMeta.label)} ${esc(labels.view)}</span>` : ""}
-        ${pinned ? `<span class="pinned-visibility tabular-nums">${esc(labels.pinned)} ${pinned}</span>` : ""}
-        <span class="tabular-nums">${esc(labels.working)} ${working}</span>
-        ${review ? `<span class="needs-attention tabular-nums">${esc(labels.review)} ${review}</span>` : ""}
-        ${recent ? `<span class="tabular-nums">${esc(labels.recent)} ${recent}</span>` : ""}
+        ${pinned ? `<button type="button" class="pinned-visibility tabular-nums vs-chip" data-action="pinned">${esc(labels.pinned)} ${pinned}</button>` : ""}
+        <button type="button" class="tabular-nums vs-chip" data-action="working">${esc(labels.working)} ${working}</button>
+        ${review ? `<button type="button" class="needs-attention tabular-nums vs-chip" data-action="review">${esc(labels.review)} ${review}</button>` : ""}
+        ${recent ? `<button type="button" class="tabular-nums vs-chip" data-action="recent">${esc(labels.recent)} ${recent}</button>` : ""}
     `;
+    // 클릭 핸들러 — 같은 액션이면 토글로 'all', 다른 액션이면 그걸로 전환
+    summary.querySelectorAll(".vs-chip[data-action]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const k = btn.getAttribute("data-action");
+            if (!k) return;
+            if (S.activeActionFilter === k) {
+                window.setActionFilter?.("all");
+            } else {
+                window.setActionFilter?.(k);
+            }
+        });
+    });
 }
 
 function effectivePixiDensity() {
