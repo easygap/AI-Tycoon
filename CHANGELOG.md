@@ -5,6 +5,19 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+## [1.2.0] — iter 90-149 누적 릴리즈
+- 명령 팔레트 22 → 32+ 명령으로 확장 (정렬·리셋·컴팩트·메모/스탠드업/백업 export 등)
+- Strict 프라이버시 모드 (Shift+P 더블탭) — hover unblur 차단으로 화면 녹화 완전 안전
+- 헤더 칩 3종 (`멈춤` ⚠ / `데모` / `프라이버시`) — 활성 모드 한눈에 + 클릭으로 즉시 해제
+- 디테일 패널 / 사이드 패널 / HUD / 운영 브리핑 / 보고 대기열 / 캔버스 툴팁 등 거의 모든 UI 가 KO/EN 일관
+- 한글 IME 처리: 사이드바 / 팔레트 / 단축키 모달 / 메모 textarea 4개 입력
+- 검색 매치 노란 마커 하이라이트 (사이드바 + 팔레트), 메모 검색 매칭, 메모리 추세 화살표
+- 카드 Shift+클릭 으로 핀 토글, F1 도움말, Cmd/Ctrl+S 메모 즉시 저장
+- 사이드바 '위로' 부유 버튼, 워크 이벤트 → 카드 자동 스크롤
+- 'while you were away' 토스트, 'today's MVP' 카드, 'NEW' 펄스, 신선도 색상 코딩
+- `npm run lint` (node --check 35개 파일) + CI 통합
+- `package.json` / `server.js` 의 VERSION 1.1.0 → 1.2.0
+
 ### Iteration 149 — `npm run lint` — 가벼운 syntax 일괄 점검
 - 새 `scripts/lint.js` — `js/`, `scripts/`, `server.js`, `sw.js` 의 모든 .js 파일을 `node --check` 로 일괄 검사
 - `package.json scripts.lint` 등록, `npm run lint` 한 줄로 35개 파일 검증

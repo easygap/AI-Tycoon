@@ -3,11 +3,22 @@
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-1.1.0-d97757.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.2.0-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
 
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
+
+### 🆕 v1.2.0 새 소식 (요약)
+- **명령 팔레트 32+ 명령** — 검색/팔레트/단축키 모달 모두에 한글 IME 매끄럽게
+- **Strict 프라이버시 모드** (`Shift+P` 더블탭) — hover unblur 차단으로 화면 녹화 안전
+- **헤더 모드 칩 3종** (`⚠ 멈춤` / `DEMO` / `프라이버시`) — 활성 모드 즉시 인지 + 클릭으로 해제
+- **검색 매치 노란 하이라이트** (사이드바 + 팔레트), 메모도 검색 매칭
+- **카드 Shift+클릭 으로 핀 토글**, F1 도움말, Cmd/Ctrl+S 메모 즉시 저장
+- **워크 이벤트 → 카드 자동 스크롤**, 사이드바 '위로' 부유 버튼
+- **신선도 색상 코드** (1분/5분/30분), 메모리 추세 ▲/▼
+- **운영 브리핑 / 헬스 / 보고 대기열** 등 사이드 패널 거의 모든 영역 KO/EN 일관
+- `npm run lint` (35개 .js syntax 일괄 검사) + CI 통합
 
 ### 🆕 v1.1.0 새 소식 (요약)
 - **명령 팔레트** (`Ctrl/Cmd+K`) — 22개 명령 + 에이전트 fuzzy 검색
