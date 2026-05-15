@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 164 — Insights 모달 'mood line' 클릭 시 최활발 직원 포커스
+- 활성 직원이 1명 이상일 때만 mood line 에 cursor: pointer + 클릭 가능 표시
+- 클릭하면 `agentSortByLivePriority` 로 가장 활발한 친구를 골라 포커스 + 모달 자동 닫힘
+- title 안내 (KO `클릭하면 가장 활발한 직원으로 포커스` / EN `Click to focus the most active agent`)
+- 활성 0명일 때는 평소처럼 표시 전용 (잘못된 클릭 안 잡힘)
+
 ### Iteration 163 — 새 데이터 들어올 때 conn-dot 짧은 ring pulse
 - `handleState()` 진입 시 `#conn-dot.is-pulsing` 토글 → 800ms emerald ring 펄스
 - 매번 reflow 강제(`void offsetWidth`)해 같은 프레임 안 재트리거도 자연스럽게 재시작
