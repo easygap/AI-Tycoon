@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 161 — 명령 팔레트에 '활동 로그 비우기' 추가
+- `tools` 그룹에 새 명령 — `S.workEvents` + `S.activityLog` 동시 비움
+- 사이드 패널 하단 활동 타임라인 + 시스템 로그 + 캔버스 work-stream 모두 깨끗
+- 실제 에이전트 상태는 그대로, 표시만 리셋
+- 토스트로 결과 안내 (KO/EN)
+
 ### Iteration 160 — 디테일 패널 메타 행에 '출근' 시각 추가
 - `agent.startTime` 이 있으면 `09:23 · 2시간 전` 형식으로 출근 시각 + 경과 시간 표시
 - 메타 행에 `출근 / Started` 라벨로 PID/세션/경로와 함께 나란히
