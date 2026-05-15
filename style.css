@@ -1,5 +1,11 @@
 /* ===== AI Tycoon — Live Operations Studio ===== */
 
+/* iter 156 에서 발견한 .empty-cta 처럼, display:flex/inline-flex/inline-block
+   같은 선언이 HTML hidden 속성(기본 display:none)을 덮어써서 hidden 으로
+   토글해도 안 사라지는 버그가 여러 셀렉터(헤더 칩 3종, week-chip 등)에
+   잠재해 있었음. 전역으로 한 번에 잡고 가는 게 안전. */
+[hidden] { display: none !important; }
+
 /* ── Empty-state Demo CTA (only visible when no agents) ── */
 .empty-cta {
     position: absolute;
