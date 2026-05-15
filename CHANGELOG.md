@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 160 — 디테일 패널 메타 행에 '출근' 시각 추가
+- `agent.startTime` 이 있으면 `09:23 · 2시간 전` 형식으로 출근 시각 + 경과 시간 표시
+- 메타 행에 `출근 / Started` 라벨로 PID/세션/경로와 함께 나란히
+- `copyAgentValue` 에 `started` 분기 추가 (ISO 타임스탬프 복사)
+- 영어 모드에서는 `Started` 라벨 + 같은 포맷
+
 ### Iteration 159 — 핀된 에이전트가 사이드바 정렬에서 항상 상단
 - `compareAgentPriority()` 의 첫 비교 단계로 `context.pinnedKeys` 기반 핀 우선순위 추가
 - 핀된 친구는 어떤 정렬 모드 (상태/메모리/플랫폼/프로젝트/최근) 에서도 항상 위로 올라옴
