@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 146 — 명령 팔레트에 정렬 기준 5종 추가
+- 사이드 패널의 정렬 select 박스에만 있던 5가지 정렬을 Ctrl+K 에서도 빠르게 전환
+- `정렬: 상태순 / 메모리순 / 플랫폼순 / 프로젝트순 / 최근 활동순`
+- 모두 `filter` 그룹에 묶여 좌측 연두 strip 으로 일관
+
 ### Iteration 145 — 명령 팔레트에 reset/clear 명령 3종 추가
 - 화면이 검색/필터/핀으로 좁아졌을 때 한 번에 깨끗하게 정리할 수 있도록 추가
 - `검색 비우기` — `clearAgentSearch()` 호출

@@ -315,6 +315,12 @@ function buildActions(query) {
                     lang === "en" ? "All pinned agents released." : "고정된 에이전트가 모두 해제됐어요.");
             } catch { /* ignore */ }
         } },
+        // ── Sort ── 정렬 기준 5종 — Ctrl+K 에서도 마우스 없이 빠르게 전환
+        { id: "sort-status",   group: "filter", title: "정렬: 상태순",        run: () => { try { window.setSortOrder?.("status"); } catch { /* ignore */ } } },
+        { id: "sort-memory",   group: "filter", title: "정렬: 메모리순",      run: () => { try { window.setSortOrder?.("memory"); } catch { /* ignore */ } } },
+        { id: "sort-platform", group: "filter", title: "정렬: 플랫폼순",      run: () => { try { window.setSortOrder?.("platform"); } catch { /* ignore */ } } },
+        { id: "sort-project",  group: "filter", title: "정렬: 프로젝트순",    run: () => { try { window.setSortOrder?.("project"); } catch { /* ignore */ } } },
+        { id: "sort-recent",   group: "filter", title: "정렬: 최근 활동순",   run: () => { try { window.setSortOrder?.("recent"); } catch { /* ignore */ } } },
         // ── Theme ──
         { id: "theme-classic", group: "theme", title: "테마: 클래식", run: () => setTheme("classic") },
         { id: "theme-cafe", group: "theme", title: "테마: 카페", run: () => setTheme("cafe") },
