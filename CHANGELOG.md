@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 163 — 새 데이터 들어올 때 conn-dot 짧은 ring pulse
+- `handleState()` 진입 시 `#conn-dot.is-pulsing` 토글 → 800ms emerald ring 펄스
+- 매번 reflow 강제(`void offsetWidth`)해 같은 프레임 안 재트리거도 자연스럽게 재시작
+- 헤더 connection 배지가 'Live' 상태인지 시각적으로 확인 가능 (정지 = 데이터 멈춤)
+- `prefers-reduced-motion` 사용자에겐 펄스 비활성화
+
 ### Iteration 162 — 디테일 패널 메모리 스파크라인 hover 시 정확한 값
 - 각 데이터 포인트에 `<circle r="2.4">` + `<title>` 를 합성해서 OS 네이티브 툴팁으로 `HH:MM · NMB` 노출
 - 평소엔 opacity 거의 0 (투명) 이고 hover 시 CSS 로 r=3.5 + opacity 1 강조

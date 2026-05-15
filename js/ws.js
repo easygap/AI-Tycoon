@@ -325,6 +325,14 @@ function collectWorkEvents(prevAgentsByPid) {
 export function handleState(state) {
     S.serverState = state;
     S.lastStateAt = Date.now();
+    // 새 데이터 들어왔다는 시각 신호 — 연결 점에 짧게 'flash' 클래스 부여
+    const dotEl = document.getElementById("conn-dot");
+    if (dotEl) {
+        dotEl.classList.remove("is-pulsing"); // 같은 프레임 안에 다시 트리거되어도 재시작되도록
+        // reflow 강제 (transform/animation 재실행을 위해)
+        void dotEl.offsetWidth;
+        dotEl.classList.add("is-pulsing");
+    }
     const prevAgentsByPid = new Map(S.liveAgents.map(a => [pidKey(a.pid), a]));
     const prevPids = new Set(S.liveAgents.map(a => pidKey(a.pid)));
     S.liveAgents = state.agents || [];
