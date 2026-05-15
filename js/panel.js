@@ -2032,7 +2032,7 @@ export function updateDetailPanel() {
     const pinned = isAgentPinned(agent);
     const action = getAgentNextAction(agent);
 
-    // Memory graph (mini sparkline)
+    // Memory graph (mini sparkline) — 데이터 포인트 hover 시 정확한 MB + 시각 표시
     let memGraph = "";
     if (hist.length > 1) {
         const maxMB = Math.max(...hist.map(h => h.mb), 100);
@@ -2045,9 +2045,19 @@ export function updateDetailPanel() {
         const ageMin = Math.round((Date.now() - (hist[0]?.ts || Date.now())) / 60000);
         const lgMG = (window.aiTycoonI18n?.getLang?.() || "ko");
         const ageLabelMG = lgMG === "en" ? `${ageMin}m ago` : `${ageMin}분 전`;
+        // 각 포인트에 <circle> + <title> 로 호버 시 정확한 값 노출 (간단한 OS 툴팁)
+        const dots = hist.map((p, i) => {
+            const x = (i / (hist.length - 1)) * w;
+            const y = h - (p.mb / maxMB) * h;
+            const t = new Date(p.ts || Date.now());
+            const hh = String(t.getHours()).padStart(2, "0");
+            const mm = String(t.getMinutes()).padStart(2, "0");
+            return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4" fill="${theme.body}" opacity="0.0001"><title>${hh}:${mm} · ${p.mb}MB</title></circle>`;
+        }).join("");
         memGraph = `
             <svg width="${w}" height="${h}" class="mt-1">
                 <polyline points="${points}" fill="none" stroke="${theme.body}" stroke-width="1.5" stroke-linejoin="round"/>
+                ${dots}
                 <text x="${w}" y="10" text-anchor="end" fill="currentColor" font-size="9" class="text-zinc-400">${hist[hist.length-1]?.mb || 0}MB</text>
                 <text x="0" y="${h}" fill="currentColor" font-size="8" class="text-zinc-400">${esc(ageLabelMG)}</text>
             </svg>`;

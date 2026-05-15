@@ -4532,6 +4532,9 @@ body.dark .cp-foot { background: rgba(0,0,0,0.25); border-top-color: rgba(255,25
     .cp-card { width: 96vw; }
 }
 
+/* Iteration 162 — 메모리 sparkline 의 hover hit-area circle 시각 강조 */
+svg circle[r="2.4"]:hover { opacity: 1 !important; r: 3.5; cursor: help; }
+
 /* Iteration 63 — Memory trend arrow (▲ / ▼) next to MB display */
 .mem-trend {
     display: inline-block;

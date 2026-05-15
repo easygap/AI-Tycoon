@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 162 — 디테일 패널 메모리 스파크라인 hover 시 정확한 값
+- 각 데이터 포인트에 `<circle r="2.4">` + `<title>` 를 합성해서 OS 네이티브 툴팁으로 `HH:MM · NMB` 노출
+- 평소엔 opacity 거의 0 (투명) 이고 hover 시 CSS 로 r=3.5 + opacity 1 강조
+- 스파크라인의 60개 샘플 중 어느 시점에 메모리가 튀었는지 마우스 대보면 즉시 확인 가능
+- 시각적 잡음 최소, hover 시에만 보이게
+
 ### Iteration 161 — 명령 팔레트에 '활동 로그 비우기' 추가
 - `tools` 그룹에 새 명령 — `S.workEvents` + `S.activityLog` 동시 비움
 - 사이드 패널 하단 활동 타임라인 + 시스템 로그 + 캔버스 work-stream 모두 깨끗
