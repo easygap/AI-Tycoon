@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 166 — 메모 글자 수 카운터/색상 모두 즉시 갱신
+- iter 165 의 색상 강조는 즉시였지만 카운터 숫자는 디바운스 220ms 후에야 갱신돼서 어색
+- `applyLimitWarn()` 가 `is-saved` 상태가 아니면 카운터 숫자(`로컬에만 저장 · N/500`)도 같이 갱신
+- 저장됨 표시는 1.2초 그대로 유지 (덮어쓰지 않음)
+- 사용자가 글자 입력하는 순간 색 + 숫자 모두 즉시 반응
+
 ### Iteration 165 — 메모 글자 수 임계값 시각 강조
 - 메모 길이가 420자 이상이면 footer 카운터에 호박색(`data-warn="mid"`)
 - 480자 이상이면 진한 빨강(`data-warn="high"`) 으로 강조해 maxlength 500 도달 직전 알림
