@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 158 — 데모 모드 start/stop 활동 로그도 KO/EN
+- `startDemo` / `stopDemo` 의 `addLog` 메시지가 한국어 하드코딩이라 영어 모드에서도 한국어가 떴음
+- KO `데모 모드 ON · 합성 에이전트 표시` / `데모 모드 OFF`
+- EN `Demo mode on · showing synthetic agents` / `Demo mode off`
+- 토스트는 이미 i18n 됐고 (iter 85), 로그도 같이 정리
+
 ### Iteration 157 — 전역 `[hidden] { display: none !important }` 안전망
 - iter 156 의 데모 CTA 와 동일 패턴 버그가 잠재한 셀렉터 5종 발견
   - `.header-stuck-chip` / `.header-demo-chip` / `.header-privacy-chip` (헤더 모드 칩)
