@@ -902,6 +902,7 @@
                         <li><span class="shortcuts-keys"><kbd>F</kbd></span><span data-i18n="shortcuts.focusActive">가장 활발한 직원 포커스</span></li>
                         <li><span class="shortcuts-keys"><kbd>J</kbd> / <kbd>K</kbd></span><span data-i18n="shortcuts.cycleAgents">다음 / 이전 직원</span></li>
                         <li><span class="shortcuts-keys"><kbd>Shift</kbd>+<kbd>Click</kbd></span><span data-i18n="shortcuts.pinShift">카드 Shift+클릭으로 핀 토글</span></li>
+                        <li><span class="shortcuts-keys"><kbd>N</kbd></span><span data-i18n="shortcuts.noteFocus">선택된 에이전트의 메모로 포커스</span></li>
                         <li><span class="shortcuts-keys"><kbd>H</kbd></span><span data-i18n="shortcuts.resetView">전체 보기로 리셋</span></li>
                         <li><span class="shortcuts-keys"><kbd>?</kbd></span><span data-i18n="shortcuts.help">이 도움말 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>I</kbd></span><span data-i18n="shortcuts.insights">인사이트 열기</span></li>
@@ -1899,6 +1900,21 @@
         else if (k === "0") {
             event.preventDefault();
             if (typeof window.resetCameraView === "function") window.resetCameraView();
+        }
+        // 'N' = 선택된 에이전트의 메모 textarea 로 빠르게 포커스 (편집 시작).
+        // 디테일 패널이 열려있지 않으면 짧은 토스트로 안내.
+        else if (k === "n" || k === "N") {
+            event.preventDefault();
+            const input = document.getElementById("detail-note-input");
+            if (input) {
+                input.focus({ preventScroll: false });
+                input.selectionStart = input.selectionEnd = input.value.length;
+            } else {
+                const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                window.aiTycoonToasts?.show?.("info",
+                    lang === "en" ? "Select an agent first" : "에이전트를 먼저 선택해 주세요",
+                    lang === "en" ? "Open a card to edit its note." : "카드를 열면 메모를 바로 편집할 수 있어요.");
+            }
         }
     });
     document.addEventListener("DOMContentLoaded", showWelcomeIfNeeded);
