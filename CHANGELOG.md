@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 165 — 메모 글자 수 임계값 시각 강조
+- 메모 길이가 420자 이상이면 footer 카운터에 호박색(`data-warn="mid"`)
+- 480자 이상이면 진한 빨강(`data-warn="high"`) 으로 강조해 maxlength 500 도달 직전 알림
+- 저장됨 / 복귀 / 디테일 패널 첫 렌더 모두에서 일관 적용
+- 다크 모드 별도 톤
+
 ### Iteration 164 — Insights 모달 'mood line' 클릭 시 최활발 직원 포커스
 - 활성 직원이 1명 이상일 때만 mood line 에 cursor: pointer + 클릭 가능 표시
 - 클릭하면 `agentSortByLivePriority` 로 가장 활발한 친구를 골라 포커스 + 모달 자동 닫힘

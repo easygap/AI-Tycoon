@@ -3264,6 +3264,18 @@ body.dark .detail-project-chip:hover {
 body.dark .detail-note-hint.is-saved {
     color: #34d399;
 }
+
+/* iter 165 — 글자 수 임계값 강조 */
+.detail-note-hint[data-warn="mid"] {
+    color: #b45309;
+    font-weight: 700;
+}
+.detail-note-hint[data-warn="high"] {
+    color: #b91c1c;
+    font-weight: 800;
+}
+body.dark .detail-note-hint[data-warn="mid"] { color: #fbbf24; }
+body.dark .detail-note-hint[data-warn="high"] { color: #fca5a5; }
 .detail-note-clear {
     background: rgba(245, 158, 11, 0.12);
     border: 1px solid rgba(245, 158, 11, 0.32);
