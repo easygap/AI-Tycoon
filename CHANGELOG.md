@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 174 — 디테일 패널 다른 에이전트로 전환 시 스크롤 위로 자동
+- 이전 카드의 스크롤 위치가 남아있어 새 카드 열어도 한참 아래가 보이던 불편 해소
+- `container._lastRenderedPid` 로 PID 변경 감지, 변경 시 `scrollTop = 0`
+- 같은 PID 재렌더(주기적 갱신) 때는 스크롤 위치 그대로 유지 — 메모 작성 중 갑자기 튀어오르지 않음
+- detail-close-btn 에 `title="Esc"` 추가로 키보드 안내
+
 ### Iteration 173 — 사이드바 검색 Enter 로 첫 결과 자동 선택
 - 검색 input 에 `Enter` 누르면 현재 보이는 첫 번째 카드를 자동 클릭 (selectAgent 효과)
 - 검색 → 좁힘 → Enter → 디테일 패널 열림 → `N` 으로 메모, 한 손 키보드 워크플로우
