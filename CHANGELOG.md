@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 167 — 메모 textarea 의 Cmd/Ctrl+Enter — 저장 + 디테일 패널 닫기
+- iter 117 의 Cmd/Ctrl+S 즉시 저장에 더해, Cmd/Ctrl+Enter 면 저장 + 디테일 패널 즉시 닫힘
+- 메모 다 적었을 때 한 번의 키 조합으로 작업 완료
+- `window.closeDetail` 을 index.html 에서 외부 노출해 다른 모듈에서도 호출 가능
+
 ### Iteration 166 — 메모 글자 수 카운터/색상 모두 즉시 갱신
 - iter 165 의 색상 강조는 즉시였지만 카운터 숫자는 디바운스 220ms 후에야 갱신돼서 어색
 - `applyLimitWarn()` 가 `is-saved` 상태가 아니면 카운터 숫자(`로컬에만 저장 · N/500`)도 같이 갱신
