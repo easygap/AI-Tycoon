@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 154 — 명령 팔레트에 'WebSocket 재연결' 명령
+- 헤더 conn-badge 외에 Ctrl+K 에서도 빠르게 재연결 트리거 가능
+- `tools` 그룹에 `WebSocket 즉시 재연결` 추가, `aiTycoonReconnect()` 호출
+- 사이드 패널 시스템 헬스 카드의 재연결 안내 보면서 팔레트 한 번에 처리
+
 ### Iteration 153 — 헤더 연결 상태 배지 클릭으로 즉시 재연결
 - `conn-badge` 를 `<div>` → `<button>` 으로 변경 + `aiTycoonReconnect()` 핸들러 연결
 - 새 `window.aiTycoonReconnect()`: 기존 WS 닫고 reconnectAttempt 리셋한 뒤 `connectWS()` 재호출

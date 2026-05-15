@@ -339,6 +339,7 @@ function buildActions(query) {
         { id: "standup", group: "tools", title: "일일 리포트 (Markdown)", run: () => { try { window.aiTycoonStandup?.download?.(); } catch { /* ignore */ } } },
         { id: "notes-export", group: "tools", title: "에이전트 메모 내보내기 (Markdown)", run: () => { try { window.aiTycoonNotes?.download?.(); } catch { /* ignore */ } } },
         { id: "mute", group: "tools", title: "사운드 음소거 토글", hint: "M", run: () => { try { window.aiTycoonSound?.toggle?.(); } catch { /* ignore */ } } },
+        { id: "reconnect", group: "tools", title: "WebSocket 즉시 재연결", run: () => { try { window.aiTycoonReconnect?.(); } catch { /* ignore */ } } },
     ];
     if (!query) {
         // Pick a relevant default starter set
