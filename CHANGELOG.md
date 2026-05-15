@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 159 — 핀된 에이전트가 사이드바 정렬에서 항상 상단
+- `compareAgentPriority()` 의 첫 비교 단계로 `context.pinnedKeys` 기반 핀 우선순위 추가
+- 핀된 친구는 어떤 정렬 모드 (상태/메모리/플랫폼/프로젝트/최근) 에서도 항상 위로 올라옴
+- `panel.js priorityContext()` / `main.js agentPriorityContext()` 둘 다 이미 `pinnedKeys` 를 넘겨주고 있어서 자동 동작
+- `pinnedKeys` 가 빈 배열이면 기존 동작 그대로 (regression 무방)
+
 ### Iteration 158 — 데모 모드 start/stop 활동 로그도 KO/EN
 - `startDemo` / `stopDemo` 의 `addLog` 메시지가 한국어 하드코딩이라 영어 모드에서도 한국어가 떴음
 - KO `데모 모드 ON · 합성 에이전트 표시` / `데모 모드 OFF`
