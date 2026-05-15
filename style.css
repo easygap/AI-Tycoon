@@ -3809,6 +3809,19 @@ body.dark .agent-search-cmdk kbd {
     border-color: rgba(255,107,74,0.2);
 }
 
+/* Iteration 152 — visibility-summary 안의 클릭 가능 칩 (vs-chip) */
+.agent-visibility-summary .vs-chip {
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.08s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.agent-visibility-summary .vs-chip:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow: 0 4px 10px -4px rgba(0,0,0,0.18);
+}
+.agent-visibility-summary .vs-chip:active { transform: translateY(0); }
+
 .agent-visibility-summary .action-visibility {
     color: #2563eb;
     background: rgba(47,128,237,0.1);

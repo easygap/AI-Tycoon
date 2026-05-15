@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 152 — 사이드바 가시성 요약 칩을 클릭 가능한 액션 필터로
+- `고정 N / 작업 N / 검토 N / 최근 N` 칩들을 `<span>` → `<button>` 으로 바꿔 액션 필터 트리거
+- 같은 액션 다시 클릭하면 'all' 로 토글, 다른 거 누르면 그쪽으로 전환
+- hover 시 살짝 떠오르고 그림자 추가, `vs-chip` 공통 클래스로 시각 통일
+- 표시 전용이던 요약 줄이 즉시 액션 가능한 컨트롤로 승격
+
 ### Iteration 151 — Insights '완료 태스크' 라벨 옆 '7일 누적' 칩
 - 라벨 줄에 작은 라벤더 칩 추가 (`7일 · 42` / `7d · 42`)
 - `recentDays(7)` 합산으로 최근 7일간 누적 완료 태스크 표시
