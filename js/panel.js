@@ -2554,6 +2554,22 @@ export function refreshInsights() {
             completedEl.innerHTML = `${totalCompleted}<span id="insights-completed-delta" class="insights-delta" data-tone="${tone}" title="${esc(yLabel)}: ${sign}${delta}">${sign}${delta}</span>`;
         }
     }
+    // 라벨 옆 작은 '7d N개' 칩 — 이번 주(최근 7일) 누적 완료 태스크
+    const weekChip = el("insights-week-chip");
+    if (weekChip) {
+        try {
+            const days = recentDays(7);
+            const weekSum = days.reduce((s, d) => s + (d?.completedMax || 0), 0);
+            if (weekSum > 0) {
+                weekChip.hidden = false;
+                const langW = (window.aiTycoonI18n?.getLang?.() || "ko");
+                weekChip.textContent = langW === "en" ? `7d · ${weekSum}` : `7일 · ${weekSum}`;
+                weekChip.title = langW === "en" ? `Last 7 days: ${weekSum} completed` : `최근 7일 누적: ${weekSum}개 완료`;
+            } else {
+                weekChip.hidden = true;
+            }
+        } catch { /* stats 가 비어도 안전 */ }
+    }
     if (el("insights-ongoing")) el("insights-ongoing").textContent = totalOngoing;
     if (el("insights-ram")) {
         el("insights-ram").innerHTML = totalRam.toLocaleString() + '<span class="insights-unit">MB</span>';

@@ -3443,6 +3443,28 @@ body.dark @keyframes stuckPulse {
     50% { box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.24); }
 }
 
+/* Iteration 151 — Insights '완료' 라벨 옆 주간 누적 칩 */
+.insights-week-chip {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.12);
+    color: #6366f1;
+    border: 1px solid rgba(99, 102, 241, 0.28);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    vertical-align: middle;
+    font-variant-numeric: tabular-nums;
+    cursor: help;
+}
+body.dark .insights-week-chip {
+    background: rgba(165, 180, 252, 0.16);
+    color: #a5b4fc;
+    border-color: rgba(165, 180, 252, 0.38);
+}
+
 /* Iteration 91 — Insights 완료 태스크 옆 '어제 대비' 델타 칩 */
 .insights-delta {
     display: inline-block;
