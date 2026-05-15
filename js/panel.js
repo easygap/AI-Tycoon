@@ -2989,8 +2989,11 @@ export function refreshInsights() {
                 <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#10b981"></span>${esc(weekLabel)} <strong>${v}</strong></div>
                 <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#ff8a4c"></span>${esc(todayLabel)} <strong>${todayV}</strong></div>
             `;
+            const nowAttrs = isNow
+                ? ` aria-current="true" aria-label="${esc(`${hourLabel} · ${lang === "en" ? "Now" : "지금"}`)}"`
+                : "";
             return `
-                <div class="insights-hour-cell${isNow ? " is-now" : ""}" data-tooltip="${esc(tooltip)}">
+                <div class="insights-hour-cell${isNow ? " is-now" : ""}" data-tooltip="${esc(tooltip)}"${nowAttrs}>
                     <div class="insights-hour-bar" style="--intensity:${intensity.toFixed(2)}"></div>
                     <div class="insights-hour-dot" style="opacity:${dotSize.toFixed(2)}"></div>
                     <div class="insights-hour-label">${h % 3 === 0 ? String(h).padStart(2, "0") : "·"}</div>
