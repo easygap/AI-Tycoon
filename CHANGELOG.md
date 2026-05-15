@@ -5,6 +5,16 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 177 — 디테일 패널 ‹ / › 이전·다음 에이전트 버튼
+- 키보드 안 쓰는(터치/마우스) 사용자를 위한 prev/next 버튼을 디테일 패널 헤더에 추가
+- `data-detail-nav="prev|next"` 두 개 버튼 — 클릭 시 `window.cycleAgentFocus(±1)` 호출
+- 결과적으로 j/k 단축키와 완전히 동일한 코드 패스 (사이드바 가시 카드 순서 + scrollIntoView)
+- 버튼 title 에 `(j)` / `(k)` 단축키 힌트 — 키보드 단축키 발견 가능성 향상
+- index.html: `cycleAgentFocus` 를 `window` 에 노출
+- 핀/닫기 버튼과 같은 30px 사각 디자인, hover 시 오렌지 강조 (디테일 패널 톤과 일치)
+- 다크 모드 대응 색상 포함
+- SW 캐시 v16 → v17
+
 ### Iteration 176 — j/k 키 순회가 사이드바 정렬·필터 반영
 - 기존 `cycleAgentFocus` 는 `liveAgents.filter(isRunning)` 순서로만 돌아서
   사이드바 정렬·검색·필터를 무시 — 사용자가 보는 카드 순서와 다름
