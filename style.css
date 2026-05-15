@@ -24,6 +24,9 @@
     animation: empty-cta-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: auto;
 }
+/* 위 .empty-cta 의 display:flex 가 HTML hidden 속성(display:none)을 덮어써서,
+   에이전트가 잡혔는데도 CTA 가 사라지지 않는 버그가 있었음. !important 로 강제. */
+.empty-cta[hidden] { display: none !important; }
 .empty-cta-glow {
     position: absolute;
     inset: -20px;

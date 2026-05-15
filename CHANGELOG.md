@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 156 — 버그픽스: '데모 모드' CTA 가 에이전트 있어도 안 사라지는 문제
+- `.empty-cta { display: flex }` 가 HTML `hidden` 속성(보통 `display: none`) 을 specificity 로 덮어쓰던 CSS 버그
+- `refreshEmptyCta()` 가 `cta.hidden = true` 로 잘 바꿔도 시각적으로는 계속 떠 있어서 사용자가 헷갈림
+- 한 줄 추가 (`.empty-cta[hidden] { display: none !important; }`) 로 해결
+- SW v12 → v13 bump 해 브라우저 캐시 갱신
+
 ### Iteration 155 — CONTRIBUTING.md 최신 모듈/스크립트 목록 동기화
 - `npm run lint` 단계가 빠져있던 Setup/Testing 섹션에 추가
 - 모듈 목록에 `awaySummary.js`, `commandPalette.js`, `privacyMode.js`, `standupExport.js` 4개 추가 (iter 55~71 사이 새 모듈)
