@@ -5,6 +5,15 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 157 — 전역 `[hidden] { display: none !important }` 안전망
+- iter 156 의 데모 CTA 와 동일 패턴 버그가 잠재한 셀렉터 5종 발견
+  - `.header-stuck-chip` / `.header-demo-chip` / `.header-privacy-chip` (헤더 모드 칩)
+  - `.insights-week-chip` (Insights 주간 누적 칩)
+  - `.welcome-overlay` / `.modal-overlay` (opacity 로 가려져서 시각적으론 OK 였지만 hidden 자체는 무력)
+- 모두 `display: inline-flex / inline-block / flex` 가 HTML `hidden` 속성을 덮어쓰는 구조
+- 전역 한 줄 `[hidden] { display: none !important; }` 로 일괄 해결
+- SW v13 → v14 캐시 갱신
+
 ### Iteration 156 — 버그픽스: '데모 모드' CTA 가 에이전트 있어도 안 사라지는 문제
 - `.empty-cta { display: flex }` 가 HTML `hidden` 속성(보통 `display: none`) 을 specificity 로 덮어쓰던 CSS 버그
 - `refreshEmptyCta()` 가 `cta.hidden = true` 로 잘 바꿔도 시각적으로는 계속 떠 있어서 사용자가 헷갈림
