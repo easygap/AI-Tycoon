@@ -2231,6 +2231,20 @@ export function updateDetailPanel() {
             </div>
             <div class="detail-head-actions">
                 <button type="button"
+                    class="detail-nav-btn"
+                    data-detail-nav="prev"
+                    title="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Previous agent (k)" : "이전 에이전트 (k)")}"
+                    aria-label="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Previous agent" : "이전 에이전트")}">
+                    <iconify-icon icon="solar:alt-arrow-left-linear" aria-hidden="true"></iconify-icon>
+                </button>
+                <button type="button"
+                    class="detail-nav-btn"
+                    data-detail-nav="next"
+                    title="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Next agent (j)" : "다음 에이전트 (j)")}"
+                    aria-label="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Next agent" : "다음 에이전트")}">
+                    <iconify-icon icon="solar:alt-arrow-right-linear" aria-hidden="true"></iconify-icon>
+                </button>
+                <button type="button"
                     class="detail-pin-btn${pinned ? " is-pinned" : ""}"
                     data-detail-pin
                     aria-pressed="${pinned ? "true" : "false"}"
@@ -2320,6 +2334,18 @@ export function updateDetailPanel() {
         });
     });
     container.querySelector("[data-detail-pin]")?.addEventListener("click", () => toggleAgentPin(agent));
+
+    // Prev/Next 버튼 — j/k 와 동일한 cycleAgentFocus 호출.
+    // index.html 에서 window.cycleAgentFocus 로 노출됨.
+    container.querySelectorAll("[data-detail-nav]").forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            const dir = btn.dataset.detailNav === "prev" ? -1 : +1;
+            if (typeof window.cycleAgentFocus === "function") {
+                window.cycleAgentFocus(dir);
+            }
+        });
+    });
 
     // 프로젝트 칩 클릭 → 검색창에 프로젝트명 박아 넣어서 동일 프로젝트만 보이게
     // (이미 동일 검색어면 토글로 해제)

@@ -1353,6 +1353,8 @@
             label,
             `${nextIdx + 1} / ${ids.length} · ${lang === "en" ? "agent focused" : "에이전트 포커스"}`);
     }
+    // 디테일 패널의 ‹ / › 버튼이나 다른 모듈에서 호출할 수 있게 노출.
+    if (typeof window !== "undefined") window.cycleAgentFocus = cycleAgentFocus;
     function toggleCinemaMode() {
         _cinemaMode = !_cinemaMode;
         document.body.classList.toggle("cinema-mode", _cinemaMode);
