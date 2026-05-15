@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 171 — 검색 placeholder 에 '메모' 명시 추가
+- iter 92 에서 메모도 검색 매칭 대상이 됐지만 placeholder 는 그대로라 사용자가 모름
+- KO: `직원, 프로젝트, 작업 검색` → `직원·프로젝트·작업·메모 검색`
+- EN: `Search agents, projects, tasks` → `Search agents, projects, tasks, notes`
+- 사용자가 메모 키워드로도 검색 가능하다는 걸 placeholder 만 봐도 알게 됨
+
 ### Iteration 170 — 'icon-only' 복사 버튼 클릭 시 토스트로 결과 안내
 - `.detail-copy-btn.icon-only` 버튼이 30px 폭이라 기존의 `복사됨` 텍스트 교체가 잘려 보이지 않던 케이스
 - icon-only 면 토스트로 `복사됨 / Copied to clipboard` + 복사된 내용 80자 프리뷰 노출

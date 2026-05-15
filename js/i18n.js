@@ -182,7 +182,7 @@ const DICT = {
         "shortcuts.dblZoom": "줌 리셋",
         // Sidebar
         "panel.agents": "에이전트",
-        "panel.searchPlaceholder": "직원, 프로젝트, 작업 검색",
+        "panel.searchPlaceholder": "직원·프로젝트·작업·메모 검색",
         "panel.recentActivity": "최근 활동",
         "panel.filterAll": "전체",
         "panel.filterCoding": "코딩 중",
@@ -391,7 +391,7 @@ const DICT = {
         "shortcuts.panning": "Pan",
         "shortcuts.dblZoom": "Reset zoom",
         "panel.agents": "Agents",
-        "panel.searchPlaceholder": "Search agents, projects, tasks",
+        "panel.searchPlaceholder": "Search agents, projects, tasks, notes",
         "panel.recentActivity": "Recent activity",
         "panel.filterAll": "All",
         "panel.filterCoding": "Coding",
