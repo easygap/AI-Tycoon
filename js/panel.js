@@ -2259,6 +2259,12 @@ export function updateDetailPanel() {
             const noteVal = getAgentNote(agent) || "";
             const hintPrefix = langN === "en" ? "Local only" : "로컬에만 저장";
             const clearLabel = langN === "en" ? "Clear" : "지우기";
+            // macOS 면 mod 키 라벨을 ⌘ 로 — index.html 의 applyModKey 같은 효과
+            const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+            const modKey = isMac ? "⌘" : "Ctrl";
+            const saveHint = langN === "en"
+                ? `<kbd>${modKey}S</kbd> save · <kbd>${modKey}⏎</kbd> save+close`
+                : `<kbd>${modKey}S</kbd> 저장 · <kbd>${modKey}⏎</kbd> 저장+닫기`;
             return `
         <div class="detail-section-title mt-3">${esc(noteTitle)}</div>
         <div class="detail-note-card">
@@ -2272,6 +2278,7 @@ export function updateDetailPanel() {
                 data-privacy>${esc(noteVal)}</textarea>
             <div class="detail-note-foot">
                 <span class="detail-note-hint">${esc(hintPrefix)} · ${esc(String(noteVal.length))}/500</span>
+                <span class="detail-note-keys">${saveHint}</span>
                 <button type="button" class="detail-note-clear" data-detail-note-clear ${!noteVal ? "hidden" : ""}>${esc(clearLabel)}</button>
             </div>
         </div>`;
