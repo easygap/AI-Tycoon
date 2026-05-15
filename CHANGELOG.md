@@ -5,6 +5,17 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 176 — j/k 키 순회가 사이드바 정렬·필터 반영
+- 기존 `cycleAgentFocus` 는 `liveAgents.filter(isRunning)` 순서로만 돌아서
+  사이드바 정렬·검색·필터를 무시 — 사용자가 보는 카드 순서와 다름
+- 이제 `#agents-list .agent-card` (offsetParent 로 hidden 제외) 의 DOM 순서대로 순회
+- 새 카드로 이동하면 `scrollIntoView({block:"nearest", behavior:"smooth"})` 로 시야 확보
+- `window.updatePanel` / `window.updateDetailPanel` 를 main.js 에서 노출하고
+  순회 직후 즉시 호출 — 다음 WS 틱(~500ms) 기다리지 않고 반응적으로 리렌더
+- 사이드바가 비어 있으면 (필터에 다 걸러진 경우) 기존 running 폴백 유지
+- 미선택 상태에서 `j` 누르면 첫 카드, `k` 누르면 마지막 카드로 진입
+- SW 캐시 v15 → v16
+
 ### Iteration 175 — Insights 시간대 히트맵 'now' 셀에 ▼ 마커
 - 기존엔 현재 시각 셀에 살짝 outline 만 들어가서 "지금이 어딘지" 한눈에 안 띔
 - 셀 상단에 작은 ▼ 삼각형 마커 + 1.8s 부드러운 바운스 애니메이션
