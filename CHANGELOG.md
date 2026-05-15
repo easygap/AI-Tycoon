@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 153 — 헤더 연결 상태 배지 클릭으로 즉시 재연결
+- `conn-badge` 를 `<div>` → `<button>` 으로 변경 + `aiTycoonReconnect()` 핸들러 연결
+- 새 `window.aiTycoonReconnect()`: 기존 WS 닫고 reconnectAttempt 리셋한 뒤 `connectWS()` 재호출
+- 자동 재연결 (지수 backoff) 이 답답할 때 명시적으로 한 번에 트리거 가능
+- title 안내 + cursor: pointer 추가, hover 시 더 진한 배경
+
 ### Iteration 152 — 사이드바 가시성 요약 칩을 클릭 가능한 액션 필터로
 - `고정 N / 작업 N / 검토 N / 최근 N` 칩들을 `<span>` → `<button>` 으로 바꿔 액션 필터 트리거
 - 같은 액션 다시 클릭하면 'all' 로 토글, 다른 거 누르면 그쪽으로 전환
