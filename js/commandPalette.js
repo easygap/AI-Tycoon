@@ -283,6 +283,7 @@ function buildActions(query) {
         { id: "privacy", group: "display", title: "프라이버시 모드 토글", hint: "⇧P", run: () => { try { window.aiTycoonPrivacy?.toggle?.(); } catch { /* ignore */ } } },
         { id: "privacy-strict", group: "display", title: "Strict 프라이버시 (호버 미리보기 차단)", hint: "⇧P⇧P", run: () => { try { window.aiTycoonPrivacy?.setStrict?.(!window.aiTycoonPrivacy?.isStrict?.()); } catch { /* ignore */ } } },
         { id: "cinema", group: "display", title: "시네마 모드 (오버레이 숨김)", hint: "Z", run: () => { try { window.toggleCinemaMode?.(); } catch { /* ignore */ } } },
+        { id: "compact-cards", group: "display", title: "에이전트 카드 컴팩트 보기 토글", run: () => { try { window.toggleAgentsCompact?.(); } catch { /* ignore */ } } },
         // ── Modals ──
         { id: "insights", group: "modal", title: "인사이트 모달 열기", hint: "I", run: () => { try { window.openInsights?.(); } catch { /* ignore */ } } },
         { id: "settings", group: "modal", title: "설정 열기", hint: ",", run: () => { try { document.getElementById("settings-toggle")?.click(); } catch { /* ignore */ } } },

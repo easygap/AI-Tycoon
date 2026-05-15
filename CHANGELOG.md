@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 147 — 팔레트에 컴팩트 카드 토글 명령
+- 사이드 패널 우측의 작은 컴팩트 토글 버튼을 누르지 않아도 Ctrl+K 로 빠르게 전환
+- 명령 이름: `에이전트 카드 컴팩트 보기 토글`
+- display 그룹에 묶여 보라색 strip + 기존 시네마/프라이버시/다크 토글 옆에 자연스럽게
+
 ### Iteration 146 — 명령 팔레트에 정렬 기준 5종 추가
 - 사이드 패널의 정렬 select 박스에만 있던 5가지 정렬을 Ctrl+K 에서도 빠르게 전환
 - `정렬: 상태순 / 메모리순 / 플랫폼순 / 프로젝트순 / 최근 활동순`
