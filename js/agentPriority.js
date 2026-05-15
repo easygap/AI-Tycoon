@@ -78,6 +78,15 @@ export function agentNextAction(agent, context = {}, now = Date.now()) {
 }
 
 export function compareAgentPriority(a, b, context = {}, now = Date.now()) {
+    // 핀된 에이전트는 항상 상단 — 같은 액션 rank 안에서도 핀이 먼저 오도록.
+    // context.pinnedKeys 가 있을 때만 동작 (없으면 무시).
+    const pins = context.pinnedKeys || [];
+    if (pins.length > 0) {
+        const pinA = isAgentPinned(a, pins) ? 0 : 1;
+        const pinB = isAgentPinned(b, pins) ? 0 : 1;
+        if (pinA !== pinB) return pinA - pinB;
+    }
+
     const aa = agentNextAction(a, context, now);
     const ba = agentNextAction(b, context, now);
     if (aa.rank !== ba.rank) return aa.rank - ba.rank;
