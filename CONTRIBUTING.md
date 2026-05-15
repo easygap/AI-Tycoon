@@ -9,7 +9,8 @@ single Node.js file. Setup is minimal.
 ```bash
 npm install
 npm start          # http://localhost:3777
-npm test           # smoke check: 30 assets + modules + API
+npm run lint       # node --check 35+ .js files
+npm test           # smoke check: 38 assets/modules/API contract
 ```
 
 Open `http://localhost:3777` in your browser. Edits to JS / CSS / HTML take
@@ -29,7 +30,8 @@ ai-tycoon/
 ├── icons/                 # SVG icons (normal + maskable)
 ├── scripts/
 │   ├── build-css.js       # Tailwind utility build
-│   └── smoke-test.js      # `npm test` — server + 30 asset checks
+│   ├── lint.js            # `npm run lint` — node --check on every .js
+│   └── smoke-test.js      # `npm test` — server + 38 asset/API checks
 └── js/
     ├── main.js            # Entry point, game loop, input handlers
     ├── state.js           # Shared mutable state + utilities
@@ -44,7 +46,7 @@ ai-tycoon/
     ├── agentPriority.js   # Sort + filter heuristics
     ├── i18n.js            # KO/EN dictionary + DOM applier
     ├── stats.js           # localStorage daily rollups + 7-day trend
-    ├── achievements.js    # 21 milestones with confetti + popups
+    ├── achievements.js    # 24 milestones with confetti + popups
     ├── sound.js           # Web Audio chimes + volume control
     ├── notifications.js   # Desktop Notification API wrapper
     ├── snapshot.js        # PNG export of office + Pixi composite
@@ -56,6 +58,10 @@ ai-tycoon/
     ├── tour.js            # First-run onboarding spotlights
     ├── crossTab.js        # BroadcastChannel sync of 21 prefs
     ├── konami.js          # Hidden ↑↑↓↓←→←→BA egg
+    ├── awaySummary.js     # 'While you were away' toast on tab return
+    ├── commandPalette.js  # Ctrl/Cmd+K palette (32+ commands)
+    ├── privacyMode.js     # Shift+P blur + Strict mode
+    ├── standupExport.js   # Daily standup + agent notes Markdown export
     └── demoMode.js        # Synthetic agents for screenshots
 ```
 
@@ -86,19 +92,22 @@ that ignore typing targets), and add a row to the `shortcuts-overlay` modal.
 ## Testing
 
 ```bash
-npm test
+npm run lint   # node --check on every .js (35+ files)
+npm test       # smoke check: 38 assets/API/contract
 ```
 
-The smoke test boots a sibling server on port 3778, hits 30 endpoints (HTML,
-manifest, SW, icons, every JS module, the API), and verifies status + payload
-keywords. CI-friendly exit codes:
+The smoke test boots a sibling server on port 3778, hits 38 endpoints (HTML,
+manifest, SW, icons, every JS module, the API JSON contract for /api/health,
+/api/agents, CORS header, custom 404), and verifies status + payload keywords.
+CI-friendly exit codes:
 
 - `0` — all pass
 - `1` — one or more failures
 - `2` — server failed to start
 - `3` — test harness crash
 
-Add new modules to the `SHELL` list when you introduce one.
+Add new modules to the `SHELL` list when you introduce one. CI runs both
+`npm run lint` and `npm test` on Node 18 / 20 / 22.
 
 ## Coding conventions
 

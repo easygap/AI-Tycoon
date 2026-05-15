@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 155 — CONTRIBUTING.md 최신 모듈/스크립트 목록 동기화
+- `npm run lint` 단계가 빠져있던 Setup/Testing 섹션에 추가
+- 모듈 목록에 `awaySummary.js`, `commandPalette.js`, `privacyMode.js`, `standupExport.js` 4개 추가 (iter 55~71 사이 새 모듈)
+- 업적 카운트 21 → 24, smoke 테스트 30 → 38, CI Node 18/20/22 명시
+- 신규 기여자가 폴더 구조 / 테스트 흐름 정확히 파악 가능
+
 ### Iteration 154 — 명령 팔레트에 'WebSocket 재연결' 명령
 - 헤더 conn-badge 외에 Ctrl+K 에서도 빠르게 재연결 트리거 가능
 - `tools` 그룹에 `WebSocket 즉시 재연결` 추가, `aiTycoonReconnect()` 호출
