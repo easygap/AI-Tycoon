@@ -17,6 +17,21 @@ import { notify } from "./notifications.js";
 import { showToast } from "./toasts.js";
 
 // ── WebSocket ──
+// 헤더 conn-badge 같은 곳에서 즉시 재연결 트리거할 수 있도록 노출
+if (typeof window !== "undefined") {
+    window.aiTycoonReconnect = () => {
+        try {
+            if (S.ws) {
+                // 기존 연결 정리해서 새로 연결되도록
+                try { S.ws.close(); } catch { /* ignore */ }
+                S.ws = null;
+            }
+            S.reconnectAttempt = 0;
+            connectWS();
+        } catch { /* ignore */ }
+    };
+}
+
 export function connectWS() {
     try { S.ws = new WebSocket(WS_URL); } catch(e) { scheduleReconnect(); return; }
     S.ws.onopen = () => {

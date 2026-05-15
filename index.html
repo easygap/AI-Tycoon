@@ -61,11 +61,11 @@
                 <span class="text-[15px] font-bold text-zinc-800 tracking-tight">AI Tycoon</span>
             </div>
 
-            <!-- Connection Status -->
-            <div id="conn-badge" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-[11px] text-zinc-500 shrink-0">
+            <!-- Connection Status — 클릭하면 즉시 재연결 시도 -->
+            <button id="conn-badge" type="button" onclick="window.aiTycoonReconnect?.()" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-[11px] text-zinc-500 shrink-0 cursor-pointer transition hover:bg-zinc-200" title="클릭하면 즉시 재연결" aria-label="WebSocket 재연결">
                 <div id="conn-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-400"></div>
                 <span id="conn-text" data-i18n="conn.connecting">연결 중</span>
-            </div>
+            </button>
 
             <!-- 프라이버시 모드 활성 시에만 — 헤더에서도 한눈에 인지. 클릭하면 종료. -->
             <button id="header-privacy-chip" type="button" class="header-privacy-chip"
