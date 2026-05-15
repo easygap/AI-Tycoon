@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 148 — README 단축키 표 최신 단축키 5종 반영
+- F1 (도움말 표준) 추가, Shift+P 빠르게 두 번 누르면 Strict 안내
+- 명령 팔레트 32+ 명령 (현재 누적), Shift+Click 핀 토글, Cmd/Ctrl+S 메모 저장 항목 추가
+- README 첫 방문 사용자에게 모든 단축키가 한눈에 보이도록 정리
+
 ### Iteration 147 — 팔레트에 컴팩트 카드 토글 명령
 - 사이드 패널 우측의 작은 컴팩트 토글 버튼을 누르지 않아도 Ctrl+K 로 빠르게 전환
 - 명령 이름: `에이전트 카드 컴팩트 보기 토글`
