@@ -340,6 +340,22 @@ function buildActions(query) {
         { id: "notes-export", group: "tools", title: "에이전트 메모 내보내기 (Markdown)", run: () => { try { window.aiTycoonNotes?.download?.(); } catch { /* ignore */ } } },
         { id: "mute", group: "tools", title: "사운드 음소거 토글", hint: "M", run: () => { try { window.aiTycoonSound?.toggle?.(); } catch { /* ignore */ } } },
         { id: "reconnect", group: "tools", title: "WebSocket 즉시 재연결", run: () => { try { window.aiTycoonReconnect?.(); } catch { /* ignore */ } } },
+        { id: "clear-logs", group: "tools", title: "활동 로그 비우기", run: () => {
+            // 사이드 패널 하단 활동 타임라인 + 시스템 로그 + 캔버스 work-stream 모두 비움.
+            // 실제 에이전트 상태는 그대로 — 표시만 깨끗하게.
+            try {
+                S.workEvents.length = 0;
+                S.activityLog.length = 0;
+                const logEl = document.getElementById("activity-log");
+                if (logEl) logEl.innerHTML = "";
+                // 패널 다시 그리면서 빈 상태 메시지로 갱신
+                window.setFilter?.(S.activeFilter || "all");
+                const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                window.aiTycoonToasts?.show?.("info",
+                    lang === "en" ? "Activity log cleared" : "활동 로그 비움",
+                    lang === "en" ? "Stream reset, new events will fill up." : "다시 새 이벤트가 쌓이기 시작해요.");
+            } catch { /* ignore */ }
+        } },
     ];
     if (!query) {
         // Pick a relevant default starter set
