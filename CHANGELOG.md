@@ -5,6 +5,11 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 172 — 명령 팔레트 placeholder 에도 '메모' 명시
+- iter 93 메모 매칭과 짝을 이루도록 팔레트 input placeholder 도 갱신
+- KO `에이전트, 프로젝트, 명령…` → `에이전트·프로젝트·메모·명령…`
+- EN `Agents, projects, commands…` → `Agents, projects, notes, commands…`
+
 ### Iteration 171 — 검색 placeholder 에 '메모' 명시 추가
 - iter 92 에서 메모도 검색 매칭 대상이 됐지만 placeholder 는 그대로라 사용자가 모름
 - KO: `직원, 프로젝트, 작업 검색` → `직원·프로젝트·작업·메모 검색`

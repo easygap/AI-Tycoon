@@ -72,7 +72,7 @@ function ensureRoot() {
                 <input id="${INPUT_ID}" type="text"
                     autocomplete="off"
                     spellcheck="false"
-                    placeholder="에이전트, 프로젝트, 명령…"
+                    placeholder="에이전트·프로젝트·메모·명령…"
                     aria-label="Command palette input" />
                 <kbd class="cp-hint">esc</kbd>
             </div>
@@ -110,7 +110,7 @@ function open() {
     if (input) {
         input.value = "";
         const lang = window.aiTycoonI18n?.getLang?.() || "ko";
-        input.placeholder = lang === "en" ? "Agents, projects, commands…" : "에이전트, 프로젝트, 명령…";
+        input.placeholder = lang === "en" ? "Agents, projects, notes, commands…" : "에이전트·프로젝트·메모·명령…";
         input.focus();
     }
     render();
