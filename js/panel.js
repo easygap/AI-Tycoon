@@ -1302,14 +1302,28 @@ async function copyTextToClipboard(text, button) {
             document.execCommand("copy");
             textarea.remove();
         }
+        const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
         if (button) {
-            const original = button.innerHTML;
-            button.classList.add("is-copied");
-            button.innerHTML = `<iconify-icon icon="solar:check-circle-linear" aria-hidden="true"></iconify-icon><span>복사됨</span>`;
-            setTimeout(() => {
-                button.classList.remove("is-copied");
-                button.innerHTML = original;
-            }, 1300);
+            // icon-only 버튼은 width 30px 라 '복사됨' 텍스트가 잘림 — 토스트로 알림 보완
+            const iconOnly = button.classList?.contains("icon-only");
+            if (iconOnly) {
+                try {
+                    window.aiTycoonToasts?.show?.("info",
+                        lang === "en" ? "Copied to clipboard" : "복사됨",
+                        text.length > 80 ? text.slice(0, 80) + "…" : text);
+                } catch { /* ignore */ }
+                button.classList.add("is-copied");
+                setTimeout(() => button.classList.remove("is-copied"), 1300);
+            } else {
+                const original = button.innerHTML;
+                button.classList.add("is-copied");
+                const copiedLabel = lang === "en" ? "Copied" : "복사됨";
+                button.innerHTML = `<iconify-icon icon="solar:check-circle-linear" aria-hidden="true"></iconify-icon><span>${copiedLabel}</span>`;
+                setTimeout(() => {
+                    button.classList.remove("is-copied");
+                    button.innerHTML = original;
+                }, 1300);
+            }
         }
     } catch (error) {
         console.warn("[AI Tycoon] Clipboard copy failed:", error);

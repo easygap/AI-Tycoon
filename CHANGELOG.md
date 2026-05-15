@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 170 — 'icon-only' 복사 버튼 클릭 시 토스트로 결과 안내
+- `.detail-copy-btn.icon-only` 버튼이 30px 폭이라 기존의 `복사됨` 텍스트 교체가 잘려 보이지 않던 케이스
+- icon-only 면 토스트로 `복사됨 / Copied to clipboard` + 복사된 내용 80자 프리뷰 노출
+- 일반(아이콘+텍스트) 버튼은 기존처럼 인라인 교체 + KO/EN 분기
+- `is-copied` 클래스는 두 경우 모두 1.3초 동안 유지 (배경 emerald 강조)
+
 ### Iteration 169 — 메모 푸터에 단축키 힌트 칩
 - 디테일 패널 메모 푸터에 `⌘S 저장 · ⌘⏎ 저장+닫기` (Mac) / `CtrlS · Ctrl⏎` (Win/Linux) 힌트
 - iter 117/167/168 에 추가한 단축키 흐름이 처음 사용자에게도 자연스럽게 보임
