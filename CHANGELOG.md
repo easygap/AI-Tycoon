@@ -5,6 +5,12 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 169 — 메모 푸터에 단축키 힌트 칩
+- 디테일 패널 메모 푸터에 `⌘S 저장 · ⌘⏎ 저장+닫기` (Mac) / `CtrlS · Ctrl⏎` (Win/Linux) 힌트
+- iter 117/167/168 에 추가한 단축키 흐름이 처음 사용자에게도 자연스럽게 보임
+- macOS 자동 감지로 `⌘` 표기, 그 외 `Ctrl`
+- KO/EN 분기, 다크 모드 별도 톤
+
 ### Iteration 168 — 'N' 단축키 — 선택된 에이전트 메모로 빠르게 포커스
 - 글로벌 단축키에 `N` 추가 — `#detail-note-input` 이 있으면 그 textarea 로 포커스 + 커서 끝으로
 - 디테일 패널이 없으면 토스트로 "에이전트를 먼저 선택해 주세요" 안내
