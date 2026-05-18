@@ -1,5 +1,9 @@
 # AI Tycoon
 
+<p align="center">
+  <img src="icons/icon.png" alt="AI Tycoon — 픽셀아트 오피스 아이콘" width="128" height="128">
+</p>
+
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
