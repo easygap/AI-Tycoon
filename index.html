@@ -1422,6 +1422,8 @@
             if (before !== after) { notes[key] = after; changed++; }
         }
         try { localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch { /* quota */ }
+        // 캐시 무효화 — 패널 리렌더가 stale 한 1초 TTL 데이터 안 잡도록
+        window.aiTycoonInvalidateTagCache?.();
         window.aiTycoonToasts?.show?.("info",
             t("settings.tagsRenameDone"),
             `#${oldTag} → #${newTag} · ${changed}`);
@@ -1481,6 +1483,8 @@
             }
         }
         try { localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch { /* quota */ }
+        // 캐시 무효화 — 패널 리렌더가 stale 한 1초 TTL 데이터 안 잡도록
+        window.aiTycoonInvalidateTagCache?.();
         window.aiTycoonToasts?.show?.("info",
             t("settings.tagsDeleteDone"),
             `#${tag} · ${changed}`);

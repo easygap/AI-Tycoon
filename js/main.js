@@ -14,7 +14,7 @@ import {
 } from "./constants.js";
 import { connectWS, setConn } from "./ws.js";
 import { render } from "./renderer.js";
-import { updatePanel, updateDetailPanel, updateBossQueueUI, updateLiveHud, onMouseMove } from "./panel.js";
+import { updatePanel, updateDetailPanel, updateBossQueueUI, updateLiveHud, onMouseMove, invalidateTagCache } from "./panel.js";
 import { initPixiOverlay, resizePixiOverlay, renderPixiOverlay, getPixiOverlayDebug } from "./pixiOverlay.js";
 import { compareAgentPriority } from "./agentPriority.js";
 import { applyToDom as applyI18nToDom, onLangChange, getLang, t } from "./i18n.js";
@@ -57,6 +57,8 @@ if (typeof window !== "undefined") {
     // ESM import 만으로는 window scope 에 노출되지 않아 명시적으로 바인딩.
     window.updatePanel = updatePanel;
     window.updateDetailPanel = updateDetailPanel;
+    // 태그 매니저 (settings) 가 localStorage 직접 수정하는 케이스용 — invalidate 후 리렌더
+    window.aiTycoonInvalidateTagCache = invalidateTagCache;
 }
 
 const PANEL_FOCUSABLE = [
