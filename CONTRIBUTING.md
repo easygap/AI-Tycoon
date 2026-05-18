@@ -9,8 +9,10 @@ single Node.js file. Setup is minimal.
 ```bash
 npm install
 npm start          # http://localhost:3777
-npm run lint       # node --check 35+ .js files
+npm run lint       # node --check 36+ .js files
 npm test           # smoke check: 38 assets/modules/API contract
+npm run icons      # 새 픽셀아트 아이콘 설치 (PNG/ICO 자동 분기)
+npm run build      # Tailwind 유틸리티 재생성 (css/tailwind.input.css 수정 후)
 ```
 
 Open `http://localhost:3777` in your browser. Edits to JS / CSS / HTML take
@@ -27,10 +29,11 @@ ai-tycoon/
 ├── style.css              # Theme + component CSS (Tailwind generated separately)
 ├── manifest.webmanifest   # PWA manifest
 ├── sw.js                  # Service worker (offline shell cache)
-├── icons/                 # SVG icons (normal + maskable)
+├── icons/                 # 픽셀아트 PNG (1순위) + SVG (fallback) + ICO (IE/Edge 호환)
 ├── scripts/
 │   ├── build-css.js       # Tailwind utility build
 │   ├── lint.js            # `npm run lint` — node --check on every .js
+│   ├── install-app-icon.js # `npm run icons` — PNG/ICO 자동 분기해서 icon.png 갱신
 │   └── smoke-test.js      # `npm test` — server + 38 asset/API checks
 └── js/
     ├── main.js            # Entry point, game loop, input handlers
@@ -88,11 +91,37 @@ can find them. Add the close key to the `Escape` priority chain in `index.html`.
 
 Update the global `keydown` listener in `index.html` (single-letter shortcuts
 that ignore typing targets), and add a row to the `shortcuts-overlay` modal.
+모달은 `탐색 / 화면 / 캔버스 / 메모` 4개 그룹으로 나뉘어 있어요 — 새 키는 가장 맞는
+그룹 아래 `<li>` 로 추가하고, `data-i18n="shortcuts.<key>"` 로 KO/EN 둘 다 등록하세요.
+
+## 메모 hashtag 시스템 (v1.3.0+)
+
+메모에 `#frontend` 같은 hashtag 를 쓰면 8개 터치포인트에서 자동 노출됩니다.
+새 기능 추가/수정할 때 이 중 영향 갈 만한 곳 체크해 주세요:
+
+1. **사이드바 `agent-tags-bar`** (`renderAgentTagsBar` in `js/panel.js`)
+2. **디테일 패널 메모 칩** (`updateDetailPanel` 안 `tagChipsHtml`)
+3. **메모 textarea 자동완성** (`refreshAutocomplete` in `js/panel.js`)
+4. **명령 팔레트 필터 명령** (`buildActions` 후반부 in `js/commandPalette.js`)
+5. **visibility-summary `#tag` 칩** (`updateSearchControls` in `js/panel.js`)
+6. **hashtag 0건 empty state** (filteredAgents 분기 in `updatePanel`)
+7. **설정 → 메모 태그 관리자** (`renderTagsManager` in `index.html`)
+8. **에이전트 카드 내부 칩** (`updatePanel` 카드 render `agent-card-tags`)
+
+핵심 헬퍼:
+- `extractTagsFromText(text)` — 단일 메모 → unique 태그 배열 (순서 보존)
+- `extractTagsFromNotes()` — 전체 메모 → `[{tag, count}]` (1초 TTL 캐시)
+- `invalidateTagCache()` — localStorage 직접 수정 시 호출 필요
+  (`window.aiTycoonInvalidateTagCache` 로도 노출)
+- `tagHueFor(tag)` — 태그명 → stable hsl hue (다크/라이트 양쪽 가독성 보장)
+
+태그 정규식은 `/#([A-Za-z0-9_가-힣]{2,32})/g` 한 곳 (`TAG_REGEX` in `panel.js`).
+수정 시 단어 경계 검사 (`(?![A-Za-z0-9_가-힣])`) 도 같이 바꿔야 rename/delete 안전.
 
 ## Testing
 
 ```bash
-npm run lint   # node --check on every .js (35+ files)
+npm run lint   # node --check on every .js (36+ files)
 npm test       # smoke check: 38 assets/API/contract
 ```
 
@@ -120,6 +149,9 @@ Add new modules to the `SHELL` list when you introduce one. CI runs both
 - **Persist via localStorage** with the `ai-tycoon-*` prefix so backup/restore
   and cross-tab sync pick it up automatically. Add the key to `SYNCED_KEYS`
   in `js/crossTab.js` if it should sync across tabs.
+- **태그 캐시 정합** — 메모 (`ai-tycoon-agent-notes`) 를 `setAgentNote` 가 아닌
+  경로로 직접 수정한다면 `window.aiTycoonInvalidateTagCache()` 호출 필수.
+  안 그러면 1초간 stale 태그 리스트가 사이드바·카드·팔레트에 그려짐.
 - **prefers-reduced-motion**: respected for confetti, splash, tip cards,
   konami, empty CTA, mini-map. New animated elements should check the media
   query.

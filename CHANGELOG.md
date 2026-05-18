@@ -5,6 +5,18 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 201 — CONTRIBUTING.md hashtag 시스템 / 새 스크립트 문서화
+- v1.4.0 까지 추가된 사항을 contrib 가이드에 반영
+- 파일 카운트 `35+ → 36+` (install-app-icon.js 추가)
+- `npm run icons` / `npm run build` 명령 안내
+- `scripts/install-app-icon.js` 항목 추가
+- `icons/` 설명: 이제 PNG (1순위) + SVG (fallback) + ICO (IE 호환)
+- shortcuts-overlay 가 `탐색/화면/캔버스/메모` 4그룹 으로 나뉜다는 안내 (iter 189 반영)
+- **신규: 메모 hashtag 시스템 섹션** — 8개 터치포인트 + 핵심 헬퍼 (`extractTagsFromText`,
+  `extractTagsFromNotes`, `invalidateTagCache`, `tagHueFor`) + 정규식 위치 명시
+- **신규: 코딩 컨벤션에 캐시 정합 노트** — `setAgentNote` 우회 시 invalidate 호출 필수
+  (iter 200 의 잠재 버그를 직접 언급해서 같은 실수 막음)
+
 ### Iteration 200 — 태그 매니저 mutation 후 캐시 invalidate (버그픽스)
 - iter 196/197 의 `applyTagRename` / `applyTagDelete` 가 localStorage 만 갱신하고
   `_tagCache` (iter 194 의 1초 TTL) 무효화는 안 해서, 직후 패널 리렌더가 최대 1초 동안
