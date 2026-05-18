@@ -7,11 +7,24 @@
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-1.3.1-d97757.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.4.0-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
 
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
+
+### 🆕 v1.4.0 새 소식 (요약)
+- **메모 hashtag 자동완성** — textarea 에서 `#` 입력 시 기존 태그 floating list (↑↓/Enter/Tab)
+- **설정 → 메모 태그 관리자** — 모든 메모를 스캔해 #태그 목록, 인라인 이름 변경·삭제 (단어 경계 안전 매칭)
+- **에이전트 카드 안에 hashtag 칩** — 카드별 최대 2개 + `+N` overflow, 클릭 시 즉시 필터
+- **명령 팔레트 hashtag 필터 명령** — `필터: #frontend (3)` 형식 동적 추가
+- **visibility-summary 의 #tag 칩** — 태그 컬러 그대로 적용, 일반 검색과 시각 구분
+- **hashtag 0건 empty state** — `'#frontend' 태그가 붙은 에이전트가 없습니다` + 사용법 힌트
+- **메모 입력 중 디테일 패널 re-render skip** — autocomplete/IME 깨짐 핫픽스
+- **단축키 모달 '메모' 그룹** — `Cmd+S` · `Cmd+Enter` · `#` 자동완성 명시
+- **`extractTagsFromNotes` 1초 TTL 캐시** — 100+ 메모 환경에서도 jank 없음
+- **`npm run icons` PNG·ICO 자동 분기** — 일회용 추출 스크립트 통합
+- SW 캐시 v23 → **v33**
 
 ### 🆕 v1.3.0 새 소식 (요약)
 - **메모 hashtag** — 메모에 `#frontend` `#리팩터링` 같이 적으면 자동 수집 → 사이드바 상단에 태그별 stable 컬러 칩으로 노출. 클릭 한 번에 같은 태그의 에이전트들로 필터
