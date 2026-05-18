@@ -5,6 +5,26 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.3.0] — 2026-05-18
+
+> v1.2.0 이후 ~30 iteration 동안 누적된 키보드 워크플로우 · hashtag 시스템 · 픽셀아트
+> 앱 아이콘 등을 묶어서 공식 릴리즈로 컷. 자세한 iter 별 변경은 아래 Iteration 144~184
+> 참고. 주요 하이라이트:
+>
+> - **메모 hashtag 시스템** (iter 180, 183, 184) — 사이드바 + 디테일 패널 양쪽에 stable color 칩
+> - **사이드바 검색 최근 5개 칩** (iter 178)
+> - **j/k + ‹ / › 디테일 prev/next** (iter 176, 177)
+> - **Insights 히트맵 ▼ now 마커** (iter 175)
+> - **새 픽셀아트 PNG 앱 아이콘** (iter 179, 181) + `scripts/extract-png-from-ico.js`
+> - **[hidden] 글로벌 안전망** (iter 157) — CSS specificity vs hidden attribute 버그 일괄 해소
+> - **메모 단축키 풀스택** — Cmd+S 저장, Cmd+Enter 저장+닫기, N 으로 포커스
+> - **conn-dot WS pulse + 수동 재연결** (iter 153, 163)
+> - **모든 사이드/디테일/캔버스/HUD/대기열/브리핑** KO/EN i18n
+>
+> v1.2.0 → v1.3.0 디프 한 줄 요약: **에이전트 정리·라벨링·키보드 워크플로우** 가 본격적으로 자리잡음.
+
 ### Iteration 184 — 디테일 패널 메모에 해당 에이전트의 hashtag 칩
 - 메모 textarea 바로 아래 이 에이전트의 메모 안에 들어 있는 hashtag 만 칩으로 노출
 - 칩 클릭 시 사이드바 검색에 `#tag` 박아 같은 태그의 다른 에이전트로 점프
