@@ -5,6 +5,17 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 181 — 픽셀아트 앱 아이콘 실제 PNG 적용
+- 사용자가 떨어뜨려준 `icons/icon.ico` (128×128 PNG-in-ICO) 에서 PNG 비트맵 추출
+- `scripts/extract-png-from-ico.js` — Node 내장 API 만으로 ICONDIR/ICONDIRENTRY 파싱 후
+  payload 가 PNG 시그니처면 그대로 `icons/icon.png` 으로 write
+- 결과: 128×128 RGBA 픽셀아트 (소년이 'AI TYCOON' 액자 올려다보는 햇살 가득한 방)
+- `manifest.webmanifest`: 사이즈 `1024x1024` → 실제 `128x128` 로 정확히 명시
+- `index.html`: `<link rel="shortcut icon" href="icons/icon.ico">` 도 추가
+  (IE/구형 Edge favicon 호환), PNG `sizes="128x128"` 명시
+- `sw.js`: `/icons/icon.ico` 도 SHELL_ASSETS 에 추가, VERSION v20 → v21
+- 브라우저 탭/PWA 설치 아이콘/SNS 공유 미리보기 전부 새 픽셀아트로 전환됨
+
 ### Iteration 180 — 메모 hashtag 자동 추출 → 사이드바 칩 필터
 - 사용자가 메모에 `#frontend` `#bug` `#리팩터링` 같이 적으면 자동으로 수집
 - 사이드바 검색 영역 바로 아래 `agent-tags-bar` 에 상위 8개 태그 칩으로 노출

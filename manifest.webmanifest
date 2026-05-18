@@ -13,7 +13,7 @@
   "icons": [
     {
       "src": "/icons/icon.png",
-      "sizes": "1024x1024",
+      "sizes": "128x128",
       "type": "image/png",
       "purpose": "any"
     },
@@ -37,7 +37,7 @@
       "description": "View today's workspace insights",
       "url": "/?action=insights",
       "icons": [
-        { "src": "/icons/icon.png", "sizes": "1024x1024", "type": "image/png" },
+        { "src": "/icons/icon.png", "sizes": "128x128", "type": "image/png" },
         { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
       ]
     },
@@ -47,7 +47,7 @@
       "description": "Open settings",
       "url": "/?action=settings",
       "icons": [
-        { "src": "/icons/icon.png", "sizes": "1024x1024", "type": "image/png" },
+        { "src": "/icons/icon.png", "sizes": "128x128", "type": "image/png" },
         { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
       ]
     }
