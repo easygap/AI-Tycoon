@@ -5,6 +5,14 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 189 — 단축키 모달에 '메모' 그룹 추가
+- iter 188 의 hashtag 자동완성 + 기존 메모 단축키 (Cmd+S / Cmd+Enter) 를
+  shortcuts modal 의 새로운 '메모 / Notes' 섹션에 명시
+- 새 키: `shortcuts.notesGroup`, `noteSave`, `noteSaveClose`, `noteHashtag`, `noteEscape`
+- KO/EN 양쪽 모두 추가
+- 사용자가 ? 또는 F1 으로 도움말 열 때 자동완성 트릭을 발견할 수 있게
+- SW 캐시 v24 → v25
+
 ### Iteration 188 — 메모 textarea hashtag 자동완성
 - 메모 input 에서 `#` 타이핑 시 기존 태그 중 prefix 매칭되는 6개를 floating list 로 노출
 - ↑/↓ 키로 선택 이동, Enter/Tab 으로 삽입, Esc 로 닫기
