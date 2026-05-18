@@ -1921,6 +1921,25 @@ export function updatePanel() {
                 </div>
                 <div class="text-[12px] text-zinc-500 truncate mb-1" style="word-break:keep-all;" title="${esc(task)}">${hl(esc(task))}</div>
                 ${age ? `<div class="text-[10px] text-zinc-400 mb-1">최근 ${age}</div>` : ""}
+                ${(() => {
+                    // 메모에 박힌 hashtag 를 카드에 노출 (최대 2개, 그 외 +N).
+                    // 클릭하면 사이드바 검색에 `#tag` 박혀서 필터 — 다른 곳과 동일 흐름.
+                    if (!hasNote) return "";
+                    const cardTags = extractTagsFromText(noteText);
+                    if (cardTags.length === 0) return "";
+                    const visible = cardTags.slice(0, 2);
+                    const overflow = cardTags.length - visible.length;
+                    const chipHtml = visible.map(tg => {
+                        const hue = tagHueFor(tg);
+                        return `<button type="button" class="agent-card-tag-chip" data-card-tag="${esc(tg)}" style="--tag-hue:${hue}" title="#${esc(tg)}">
+                            <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${esc(tg)}</span>
+                        </button>`;
+                    }).join("");
+                    const more = overflow > 0
+                        ? `<span class="agent-card-tag-more" title="${esc(cardTags.slice(2).map(t => "#" + t).join(" "))}">+${overflow}</span>`
+                        : "";
+                    return `<div class="agent-card-tags" aria-label="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Tags in note" : "메모 태그")}">${chipHtml}${more}</div>`;
+                })()}
                 ${agent.totalTasks > 0 ? `
                 <div class="progress-track">
                     <div class="progress-fill" style="width:${pct}%"></div>
@@ -1929,6 +1948,21 @@ export function updatePanel() {
                 ${subHtml}` : ""}
             </div>
         `;
+        // 카드 태그 칩 클릭 → 사이드바 검색에 #tag 박기 (event.stopPropagation 으로 카드 selectAgent 방지)
+        card.querySelectorAll("[data-card-tag]").forEach(btn => {
+            btn.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const tg = btn.dataset.cardTag;
+                if (!tg) return;
+                const q = `#${tg}`;
+                const input = document.getElementById("agent-search");
+                if (input) input.value = q;
+                window.setAgentSearch?.(q);
+            });
+            // Shift+Click 카드 (pin 토글) 등 다른 키 핸들러와 충돌 방지
+            btn.addEventListener("mousedown", (e) => e.stopPropagation());
+        });
         const pinButton = card.querySelector('[data-pin-action="toggle"]');
         if (pinButton) {
             pinButton.addEventListener("click", event => {
@@ -2758,6 +2792,21 @@ function setAgentNote(agent, value) {
 // 사이드바 상단에 클릭형 칩으로 노출. 클릭 시 검색창에 #tag 박아 필터.
 // 1글자 태그·중복은 제거하고 한/영/숫자/_ 만 허용.
 const TAG_REGEX = /#([A-Za-z0-9_가-힣]{2,32})/g;
+// 단일 메모 텍스트에서 unique 태그 배열만 뽑기 (순서 보존).
+// 카드/디테일 등 "이 에이전트의 태그만 보고 싶다" 케이스에서 재사용.
+export function extractTagsFromText(text) {
+    if (!text || typeof text !== "string") return [];
+    const out = [];
+    const seen = new Set();
+    let m; TAG_REGEX.lastIndex = 0;
+    while ((m = TAG_REGEX.exec(text)) !== null) {
+        const tag = m[1].toLowerCase();
+        if (seen.has(tag)) continue;
+        seen.add(tag);
+        out.push(tag);
+    }
+    return out;
+}
 // extractTagsFromNotes 캐시 — 한 render cycle 안에서 여러 곳 (사이드바/팔레트/디테일/empty state)
 // 이 동시 호출하는데 매번 풀 스캔하면 메모 100개 + 호출 5번 = 500회 정규식 실행이 됨.
 // setAgentNote 시 invalidate, 또는 1초 TTL 자동 expire.
