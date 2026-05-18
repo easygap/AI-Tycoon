@@ -2812,7 +2812,7 @@ export function extractTagsFromText(text) {
 // setAgentNote 시 invalidate, 또는 1초 TTL 자동 expire.
 let _tagCache = null;
 let _tagCacheExpire = 0;
-function invalidateTagCache() {
+export function invalidateTagCache() {
     _tagCache = null;
     _tagCacheExpire = 0;
 }

@@ -5,7 +5,17 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 200 — 태그 매니저 mutation 후 캐시 invalidate (버그픽스)
+- iter 196/197 의 `applyTagRename` / `applyTagDelete` 가 localStorage 만 갱신하고
+  `_tagCache` (iter 194 의 1초 TTL) 무효화는 안 해서, 직후 패널 리렌더가 최대 1초 동안
+  **stale 한 태그 리스트** 그리던 잠재 버그
+- 사이드바 tags-bar / 카드 chip / 명령 팔레트 / empty state 모두 1초 동안 옛 태그 보여줌
+- 코드 리뷰 (agent 활용) 로 발견 → 픽스
+- `panel.js` 의 `invalidateTagCache` 를 export, `main.js` 에서 `window.aiTycoonInvalidateTagCache` 로 노출
+- `applyTagRename`/`applyTagDelete` 가 localStorage 쓰고 즉시 invalidate → 그 다음 `updatePanel()` 콜이 최신 데이터로 렌더
+- SW 캐시 v33 → v34
+
+## [1.4.0] — 2026-05-18
 
 ## [1.4.0] — 2026-05-18
 
