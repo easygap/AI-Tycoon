@@ -5,6 +5,15 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 183 — hashtag 칩에 태그별 stable 컬러
+- 모든 태그 칩이 같은 indigo 였던 시각적 단조로움 해소
+- `tagHueFor(tag)` — 문자열 hash → 0~359 hue, 같은 태그는 항상 같은 색
+- CSS custom property `--tag-hue` 로 주입, hsl() 로 base/hover/active 상태 자동 파생
+- `lightness 96%` (light bg) → `38%` (text) → `52%` (active solid) 한 hue 로 5단계 색조
+- 다크 모드는 `hsla 30~78% lightness` 로 별도 매핑 — 어둡고 채도 살아있게
+- 같은 hue 라도 모드 따라 보색 톤 자동 보정
+- SW 캐시 v21 → v22
+
 ### Iteration 181 — 픽셀아트 앱 아이콘 실제 PNG 적용
 - 사용자가 떨어뜨려준 `icons/icon.ico` (128×128 PNG-in-ICO) 에서 PNG 비트맵 추출
 - `scripts/extract-png-from-ico.js` — Node 내장 API 만으로 ICONDIR/ICONDIRENTRY 파싱 후
