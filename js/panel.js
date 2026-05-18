@@ -1661,6 +1661,9 @@ export function updatePanel() {
     // what's happening even before scanning the agent list
     renderAgentsStatusSummary();
 
+    // 메모 hashtag 추출해서 칩 바 렌더 — `#frontend` `#bug` 같은 라벨로 빠르게 필터
+    renderAgentTagsBar();
+
     const filteredAgents = getFilteredSortedAgents();
     updateSearchControls(filteredAgents);
     if (S.liveAgents.length === 0) {
@@ -2578,6 +2581,77 @@ function setAgentNote(agent, value) {
     if (trimmed) all[key] = trimmed;
     else delete all[key];
     try { localStorage.setItem(NOTE_KEY, JSON.stringify(all)); } catch { /* quota */ }
+    // 메모 저장 시 hashtag 바도 즉시 갱신 (다음 WS tick 대기 안 함)
+    try { renderAgentTagsBar(); } catch { /* DOM 없을 수 있음 */ }
+}
+
+// ── Note hashtag 추출 + 사이드바 칩 바 ──────────────────────────────
+// 사용자가 메모에 `#frontend` `#bug` 같이 적으면 자동으로 수집해서
+// 사이드바 상단에 클릭형 칩으로 노출. 클릭 시 검색창에 #tag 박아 필터.
+// 1글자 태그·중복은 제거하고 한/영/숫자/_ 만 허용.
+const TAG_REGEX = /#([A-Za-z0-9_가-힣]{2,32})/g;
+export function extractTagsFromNotes() {
+    const all = loadAllNotes();
+    const counts = new Map();
+    for (const text of Object.values(all)) {
+        if (!text || typeof text !== "string") continue;
+        const seenInThisNote = new Set(); // 한 메모에서 동일 태그 중복 카운트 방지
+        let m;
+        TAG_REGEX.lastIndex = 0;
+        while ((m = TAG_REGEX.exec(text)) !== null) {
+            const tag = m[1].toLowerCase();
+            if (seenInThisNote.has(tag)) continue;
+            seenInThisNote.add(tag);
+            counts.set(tag, (counts.get(tag) || 0) + 1);
+        }
+    }
+    // count 내림차순, 동일 카운트면 알파벳순
+    return [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([tag, count]) => ({ tag, count }));
+}
+function renderAgentTagsBar() {
+    const bar = document.getElementById("agent-tags-bar");
+    if (!bar) return;
+    const tags = extractTagsFromNotes().slice(0, 8); // 상위 8개만
+    if (tags.length === 0) {
+        bar.hidden = true;
+        bar.innerHTML = "";
+        return;
+    }
+    const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const label = lang === "en" ? "Tags" : "태그";
+    // 현재 검색어가 `#tag` 형태면 매칭 칩을 active 표시
+    const currentQ = String(S.agentSearchQuery || "").trim().toLowerCase();
+    const activeTag = currentQ.startsWith("#") ? currentQ.slice(1) : "";
+    const chips = tags.map(({ tag, count }) => {
+        const isActive = activeTag === tag;
+        return `<button type="button" class="agent-tag-chip${isActive ? " is-active" : ""}" data-tag="${esc(tag)}" title="#${esc(tag)} (${count})">
+            <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${esc(tag)}</span><span class="agent-tag-chip-count">${count}</span>
+        </button>`;
+    }).join("");
+    bar.innerHTML = `<span class="agent-tags-bar-label">${esc(label)}</span>${chips}`;
+    bar.hidden = false;
+    bar.querySelectorAll("[data-tag]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const tag = btn.dataset.tag || "";
+            if (!tag) return;
+            const query = `#${tag}`;
+            const input = document.getElementById("agent-search");
+            // 이미 활성 → 토글로 해제
+            if (activeTag === tag.toLowerCase()) {
+                if (typeof window.clearAgentSearch === "function") window.clearAgentSearch();
+                return;
+            }
+            if (input) input.value = query;
+            if (typeof window.setAgentSearch === "function") {
+                window.setAgentSearch(query);
+            } else {
+                S.agentSearchQuery = query;
+                updatePanel();
+            }
+        });
+    });
 }
 
 /** Compare current memoryMB against ~30 s ago to spot trends.

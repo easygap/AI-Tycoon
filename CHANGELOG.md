@@ -5,6 +5,19 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 180 — 메모 hashtag 자동 추출 → 사이드바 칩 필터
+- 사용자가 메모에 `#frontend` `#bug` `#리팩터링` 같이 적으면 자동으로 수집
+- 사이드바 검색 영역 바로 아래 `agent-tags-bar` 에 상위 8개 태그 칩으로 노출
+- 칩 클릭 → 검색창에 `#tag` 박아 필터 (이미 검색이 메모도 매칭하므로 즉시 동작)
+- 활성 태그는 indigo 솔리드 칩으로 강조 + 다시 클릭하면 토글 해제
+- 카운트 배지 — 같은 태그가 몇 개 에이전트 메모에 있는지 한눈에
+- 같은 메모 안 동일 태그 중복 카운트 방지 (Set 으로 노트 단위 dedupe)
+- 정규식 `/#([A-Za-z0-9_가-힣]{2,32})/g` — 2~32자, 한/영/숫자/_ 허용
+- `setAgentNote` 호출 직후 `renderAgentTagsBar()` 도 즉시 호출 → 저장 즉시 새 태그 반영
+- KO/EN: `태그 / Tags` 레이블
+- 다크 모드 대응 색상 (#a5b4fc 계열) 포함
+- SW 캐시 v19 → v20
+
 ### Iteration 179 — 픽셀아트 PNG 앱 아이콘 설치 파이프라인
 - 사용자가 손그림 픽셀아트 이미지를 앱 아이콘으로 쓸 수 있도록 인프라 구성
 - `manifest.webmanifest`: `icons/icon.png` 을 first entry 로 (purpose any, 1024×1024)
