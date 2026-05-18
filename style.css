@@ -3107,6 +3107,94 @@ body.dark .activity-log-mini {
     transition-timing-function: var(--ease-out);
 }
 
+/* 검색 히스토리 칩 — 빈 입력 + 포커스 시 노출 */
+.agent-search-history {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+    animation: search-history-fade 180ms var(--ease-out, ease-out);
+}
+@keyframes search-history-fade {
+    from { opacity: 0; transform: translateY(-2px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.agent-search-history-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #98a2b3;
+    margin-right: 2px;
+}
+.agent-search-history-chip {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(217,119,87,0.08);
+    border: 1px solid rgba(217,119,87,0.22);
+    color: #b35a3f;
+    cursor: pointer;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: background-color 140ms var(--ease-out, ease-out),
+                border-color 140ms var(--ease-out, ease-out),
+                color 140ms var(--ease-out, ease-out),
+                transform 120ms var(--ease-out, ease-out);
+}
+.agent-search-history-chip:hover,
+.agent-search-history-chip:focus-visible {
+    background: rgba(217,119,87,0.18);
+    border-color: rgba(217,119,87,0.4);
+    color: #8a3d22;
+}
+.agent-search-history-chip:active { transform: translateY(1px); }
+.agent-search-history-clear {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: transparent;
+    border: 1px dashed rgba(24,27,31,0.18);
+    color: #8a6b4c;
+    cursor: pointer;
+    margin-left: auto;
+    transition: background-color 140ms var(--ease-out, ease-out),
+                border-color 140ms var(--ease-out, ease-out),
+                color 140ms var(--ease-out, ease-out);
+}
+.agent-search-history-clear:hover,
+.agent-search-history-clear:focus-visible {
+    background: rgba(24,27,31,0.05);
+    border-color: rgba(24,27,31,0.32);
+    color: #475467;
+}
+body.dark .agent-search-history-label { color: #8a8275; }
+body.dark .agent-search-history-chip {
+    background: rgba(253,186,116,0.10);
+    border-color: rgba(253,186,116,0.26);
+    color: #fdba74;
+}
+body.dark .agent-search-history-chip:hover,
+body.dark .agent-search-history-chip:focus-visible {
+    background: rgba(253,186,116,0.22);
+    border-color: rgba(253,186,116,0.46);
+    color: #ffd9b3;
+}
+body.dark .agent-search-history-clear {
+    border-color: rgba(255,255,255,0.16);
+    color: #a89c8e;
+}
+body.dark .agent-search-history-clear:hover,
+body.dark .agent-search-history-clear:focus-visible {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.32);
+    color: #d6cabd;
+}
+
 /* Iteration 76 — 빈 상태 풍부화: 지원 플랫폼 칩 + 데모 CTA */
 .agent-empty-rich { padding: 18px 14px; gap: 10px; }
 .empty-platforms {

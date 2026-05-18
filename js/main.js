@@ -363,6 +363,100 @@ function init() {
         focusInput();
         requestAnimationFrame(focusInput);
     };
+
+    // ─── 검색 히스토리 (최근 5개) ──────────────────────────────────────
+    // 검색어를 commit 하는 시점(Enter 또는 blur)에 저장 → 빈 입력 + 포커스 시 칩으로 노출.
+    // 의도: 자주 쓰는 프로젝트명/메모 키워드를 한 번 친 후 재타이핑 부담 해소.
+    const SEARCH_HISTORY_KEY = "ai-tycoon-search-history";
+    const SEARCH_HISTORY_MAX = 5;
+    function readSearchHistory() {
+        try {
+            const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
+            if (!raw) return [];
+            const arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr.filter(s => typeof s === "string" && s.trim()) : [];
+        } catch { return []; }
+    }
+    function writeSearchHistory(list) {
+        try { localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(list.slice(0, SEARCH_HISTORY_MAX))); }
+        catch { /* quota or no storage */ }
+    }
+    window.aiTycoonSaveSearchTerm = (term) => {
+        const trimmed = String(term || "").trim();
+        if (!trimmed) return;
+        // 너무 짧으면 (1글자) 무시 — 의미 없는 노이즈
+        if (trimmed.length < 2) return;
+        const list = readSearchHistory().filter(s => s.toLowerCase() !== trimmed.toLowerCase());
+        list.unshift(trimmed);
+        writeSearchHistory(list);
+        renderSearchHistory();
+    };
+    window.aiTycoonClearSearchHistory = () => {
+        try { localStorage.removeItem(SEARCH_HISTORY_KEY); } catch { /* ignore */ }
+        renderSearchHistory();
+    };
+    function renderSearchHistory() {
+        const wrap = document.getElementById("agent-search-history");
+        const input = document.getElementById("agent-search");
+        if (!wrap || !input) return;
+        const list = readSearchHistory();
+        const focused = document.activeElement === input;
+        const empty = !input.value;
+        // 포커스 + 빈 입력 + 히스토리 있을 때만 노출
+        if (!focused || !empty || list.length === 0) {
+            wrap.hidden = true;
+            wrap.innerHTML = "";
+            return;
+        }
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const recentLabel = lang === "en" ? "Recent" : "최근";
+        const clearLabel = lang === "en" ? "Clear" : "전체 지우기";
+        const escAttr = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        const chips = list.map(term =>
+            `<button type="button" class="agent-search-history-chip" data-term="${escAttr(term)}" title="${escAttr(term)}">${escAttr(term)}</button>`
+        ).join("");
+        wrap.innerHTML = `
+            <span class="agent-search-history-label">${recentLabel}</span>
+            ${chips}
+            <button type="button" class="agent-search-history-clear" data-search-history-clear>${clearLabel}</button>
+        `;
+        wrap.hidden = false;
+        wrap.querySelectorAll(".agent-search-history-chip").forEach(btn => {
+            btn.addEventListener("mousedown", (e) => e.preventDefault()); // blur 방지
+            btn.addEventListener("click", () => {
+                const term = btn.dataset.term || "";
+                input.value = term;
+                window.setAgentSearch(term);
+                // commit 도 즉시 — 다시 history 상단으로 끌어올리기
+                window.aiTycoonSaveSearchTerm(term);
+                input.focus({ preventScroll: true });
+                wrap.hidden = true;
+            });
+        });
+        wrap.querySelector("[data-search-history-clear]")?.addEventListener("mousedown", (e) => e.preventDefault());
+        wrap.querySelector("[data-search-history-clear]")?.addEventListener("click", () => {
+            window.aiTycoonClearSearchHistory();
+            input.focus({ preventScroll: true });
+        });
+    }
+    // 포커스/블러/입력 시 재렌더
+    document.addEventListener("DOMContentLoaded", () => {
+        const input = document.getElementById("agent-search");
+        if (!input) return;
+        input.addEventListener("focus", renderSearchHistory);
+        input.addEventListener("blur", () => {
+            // 클릭 핸들러가 먼저 잡을 시간 확보
+            setTimeout(() => {
+                // 검색어가 비어있지 않고 사용자가 떠나면 commit
+                const val = (input.value || "").trim();
+                if (val) window.aiTycoonSaveSearchTerm(val);
+                renderSearchHistory();
+            }, 120);
+        });
+        input.addEventListener("input", renderSearchHistory);
+    });
+    // Enter 키 commit 도 핸들러에서 추가로 호출하기 위해 노출 (handleAgentSearchKey 에서 사용)
+    window.aiTycoonRenderSearchHistory = renderSearchHistory;
     window.setSortOrder = (s) => { S.sortOrder = s; localStorage.setItem("ai-tycoon-sort", s); updatePanel(); };
     // Compact agents list toggle — slim, single-line cards for power users
     window.toggleAgentsCompact = () => {

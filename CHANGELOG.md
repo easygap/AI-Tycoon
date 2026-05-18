@@ -5,6 +5,18 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 178 — 사이드바 검색 최근 5개 히스토리 칩
+- 검색 input 포커스 + 빈 입력 일 때 최근 5개 검색어를 칩으로 노출
+- Enter 또는 blur 시 commit — `localStorage` 키 `ai-tycoon-search-history`
+- 동일 검색어 (대소문자 무시) 재타이핑 시 중복 제거 후 최상단으로
+- 1글자 검색어는 노이즈로 간주, 저장 안 함
+- 칩 클릭 시 input 채움 + setAgentSearch + 즉시 히스토리 상단 갱신
+- `전체 지우기` 버튼으로 히스토리 일괄 삭제 가능
+- KO/EN: `최근 / Recent`, `전체 지우기 / Clear`
+- 다크 모드 대응 색상 (#fdba74 계열) 포함
+- `mousedown` preventDefault 로 칩 클릭 시 input blur 방지
+- SW 캐시 v17 → v18
+
 ### Iteration 177 — 디테일 패널 ‹ / › 이전·다음 에이전트 버튼
 - 키보드 안 쓰는(터치/마우스) 사용자를 위한 prev/next 버튼을 디테일 패널 헤더에 추가
 - `data-detail-nav="prev|next"` 두 개 버튼 — 클릭 시 `window.cycleAgentFocus(±1)` 호출
