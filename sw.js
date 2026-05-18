@@ -2,7 +2,7 @@
 // Caches the static shell so the dashboard still opens offline,
 // then falls back to network for everything else.
 
-const VERSION = "ai-tycoon-shell-v31";
+const VERSION = "ai-tycoon-shell-v32";
 const SHELL_ASSETS = [
     "/",
     "/index.html",

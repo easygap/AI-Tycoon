@@ -4023,6 +4023,100 @@ body.dark .settings-tag-delete:focus-visible {
 }
 body.dark .settings-tags-empty { color: #a89c8e; }
 
+/* 인라인 rename input + 저장/취소 (native prompt 대체) */
+.settings-tag-rename-input {
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(99, 102, 241, 0.34);
+    background: rgba(255, 255, 255, 0.85);
+    color: #1f1b16;
+    width: 130px;
+    outline: none;
+    transition: border-color 140ms var(--ease-out, ease-out),
+                box-shadow 140ms var(--ease-out, ease-out);
+}
+.settings-tag-rename-input:focus {
+    border-color: rgba(99, 102, 241, 0.7);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+.settings-tag-rename-save,
+.settings-tag-rename-cancel,
+.settings-tag-delete-yes,
+.settings-tag-delete-no {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 140ms var(--ease-out, ease-out),
+                border-color 140ms var(--ease-out, ease-out),
+                color 140ms var(--ease-out, ease-out);
+}
+.settings-tag-rename-save,
+.settings-tag-delete-yes {
+    background: rgba(99, 102, 241, 0.92);
+    border-color: rgba(99, 102, 241, 0.92);
+    color: #fff;
+}
+.settings-tag-delete-yes {
+    background: rgba(220, 38, 38, 0.92);
+    border-color: rgba(220, 38, 38, 0.92);
+}
+.settings-tag-rename-save:hover,
+.settings-tag-rename-save:focus-visible {
+    background: rgba(79, 70, 229, 0.95);
+    border-color: rgba(79, 70, 229, 0.95);
+}
+.settings-tag-delete-yes:hover,
+.settings-tag-delete-yes:focus-visible {
+    background: rgba(185, 28, 28, 0.95);
+    border-color: rgba(185, 28, 28, 0.95);
+}
+.settings-tag-rename-cancel,
+.settings-tag-delete-no {
+    background: rgba(24, 27, 31, 0.05);
+    border-color: rgba(24, 27, 31, 0.12);
+    color: #475467;
+}
+.settings-tag-rename-cancel:hover,
+.settings-tag-rename-cancel:focus-visible,
+.settings-tag-delete-no:hover,
+.settings-tag-delete-no:focus-visible {
+    background: rgba(24, 27, 31, 0.09);
+    border-color: rgba(24, 27, 31, 0.18);
+}
+.settings-tag-delete-prompt {
+    font-size: 11px;
+    font-weight: 600;
+    color: #b91c1c;
+    margin-right: auto;
+}
+body.dark .settings-tag-rename-input {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(165, 180, 252, 0.36);
+    color: #f5f0e7;
+}
+body.dark .settings-tag-rename-input:focus {
+    border-color: rgba(165, 180, 252, 0.8);
+    box-shadow: 0 0 0 3px rgba(165, 180, 252, 0.18);
+}
+body.dark .settings-tag-rename-cancel,
+body.dark .settings-tag-delete-no {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #d6cabd;
+}
+body.dark .settings-tag-rename-cancel:hover,
+body.dark .settings-tag-rename-cancel:focus-visible,
+body.dark .settings-tag-delete-no:hover,
+body.dark .settings-tag-delete-no:focus-visible {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(255, 255, 255, 0.24);
+}
+body.dark .settings-tag-delete-prompt { color: #fca5a5; }
+
 /* Iteration 66 — "What's new" section inside the Settings modal */
 .whatsnew-card {
     background: linear-gradient(135deg, rgba(252, 211, 77, 0.12), rgba(255, 222, 180, 0.42));

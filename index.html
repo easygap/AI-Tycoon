@@ -1350,33 +1350,69 @@
                 </div>
             </div>`;
         }).join("");
-        // 이벤트 위임
+        // 이벤트 위임 — 행 안에서 인라인 입력/확인으로 swap (native prompt/confirm 안 씀)
         container.querySelectorAll("[data-tag-rename]").forEach(btn => {
-            btn.addEventListener("click", () => renameTagGlobally(btn.dataset.tagRename));
+            btn.addEventListener("click", () => beginInlineRename(btn));
         });
         container.querySelectorAll("[data-tag-delete]").forEach(btn => {
-            btn.addEventListener("click", () => deleteTagGlobally(btn.dataset.tagDelete));
+            btn.addEventListener("click", () => beginInlineDelete(btn));
         });
     }
-    function renameTagGlobally(oldTag) {
+    // 인라인 rename UI — 액션 버튼 영역을 input + 저장/취소로 바꿈
+    function beginInlineRename(triggerBtn) {
+        const row = triggerBtn.closest(".settings-tag-row");
+        if (!row) return;
+        const tag = triggerBtn.dataset.tagRename;
+        const actions = row.querySelector(".settings-tag-actions");
+        if (!actions) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const saveLabel = lang === "en" ? "Save" : "저장";
+        const cancelLabel = lang === "en" ? "Cancel" : "취소";
+        const placeholder = lang === "en" ? "new name (no #)" : "새 이름 (# 없이)";
+        const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+        const original = actions.innerHTML;
+        actions.innerHTML = `
+            <input type="text" class="settings-tag-rename-input" value="${escA(tag)}"
+                placeholder="${escA(placeholder)}" maxlength="32" autocomplete="off"
+                aria-label="${escA(lang === "en" ? "New tag name" : "새 태그 이름")}">
+            <button type="button" class="settings-tag-rename-save">${escA(saveLabel)}</button>
+            <button type="button" class="settings-tag-rename-cancel">${escA(cancelLabel)}</button>
+        `;
+        const input = actions.querySelector(".settings-tag-rename-input");
+        const saveBtn = actions.querySelector(".settings-tag-rename-save");
+        const cancelBtn = actions.querySelector(".settings-tag-rename-cancel");
+        // 포커스 + 텍스트 전체 선택 — 사용자가 바로 새 이름 타이핑 가능
+        input.focus({ preventScroll: true });
+        input.select();
+        const restore = () => { actions.innerHTML = original; renderTagsManager(); };
+        const commit = () => {
+            const newTag = String(input.value || "").trim().replace(/^#+/, "").toLowerCase();
+            if (!/^[A-Za-z0-9_가-힣]{2,32}$/.test(newTag)) {
+                window.aiTycoonToasts?.show?.("warning",
+                    lang === "en" ? "Invalid tag" : "사용할 수 없는 태그",
+                    lang === "en"
+                        ? "2-32 chars; letters, numbers, _, Korean only."
+                        : "2~32자, 한/영/숫자/_ 만 가능합니다.");
+                input.focus({ preventScroll: true });
+                input.select();
+                return;
+            }
+            if (newTag === tag) { restore(); return; }
+            applyTagRename(tag, newTag);
+        };
+        saveBtn.addEventListener("click", commit);
+        cancelBtn.addEventListener("click", restore);
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") { e.preventDefault(); commit(); }
+            else if (e.key === "Escape") { e.preventDefault(); restore(); }
+        });
+    }
+    function applyTagRename(oldTag, newTag) {
         const t = (k) => window.aiTycoonI18n?.t?.(k) || k;
-        const fresh = window.prompt(t("settings.tagsRenamePrompt"), oldTag);
-        if (fresh === null) return; // cancel
-        const newTag = String(fresh).trim().replace(/^#+/, "").toLowerCase();
-        if (!/^[A-Za-z0-9_가-힣]{2,32}$/.test(newTag)) {
-            window.aiTycoonToasts?.show?.("warning",
-                window.aiTycoonI18n?.getLang?.() === "en" ? "Invalid tag" : "사용할 수 없는 태그",
-                window.aiTycoonI18n?.getLang?.() === "en"
-                    ? "2-32 chars; letters, numbers, _, Korean only."
-                    : "2~32자, 한/영/숫자/_ 만 가능합니다.");
-            return;
-        }
-        if (newTag === oldTag) return;
         const NOTE_KEY = "ai-tycoon-agent-notes";
         let notes;
         try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
         catch { notes = {}; }
-        // 정규식 escape — # 뒤에 정확히 oldTag 만 매칭 (단어 경계로 한/영/숫자/_ 끝)
         const escOld = oldTag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const re = new RegExp(`#${escOld}(?![A-Za-z0-9_가-힣])`, "gi");
         let changed = 0;
@@ -1389,25 +1425,50 @@
         window.aiTycoonToasts?.show?.("info",
             t("settings.tagsRenameDone"),
             `#${oldTag} → #${newTag} · ${changed}`);
-        // 사이드바·디테일·태그바·empty state 모두 즉시 갱신 (캐시 invalidate 효과)
         try {
-            // panel.js 에 invalidate 직접 export 가 없으니 1초 자동 expire 에 의존하되,
-            // updatePanel/updateDetailPanel 한 번 강제 호출
             window.updatePanel?.();
             window.updateDetailPanel?.();
         } catch { /* ignore */ }
-        renderTagsManager(); // 자기 자신도 다시 그림
+        renderTagsManager();
     }
-    function deleteTagGlobally(tag) {
+    // 인라인 delete confirm — 액션 버튼 영역을 "정말 지울까요? 예/아니오" 로 바꿈
+    function beginInlineDelete(triggerBtn) {
+        const row = triggerBtn.closest(".settings-tag-row");
+        if (!row) return;
+        const tag = triggerBtn.dataset.tagDelete;
+        const actions = row.querySelector(".settings-tag-actions");
+        if (!actions) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const yesLabel = lang === "en" ? "Yes, delete" : "예, 지우기";
+        const noLabel = lang === "en" ? "No" : "아니오";
+        const promptText = lang === "en"
+            ? `Remove #${tag} from every note?`
+            : `모든 메모에서 #${tag} 를 지울까요?`;
+        const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+        const original = actions.innerHTML;
+        actions.innerHTML = `
+            <span class="settings-tag-delete-prompt">${escA(promptText)}</span>
+            <button type="button" class="settings-tag-delete-yes">${escA(yesLabel)}</button>
+            <button type="button" class="settings-tag-delete-no">${escA(noLabel)}</button>
+        `;
+        const yesBtn = actions.querySelector(".settings-tag-delete-yes");
+        const noBtn = actions.querySelector(".settings-tag-delete-no");
+        // 기본 포커스를 '아니오' 에 두어 키 Enter 로 실수로 삭제하지 않게
+        noBtn.focus({ preventScroll: true });
+        const restore = () => { actions.innerHTML = original; renderTagsManager(); };
+        yesBtn.addEventListener("click", () => applyTagDelete(tag));
+        noBtn.addEventListener("click", restore);
+        actions.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") { e.preventDefault(); restore(); }
+        });
+    }
+    function applyTagDelete(tag) {
         const t = (k) => window.aiTycoonI18n?.t?.(k) || k;
-        const ok = window.confirm(`${t("settings.tagsDeleteConfirm")}\n\n#${tag}`);
-        if (!ok) return;
         const NOTE_KEY = "ai-tycoon-agent-notes";
         let notes;
         try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
         catch { notes = {}; }
         const escT = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        // `#tag` 만 지우고 앞뒤 공백은 정리 (` #tag ` → ` `)
         const re = new RegExp(`\\s?#${escT}(?![A-Za-z0-9_가-힣])\\s?`, "gi");
         let changed = 0;
         for (const key of Object.keys(notes)) {
@@ -1415,7 +1476,7 @@
             const after = before.replace(re, " ").replace(/[ \t]{2,}/g, " ").trim();
             if (before !== after) {
                 if (after) notes[key] = after;
-                else delete notes[key]; // 본문이 다 비면 키 자체 삭제
+                else delete notes[key];
                 changed++;
             }
         }

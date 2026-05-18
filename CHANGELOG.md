@@ -5,6 +5,16 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 197 — 태그 관리자: native prompt/confirm → 인라인 UI
+- iter 196 의 `window.prompt`/`window.confirm` 은 OS 기본 다이얼로그라 디자인 톤 깨짐
+- 행 안에서 액션 버튼 영역 자체를 인라인 UI 로 swap:
+  - **rename**: input + 저장/취소 버튼, input focus + selectall + Enter 커밋 / Esc 취소
+  - **delete**: "모든 메모에서 #tag 를 지울까요?" + 예/아니오, 기본 포커스는 '아니오' 에 두어 실수 방지
+- 인디고/레드 톤 + 다크 모드 대응 (`#a5b4fc` / `#fca5a5` 라인)
+- 검증 실패 시 input 그대로 두고 select + 토스트 — 사용자가 즉시 수정
+- `applyTagRename` / `applyTagDelete` 로 실제 mutation 로직 분리 — 테스트 가능성/재사용
+- SW 캐시 v31 → v32
+
 ### Iteration 196 — 설정에 '메모 태그' 관리자 추가
 - 모든 메모를 스캔해 #태그 목록 + 카운트 칩으로 노출 (사이드바 칩과 동일 컬러)
 - **이름 변경** — `prompt()` 로 새 이름 입력, 정규식 검증 (2~32자, 한/영/숫자/_)
