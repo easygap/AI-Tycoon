@@ -5,6 +5,17 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 190 — 메모 입력 중에는 디테일 패널 re-render skip
+- WS tick (~500ms) 마다 `updateDetailPanel` 이 innerHTML 갈아엎어서 textarea 포커스 / hashtag
+  autocomplete / IME 조합 상태가 매번 깨지던 잠재 버그 (iter 188 의 autocomplete 가 더
+  드러나게 함)
+- 같은 PID 재렌더 시점에서 `document.activeElement === detail-note-input` 이거나
+  `#detail-note-autocomplete` 가 열려 있으면 그 tick 의 re-render 자체를 skip
+- 다른 영역 (메모리 그래프, 상태) 은 다음 tick 에 자연스럽게 갱신 — 잠시 stale 해도 무해
+- PID 가 바뀌면 (다른 카드 클릭) 무조건 재렌더 — 그 땐 사용자가 메모 흐름 중일 리 없음
+- 결과: hashtag 자동완성 도중 깜박임 사라짐, IME 조합 깨짐도 함께 해소
+- SW 캐시 v25 → v26
+
 ### Iteration 189 — 단축키 모달에 '메모' 그룹 추가
 - iter 188 의 hashtag 자동완성 + 기존 메모 단축키 (Cmd+S / Cmd+Enter) 를
   shortcuts modal 의 새로운 '메모 / Notes' 섹션에 명시
