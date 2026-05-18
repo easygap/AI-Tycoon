@@ -5,6 +5,23 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 179 — 픽셀아트 PNG 앱 아이콘 설치 파이프라인
+- 사용자가 손그림 픽셀아트 이미지를 앱 아이콘으로 쓸 수 있도록 인프라 구성
+- `manifest.webmanifest`: `icons/icon.png` 을 first entry 로 (purpose any, 1024×1024)
+  → 기존 SVG 들은 fallback 으로 유지
+- `index.html`: `<link rel="icon" type="image/png">` 추가, `apple-touch-icon` 도 PNG 로,
+  og:image / twitter:image 도 PNG 참조 (SNS 공유 미리보기 화질 향상)
+- `sw.js`: `/icons/icon.png` 을 SHELL_ASSETS 에 추가 (오프라인 캐시), VERSION v18 → v19
+- `scripts/install-app-icon.js` 신규 — 원본 PNG 를 `icons/source.png` 에 두고
+  `npm run icons` 실행하면 헤더 검증(시그니처/크기) 후 `icons/icon.png` 으로 복사.
+  외부 의존성 0, 순수 Node API
+- `package.json`: `"icons": "node scripts/install-app-icon.js"` 스크립트 추가
+- `.gitignore`: `icons/source.png` 추가 — 원본 staging 파일은 commit 안 함
+
+> **사용자 액션 필요**: 첨부한 픽셀아트 PNG 를 `icons/source.png` 또는 `icons/icon.png` 으로
+> 저장 후 `npm run icons` 실행. 그러면 매니페스트/파비콘/og:image/SW 캐시 모두 자동으로
+> 새 아트워크를 가리킵니다.
+
 ### Iteration 178 — 사이드바 검색 최근 5개 히스토리 칩
 - 검색 input 포커스 + 빈 입력 일 때 최근 5개 검색어를 칩으로 노출
 - Enter 또는 blur 시 commit — `localStorage` 키 `ai-tycoon-search-history`

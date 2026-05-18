@@ -23,3 +23,6 @@ test-results/
 # Local environment
 .env
 .env.local
+
+# 앱 아이콘 설치 스크립트의 원본 staging 파일 (체크인 불필요 — 결과물 icon.png 만 commit)
+icons/source.png
