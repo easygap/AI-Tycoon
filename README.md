@@ -7,18 +7,24 @@
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-1.2.0-d97757.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.0-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
 
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
 
-### 🆕 다음 버전 미리보기 (Unreleased)
-- **메모 hashtag** — 메모에 `#frontend` `#리팩터링` 같이 적으면 자동 수집 → 사이드바 상단에 색별 칩으로 노출. 클릭 한 번에 같은 태그의 에이전트들로 필터
-- **사이드바 검색 최근 5개** — 자주 쓰는 프로젝트명/메모 키워드를 칩으로 재선택
-- **`j/k` 키 + ‹ / › 버튼** — 사이드바 정렬·필터 그대로 따라 에이전트 순회
-- **Insights 시간대 히트맵 ▼ 마커** — 현재 시각 셀에 바운스 화살표
-- **새 픽셀아트 앱 아이콘** — PWA 설치본·favicon·SNS 공유 미리보기 전부 갱신
+### 🆕 v1.3.0 새 소식 (요약)
+- **메모 hashtag** — 메모에 `#frontend` `#리팩터링` 같이 적으면 자동 수집 → 사이드바 상단에 태그별 stable 컬러 칩으로 노출. 클릭 한 번에 같은 태그의 에이전트들로 필터
+- **디테일 패널의 hashtag 칩** — 현재 에이전트가 가진 태그를 메모 아래에 작게 표시, 클릭 시 같은 태그 다른 에이전트로 점프
+- **사이드바 검색 최근 5개 칩** — 자주 쓰는 프로젝트명/메모 키워드를 클릭으로 재선택
+- **`j/k` 키 + 디테일 ‹ / › 버튼** — 사이드바 정렬·필터 그대로 따라 에이전트 순회 + 카드 자동 스크롤
+- **Insights 시간대 히트맵 ▼ 마커** — 현재 시각 셀에 오렌지 바운스 화살표
+- **새 픽셀아트 앱 아이콘** — PWA 설치본·favicon·SNS 공유 미리보기 전부 갱신 (`scripts/extract-png-from-ico.js`)
+- **사이드바 Enter 로 첫 결과 선택**, 디테일 PID 변경 시 스크롤 위로 자동
+- **메모 글자 수 임계 경고 색**, 메모 푸터 단축키 힌트 (⌘S / ⌘⏎), `N` 단축키로 메모 빠른 포커스
+- **`[hidden] { display: none !important; }` 글로벌 안전망** — 모드 칩·CTA 가 hidden 속성 무시하던 버그 일괄 해소
+- **conn-dot WS 상태 pulse**, `aiTycoonReconnect()` 노출 + 명령 팔레트 명령
+- SW 캐시 v11 → **v23**, smoke 38개·lint 37개 그대로 통과
 
 ### 🆕 v1.2.0 새 소식 (요약)
 - **명령 팔레트 32+ 명령** — 검색/팔레트/단축키 모달 모두에 한글 IME 매끄럽게
