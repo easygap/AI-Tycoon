@@ -1724,21 +1724,35 @@ export function updatePanel() {
         // 검색어가 #tag 형식이면 hashtag 전용 친절한 메시지 분기
         const rawQ = String(S.agentSearchQuery || "").trim();
         const isHashtagQuery = rawQ.startsWith("#") && rawQ.length > 1;
-        const tagName = isHashtagQuery ? rawQ.slice(1) : "";
+        const tagName = isHashtagQuery ? rawQ.slice(1).toLowerCase() : "";
+        // 해당 태그가 어떤 노트엔 들어있지만 그 노트의 에이전트가 현재 liveAgents 에 없을 수도 있음.
+        // (실제 프로세스가 종료/재시작되어 sessionId 가 매칭 안 되는 케이스)
+        // → 메시지를 "에이전트 오프라인" 톤으로 바꿔야 사용자가 "안 적었나?" 헷갈리지 않음.
+        let orphanTag = false;
+        if (isHashtagQuery) {
+            const allTags = extractTagsFromNotes(); // 캐시 hit
+            orphanTag = allTags.some(t => t.tag === tagName);
+        }
         const resetLabel = hasSearch
             ? (isEn ? "Clear search" : "검색 지우기")
             : hasActionFilter
                 ? (isEn ? "Reset action filter" : "행동 필터 해제")
                 : (isEn ? "Show all" : "전체 보기");
         const titleStr = isHashtagQuery
-            ? (isEn ? `No agents tagged #${tagName}` : `'#${tagName}' 태그가 붙은 에이전트가 없습니다`)
+            ? (orphanTag
+                ? (isEn ? `#${tagName} agent is offline` : `'#${tagName}' 태그가 적힌 에이전트가 오프라인입니다`)
+                : (isEn ? `No agents tagged #${tagName}` : `'#${tagName}' 태그가 붙은 에이전트가 없습니다`))
             : hasSearch
                 ? (isEn ? "No results" : "검색 결과가 없습니다")
                 : (isEn ? "No agents match the filter" : "필터에 맞는 에이전트가 없습니다");
         const bodyStr = isHashtagQuery
-            ? (isEn
-                ? `Open an agent's detail panel and add #${tagName} to its note to start filtering.`
-                : `에이전트 디테일 패널을 열어서 메모에 #${tagName} 을(를) 적으면 필터 대상이 됩니다.`)
+            ? (orphanTag
+                ? (isEn
+                    ? `The agent that has #${tagName} in its note isn't running right now. The tag will reappear when it starts again.`
+                    : `#${tagName} 이(가) 적힌 에이전트가 지금은 켜져 있지 않아요. 다시 실행되면 태그도 돌아옵니다.`)
+                : (isEn
+                    ? `Open an agent's detail panel and add #${tagName} to its note to start filtering.`
+                    : `에이전트 디테일 패널을 열어서 메모에 #${tagName} 을(를) 적으면 필터 대상이 됩니다.`))
             : hasSearch
                 ? (isEn ? "Double-check the name, project, or work text." : "직원 이름, 프로젝트, 작업 문구를 다시 확인해 주세요.")
                 : hasActionFilter
