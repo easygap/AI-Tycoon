@@ -22,6 +22,7 @@
 import { S } from "./state.js";
 import { AGENT_THEMES, STATUS_META, PLATFORM_META } from "./constants.js";
 import { isAgentPinned as _isAgentPinned } from "./agentPriority.js";
+import { extractTagsFromNotes } from "./panel.js";
 
 function isPinned(agent) {
     return _isAgentPinned(agent, S.pinnedAgentKeys || []);
@@ -357,6 +358,30 @@ function buildActions(query) {
             } catch { /* ignore */ }
         } },
     ];
+    // Hashtag 필터 명령들 — 메모에 실제로 박혀있는 태그만 동적 추가.
+    // `필터: #frontend (3)` 형식으로, 검색·일반 fuzzy match 와 같은 경로로 노출됨.
+    try {
+        const tags = extractTagsFromNotes();
+        const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+        for (const { tag, count } of tags) {
+            const label = lang === "en"
+                ? `Filter by #${tag} (${count})`
+                : `필터: #${tag} (${count})`;
+            all.push({
+                id: `filter-tag-${tag}`,
+                group: "filter",
+                title: label,
+                run: () => {
+                    try {
+                        const input = document.getElementById("agent-search");
+                        const q = `#${tag}`;
+                        if (input) input.value = q;
+                        window.setAgentSearch?.(q);
+                    } catch { /* ignore */ }
+                },
+            });
+        }
+    } catch { /* extractTagsFromNotes 미존재 시 무시 */ }
     if (!query) {
         // Pick a relevant default starter set
         return all.filter(a => ["display", "modal", "filter"].includes(a.group)).slice(0, 6);
