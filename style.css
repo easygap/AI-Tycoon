@@ -3428,6 +3428,83 @@ body.dark .detail-project-chip:hover {
     max-height: 200px;
 }
 .detail-note-input::placeholder { color: #b8956c; }
+.detail-note-shell {
+    position: relative;
+}
+/* Hashtag autocomplete — textarea 바로 아래에 띄우는 listbox */
+.detail-note-autocomplete {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 30;
+    background: rgba(255, 251, 245, 0.99);
+    border: 1px solid rgba(217, 119, 87, 0.28);
+    border-radius: 8px;
+    box-shadow: 0 12px 28px -8px rgba(124, 76, 36, 0.22);
+    overflow: hidden;
+    max-height: 220px;
+    overflow-y: auto;
+    animation: detail-note-ac-fade 140ms var(--ease-out, ease-out);
+}
+@keyframes detail-note-ac-fade {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.detail-note-ac-item {
+    --tag-hue: 240;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: hsl(var(--tag-hue), 55%, 35%);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 120ms var(--ease-out, ease-out);
+}
+.detail-note-ac-item:hover,
+.detail-note-ac-item.is-active {
+    background: hsla(var(--tag-hue), 70%, 92%, 0.7);
+    color: hsl(var(--tag-hue), 55%, 28%);
+}
+.detail-note-ac-item .agent-tag-chip-hash {
+    opacity: 0.6;
+    font-weight: 800;
+}
+.detail-note-ac-count {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: hsla(var(--tag-hue), 60%, 80%, 0.4);
+    color: hsl(var(--tag-hue), 55%, 35%);
+    min-width: 16px;
+    text-align: center;
+}
+body.dark .detail-note-autocomplete {
+    background: rgba(28, 22, 18, 0.99);
+    border-color: rgba(253, 186, 116, 0.36);
+    box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.55);
+}
+body.dark .detail-note-ac-item {
+    color: hsl(var(--tag-hue), 75%, 75%);
+}
+body.dark .detail-note-ac-item:hover,
+body.dark .detail-note-ac-item.is-active {
+    background: hsla(var(--tag-hue), 55%, 40%, 0.28);
+    color: hsl(var(--tag-hue), 80%, 85%);
+}
+body.dark .detail-note-ac-count {
+    background: hsla(var(--tag-hue), 45%, 35%, 0.45);
+    color: hsl(var(--tag-hue), 75%, 80%);
+}
+
 .detail-note-tags {
     display: flex;
     flex-wrap: wrap;

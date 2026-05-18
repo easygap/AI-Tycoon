@@ -5,6 +5,18 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 188 — 메모 textarea hashtag 자동완성
+- 메모 input 에서 `#` 타이핑 시 기존 태그 중 prefix 매칭되는 6개를 floating list 로 노출
+- ↑/↓ 키로 선택 이동, Enter/Tab 으로 삽입, Esc 로 닫기
+- 마우스 클릭도 지원 (`mousedown preventDefault` 로 textarea blur 차단)
+- 삽입 시 `#prefix` 패턴을 `#fulltag ` (뒤에 공백) 로 치환 → 다음 단어 즉시 이어쓰기
+- caret 위치 기반: `before` + `inserted` + `after` 로 자른 후 다시 합치고 selectionRange 재설정
+- 한글 IME 조합 중에는 list 안 띄움 (조합 끝나면 한 번 갱신)
+- 검색 정확히 같은 태그는 list 에서 제외 (이미 있음)
+- count 배지로 해당 태그가 몇 개 메모에 있는지 표시
+- 다크 모드 hsl 색상 매핑 포함
+- SW 캐시 v23 → v24
+
 ### Iteration 187 — `npm run icons` 가 ICO 도 자동 처리
 - iter 179 의 `install-app-icon.js` (PNG only) + iter 181 의 `extract-png-from-ico.js`
   (ICO only, 일회용) 가 따로 있던 걸 통합

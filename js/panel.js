@@ -2330,14 +2330,17 @@ export function updateDetailPanel() {
             return `
         <div class="detail-section-title mt-3">${esc(noteTitle)}</div>
         <div class="detail-note-card">
-            <textarea
-                id="detail-note-input"
-                class="detail-note-input"
-                rows="2"
-                placeholder="${esc(placeholder)}"
-                aria-label="${esc(ariaLabel)}"
-                maxlength="500"
-                data-privacy>${esc(noteVal)}</textarea>
+            <div class="detail-note-shell">
+                <textarea
+                    id="detail-note-input"
+                    class="detail-note-input"
+                    rows="2"
+                    placeholder="${esc(placeholder)}"
+                    aria-label="${esc(ariaLabel)}"
+                    maxlength="500"
+                    data-privacy>${esc(noteVal)}</textarea>
+                <div id="detail-note-autocomplete" class="detail-note-autocomplete" hidden role="listbox" aria-label="${langN === "en" ? "Hashtag suggestions" : "해시태그 제안"}"></div>
+            </div>
             ${tagChipsHtml}
             <div class="detail-note-foot">
                 <span class="detail-note-hint">${esc(hintPrefix)} · ${esc(String(noteVal.length))}/500</span>
@@ -2439,6 +2442,77 @@ export function updateDetailPanel() {
     };
     if (noteInput) {
         let saveTimer = null;
+        // ── Hashtag autocomplete 상태 ─────────────────────────────────
+        // caret 직전의 `#prefix` 패턴 감지해서 floating list 노출.
+        // 마우스/키보드 모두 지원, Tab/Enter 로 삽입, Esc 로 닫기, ↑↓ 로 선택.
+        const acEl = container.querySelector("#detail-note-autocomplete");
+        let acItems = [];
+        let acIdx = 0;
+        function findHashtagAtCaret() {
+            if (!acEl) return null;
+            const caret = noteInput.selectionStart;
+            // caret 직전 텍스트에서 마지막 `#word` 패턴 찾기 (공백/줄바꿈 직후만)
+            const before = noteInput.value.slice(0, caret);
+            const m = before.match(/(^|[\s\n])#([A-Za-z0-9_가-힣]{0,32})$/);
+            if (!m) return null;
+            return { prefix: m[2].toLowerCase(), start: before.length - m[2].length - 1 /* '#' 위치 */ };
+        }
+        function refreshAutocomplete() {
+            if (!acEl) return;
+            const hit = findHashtagAtCaret();
+            if (!hit) { hideAutocomplete(); return; }
+            const allTags = extractTagsFromNotes()
+                .filter(t => t.tag !== hit.prefix) // 정확히 같은 태그는 굳이 노출 X
+                .filter(t => !hit.prefix || t.tag.includes(hit.prefix))
+                .slice(0, 6);
+            if (allTags.length === 0) { hideAutocomplete(); return; }
+            acItems = allTags;
+            acIdx = 0;
+            const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+            acEl.innerHTML = allTags.map((t, i) => {
+                const hue = tagHueFor(t.tag);
+                return `<button type="button" class="detail-note-ac-item${i === 0 ? " is-active" : ""}" data-tag="${escA(t.tag)}" data-idx="${i}" role="option" style="--tag-hue:${hue}">
+                    <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${escA(t.tag)}</span><span class="detail-note-ac-count">${t.count}</span>
+                </button>`;
+            }).join("");
+            acEl.hidden = false;
+            acEl.querySelectorAll(".detail-note-ac-item").forEach(btn => {
+                btn.addEventListener("mousedown", (e) => e.preventDefault()); // blur 방지
+                btn.addEventListener("click", () => insertTag(btn.dataset.tag));
+            });
+        }
+        function hideAutocomplete() {
+            if (!acEl) return;
+            acEl.hidden = true;
+            acEl.innerHTML = "";
+            acItems = [];
+            acIdx = 0;
+        }
+        function moveAcSelection(delta) {
+            if (!acEl || acItems.length === 0) return;
+            acIdx = (acIdx + delta + acItems.length) % acItems.length;
+            acEl.querySelectorAll(".detail-note-ac-item").forEach((el, i) => {
+                el.classList.toggle("is-active", i === acIdx);
+                if (i === acIdx) el.scrollIntoView({ block: "nearest" });
+            });
+        }
+        function insertTag(tag) {
+            const hit = findHashtagAtCaret();
+            if (!hit) { hideAutocomplete(); return; }
+            const before = noteInput.value.slice(0, hit.start);
+            const after = noteInput.value.slice(noteInput.selectionStart);
+            const inserted = `#${tag} `;
+            noteInput.value = before + inserted + after;
+            const newCaret = before.length + inserted.length;
+            noteInput.setSelectionRange(newCaret, newCaret);
+            noteInput.focus();
+            // 삽입 후 저장 즉시
+            setAgentNote(agent, noteInput.value);
+            if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
+            flashSaved();
+            hideAutocomplete();
+        }
+
         // 한글 IME 조합 중에는 저장 보류 — 자모 단위로 저장되면 의미 없는 텍스트만 박힘
         noteInput.addEventListener("compositionstart", () => { noteInput._imeComposing = true; });
         noteInput.addEventListener("compositionend", () => {
@@ -2447,10 +2521,12 @@ export function updateDetailPanel() {
             setAgentNote(agent, noteInput.value);
             if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
             flashSaved();
+            refreshAutocomplete();
         });
         noteInput.addEventListener("input", () => {
             // 글자 수 강조는 디바운스 무시하고 즉시 — 사용자가 limit 다가오는 걸 바로 봐야 의미가 있음
             applyLimitWarn();
+            if (!noteInput._imeComposing) refreshAutocomplete();
             if (noteInput._imeComposing) return;
             if (saveTimer) clearTimeout(saveTimer);
             saveTimer = setTimeout(() => {
@@ -2459,10 +2535,26 @@ export function updateDetailPanel() {
                 flashSaved();
             }, 220);
         });
+        noteInput.addEventListener("blur", () => {
+            // 클릭 핸들러 가 먼저 잡을 시간 — 다음 tick 까지 대기
+            setTimeout(hideAutocomplete, 120);
+        });
         // Cmd/Ctrl+S 로 즉시 저장. Cmd/Ctrl+Enter 면 저장 + 디테일 패널 닫기 (메모 다 적었을 때 한 번에).
         // 브라우저 기본 '페이지 저장' 동작은 textarea 안에서만 막음.
         noteInput.addEventListener("keydown", (e) => {
             const mod = e.ctrlKey || e.metaKey;
+            // Autocomplete 가 열려 있으면 위/아래/Enter/Tab/Esc 를 먼저 처리
+            if (acEl && !acEl.hidden && acItems.length > 0) {
+                if (e.key === "ArrowDown") { e.preventDefault(); moveAcSelection(+1); return; }
+                if (e.key === "ArrowUp")   { e.preventDefault(); moveAcSelection(-1); return; }
+                if (e.key === "Enter" || e.key === "Tab") {
+                    e.preventDefault();
+                    const sel = acItems[acIdx];
+                    if (sel) insertTag(sel.tag);
+                    return;
+                }
+                if (e.key === "Escape") { e.preventDefault(); hideAutocomplete(); return; }
+            }
             if (mod && (e.key === "s" || e.key === "S")) {
                 e.preventDefault();
                 if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
