@@ -3428,6 +3428,18 @@ body.dark .detail-project-chip:hover {
     max-height: 200px;
 }
 .detail-note-input::placeholder { color: #b8956c; }
+.detail-note-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+    align-items: center;
+}
+.detail-note-tag-chip {
+    /* 사이드바 칩 보다 작게 (디테일 패널 공간 절약) */
+    font-size: 10.5px;
+    padding: 2px 7px;
+}
 .detail-note-foot {
     display: flex;
     align-items: center;
