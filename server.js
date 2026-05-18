@@ -35,7 +35,7 @@ const QUIET = process.env.QUIET === "1" || process.env.LOG_LEVEL === "warn" || p
 
 // ── State ────────────────────────────────────────────────────
 const STARTED_AT = Date.now();
-const VERSION = "1.3.0";
+const VERSION = "1.3.1";
 let lastState = null;
 let clients = new Set();
 let watchDebounceTimer = null;
