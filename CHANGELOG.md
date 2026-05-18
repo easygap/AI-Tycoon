@@ -5,6 +5,16 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 193 — 명령 팔레트에서 hashtag 필터 명령 노출
+- 메모에 실제 박혀있는 hashtag 마다 동적으로 `필터: #frontend (3)` 형식 명령 추가
+- 검색·필터 그룹 안에 들어가 Ctrl+K 한 번이면 발견 가능
+- Tab/Enter 로 즉시 `#tag` 검색 트리거 — 사이드바 칩 클릭과 동일 효과
+- count 함께 표시해서 가장 자주 쓰는 태그가 어떤 건지 한눈에
+- 메모가 추가/삭제될 때마다 자동 갱신 (각 render 마다 `extractTagsFromNotes` 재호출)
+- `extractTagsFromNotes` 를 commandPalette.js 에서 import (panel.js 기존 export 재사용)
+- KO/EN 분기 — `Filter by #frontend` / `필터: #frontend`
+- SW 캐시 v28 → v29
+
 ### Iteration 192 — visibility-summary 의 hashtag 검색은 tag-chip 풍으로
 - 검색어가 `#tag` 형식이면 그동안 `"#frontend"` 처럼 따옴표 + 초록 톤으로만 보여 단조로움
 - 이제 `tagHueFor()` hue 그대로 받아서 사이드바 태그 칩과 같은 색상으로 렌더
