@@ -3960,6 +3960,65 @@ body.dark .storage-usage strong { color: #fef3c7; }
 .settings-tag-row .agent-tag-chip {
     pointer-events: none; /* settings 안에서는 칩 자체를 클릭 액션 안 함 */
 }
+
+/* iter 198 — agent-card 안에 박히는 작은 hashtag 칩 (사이드바 바보다 더 컴팩트) */
+.agent-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 5px;
+    margin-bottom: 2px;
+}
+.agent-card-tag-chip {
+    --tag-hue: 240;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: hsla(var(--tag-hue), 70%, 92%, 0.85);
+    border: 1px solid hsla(var(--tag-hue), 60%, 70%, 0.55);
+    color: hsl(var(--tag-hue), 55%, 32%);
+    max-width: 92px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background-color 120ms var(--ease-out, ease-out);
+}
+.agent-card-tag-chip:hover,
+.agent-card-tag-chip:focus-visible {
+    background: hsla(var(--tag-hue), 75%, 86%, 0.95);
+}
+.agent-card-tag-chip .agent-tag-chip-hash { opacity: 0.55; font-weight: 800; }
+.agent-card-tag-chip .agent-tag-chip-name {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 72px;
+}
+.agent-card-tag-more {
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 999px;
+    background: rgba(24, 27, 31, 0.06);
+    color: #6b6760;
+    cursor: default;
+}
+body.dark .agent-card-tag-chip {
+    background: hsla(var(--tag-hue), 45%, 32%, 0.35);
+    border-color: hsla(var(--tag-hue), 55%, 55%, 0.5);
+    color: hsl(var(--tag-hue), 80%, 80%);
+}
+body.dark .agent-card-tag-chip:hover,
+body.dark .agent-card-tag-chip:focus-visible {
+    background: hsla(var(--tag-hue), 55%, 42%, 0.55);
+}
+body.dark .agent-card-tag-more {
+    background: rgba(255, 255, 255, 0.08);
+    color: #a89c8e;
+}
 .settings-tag-actions {
     margin-left: auto;
     display: flex;

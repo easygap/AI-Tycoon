@@ -5,6 +5,16 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 198 — 에이전트 카드 안에 hashtag 칩 노출
+- 카드의 task 라인 아래에 메모 hashtag 를 최대 2개까지 컴팩트 칩 (`.agent-card-tag-chip`)
+- 2개 초과면 `+N` overflow 표시, title 에 나머지 모두
+- 클릭 → 사이드바 검색에 `#tag` 박혀 즉시 필터 (다른 칩들과 동일 흐름)
+- `mousedown stopPropagation` + `click stopPropagation` 으로 카드 selectAgent / Shift+Click pin 토글 안 건드림
+- `extractTagsFromText(noteText)` 신규 export — 단일 메모 → unique 태그 배열 (순서 보존)
+- 9.5px 미니 사이즈로 카드 시각 밀도 보호하면서 hashtag 발견성 끌어올림
+- 다크 모드 hsl 매핑 포함
+- SW 캐시 v32 → v33
+
 ### Iteration 197 — 태그 관리자: native prompt/confirm → 인라인 UI
 - iter 196 의 `window.prompt`/`window.confirm` 은 OS 기본 다이얼로그라 디자인 톤 깨짐
 - 행 안에서 액션 버튼 영역 자체를 인라인 UI 로 swap:
