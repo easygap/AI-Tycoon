@@ -5,6 +5,27 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.0] — 2026-05-18
+
+> hashtag 시스템을 완전히 끝까지 밀어붙인 minor.
+> v1.3.0 의 사이드바 칩 + 디테일 패널 칩 + 자동완성에 더해, 이번엔 메모 안 어디서나 보이고,
+> 어디서나 클릭으로 필터되고, 한 곳에서 일괄 관리 가능.
+>
+> **새 기능 (iter 196-198 + v1.3.1 누적분)**
+> - 메모 태그 관리자 (settings → 메모 태그) — 인라인 rename / delete
+> - 에이전트 카드 안 hashtag 칩 (최대 2개 + `+N`)
+> - 메모 textarea hashtag 자동완성 (↑↓/Enter/Tab)
+> - 명령 팔레트 hashtag 필터 명령 (`필터: #frontend (3)`)
+> - visibility-summary 의 `#tag` 칩 컬러 매칭
+> - hashtag 0건 empty state 친절한 안내
+> - 단축키 모달 '메모' 그룹
+> - 100+ 메모 환경 TTL 캐시 최적화
+> - `npm run icons` PNG/ICO 자동 분기
+> - 메모 입력 중 디테일 패널 re-render skip (autocomplete/IME 핫픽스)
+> - native prompt/confirm → 디자인 톤 인라인 UI (rename input + 저장/취소, delete 예/아니오)
+
 ### Iteration 198 — 에이전트 카드 안에 hashtag 칩 노출
 - 카드의 task 라인 아래에 메모 hashtag 를 최대 2개까지 컴팩트 칩 (`.agent-card-tag-chip`)
 - 2개 초과면 `+N` overflow 표시, title 에 나머지 모두
