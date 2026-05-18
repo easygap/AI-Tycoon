@@ -5,6 +5,16 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 184 — 디테일 패널 메모에 해당 에이전트의 hashtag 칩
+- 메모 textarea 바로 아래 이 에이전트의 메모 안에 들어 있는 hashtag 만 칩으로 노출
+- 칩 클릭 시 사이드바 검색에 `#tag` 박아 같은 태그의 다른 에이전트로 점프
+- iter 183 의 stable color (`tagHueFor`) 그대로 재사용 — 사이드바/디테일 양쪽 색 일관
+- 디테일 칩은 사이드바보다 살짝 작게 (font 10.5px, padding 2/7) — 공간 절약
+- 중복 태그 제거 (Set), 정규식은 사이드바 bar 와 동일 (`/#([A-Za-z0-9_가-힣]{2,32})/g`)
+- 메모에 태그 없으면 칩 영역 자체를 렌더링 안 함 (DOM 깔끔)
+- 다국어: aria-label "이 메모의 태그 / Hashtags in this note"
+- SW 캐시 v22 → v23
+
 ### Iteration 183 — hashtag 칩에 태그별 stable 컬러
 - 모든 태그 칩이 같은 indigo 였던 시각적 단조로움 해소
 - `tagHueFor(tag)` — 문자열 hash → 0~359 hue, 같은 태그는 항상 같은 색

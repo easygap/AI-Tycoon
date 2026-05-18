@@ -2308,6 +2308,25 @@ export function updateDetailPanel() {
             const saveHint = langN === "en"
                 ? `<kbd>${modKey}S</kbd> save · <kbd>${modKey}⏎</kbd> save+close`
                 : `<kbd>${modKey}S</kbd> 저장 · <kbd>${modKey}⏎</kbd> 저장+닫기`;
+            // 이 에이전트 메모에 들어 있는 hashtag 만 추출 (사이드바 bar 와 동일 정규식).
+            // 클릭 시 사이드바 검색에 해당 #tag 박아 같은 태그의 다른 에이전트들로 점프 가능.
+            const ownTags = [];
+            const TAG_RE = /#([A-Za-z0-9_가-힣]{2,32})/g;
+            const seenTag = new Set();
+            let m;
+            while ((m = TAG_RE.exec(noteVal)) !== null) {
+                const t = m[1].toLowerCase();
+                if (!seenTag.has(t)) { seenTag.add(t); ownTags.push(t); }
+            }
+            const tagChipsHtml = ownTags.length === 0 ? "" : `
+                <div class="detail-note-tags" aria-label="${langN === "en" ? "Hashtags in this note" : "이 메모의 태그"}">
+                    ${ownTags.map(t => {
+                        const hue = tagHueFor(t);
+                        return `<button type="button" class="agent-tag-chip detail-note-tag-chip" data-detail-tag="${esc(t)}" style="--tag-hue:${hue}" title="#${esc(t)}">
+                            <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${esc(t)}</span>
+                        </button>`;
+                    }).join("")}
+                </div>`;
             return `
         <div class="detail-section-title mt-3">${esc(noteTitle)}</div>
         <div class="detail-note-card">
@@ -2319,6 +2338,7 @@ export function updateDetailPanel() {
                 aria-label="${esc(ariaLabel)}"
                 maxlength="500"
                 data-privacy>${esc(noteVal)}</textarea>
+            ${tagChipsHtml}
             <div class="detail-note-foot">
                 <span class="detail-note-hint">${esc(hintPrefix)} · ${esc(String(noteVal.length))}/500</span>
                 <span class="detail-note-keys">${saveHint}</span>
@@ -2346,6 +2366,24 @@ export function updateDetailPanel() {
             const dir = btn.dataset.detailNav === "prev" ? -1 : +1;
             if (typeof window.cycleAgentFocus === "function") {
                 window.cycleAgentFocus(dir);
+            }
+        });
+    });
+
+    // 디테일 패널의 hashtag 칩 — 클릭 시 사이드바 검색에 #tag 박아 동일 태그 에이전트들 목록화
+    container.querySelectorAll("[data-detail-tag]").forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            const tag = btn.dataset.detailTag || "";
+            if (!tag) return;
+            const query = `#${tag}`;
+            const input = document.getElementById("agent-search");
+            if (input) input.value = query;
+            if (typeof window.setAgentSearch === "function") {
+                window.setAgentSearch(query);
+            } else {
+                S.agentSearchQuery = query;
+                updatePanel();
             }
         });
     });
