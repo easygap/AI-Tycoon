@@ -3936,6 +3936,93 @@ body.dark .storage-usage {
 }
 body.dark .storage-usage strong { color: #fef3c7; }
 
+/* Iteration 196 — 메모 태그 관리자 (settings → 메모 태그) */
+.settings-tags-manager {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+}
+.settings-tags-empty {
+    color: #8a6b4c;
+    font-size: 11px;
+    line-height: 1.5;
+}
+.settings-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(217, 170, 120, 0.18);
+    border-radius: 8px;
+}
+.settings-tag-row .agent-tag-chip {
+    pointer-events: none; /* settings 안에서는 칩 자체를 클릭 액션 안 함 */
+}
+.settings-tag-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+}
+.settings-tag-rename,
+.settings-tag-delete {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 140ms var(--ease-out, ease-out),
+                border-color 140ms var(--ease-out, ease-out),
+                color 140ms var(--ease-out, ease-out);
+}
+.settings-tag-rename {
+    background: rgba(99, 102, 241, 0.08);
+    border-color: rgba(99, 102, 241, 0.22);
+    color: #4f46e5;
+}
+.settings-tag-rename:hover,
+.settings-tag-rename:focus-visible {
+    background: rgba(99, 102, 241, 0.18);
+    border-color: rgba(99, 102, 241, 0.42);
+}
+.settings-tag-delete {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.22);
+    color: #b91c1c;
+}
+.settings-tag-delete:hover,
+.settings-tag-delete:focus-visible {
+    background: rgba(220, 38, 38, 0.18);
+    border-color: rgba(220, 38, 38, 0.42);
+}
+body.dark .settings-tag-row {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+body.dark .settings-tag-rename {
+    background: rgba(165, 180, 252, 0.10);
+    border-color: rgba(165, 180, 252, 0.26);
+    color: #c7d2fe;
+}
+body.dark .settings-tag-rename:hover,
+body.dark .settings-tag-rename:focus-visible {
+    background: rgba(165, 180, 252, 0.22);
+    border-color: rgba(165, 180, 252, 0.46);
+}
+body.dark .settings-tag-delete {
+    background: rgba(248, 113, 113, 0.10);
+    border-color: rgba(248, 113, 113, 0.26);
+    color: #fca5a5;
+}
+body.dark .settings-tag-delete:hover,
+body.dark .settings-tag-delete:focus-visible {
+    background: rgba(248, 113, 113, 0.22);
+    border-color: rgba(248, 113, 113, 0.46);
+}
+body.dark .settings-tags-empty { color: #a89c8e; }
+
 /* Iteration 66 — "What's new" section inside the Settings modal */
 .whatsnew-card {
     background: linear-gradient(135deg, rgba(252, 211, 77, 0.12), rgba(255, 222, 180, 0.42));

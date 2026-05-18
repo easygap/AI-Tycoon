@@ -816,6 +816,13 @@
                 </section>
 
                 <section class="settings-section">
+                    <h3 class="settings-section-title" data-i18n="settings.tagsTitle">메모 태그</h3>
+                    <div class="settings-row settings-row-vertical">
+                        <p class="settings-help" data-i18n="settings.tagsHelp">메모에 적은 #해시태그를 한 번에 이름 바꾸거나 모든 메모에서 지울 수 있어요.</p>
+                        <div id="settings-tags-manager" class="settings-tags-manager" aria-live="polite"></div>
+                    </div>
+                </section>
+                <section class="settings-section">
                     <h3 class="settings-section-title" data-i18n="settings.data">데이터</h3>
                     <div class="settings-row settings-row-vertical">
                         <div class="settings-button-pair">
@@ -1287,8 +1294,140 @@
         renderWhatsNew();
         // 브라우저 스토리지 사용량 (ai-tycoon-* 키)
         renderStorageUsage();
+        // 메모 태그 관리자 (rename/delete) 패널
+        renderTagsManager();
 
         openModalOverlay(overlay);
+    }
+
+    // ── 메모 태그 관리자 ─────────────────────────────────────────────
+    // 모든 메모를 스캔해 #태그 목록을 만들고, rename/delete 액션을 노출.
+    // localStorage 의 `ai-tycoon-agent-notes` 를 직접 다룸.
+    function renderTagsManager() {
+        const container = document.getElementById("settings-tags-manager");
+        if (!container) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const t = (k) => window.aiTycoonI18n?.t?.(k) || k;
+        const NOTE_KEY = "ai-tycoon-agent-notes";
+        const TAG_RE = /#([A-Za-z0-9_가-힣]{2,32})/g;
+        let notes;
+        try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+        catch { notes = {}; }
+        // 태그 별 카운트
+        const counts = new Map();
+        for (const text of Object.values(notes)) {
+            if (typeof text !== "string") continue;
+            const seen = new Set();
+            let m; TAG_RE.lastIndex = 0;
+            while ((m = TAG_RE.exec(text)) !== null) {
+                const tag = m[1].toLowerCase();
+                if (seen.has(tag)) continue;
+                seen.add(tag);
+                counts.set(tag, (counts.get(tag) || 0) + 1);
+            }
+        }
+        const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        if (tags.length === 0) {
+            container.innerHTML = `<p class="settings-help settings-tags-empty">${t("settings.tagsEmpty")}</p>`;
+            return;
+        }
+        // tag 별 stable hue — panel.js 의 tagHueFor 와 동일 알고리즘 (small 중복이라 inline)
+        const hueFor = (s) => {
+            let h = 0;
+            for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+            return Math.abs(h) % 360;
+        };
+        const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+        container.innerHTML = tags.map(([tag, count]) => {
+            const hue = hueFor(tag);
+            return `<div class="settings-tag-row" style="--tag-hue:${hue}">
+                <span class="agent-tag-chip" style="--tag-hue:${hue}" aria-hidden="true">
+                    <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${escA(tag)}</span><span class="agent-tag-chip-count">${count}</span>
+                </span>
+                <div class="settings-tag-actions">
+                    <button type="button" class="settings-tag-rename" data-tag-rename="${escA(tag)}">${t("settings.tagsRename")}</button>
+                    <button type="button" class="settings-tag-delete" data-tag-delete="${escA(tag)}">${t("settings.tagsDelete")}</button>
+                </div>
+            </div>`;
+        }).join("");
+        // 이벤트 위임
+        container.querySelectorAll("[data-tag-rename]").forEach(btn => {
+            btn.addEventListener("click", () => renameTagGlobally(btn.dataset.tagRename));
+        });
+        container.querySelectorAll("[data-tag-delete]").forEach(btn => {
+            btn.addEventListener("click", () => deleteTagGlobally(btn.dataset.tagDelete));
+        });
+    }
+    function renameTagGlobally(oldTag) {
+        const t = (k) => window.aiTycoonI18n?.t?.(k) || k;
+        const fresh = window.prompt(t("settings.tagsRenamePrompt"), oldTag);
+        if (fresh === null) return; // cancel
+        const newTag = String(fresh).trim().replace(/^#+/, "").toLowerCase();
+        if (!/^[A-Za-z0-9_가-힣]{2,32}$/.test(newTag)) {
+            window.aiTycoonToasts?.show?.("warning",
+                window.aiTycoonI18n?.getLang?.() === "en" ? "Invalid tag" : "사용할 수 없는 태그",
+                window.aiTycoonI18n?.getLang?.() === "en"
+                    ? "2-32 chars; letters, numbers, _, Korean only."
+                    : "2~32자, 한/영/숫자/_ 만 가능합니다.");
+            return;
+        }
+        if (newTag === oldTag) return;
+        const NOTE_KEY = "ai-tycoon-agent-notes";
+        let notes;
+        try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+        catch { notes = {}; }
+        // 정규식 escape — # 뒤에 정확히 oldTag 만 매칭 (단어 경계로 한/영/숫자/_ 끝)
+        const escOld = oldTag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const re = new RegExp(`#${escOld}(?![A-Za-z0-9_가-힣])`, "gi");
+        let changed = 0;
+        for (const key of Object.keys(notes)) {
+            const before = notes[key];
+            const after = before.replace(re, `#${newTag}`);
+            if (before !== after) { notes[key] = after; changed++; }
+        }
+        try { localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch { /* quota */ }
+        window.aiTycoonToasts?.show?.("info",
+            t("settings.tagsRenameDone"),
+            `#${oldTag} → #${newTag} · ${changed}`);
+        // 사이드바·디테일·태그바·empty state 모두 즉시 갱신 (캐시 invalidate 효과)
+        try {
+            // panel.js 에 invalidate 직접 export 가 없으니 1초 자동 expire 에 의존하되,
+            // updatePanel/updateDetailPanel 한 번 강제 호출
+            window.updatePanel?.();
+            window.updateDetailPanel?.();
+        } catch { /* ignore */ }
+        renderTagsManager(); // 자기 자신도 다시 그림
+    }
+    function deleteTagGlobally(tag) {
+        const t = (k) => window.aiTycoonI18n?.t?.(k) || k;
+        const ok = window.confirm(`${t("settings.tagsDeleteConfirm")}\n\n#${tag}`);
+        if (!ok) return;
+        const NOTE_KEY = "ai-tycoon-agent-notes";
+        let notes;
+        try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+        catch { notes = {}; }
+        const escT = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        // `#tag` 만 지우고 앞뒤 공백은 정리 (` #tag ` → ` `)
+        const re = new RegExp(`\\s?#${escT}(?![A-Za-z0-9_가-힣])\\s?`, "gi");
+        let changed = 0;
+        for (const key of Object.keys(notes)) {
+            const before = notes[key];
+            const after = before.replace(re, " ").replace(/[ \t]{2,}/g, " ").trim();
+            if (before !== after) {
+                if (after) notes[key] = after;
+                else delete notes[key]; // 본문이 다 비면 키 자체 삭제
+                changed++;
+            }
+        }
+        try { localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch { /* quota */ }
+        window.aiTycoonToasts?.show?.("info",
+            t("settings.tagsDeleteDone"),
+            `#${tag} · ${changed}`);
+        try {
+            window.updatePanel?.();
+            window.updateDetailPanel?.();
+        } catch { /* ignore */ }
+        renderTagsManager();
     }
     function closeSettings() { closeModalOverlay(document.getElementById("settings-overlay")); }
     function settingsToggleDark(on) {
