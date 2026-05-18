@@ -5,7 +5,14 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 187 — `npm run icons` 가 ICO 도 자동 처리
+- iter 179 의 `install-app-icon.js` (PNG only) + iter 181 의 `extract-png-from-ico.js`
+  (ICO only, 일회용) 가 따로 있던 걸 통합
+- 단일 `scripts/install-app-icon.js` 가 확장자 (.png / .ico) 보고 알아서 분기
+- 입력 우선순위: `--src=<path>` > `icons/source.png` > `icons/icon.ico` > `icons/source.ico`
+- ICO 멀티사이즈는 가장 큰 엔트리 자동 선택 (size4 기준)
+- 일회용 `extract-png-from-ico.js` 삭제 → 스크립트 트리 깔끔 (4개)
+- 사용자는 PNG 든 ICO 든 떨궈 두고 `npm run icons` 한 번이면 끝
 
 ## [1.3.0] — 2026-05-18
 
