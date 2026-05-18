@@ -5,6 +5,15 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 194 — extractTagsFromNotes 1초 TTL 캐시
+- 한 render cycle 안에서 사이드바 바·디테일 패널·empty state·명령 팔레트가 동시 호출
+  → 메모 100개 × 5번 호출 = 500회 정규식 실행 부담
+- 1초 TTL 캐시 + `setAgentNote` 시 즉시 invalidate 로 freshness 보존
+- 캐시 hit 시 즉시 같은 `[{tag, count}]` 배열 반환 — 정렬도 한 번만
+- 실측 영향은 작지만 100+ 메모 환경에서 사이드 패널 jank 방지
+- `invalidateTagCache()` 내부 함수 — 외부 노출은 안 함 (panel 내부에서만 트리거)
+- SW 캐시 v29 → v30
+
 ### Iteration 193 — 명령 팔레트에서 hashtag 필터 명령 노출
 - 메모에 실제 박혀있는 hashtag 마다 동적으로 `필터: #frontend (3)` 형식 명령 추가
 - 검색·필터 그룹 안에 들어가 Ctrl+K 한 번이면 발견 가능

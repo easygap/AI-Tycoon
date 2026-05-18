@@ -2748,7 +2748,8 @@ function setAgentNote(agent, value) {
     if (trimmed) all[key] = trimmed;
     else delete all[key];
     try { localStorage.setItem(NOTE_KEY, JSON.stringify(all)); } catch { /* quota */ }
-    // 메모 저장 시 hashtag 바도 즉시 갱신 (다음 WS tick 대기 안 함)
+    // 캐시 무효화 후 hashtag 바 갱신 — 새로 박은 #tag 가 즉시 칩으로 등장하도록
+    invalidateTagCache();
     try { renderAgentTagsBar(); } catch { /* DOM 없을 수 있음 */ }
 }
 
@@ -2757,7 +2758,20 @@ function setAgentNote(agent, value) {
 // 사이드바 상단에 클릭형 칩으로 노출. 클릭 시 검색창에 #tag 박아 필터.
 // 1글자 태그·중복은 제거하고 한/영/숫자/_ 만 허용.
 const TAG_REGEX = /#([A-Za-z0-9_가-힣]{2,32})/g;
+// extractTagsFromNotes 캐시 — 한 render cycle 안에서 여러 곳 (사이드바/팔레트/디테일/empty state)
+// 이 동시 호출하는데 매번 풀 스캔하면 메모 100개 + 호출 5번 = 500회 정규식 실행이 됨.
+// setAgentNote 시 invalidate, 또는 1초 TTL 자동 expire.
+let _tagCache = null;
+let _tagCacheExpire = 0;
+function invalidateTagCache() {
+    _tagCache = null;
+    _tagCacheExpire = 0;
+}
 export function extractTagsFromNotes() {
+    const now = Date.now();
+    if (_tagCache && now < _tagCacheExpire) {
+        return _tagCache;
+    }
     const all = loadAllNotes();
     const counts = new Map();
     for (const text of Object.values(all)) {
@@ -2773,9 +2787,11 @@ export function extractTagsFromNotes() {
         }
     }
     // count 내림차순, 동일 카운트면 알파벳순
-    return [...counts.entries()]
+    _tagCache = [...counts.entries()]
         .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
         .map(([tag, count]) => ({ tag, count }));
+    _tagCacheExpire = now + 1000; // 1초 TTL — render cycle 약 500ms 라 한 사이클 안전 커버
+    return _tagCache;
 }
 // 태그별 stable 색상 — 같은 태그는 항상 같은 hue.
 // hsl() 만 쓰고 lightness 는 60% 부근으로 잡아 다크/라이트 모두 가독성 유지.
