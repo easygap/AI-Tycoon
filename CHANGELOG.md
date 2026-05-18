@@ -5,6 +5,19 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 202 — Playwright e2e 검증 + orphan tag empty state 분기
+- Playwright MCP 로 실제 브라우저에서 hashtag 시스템 전체 흐름 검증
+  - 메모 저장 → tags-bar 칩 등장 → 카드 칩 등장 → 클릭 → visibility-summary 칩 컬러 매칭 모두 OK
+- 검증 중 발견한 진짜 UX 갭: 에이전트가 종료된 뒤에도 그 노트는 `localStorage` 에 남아
+  사이드바 칩에는 보이지만 클릭하면 0건 → 기존 empty state 가 *"메모에 #tag 적으세요"* 라고
+  안내해서 "이미 적었는데?" 혼란
+- **orphan tag 분기 추가** — `extractTagsFromNotes()` 가 해당 태그를 알고 있지만 매칭된 카드가
+  0건이면:
+  - 제목: `'#tag' 태그가 적힌 에이전트가 오프라인입니다 / #tag agent is offline`
+  - 본문: `#tag 이(가) 적힌 에이전트가 지금은 켜져 있지 않아요. 다시 실행되면 태그도 돌아옵니다.`
+- 일반 hashtag 검색 (태그 자체가 어디에도 없음) 분기와 별개 메시지 — UX 명확성 향상
+- SW 캐시 v34 → v35
+
 ### Iteration 201 — CONTRIBUTING.md hashtag 시스템 / 새 스크립트 문서화
 - v1.4.0 까지 추가된 사항을 contrib 가이드에 반영
 - 파일 카운트 `35+ → 36+` (install-app-icon.js 추가)
