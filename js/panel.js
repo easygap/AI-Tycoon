@@ -2051,6 +2051,17 @@ export function updateDetailPanel() {
         // 일부 브라우저는 스크롤 위치를 부모에서 유지하기도 해서 명시적으로 0 처리)
         container.scrollTop = 0;
         container._lastRenderedPid = agent.pid;
+    } else {
+        // 같은 에이전트 재렌더 — 사용자가 메모 textarea 에 포커스 중이거나 hashtag
+        // autocomplete 가 열려 있으면 re-render skip. WS tick 마다 innerHTML 갈아엎으면
+        // textarea blur + autocomplete 닫힘 + 입력 흐름 깨짐.
+        // 디테일 패널의 다른 영역 (메모리 그래프, 상태 등) 은 다음 tick 에 자연스럽게 갱신됨.
+        const active = document.activeElement;
+        const isEditingNote = active && active.id === "detail-note-input";
+        const acOpen = container.querySelector("#detail-note-autocomplete:not([hidden])");
+        if (isEditingNote || acOpen) {
+            return; // skip — 사용자 흐름 보존이 우선
+        }
     }
 
     container.classList.remove("hidden");
