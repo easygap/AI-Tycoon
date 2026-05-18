@@ -5,6 +5,21 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.3.1] — 2026-05-18
+
+> v1.3.0 직후 hashtag 시스템 + 메모 UX 마무리 폴리시 8개를 모아 patch 컷.
+>
+> - **메모 hashtag 자동완성** (iter 188) — `#` 타이핑 시 기존 태그 floating list, ↑↓/Enter/Tab
+> - **명령 팔레트 hashtag 필터 명령** (iter 193) — `필터: #frontend (3)` 형식 동적 추가
+> - **메모 입력 중 디테일 패널 re-render skip** (iter 190) — autocomplete/IME 깨짐 핫픽스
+> - **hashtag 0건 empty state** (iter 191) — 일반 검색과 다른 친절한 안내
+> - **visibility-summary 의 #tag 칩** (iter 192) — 태그 컬러 그대로 적용
+> - **단축키 모달 '메모' 그룹** (iter 189) — Cmd+S / Cmd+Enter / # 자동완성 명시
+> - **`npm run icons` PNG·ICO 자동 분기** (iter 187) — 일회용 스크립트 통합
+> - **태그 추출 1초 TTL 캐시** (iter 194) — 100+ 메모 환경 jank 방지
+
 ### Iteration 194 — extractTagsFromNotes 1초 TTL 캐시
 - 한 render cycle 안에서 사이드바 바·디테일 패널·empty state·명령 팔레트가 동시 호출
   → 메모 100개 × 5번 호출 = 500회 정규식 실행 부담
