@@ -5,7 +5,20 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 196 — 설정에 '메모 태그' 관리자 추가
+- 모든 메모를 스캔해 #태그 목록 + 카운트 칩으로 노출 (사이드바 칩과 동일 컬러)
+- **이름 변경** — `prompt()` 로 새 이름 입력, 정규식 검증 (2~32자, 한/영/숫자/_)
+  → `#oldtag` → `#newtag` 로 모든 메모 안에서 일괄 치환
+  → 단어 경계 (`(?![A-Za-z0-9_가-힣])`) 로 `#frontend` 가 `#frontend-ui` 까지 잘못 잡지 않게
+- **삭제** — `confirm()` 후 `#tag` 만 제거, 앞뒤 공백 정리, 메모가 다 비면 키 자체 삭제
+- 변경 후 토스트로 "X 개 메모 갱신됨" 안내
+- `updatePanel` / `updateDetailPanel` 즉시 호출 → 사이드바 바·디테일 칩 즉시 반영
+- KO/EN 분기: `메모 태그 / Note tags`, `이름 변경 / Rename`, `삭제 / Delete`
+- 다크 모드 — indigo (rename) / red (delete) 톤 매핑
+- 태그 0개 environment 에서는 친절한 안내 메시지로 빈 상태
+- SW 캐시 v30 → v31
+
+## [1.3.1] — 2026-05-18
 
 ## [1.3.1] — 2026-05-18
 
