@@ -2,13 +2,14 @@
 // Caches the static shell so the dashboard still opens offline,
 // then falls back to network for everything else.
 
-const VERSION = "ai-tycoon-shell-v18";
+const VERSION = "ai-tycoon-shell-v19";
 const SHELL_ASSETS = [
     "/",
     "/index.html",
     "/style.css",
     "/css/tailwind.generated.css",
     "/manifest.webmanifest",
+    "/icons/icon.png",
     "/icons/icon.svg",
     "/icons/icon-maskable.svg",
     "/js/main.js",

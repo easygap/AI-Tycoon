@@ -38,7 +38,8 @@
     "start": "node server.js",
     "dev": "npm run build:css && node server.js",
     "lint": "node scripts/lint.js",
-    "test": "node scripts/smoke-test.js"
+    "test": "node scripts/smoke-test.js",
+    "icons": "node scripts/install-app-icon.js"
   },
   "dependencies": {
     "ws": "^8.16.0"
