@@ -1710,21 +1710,36 @@ export function updatePanel() {
         const resetAction = hasSearch ? "clearAgentSearch()" : hasActionFilter ? "setActionFilter('all')" : "setFilter('all')";
         const lang = window.aiTycoonI18n?.getLang?.() || "ko";
         const isEn = lang === "en";
+        // 검색어가 #tag 형식이면 hashtag 전용 친절한 메시지 분기
+        const rawQ = String(S.agentSearchQuery || "").trim();
+        const isHashtagQuery = rawQ.startsWith("#") && rawQ.length > 1;
+        const tagName = isHashtagQuery ? rawQ.slice(1) : "";
         const resetLabel = hasSearch
             ? (isEn ? "Clear search" : "검색 지우기")
             : hasActionFilter
                 ? (isEn ? "Reset action filter" : "행동 필터 해제")
                 : (isEn ? "Show all" : "전체 보기");
-        const titleStr = hasSearch
-            ? (isEn ? "No results" : "검색 결과가 없습니다")
-            : (isEn ? "No agents match the filter" : "필터에 맞는 에이전트가 없습니다");
-        const bodyStr = hasSearch
-            ? (isEn ? "Double-check the name, project, or work text." : "직원 이름, 프로젝트, 작업 문구를 다시 확인해 주세요.")
-            : hasActionFilter
-                ? (isEn ? "Pick a different action filter or go back to all." : "다른 다음 행동을 선택하거나 전체로 돌아갈 수 있습니다.")
-                : (isEn ? "Switch the filter back to All to see everyone." : "필터를 전체로 바꾸면 모든 직원을 볼 수 있습니다.");
-        list.innerHTML = `<div class="agent-empty-state">
-            <iconify-icon icon="${hasSearch ? "solar:magnifer-linear" : hasActionFilter ? "solar:bolt-circle-linear" : "solar:filter-linear"}" aria-hidden="true"></iconify-icon>
+        const titleStr = isHashtagQuery
+            ? (isEn ? `No agents tagged #${tagName}` : `'#${tagName}' 태그가 붙은 에이전트가 없습니다`)
+            : hasSearch
+                ? (isEn ? "No results" : "검색 결과가 없습니다")
+                : (isEn ? "No agents match the filter" : "필터에 맞는 에이전트가 없습니다");
+        const bodyStr = isHashtagQuery
+            ? (isEn
+                ? `Open an agent's detail panel and add #${tagName} to its note to start filtering.`
+                : `에이전트 디테일 패널을 열어서 메모에 #${tagName} 을(를) 적으면 필터 대상이 됩니다.`)
+            : hasSearch
+                ? (isEn ? "Double-check the name, project, or work text." : "직원 이름, 프로젝트, 작업 문구를 다시 확인해 주세요.")
+                : hasActionFilter
+                    ? (isEn ? "Pick a different action filter or go back to all." : "다른 다음 행동을 선택하거나 전체로 돌아갈 수 있습니다.")
+                    : (isEn ? "Switch the filter back to All to see everyone." : "필터를 전체로 바꾸면 모든 직원을 볼 수 있습니다.");
+        const iconName = isHashtagQuery
+            ? "solar:hashtag-linear"
+            : hasSearch ? "solar:magnifer-linear"
+            : hasActionFilter ? "solar:bolt-circle-linear"
+            : "solar:filter-linear";
+        list.innerHTML = `<div class="agent-empty-state${isHashtagQuery ? " agent-empty-hashtag" : ""}">
+            <iconify-icon icon="${iconName}" aria-hidden="true"></iconify-icon>
             <strong>${esc(titleStr)}</strong>
             <span>${esc(bodyStr)}</span>
             <button type="button" onclick="${resetAction}">${esc(resetLabel)}</button>

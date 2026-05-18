@@ -5,6 +5,15 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 191 — hashtag 0건 empty state 친절한 안내
+- `#tag` 필터 결과가 0건이면 일반 "검색 결과 없음" 보다 더 구체적인 메시지로 분기
+- 제목: `'#frontend' 태그가 붙은 에이전트가 없습니다 / No agents tagged #frontend`
+- 본문: `에이전트 디테일 패널을 열어서 메모에 #frontend 을(를) 적으면 필터 대상이 됩니다`
+  → 새 사용자가 hashtag 시스템 어떻게 키우는지 자연스럽게 배움
+- 아이콘 `solar:hashtag-linear`, indigo 톤 배경 (`#6366f1`) — 사이드바 칩 컬러와 일관
+- `.agent-empty-hashtag` 모디파이어 클래스 + 다크 모드 대응
+- SW 캐시 v26 → v27
+
 ### Iteration 190 — 메모 입력 중에는 디테일 패널 re-render skip
 - WS tick (~500ms) 마다 `updateDetailPanel` 이 innerHTML 갈아엎어서 textarea 포커스 / hashtag
   autocomplete / IME 조합 상태가 매번 깨지던 잠재 버그 (iter 188 의 autocomplete 가 더
