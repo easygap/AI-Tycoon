@@ -246,9 +246,20 @@ function updateSearchControls(filteredAgents) {
     const labels = lgV === "en"
         ? { all: "Show all", count: "people", view: "view", pinned: "Pinned", working: "Working", review: "Review", recent: "Recent" }
         : { all: "전체 보기", count: "명", view: "보기", pinned: "고정", working: "작업", review: "검토", recent: "최근" };
-    const searchLabel = normalizedQuery
-        ? `<span class="visibility-query">"${esc(query)}"</span>`
-        : `<span>${esc(labels.all)}</span>`;
+    // 검색어가 `#tag` 형식이면 quoted 텍스트 대신 tag-chip 풍으로 렌더 — 사이드바 태그 바와 일관.
+    let searchLabel;
+    if (normalizedQuery) {
+        const rawQ = String(query || "").trim();
+        if (rawQ.startsWith("#") && rawQ.length > 1) {
+            const tag = rawQ.slice(1).toLowerCase();
+            const hue = tagHueFor(tag);
+            searchLabel = `<span class="visibility-query visibility-query-tag" style="--tag-hue:${hue}"><span class="visibility-query-hash">#</span>${esc(tag)}</span>`;
+        } else {
+            searchLabel = `<span class="visibility-query">"${esc(query)}"</span>`;
+        }
+    } else {
+        searchLabel = `<span>${esc(labels.all)}</span>`;
+    }
     const countSuffix = lgV === "en" ? ` ${labels.count}` : labels.count; // "명" 은 붙여 쓰고 "people" 은 띄움
 
     // 핀/검토/최근 같은 카운트 칩을 클릭 가능한 액션 필터 트리거로
