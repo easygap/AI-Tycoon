@@ -2610,6 +2610,16 @@ export function extractTagsFromNotes() {
         .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
         .map(([tag, count]) => ({ tag, count }));
 }
+// 태그별 stable 색상 — 같은 태그는 항상 같은 hue.
+// hsl() 만 쓰고 lightness 는 60% 부근으로 잡아 다크/라이트 모두 가독성 유지.
+function tagHueFor(tag) {
+    const s = String(tag || "");
+    let hash = 0;
+    for (let i = 0; i < s.length; i++) {
+        hash = ((hash << 5) - hash + s.charCodeAt(i)) | 0;
+    }
+    return Math.abs(hash) % 360;
+}
 function renderAgentTagsBar() {
     const bar = document.getElementById("agent-tags-bar");
     if (!bar) return;
@@ -2626,7 +2636,10 @@ function renderAgentTagsBar() {
     const activeTag = currentQ.startsWith("#") ? currentQ.slice(1) : "";
     const chips = tags.map(({ tag, count }) => {
         const isActive = activeTag === tag;
-        return `<button type="button" class="agent-tag-chip${isActive ? " is-active" : ""}" data-tag="${esc(tag)}" title="#${esc(tag)} (${count})">
+        const hue = tagHueFor(tag);
+        // CSS custom property 로 색상 주입 → 활성/비활성/hover 상태에서 각자 다르게 쓰임
+        const styleVar = `--tag-hue:${hue}`;
+        return `<button type="button" class="agent-tag-chip${isActive ? " is-active" : ""}" data-tag="${esc(tag)}" style="${styleVar}" title="#${esc(tag)} (${count})">
             <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${esc(tag)}</span><span class="agent-tag-chip-count">${count}</span>
         </button>`;
     }).join("");

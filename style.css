@@ -3123,6 +3123,8 @@ body.dark .activity-log-mini {
     margin-right: 2px;
 }
 .agent-tag-chip {
+    /* --tag-hue 는 JS 에서 hashtag 별 stable hue 주입 (없으면 indigo 폴백 240) */
+    --tag-hue: 240;
     display: inline-flex;
     align-items: center;
     gap: 3px;
@@ -3130,29 +3132,30 @@ body.dark .activity-log-mini {
     font-weight: 600;
     padding: 3px 9px;
     border-radius: 999px;
-    background: rgba(99,102,241,0.08);
-    border: 1px solid rgba(99,102,241,0.22);
-    color: #4f46e5;
+    background: hsl(var(--tag-hue), 65%, 96%);
+    border: 1px solid hsl(var(--tag-hue), 60%, 80%);
+    color: hsl(var(--tag-hue), 55%, 38%);
     cursor: pointer;
     max-width: 160px;
     overflow: hidden;
     transition: background-color 140ms var(--ease-out, ease-out),
                 border-color 140ms var(--ease-out, ease-out),
                 color 140ms var(--ease-out, ease-out),
+                box-shadow 160ms var(--ease-out, ease-out),
                 transform 120ms var(--ease-out, ease-out);
 }
 .agent-tag-chip:hover,
 .agent-tag-chip:focus-visible {
-    background: rgba(99,102,241,0.18);
-    border-color: rgba(99,102,241,0.4);
-    color: #3730a3;
+    background: hsl(var(--tag-hue), 70%, 92%);
+    border-color: hsl(var(--tag-hue), 65%, 64%);
+    color: hsl(var(--tag-hue), 60%, 30%);
 }
 .agent-tag-chip:active { transform: translateY(1px); }
 .agent-tag-chip.is-active {
-    background: #4f46e5;
-    border-color: #4f46e5;
+    background: hsl(var(--tag-hue), 65%, 52%);
+    border-color: hsl(var(--tag-hue), 65%, 52%);
     color: #fff;
-    box-shadow: 0 6px 14px rgba(79,70,229,0.25);
+    box-shadow: 0 6px 14px hsla(var(--tag-hue), 60%, 50%, 0.25);
 }
 .agent-tag-chip-hash { opacity: 0.6; font-weight: 800; }
 .agent-tag-chip-name {
@@ -3177,20 +3180,21 @@ body.dark .activity-log-mini {
 }
 body.dark .agent-tags-bar-label { color: #8a8275; }
 body.dark .agent-tag-chip {
-    background: rgba(165,180,252,0.10);
-    border-color: rgba(165,180,252,0.26);
-    color: #a5b4fc;
+    background: hsla(var(--tag-hue), 50%, 30%, 0.22);
+    border-color: hsla(var(--tag-hue), 55%, 60%, 0.42);
+    color: hsl(var(--tag-hue), 75%, 78%);
 }
 body.dark .agent-tag-chip:hover,
 body.dark .agent-tag-chip:focus-visible {
-    background: rgba(165,180,252,0.22);
-    border-color: rgba(165,180,252,0.46);
-    color: #c7d2fe;
+    background: hsla(var(--tag-hue), 55%, 40%, 0.34);
+    border-color: hsla(var(--tag-hue), 60%, 65%, 0.6);
+    color: hsl(var(--tag-hue), 85%, 88%);
 }
 body.dark .agent-tag-chip.is-active {
-    background: #6366f1;
-    border-color: #6366f1;
+    background: hsl(var(--tag-hue), 65%, 58%);
+    border-color: hsl(var(--tag-hue), 65%, 58%);
     color: #fff;
+    box-shadow: 0 6px 14px hsla(var(--tag-hue), 60%, 50%, 0.32);
 }
 body.dark .agent-tag-chip-count {
     background: rgba(255,255,255,0.10);
