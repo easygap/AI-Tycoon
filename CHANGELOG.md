@@ -5,6 +5,14 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 192 — visibility-summary 의 hashtag 검색은 tag-chip 풍으로
+- 검색어가 `#tag` 형식이면 그동안 `"#frontend"` 처럼 따옴표 + 초록 톤으로만 보여 단조로움
+- 이제 `tagHueFor()` hue 그대로 받아서 사이드바 태그 칩과 같은 색상으로 렌더
+- `#` 기호는 opacity 0.6 으로 살짝 죽이고 태그명만 강조
+- 일반 텍스트 검색은 기존 초록 톤 유지 — hashtag 모드와 시각 구분
+- 다크 모드 색상도 함께 매핑
+- SW 캐시 v27 → v28
+
 ### Iteration 191 — hashtag 0건 empty state 친절한 안내
 - `#tag` 필터 결과가 0건이면 일반 "검색 결과 없음" 보다 더 구체적인 메시지로 분기
 - 제목: `'#frontend' 태그가 붙은 에이전트가 없습니다 / No agents tagged #frontend`
