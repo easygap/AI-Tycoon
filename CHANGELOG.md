@@ -5,6 +5,25 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.1] — 2026-05-18
+
+> v1.4.0 직후 코드 리뷰 + Playwright e2e 검증으로 발견한 3가지 버그/UX 갭 패치.
+>
+> - **태그 매니저 캐시 invalidate 버그픽스** (iter 200) — settings 의 rename/delete 가
+>   localStorage 만 갱신하고 `_tagCache` 무효화 누락 → 사이드바/카드/팔레트 가 1초 동안 stale.
+>   `invalidateTagCache` 를 export 하고 `window.aiTycoonInvalidateTagCache` 로 노출.
+>   `applyTagRename` / `applyTagDelete` 에서 즉시 호출.
+> - **CONTRIBUTING.md hashtag 시스템 문서화** (iter 201) — 8개 터치포인트 + 핵심 헬퍼
+>   + 정규식 위치 + 캐시 정합 노트. 새 contrib 가 같은 실수 안 만들도록.
+> - **orphan tag empty state UX 분기** (iter 202) — 노트는 있는데 그 노트의 에이전트가
+>   현재 `liveAgents` 에 없는 케이스 → "이미 적었는데?" 혼란 방지.
+>   `'#tag' 태그가 적힌 에이전트가 오프라인입니다 / #tag agent is offline` 분기.
+>
+> 사용자 데이터 호환: 변경 없음 (v1.4.0 그대로 호환).
+> SW 캐시: v33 → v35.
+
 ### Iteration 202 — Playwright e2e 검증 + orphan tag empty state 분기
 - Playwright MCP 로 실제 브라우저에서 hashtag 시스템 전체 흐름 검증
   - 메모 저장 → tags-bar 칩 등장 → 카드 칩 등장 → 클릭 → visibility-summary 칩 컬러 매칭 모두 OK
