@@ -5,7 +5,33 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 204 — 코어 모듈 코드 리뷰 4건 픽스 (ws · 메모리 · 타임스탬프)
+- general-purpose agent 로 `js/ws.js`, `js/state.js`, `js/agentPriority.js`,
+  `server.js`, `js/crossTab.js` 코드 리뷰 → 8건 후보 중 medium 2건 + low 2건 픽스
+
+**ws.js — 재연결 경쟁 상태 (medium)**
+- `aiTycoonReconnect()` 가 backoff 중 예약된 `setTimeout(connectWS)` 를 취소하지 않아
+  사용자가 \"즉시 재연결\" 누르면 parallel WebSocket 2개가 열리고 onmessage 가 중복 처리
+- `S.reconnectTimer` 핸들 추가 — aiTycoonReconnect / onopen / scheduleReconnect 자체에서 정리
+- scheduleReconnect 가 이미 예약된 상태면 early-return → 중복 backoff 예약 차단
+
+**ws.js — detailPid / directorFocusPid 누수 (medium)**
+- 에이전트가 liveAgents 에서 사라질 때 `selectedPid` 만 정리, `detailPid` 와
+  `directorFocusPid` 는 그대로 둬서 디테일 패널이 stale pid 로 계속 렌더 시도 + 카메라가
+  사라진 캐릭터 자리 응시
+- 같은 cleanup 블록에서 셋 다 동시에 nullify
+
+**server.js — prevMemory / stickyState / extPrevState 무제한 성장 (low/med)**
+- 세션/외부 PID 가 churn 할 때마다 key 만 늘고 정리 안 함. 며칠 띄워두면 `ext-codex-${uuid}`
+  keyspace 만 수천 개로 부풀 가능성
+- 매 poll 끝에 `livePidSet` / `liveSidSet` 와 비교해서 사라진 키 제거
+
+**server.js:808 — promptTimestamp NaN 비교 (low)**
+- `latestPrompt.timestamp` 가 ISO string 인 경우 (`history.jsonl` 일부 케이스) `Date.now() - "..."` = NaN
+- `Number.isFinite(promptTs)` 가드 + `Date.parse` 정규화 후 비교 → "최근 프롬프트 있음" 신호 누락 방지
+- SW 캐시 v35 → v36
+
+## [1.4.1] — 2026-05-18
 
 ## [1.4.1] — 2026-05-18
 

@@ -804,8 +804,15 @@ async function pollAndBroadcast() {
             const memChanged = proc && prevMem > 0 && Math.abs(memKB - prevMem) > 5000; // >5MB change = active
             if (proc) prevMemory[session._pid] = memKB;
 
-            // Also consider recent prompt as activity signal
-            const hasRecentPrompt = latestPrompt && (Date.now() - latestPrompt.timestamp) < 300000; // <5min
+            // Also consider recent prompt as activity signal.
+            // history.jsonl entries 는 timestamp 가 ISO string 일 수 있어 Number 변환 필요 —
+            // 안 그러면 (Date.now() - "2026-05-19T...") = NaN → < 300000 false → 신호 누락
+            const promptTs = latestPrompt
+                ? (typeof latestPrompt.timestamp === "number"
+                    ? latestPrompt.timestamp
+                    : Date.parse(latestPrompt.timestamp))
+                : 0;
+            const hasRecentPrompt = Number.isFinite(promptTs) && (Date.now() - promptTs) < 300000; // <5min
             const isActive = hasTempActivity || sessionFresh || memChanged || hasRecentPrompt;
 
             // ── Role: majority-vote with sticky hold ──
@@ -1145,6 +1152,21 @@ async function pollAndBroadcast() {
 
         // Merge Claude + external agents
         const allAgents = [...filteredAgents, ...externalAgents];
+
+        // 메모리 누수 방지 — 사라진 PID 의 prev 상태 정리.
+        // 오래 띄워둔 서버에서 ext-codex-${uuid} 같은 외부 세션 keyspace 가 무제한 늘어나던 문제.
+        const livePidSet = new Set(allAgents.map(a => String(a.pid)));
+        for (const key of Object.keys(prevMemory)) {
+            if (!livePidSet.has(key)) delete prevMemory[key];
+        }
+        for (const key of Object.keys(extPrevState)) {
+            if (!livePidSet.has(key)) delete extPrevState[key];
+        }
+        // stickyState 는 sessionId 키 — 살아있는 세션 ID 들 모아 비교
+        const liveSidSet = new Set(allAgents.map(a => String(a.sessionId || "")).filter(Boolean));
+        for (const sid of Object.keys(stickyState)) {
+            if (!liveSidSet.has(sid)) delete stickyState[sid];
+        }
 
         const diagnostics = {
             lastPollAt: Date.now(),
