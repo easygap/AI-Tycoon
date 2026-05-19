@@ -21,6 +21,12 @@ import { showToast } from "./toasts.js";
 if (typeof window !== "undefined") {
     window.aiTycoonReconnect = () => {
         try {
+            // backoff 중인 예약 reconnect 가 있으면 먼저 취소 — 안 그러면 즉시 connect 와
+            // 예약 connect 가 동시에 살아 parallel WebSocket 두 개 열리고 이벤트 중복 처리됨
+            if (S.reconnectTimer) {
+                try { clearTimeout(S.reconnectTimer); } catch { /* ignore */ }
+                S.reconnectTimer = null;
+            }
             if (S.ws) {
                 // 기존 연결 정리해서 새로 연결되도록
                 try { S.ws.close(); } catch { /* ignore */ }
@@ -37,6 +43,11 @@ export function connectWS() {
     S.ws.onopen = () => {
         S.connected = true;
         S.reconnectAttempt = 0;
+        // 연결 성공 — backoff 타이머 (있다면) 정리
+        if (S.reconnectTimer) {
+            try { clearTimeout(S.reconnectTimer); } catch { /* ignore */ }
+            S.reconnectTimer = null;
+        }
         S.lastHeartbeat = Date.now();
         setConn(true);
         const lang = window.aiTycoonI18n?.getLang?.() || "ko";
@@ -108,6 +119,8 @@ export function connQuality() {
 }
 
 export function scheduleReconnect() {
+    // 이미 예약된 reconnect 가 있으면 무시 — 중복 setTimeout 으로 parallel 연결 방지
+    if (S.reconnectTimer) return;
     S.reconnectAttempt++;
     const delay = Math.min(RECONNECT_BASE * Math.pow(1.5, S.reconnectAttempt - 1), RECONNECT_MAX);
     const txt = document.getElementById("conn-text");
@@ -130,7 +143,11 @@ export function scheduleReconnect() {
                 : `서버 ${WS_URL} 응답 없음 — npm start 가 실행 중인지 확인해 주세요.`, "system");
         }
     }
-    setTimeout(connectWS, delay);
+    // 핸들 저장 — onopen 또는 사용자 수동 재연결 시 정리 가능
+    S.reconnectTimer = setTimeout(() => {
+        S.reconnectTimer = null;
+        connectWS();
+    }, delay);
 }
 
 export function setConn(ok) {
@@ -410,8 +427,12 @@ export function handleState(state) {
                 } catch { /* ignore */ }
             }
             delete S.visualAgents[pid];
-            // Fix: clear selectedPid if agent left
+            // Fix: clear selectedPid AND detailPid if agent left.
+            // 둘 다 안 지우면 디테일 패널이 stale pid 로 계속 렌더 시도해서 빈 카드/이상 동작 발생.
             if (S.selectedPid === pid) S.selectedPid = null;
+            if (S.detailPid === pid) S.detailPid = null;
+            // directorFocusPid 도 동일 — 카메라가 사라진 에이전트 따라가는 일 방지
+            if (S.directorFocusPid === pid) S.directorFocusPid = null;
         }
     });
 
