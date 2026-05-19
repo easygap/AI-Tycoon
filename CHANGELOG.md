@@ -5,6 +5,26 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.2] — 2026-05-19
+
+> v1.4.1 직후 코어 비-UI 로직 (WebSocket · 서버 폴링 · 상태 정합) 잠재 버그 4건 일괄 패치.
+> general-purpose agent 코드 리뷰로 발견한 medium 2건 + low 2건.
+>
+> 사용자 데이터 호환: 변경 없음. 마이그레이션 불필요.
+> SW 캐시: v35 → v36.
+>
+> **버그 픽스**
+> - **WebSocket 재연결 race (medium)** — 사용자가 backoff 중 \"즉시 재연결\" 누르면 parallel
+>   WebSocket 2개가 동시에 살아 onmessage 가 중복 처리되던 문제. `S.reconnectTimer` 핸들 추적
+> - **종료된 에이전트의 stale pid 누수 (medium)** — `selectedPid` 만 정리되고 `detailPid` /
+>   `directorFocusPid` 는 그대로 남아 디테일 패널이 빈 데이터로 렌더하던 문제
+> - **server.js 의 prevMemory/stickyState/extPrevState 무제한 성장 (low/med)** — 며칠 띄워둔
+>   서버에서 `ext-codex-${uuid}` 등 외부 세션 keyspace 가 누적되던 문제. 매 poll 끝에 정리
+> - **`history.jsonl` 의 ISO string timestamp NaN 비교 (low)** — `Date.now() - "2026-..."` = NaN
+>   → "최근 프롬프트" 신호 누락. `Number.isFinite` + `Date.parse` 가드
+
 ### Iteration 204 — 코어 모듈 코드 리뷰 4건 픽스 (ws · 메모리 · 타임스탬프)
 - general-purpose agent 로 `js/ws.js`, `js/state.js`, `js/agentPriority.js`,
   `server.js`, `js/crossTab.js` 코드 리뷰 → 8건 후보 중 medium 2건 + low 2건 픽스
