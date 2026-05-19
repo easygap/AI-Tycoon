@@ -69,12 +69,17 @@ function onVisible() {
     if (!enabled) return;
     if (!snapshot || !leftAt) return;
     const awayMs = Date.now() - leftAt;
+    // 버그픽스 — 기존엔 snapshot 을 null 처리 후 diff(snapshot || {}, now) 호출해서
+    // 항상 빈 객체와 비교했고, 결과적으로 "지금까지 발생한 모든 이벤트 카운트" 가 통째로
+    // delta 로 잡혀 "자리 비운 사이" 토스트 가 매번 부풀려져 표시됨.
+    // 비교에 쓸 snapshot 을 먼저 보관한 뒤 reset.
+    const prevSnapshot = snapshot;
     snapshot = null;
     leftAt = 0;
     if (awayMs < MIN_AWAY_MS) return;
 
     const now = tallyByType();
-    const delta = diff(snapshot || {}, now);
+    const delta = diff(prevSnapshot || {}, now);
     if (Object.keys(delta).length === 0) return;
 
     try {
