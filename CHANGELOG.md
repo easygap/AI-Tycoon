@@ -5,6 +5,29 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.3] — 2026-05-19
+
+> v1.4.2 직후 렌더링 모듈 코드 리뷰 (`renderer.js` · `pixiOverlay.js` · `npcs.js` 등) 로
+> 발견한 high-severity 4건 일괄 패치.
+>
+> 사용자 데이터 호환: 변경 없음. 마이그레이션 불필요.
+> SW 캐시: v36 → v37.
+>
+> **버그 픽스**
+> - **null projectName 으로 canvas throw** — `a.projectName` 이 null/undefined 면 화이트보드
+>   text render 의 `.substring()` 에서 throw 발생 → 캔버스 전체 그리기 멈춤
+> - **sub-agent 렌더 silent 누락** — `Object.entries(byParent)` 의 string 키와 `a.pid` 의 strict
+>   비교 실패로 모든 sub-agent 가 안 그려지던 잠재 버그
+> - **청소 로봇 NPC 무한 정지** — `pauseTimer` 가 fractional (예: 159.7) 이면 `=== 0` 비교에 절대
+>   안 걸려 로봇이 영구 멈춤 상태로 갇히던 문제
+> - **비 weather Graphics GPU 누수** — `drawWeather()` 가 매 프레임 새 `PIXI.Graphics` 만들고
+>   `removeChildren()` 만 호출. PixiJS v8 에서는 GPU 리소스 해제 안 됨 → 비 내릴 때 누적
+>
+> 모두 general-purpose agent 코드 리뷰로 발견 (사용자 보고 없음). 잠재 영향은 컸지만
+> 빈도가 낮아 production hit 가능성은 medium 정도였음.
+
 ### Iteration 206 — 렌더링 모듈 코드 리뷰 4건 픽스 (렌더 throw · 누락 · 누수 · 정지)
 - general-purpose agent 로 `renderer.js`, `pixiOverlay.js`, `timeOfDay.js`, `seasons.js`,
   `npcs.js` 코드 리뷰 → high 3건 + low/med 1건 픽스
