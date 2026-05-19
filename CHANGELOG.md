@@ -5,7 +5,22 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 210 — 헬퍼 모듈 코드 리뷰 + 메모 export 코드블록 보존 fix
+- `standupExport.js`, `snapshot.js`, `toasts.js`, `sound.js`, `achievements.js`, `tour.js`,
+  `notifications.js` 직접 코드 리뷰. high/medium 이슈는 없음 — 여기까지 코드베이스가
+  견고하게 다듬어져 있음을 재확인.
+
+**standupExport.js — 메모 코드블록 silent 손상 픽스 (low)**
+- 기존엔 `notes 본문.replace(/```/g, "''")` 로 backtick fence 자체를 강제 치환
+- 개발자가 메모에 코드 스니펫 \`\`\`js console.log()\`\`\` 적었으면 export 결과가
+  `'' js console.log() ''` 로 깨져서 의도 손실
+- 픽스: 메모에 ``` 가 있으면 더 긴 `~~~~markdown` fence 로 감싸서 nested 코드블록 안전 격리
+  (CommonMark 의 nested fence 규칙 사용 — 안쪽 ``` 가 plain text 로 렌더됨)
+- ``` 가 없는 메모는 기존처럼 그대로 출력
+- 사용자 노트 데이터 변조 0 (round-trip preservable)
+- SW 캐시 v38 → v39
+
+## [1.4.4] — 2026-05-19
 
 ## [1.4.4] — 2026-05-19
 

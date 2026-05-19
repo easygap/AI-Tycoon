@@ -186,9 +186,18 @@ export function buildNotesMarkdown(lang = "ko") {
         }
         lines.push(`### ${label}`);
         lines.push("");
-        // 본문은 그대로 (Markdown 그대로 들어가도 큰 문제 없음, 단 ``` 차단)
-        const body = String(notes[key] || "").replace(/```/g, "''");
-        lines.push(body);
+        // 메모에 ``` 코드 블록이 포함될 수 있음 (개발자가 코드 스니펫 적는 케이스 흔함).
+        // 기존엔 `'`` 두 개로 replace 해서 사용자 코드를 silently 망가뜨림 → 그대로 보존.
+        // CommonMark 의 nested fence 규칙으로 더 긴 fence (~~~~) 로 감싸서 안전하게 격리.
+        const body = String(notes[key] || "");
+        if (body.includes("```")) {
+            // 더 긴 fence 로 감싸서 안쪽 ``` 가 정상 텍스트로 보이게
+            lines.push("~~~~markdown");
+            lines.push(body);
+            lines.push("~~~~");
+        } else {
+            lines.push(body);
+        }
         lines.push("");
     });
 
