@@ -717,14 +717,15 @@ function drawWhiteboard(px, py) {
     ctx.fillStyle = PAL.whiteboard;
     ctx.fillRect(px + 5, py + 5, TILE - 10, TILE - 13);
 
-    // Show real project names from active agents
-    const activeProjects = S.liveAgents.filter(a => a.isRunning).map(a => a.projectName);
+    // Show real project names from active agents.
+    // 빈 projectName 인 에이전트 (cwd 못 잡힌 경우) 가 있어서 fallback `""` 안 깔면 substring 에서 throw.
+    const activeProjects = S.liveAgents.filter(a => a.isRunning).map(a => a.projectName || "");
     const colors = ["rgba(5,150,105,0.4)", "rgba(37,99,235,0.35)", "rgba(217,119,6,0.35)", "rgba(220,50,100,0.3)"];
     ctx.font = "2.5px Pretendard, sans-serif";
     ctx.textAlign = "left";
     for (let i = 0; i < Math.min(activeProjects.length, 4); i++) {
         ctx.fillStyle = colors[i % colors.length];
-        ctx.fillText(activeProjects[i].substring(0, 8), px + 7, py + 8 + i * 3.5);
+        ctx.fillText((activeProjects[i] || "").substring(0, 8), px + 7, py + 8 + i * 3.5);
     }
     if (activeProjects.length === 0) {
         ctx.fillStyle = "rgba(0,0,0,0.08)";
@@ -1260,7 +1261,9 @@ function drawSubAgents() {
     Object.entries(byParent).forEach(([pid, subs]) => {
         const parent = S.visualAgents[pid];
         if (!parent) return;
-        const agent = S.liveAgents.find(a => a.pid === pid);
+        // pid 는 Object.entries() 에서 string 으로 나오는데 a.pid 는 보통 number/string 혼재.
+        // strict 비교하면 사일런트로 undefined 반환 → 모든 sub-agent 렌더 스킵되던 잠재 버그.
+        const agent = S.liveAgents.find(a => String(a.pid) === pid);
         if (!agent) return;
 
         // Sort by slot index

@@ -5,7 +5,32 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 206 — 렌더링 모듈 코드 리뷰 4건 픽스 (렌더 throw · 누락 · 누수 · 정지)
+- general-purpose agent 로 `renderer.js`, `pixiOverlay.js`, `timeOfDay.js`, `seasons.js`,
+  `npcs.js` 코드 리뷰 → high 3건 + low/med 1건 픽스
+
+**renderer.js:727 — null projectName 에서 substring throw (high)**
+- `a.projectName` 이 null/undefined 인 에이전트가 있으면 (cwd 못 잡힌 케이스) 화이트보드
+  텍스트 렌더에서 throw → 캔버스 그리기 전체 멈춤
+- map 단계와 fillText 단계 양쪽에 `|| ""` fallback
+
+**renderer.js:1264 — sub-agent pid string/number mismatch (high)**
+- `Object.entries(byParent)` 가 string 키 주는데 `a.pid === pid` 는 strict 비교
+- 사일런트로 undefined → return → 모든 sub-agent 렌더 스킵되던 잠재 버그
+- 다른 곳과 동일하게 `String(a.pid) === pid` 비교
+
+**npcs.js:330 — 청소 로봇 fractional pauseTimer 무한정지 (high)**
+- `Math.random() * 120` 결과로 159.7 같은 fractional 값이 `pauseTimer-- === 0` 비교에 절대 안 걸림
+- decrement 가 음수 통과해도 `=== 0` 만 안 맞으면 `moving` 계속 false → 로봇 영구 정지
+- `Math.floor(60 + Math.random() * 120)` 으로 정수화 + `=== 0` → `<= 0` 방어 처리
+
+**pixiOverlay.js:352 — 비 weather Graphics GPU 누수 (high)**
+- `drawWeather()` 가 매 프레임 `new PIXI.Graphics()` 만들고 `removeChildren()` 만 호출
+- PixiJS v8 의 `removeChildren()` 는 GPU 리소스 해제 안 함 → 비 내릴 때 GPU 버퍼 누적
+- 단일 persistent `_weatherGfx` 재사용 + `.clear()` 로 매 프레임 그리기 — 객체 생성 0
+- SW 캐시 v36 → v37
+
+## [1.4.2] — 2026-05-19
 
 ## [1.4.2] — 2026-05-19
 
