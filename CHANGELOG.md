@@ -5,6 +5,28 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.4] — 2026-05-19
+
+> v1.4.3 직후 데이터 모듈 코드 리뷰 (`backup.js` · `stats.js` · `awaySummary.js`) 로
+> 발견한 high 1건 + medium 2건 일괄 패치.
+>
+> 사용자 데이터 호환: 변경 없음 (백업 v2 차단만 추가).
+> SW 캐시: v37 → v38.
+>
+> **버그 픽스**
+> - **자리 비운 사이 토스트 완전 망가짐 (high)** — `onVisible()` 가 `snapshot` 을 null 처리한 *뒤에*
+>   diff 호출 → 항상 `{}` 와 비교 → "현재까지 누적된 모든 이벤트" 가 통째로 새 이벤트로 잡혀
+>   토스트가 부풀려져 표시되던 버그. `prevSnapshot` 으로 보관 후 diff
+> - **자정 rollover 시 status timer 정산 누락 (medium)** — 어제 23:30 ~ 오늘 00:00 의 코딩
+>   시간 등이 통계에서 사라지던 문제. rolloverNow 시점까지 prevDay 의 statusMinutes 에 크레딧
+> - **백업 restore 비원자성 (medium)** — 옛 키 삭제 → 새 키 setItem 순서라 중간 quota 실패 시
+>   부분 데이터 손실 가능. snapshotBefore 에 stash 후 모든 write 성공해야 옛 키 삭제 + 실패 시
+>   rollback. 미래 버전 백업 (`version > 1`) 차단도 추가
+>
+> 모두 직접 (claude) 코드 리뷰로 발견. agent rate-limit 우회 — 코드 리뷰 ownership 은 사람도 가능.
+
 ### Iteration 208 — 데이터 모듈 코드 리뷰 3건 픽스 (away 토스트 · 자정 status 분 · 백업 원자성)
 - 직접 (agent rate-limit 으로) `backup.js`, `stats.js`, `awaySummary.js` 코드 리뷰
   → high 1건 + medium 2건 픽스
