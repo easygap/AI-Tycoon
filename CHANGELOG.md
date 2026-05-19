@@ -5,7 +5,36 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 208 — 데이터 모듈 코드 리뷰 3건 픽스 (away 토스트 · 자정 status 분 · 백업 원자성)
+- 직접 (agent rate-limit 으로) `backup.js`, `stats.js`, `awaySummary.js` 코드 리뷰
+  → high 1건 + medium 2건 픽스
+
+**awaySummary.js — 자리 비운 사이 토스트 비교 객체 null 버그 (high)**
+- `onVisible()` 가 `snapshot = null` 처리한 *뒤에* `diff(snapshot || {}, now)` 호출
+- `snapshot || {}` 가 항상 `{}` 로 평가되어 결과적으로 **diff 가 "지금까지 누적된 모든 이벤트"** 를
+  전부 새 이벤트로 잡음 → 자리 비운 사이 토스트 가 사용자가 비운 시간만의 변화가 아니라
+  세션 전체 이벤트 카운트로 부풀려져 표시됨
+- 픽스: 비교용 `prevSnapshot` 을 따로 보관한 뒤 reset → diff 에 정확한 이전 값 전달
+
+**stats.js — 자정 rollover 시 status timer 정산 누락 (medium)**
+- `recordStateSnapshot` 이 자정 넘어 새 todayKey 가 되면 `memo.lastStatusTick.clear()` 만 하고
+  지금까지 누적된 분을 *어제* 의 `statusMinutes` 에 안 더했음
+- 결과: 자정 부근 (예: 어제 23:30 ~ 오늘 00:00) 의 코딩 시간 등이 통계에서 사라짐
+- 픽스: 자정 감지 직후 rolloverNow 시점까지의 시간을 prevDay 의 statusMinutes 에 크레딧
+
+**backup.js — restore 비원자성 (medium)**
+- 기존 코드는 (1) 옛 ai-tycoon-* 키 모두 삭제 → (2) 새 키 setItem 순서.
+  중간에 quota 에러 등으로 (2) 가 실패하면 사용자 데이터 부분적 소실
+- 버전 호환성 가드도 없어 미래 버전 백업이 데이터 덮어쓰기 가능
+- 픽스:
+  1. `version > 1` 차단 (미래 포맷 거부)
+  2. 백업 전 `snapshotBefore` 에 기존 키 모두 stash
+  3. 새 키 모두 write 성공 후 잔여 옛 키 삭제 (원자성)
+  4. write 도중 throw 면 새 키 제거 + snapshotBefore 복원 (rollback)
+- 결과: quota / 디스크 풀 / 권한 등 어떤 단계에서 실패해도 데이터 손실 없음
+- SW 캐시 v37 → v38
+
+## [1.4.3] — 2026-05-19
 
 ## [1.4.3] — 2026-05-19
 
