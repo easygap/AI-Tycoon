@@ -5,6 +5,18 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 211 — Playwright 으로 UI 라이브 시각 audit (이슈 0건)
+- 실제 브라우저 띄워서 demo agents 살아있는 환경에서 핵심 UI 점검:
+  - 헤더 / 사이드바 / 캔버스 모두 정상 렌더 (캔버스 909×1199)
+  - 6개 에이전트 카드 표시, has-note 클래스 / 칩 정상 동작
+  - Insights 모달 hourly heatmap (iter 175 검증): 24개 시간 셀,
+    `is-now` 클래스 + ▼ ::before pseudo + `aria-current="true"` + `aria-label="17:00 · 지금"` 모두 OK
+  - 업적 23개 그리드 표시, 9개 unlocked
+  - Ctrl+K 명령 팔레트: 11개 결과 (에이전트 fuzzy match 정상)
+- **콘솔 에러 0, 경고 0** — 라이브 환경에서 깨진 부분 없음
+- Welcome 모달, 다크 모드, 한글 IME 입력, conn-text "실시간 · 4998ms" 모두 정상
+- 코드 리뷰 라운드 + e2e 시각 audit 양쪽에서 high/medium 발견 0 → release-ready 안정 plateau 도달 확인
+
 ### Iteration 210 — 헬퍼 모듈 코드 리뷰 + 메모 export 코드블록 보존 fix
 - `standupExport.js`, `snapshot.js`, `toasts.js`, `sound.js`, `achievements.js`, `tour.js`,
   `notifications.js` 직접 코드 리뷰. high/medium 이슈는 없음 — 여기까지 코드베이스가
