@@ -10,6 +10,15 @@
 [![Version](https://img.shields.io/badge/version-1.4.5-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/hero-dark.png">
+    <img src="docs/hero-light.png" alt="AI Tycoon 라이브 대시보드 — 픽셀아트 오피스 안의 AI 에이전트들, 사이드바의 에이전트 카드와 해시태그 칩, 헤더 HUD" width="900">
+  </picture>
+  <br>
+  <sub><em>데모 모드로 띄운 라이브 화면 — 라이트 / 다크 모드 자동 전환</em></sub>
+</p>
+
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
 

@@ -5,7 +5,16 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 214 — README 에 라이브 hero 스크린샷 (라이트 + 다크)
+- 그동안 README 가 픽셀아트 아이콘만 보여줘서 새 방문자가 "실제 화면이 어떻게 생겼나" 알 수 없었음
+- Playwright 로 demo 모드 띄워서 1440×900 해상도 hero 스크린샷 캡처:
+  - `docs/hero-light.png` — 라이트 모드, 5명 데모 에이전트, 해시태그 칩, 사이드바 데이터 시각화
+  - `docs/hero-dark.png` — 같은 화면의 다크 모드
+- README 상단 badge 바로 아래에 `<picture>` element 로 `prefers-color-scheme` 분기 — GitHub 의
+  다크 모드 사용자는 자동으로 다크 hero 보임
+- 캡처 전 sample 메모 3개 (`#frontend`, `#backend #리팩터링`, `#bug`) 박아 해시태그 시스템 자연스럽게 노출
+
+### Iteration 213 — v1.4.5 마무리 patch cut (위 [1.4.5] 참고)
 
 ## [1.4.5] — 2026-05-19
 
