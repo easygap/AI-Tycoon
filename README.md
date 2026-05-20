@@ -85,7 +85,7 @@ v1.4.0 직후 7번의 검증 라운드 (general-purpose agent 코드 리뷰 5회
 - **서버 graceful shutdown** — SIGTERM/SIGINT 시 WS 클라이언트에 작별 인사
 - 업적 21 → **24개**, smoke 테스트 32 → **38개**
 
-자세한 변경 내역은 [`CHANGELOG.md`](./CHANGELOG.md) 참고.
+자세한 변경 내역은 [`CHANGELOG.md`](./CHANGELOG.md), 코드 아키텍처는 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md), 스크린샷 갤러리는 [`docs/SCREENSHOTS.md`](./docs/SCREENSHOTS.md) 참고.
 
 Claude Code · Cursor · Codex 같은 AI 에이전트가 지금 어떤 작업을 하고 있는지 자동으로 감지하고, 픽셀 아트 오피스 안의 캐릭터로 보여줍니다.
 

@@ -4,6 +4,9 @@ Thanks for your interest! This is a small but feature-rich pixel-art office
 dashboard. The frontend is plain ES modules (no bundler), the backend is a
 single Node.js file. Setup is minimal.
 
+> **데이터 흐름 / 모듈 관계 / 확장 포인트** 는 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md)
+> 에 정리돼 있습니다. 코드에 처음 진입하는 분은 이 문서를 먼저 한 번 훑어보면 좋아요.
+
 ## Setup
 
 ```bash
