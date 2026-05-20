@@ -5,6 +5,17 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 216 — docs/ARCHITECTURE.md 아키텍처 노트 작성
+- 새 contributor 가 코드 진입 시 *어떻게 도는지* 한눈에 알 수 있는 가이드 부재가 문제
+- 큰 그림 ASCII 다이어그램 + 서버/클라이언트 모듈 관계 + 데이터 흐름 한 사이클 +
+  localStorage 영속화 키 표 + Hashtag 시스템 흐름 + 캔버스 레이어 분리 + 테스팅 + 디자인 결정
+  총 10개 섹션으로 구성
+- 핵심 모듈 (`server.js`, `js/state.js`, `js/ws.js`, `js/renderer.js`, `js/pixiOverlay.js`,
+  `js/panel.js`) 의 역할 + 새 기능 추가 시 어디 손대야 하는지 명시
+- 검증 라운드 (iter 200~215) 14건 fix 의 패턴도 한 섹션으로 정리 — 같은 패턴 재사용 가능
+- `CONTRIBUTING.md` 상단에서 이 문서를 명시적으로 link
+- `README.md` 의 "자세한 변경 내역" 줄에 ARCHITECTURE / SCREENSHOTS 둘 다 link
+
 ### Iteration 215 — 기능별 스크린샷 갤러리 추가 (docs/SCREENSHOTS.md)
 - iter 214 의 hero 만으로는 제품의 깊이가 안 보임 — 핵심 기능 3가지를 추가 캡처:
   - `docs/cmdpalette.png` — 명령 팔레트 (`Ctrl+K`) "필터" 검색 시 **hashtag 별 필터 명령 자동 노출** 증명
