@@ -5,6 +5,13 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 212 — README 에 v1.4.x 안정성 패치 라인 요약 섹션 추가
+- v1.4.0 만 README "새 소식" 에 있고 v1.4.1~v1.4.4 patch release 정보는 CHANGELOG 깊숙이만 있어서
+  사용자가 patch 별 변경사항 한눈에 안 보임
+- v1.4.0 새 소식 위에 **"v1.4.x 안정성 패치 라인"** 섹션 추가
+- 7번의 검증 라운드 (agent 코드 리뷰 5회 + Playwright e2e 2회) 로 누적 14건 fix 했음을 한 줄로 명시
+- v1.4.1~v1.4.4 각 patch 의 핵심 fix 를 한 줄씩 — high-severity 는 *italics* 강조
+
 ### Iteration 211 — Playwright 으로 UI 라이브 시각 audit (이슈 0건)
 - 실제 브라우저 띄워서 demo agents 살아있는 환경에서 핵심 UI 점검:
   - 헤더 / 사이드바 / 캔버스 모두 정상 렌더 (캔버스 909×1199)
