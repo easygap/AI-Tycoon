@@ -5,6 +5,24 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.5] — 2026-05-19
+
+> v1.4.x 안정성 패치 라인의 마무리 컷. 헬퍼 모듈 코드 리뷰 라운드 (iter 210) +
+> Playwright 라이브 UI audit (iter 211) + README 정리 (iter 212) 를 묶음.
+>
+> 사용자 데이터 호환: 변경 없음. SW 캐시: v38 → v39.
+>
+> **변경**
+> - **메모 export 코드블록 silent 손상 fix (low)** — `standupExport.js` 의 notes export 가
+>   ``` 시퀀스를 `''` 로 강제 치환해서 코드 스니펫 깨지던 문제. CommonMark nested fence 로 안전 격리
+> - **Playwright 라이브 UI audit (이슈 0건)** — 실제 브라우저로 핵심 UI / iter 175 now 마커 /
+>   업적 / 명령 팔레트 / 콘솔 에러까지 점검 → 모두 정상, **release-ready 안정 plateau 도달 확인**
+> - **README 에 v1.4.x 안정성 패치 라인 섹션 추가** — 7번의 검증 라운드 + 14개 fix 의 한눈 요약
+>
+> 이 patch 로 v1.4.x 라인은 14개 잠재 버그 모두 잡힌 상태로 마감.
+
 ### Iteration 212 — README 에 v1.4.x 안정성 패치 라인 요약 섹션 추가
 - v1.4.0 만 README "새 소식" 에 있고 v1.4.1~v1.4.4 patch release 정보는 CHANGELOG 깊숙이만 있어서
   사용자가 patch 별 변경사항 한눈에 안 보임
