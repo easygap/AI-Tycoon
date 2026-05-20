@@ -16,7 +16,7 @@
     <img src="docs/hero-light.png" alt="AI Tycoon 라이브 대시보드 — 픽셀아트 오피스 안의 AI 에이전트들, 사이드바의 에이전트 카드와 해시태그 칩, 헤더 HUD" width="900">
   </picture>
   <br>
-  <sub><em>데모 모드로 띄운 라이브 화면 — 라이트 / 다크 모드 자동 전환</em></sub>
+  <sub><em>데모 모드로 띄운 라이브 화면 — 라이트 / 다크 모드 자동 전환 · <a href="docs/SCREENSHOTS.md">전체 스크린샷 갤러리 →</a></em></sub>
 </p>
 
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**

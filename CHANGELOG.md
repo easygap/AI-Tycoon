@@ -5,6 +5,15 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 215 — 기능별 스크린샷 갤러리 추가 (docs/SCREENSHOTS.md)
+- iter 214 의 hero 만으로는 제품의 깊이가 안 보임 — 핵심 기능 3가지를 추가 캡처:
+  - `docs/cmdpalette.png` — 명령 팔레트 (`Ctrl+K`) "필터" 검색 시 **hashtag 별 필터 명령 자동 노출** 증명
+  - `docs/insights.png` — 인사이트 모달 (오늘 통계, MVP, 진행 중인 프로젝트, 24시간 히트맵)
+  - `docs/detail.png` — 디테일 패널 + 카드 hashtag 칩 + 메모리 그래프
+- `docs/SCREENSHOTS.md` 새 파일 — 4개 캡처를 설명과 함께 한 곳에서 갤러리로 보여줌
+- README hero 캡션에 `전체 스크린샷 갤러리 →` 링크 추가
+- Playwright MCP 자동화로 1440×900 해상도 일관 캡처
+
 ### Iteration 214 — README 에 라이브 hero 스크린샷 (라이트 + 다크)
 - 그동안 README 가 픽셀아트 아이콘만 보여줘서 새 방문자가 "실제 화면이 어떻게 생겼나" 알 수 없었음
 - Playwright 로 demo 모드 띄워서 1440×900 해상도 hero 스크린샷 캡처:
