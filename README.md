@@ -7,22 +7,23 @@
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-1.4.4-d97757.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.4.5-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
 
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
 
-### 🛠️ v1.4.x 안정성 패치 라인 (v1.4.1 ~ v1.4.4)
+### 🛠️ v1.4.x 안정성 패치 라인 (v1.4.1 ~ v1.4.5)
 v1.4.0 직후 7번의 검증 라운드 (general-purpose agent 코드 리뷰 5회 + Playwright e2e 2회) 를 거치며
-누적 14개의 잠재 버그를 잡았습니다. 정식 patch 4종으로 컷:
+누적 14개의 잠재 버그를 잡았습니다. 정식 patch 5종으로 컷:
 
+- **v1.4.5** — 마무리 컷 — 메모 export 코드블록 보존, Playwright 라이브 audit (이슈 0건), README 정리
 - **v1.4.4** — 데이터 영속 모듈 패치 — *자리 비운 사이 토스트 부풀림 (high)*, 자정 status timer 누락, 백업 restore 원자성·버전 가드
 - **v1.4.3** — 렌더링 모듈 패치 — *canvas null projectName throw (high)*, sub-agent pid 비교 실패, 청소 로봇 fractional pauseTimer 영구 정지, 비 weather Graphics GPU 누수
 - **v1.4.2** — 코어 비-UI 패치 — WebSocket 재연결 race, 종료된 에이전트 detailPid 누수, server.js prev 상태 맵 무제한 성장, history.jsonl ISO timestamp NaN 비교
 - **v1.4.1** — UX·캐시 정합 패치 — 태그 매니저 캐시 invalidate 누락, orphan tag empty state 친절한 안내, CONTRIBUTING hashtag 시스템 문서화
 
-전체 finding 과 디테일은 [`CHANGELOG.md`](./CHANGELOG.md) 의 Iteration 200~211 참고.
+전체 finding 과 디테일은 [`CHANGELOG.md`](./CHANGELOG.md) 의 Iteration 200~212 참고.
 
 ### 🆕 v1.4.0 새 소식 (요약)
 - **메모 hashtag 자동완성** — textarea 에서 `#` 입력 시 기존 태그 floating list (↑↓/Enter/Tab)
