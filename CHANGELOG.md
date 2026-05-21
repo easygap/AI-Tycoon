@@ -5,6 +5,29 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.6] — 2026-05-21
+
+> v1.4.5 직후 모바일 audit + OSS 프로젝트 hygiene 정비 묶음. **모바일 가로 스크롤 high-severity 버그** 하나 + 인프라/문서 4종.
+>
+> 사용자 데이터 호환: 변경 없음.
+> SW 캐시: v39 → v40.
+>
+> **버그 픽스**
+> - **모바일 가로 스크롤 발생 (high)** — `iPhone 14 Pro` 등 768px 이하에서 document 자체가
+>   가로로 늘어나 사용자에게 보기 흉한 horizontal scrollbar 노출되던 문제. `agent-focus-rail`
+>   의 flex 자식들이 viewport 폭 초과로 body 너비를 끌어올림. `@media (max-width: 768px)` 에
+>   `html, body { overflow-x: hidden; max-width: 100vw }` defensive + rail 에 `width:
+>   calc(100% - 28px)` 명시. 모바일 사용자에게 직접 영향.
+>
+> **인프라 / 문서**
+> - **`docs/ARCHITECTURE.md`** (267 lines, iter 216) — 데이터 흐름 / 모듈 관계 / 확장 포인트
+> - **`docs/SCREENSHOTS.md`** + 5종 캡처 (iter 215) — hero/팔레트/인사이트/디테일/모바일
+> - **`.github/ISSUE_TEMPLATE/`** + **`PULL_REQUEST_TEMPLATE.md`** (iter 217) — 표준 OSS 템플릿
+> - **`SECURITY.md`** (iter 217) — 취약점 신고 정책, 응답 SLA
+> - **`CODE_OF_CONDUCT.md`** + **`.gitattributes`** (iter 218) — Contributor Covenant 한국어 + line ending 정규화
+
 ### Iteration 219 — 모바일 가로 스크롤 fix (real bug found by Playwright audit)
 - Playwright 로 iPhone 14 Pro (390×844) viewport 시뮬레이션
 - **document 가로 스크롤 발생 발견** — `docScrollWidth: 642` 이 `vw: 390` 넘김 (252px overflow)
