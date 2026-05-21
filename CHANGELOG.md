@@ -5,6 +5,21 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 217 — GitHub 프로젝트 hygiene 파일 4종 추가
+- 실제 OSS 프로젝트가 갖춰야 할 standard files 4종 작성:
+- `.github/ISSUE_TEMPLATE/bug_report.md` — 버그 리포트 템플릿
+  - 환경 정보 필드 (버전 / OS / 브라우저 / Node / 모니터링 도구) + 재현 단계 + 콘솔 에러 가이드
+- `.github/ISSUE_TEMPLATE/feature_request.md` — 기능 제안 템플릿
+  - 문제 → 해결책 → 대안 → 관련 컨텍스트 구조, 직접 구현 의향 옵션
+- `.github/ISSUE_TEMPLATE/config.yml` — blank issue 비활성화 + Discussions/CHANGELOG/ARCHITECTURE 외부 링크
+- `.github/PULL_REQUEST_TEMPLATE.md` — PR 본문 골격
+  - 변경 종류 7개 체크박스 + 검증 체크리스트 (lint/test/데모/다크모드/i18n/모바일) + CHANGELOG 알림
+- `SECURITY.md` (루트) — 취약점 신고 정책
+  - 지원 버전 표 (1.4.x latest), GitHub Security Advisory / 이메일 신고 경로
+  - 응답 SLA (critical 7일, high 14일, medium/low 다음 정규 릴리즈)
+  - 스코프 (server.js / 브라우저 JS / 빌드 스크립트 / PWA) + 스코프 밖 명시
+  - **알려진 보안 고려사항** — localhost only 바인딩, localStorage 평문 저장 등 design choice 공개
+
 ### Iteration 216 — docs/ARCHITECTURE.md 아키텍처 노트 작성
 - 새 contributor 가 코드 진입 시 *어떻게 도는지* 한눈에 알 수 있는 가이드 부재가 문제
 - 큰 그림 ASCII 다이어그램 + 서버/클라이언트 모듈 관계 + 데이터 흐름 한 사이클 +

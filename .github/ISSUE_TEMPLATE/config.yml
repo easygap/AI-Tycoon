@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 일반 질문 / 사용법
+    url: https://github.com/easygap/AI-Tycoon/discussions
+    about: 버그 / 기능 제안이 아닌 일반 질문은 Discussions 에 올려 주세요.
+  - name: 📜 변경 내역 (CHANGELOG)
+    url: https://github.com/easygap/AI-Tycoon/blob/main/CHANGELOG.md
+    about: 최근에 무엇이 바뀌었는지 / 알려진 이슈가 이미 fix 됐는지 먼저 확인.
+  - name: 🏗️ 아키텍처 가이드
+    url: https://github.com/easygap/AI-Tycoon/blob/main/docs/ARCHITECTURE.md
+    about: 코드 어디를 손대야 할지 막막하면 여기서 시작.
