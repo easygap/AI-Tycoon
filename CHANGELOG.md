@@ -5,6 +5,20 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 219 — 모바일 가로 스크롤 fix (real bug found by Playwright audit)
+- Playwright 로 iPhone 14 Pro (390×844) viewport 시뮬레이션
+- **document 가로 스크롤 발생 발견** — `docScrollWidth: 642` 이 `vw: 390` 넘김 (252px overflow)
+- 원인: `.agent-focus-rail` (실시간 직원 포커스 row) 의 자식 chip 들이 `flex: 0 0 156px`
+  로 자연 폭이 viewport 폭 초과. rail 자체엔 `overflow-x: auto` 가 있지만 chip 들이
+  body 의 contentSize 까지 끌어올림
+- **2단계 fix:**
+  1. rail 에 `width: calc(100% - 28px); min-width: 0;` 명시 → flex 자식 자유롭게 shrink
+  2. `@media (max-width: 768px)` 에 `html, body { overflow-x: hidden; max-width: 100vw }`
+     defensive — 어떤 자식이 실수로 폭 넘어도 document 스크롤은 절대 안 생기게
+- 결과: `docScrollWidth: 390 = vw` (가로 스크롤 0), rail 내부 swipe 는 정상 동작 유지
+- 모바일 스크린샷 캡처 → `docs/mobile.png` 추가 + `SCREENSHOTS.md` 에 모바일 섹션 추가
+- SW 캐시 v39 → v40
+
 ### Iteration 218 — CODE_OF_CONDUCT.md + .gitattributes 정규화
 - **`CODE_OF_CONDUCT.md`** (루트) — Contributor Covenant v2.1 기반 한국어 행동 강령
   - 약속 4가지 (존중·포용·건설적 비평·투명)
