@@ -383,12 +383,13 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 - **Rich hover tooltips** on every chart
 
 #### Gamification
-- **21 achievements** — first connect, 10/50 tasks, multi-platform, night owl, streaks, full house, Konami code, …
+- **23 achievements** — first connect, 10/50 tasks, multi-platform, night owl, streaks, full house, Konami code, …
 - **Confetti** + toast popups + header unseen-count badge
 
 #### i18n & accessibility
-- **KO/EN toggle** — 70+ strings, persisted preference
-- Keyboard navigation, `prefers-reduced-motion`, ARIA labels, focus traps
+- **KO/EN toggle** — 130+ strings, persisted preference
+- Keyboard navigation (`j/k` cycle, `N` note, `Ctrl+K` palette, `?` help), `prefers-reduced-motion`, ARIA labels, focus traps
+- **Mobile responsive** — `≤768px` viewport with collapsible sidebar + horizontal-scroll focus rail (no document scroll)
 
 #### Audio & alerts
 - **Desktop notifications** — Web Notifications API for task done / review requests (when tab in background)
@@ -399,9 +400,10 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 - **URL shortcuts** — `?action=insights` / `?action=settings`
 
 #### Polish
-- **Command palette** (`Ctrl/Cmd+K`) — VS-Code-style fuzzy search across agents + 22 commands (filter / theme / lang / tools)
-- **Privacy mode** (`Shift+P`) — blur prompts, project names, tasks — safe for screen sharing
-- **Per-agent personal notes** — 500-char textarea in detail panel, persists across reloads; cards with notes get a golden dot
+- **Command palette** (`Ctrl/Cmd+K`) — VS-Code-style fuzzy search across agents + 35+ commands (filter / theme / lang / tools / **dynamic `#tag` filters**)
+- **Privacy mode** (`Shift+P`, double-tap for Strict) — blur prompts, project names, tasks — safe for screen sharing
+- **Per-agent personal notes** with **hashtag autocomplete** — 500-char textarea, `#frontend` auto-suggested (↑↓/Enter/Tab), `Cmd+S` save / `Cmd+Enter` save+close
+- **Hashtag organization** — `#tag` in notes auto-collected into 8 touchpoints (sidebar bar, card chips, detail panel chips, command palette, settings manager, …)
 - **Compact view toggle** — slim cards for 10+ agents
 - **Status summary chips** — "6 coding · 2 thinking · 1 review · 3 idle" above the agent list, click to filter
 - **Per-project color dots** — agents on the same project share a stable HSL color
@@ -424,8 +426,12 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 ```bash
 npm install
 npm start          # http://localhost:3777
-npm test           # smoke check: 26 assets + modules
+npm run lint       # node --check on every .js (36+ files)
+npm test           # smoke check: 38 assets/modules/API contract
+npm run icons      # install a new pixel-art PNG/ICO as app icon
 ```
+
+Tested on Node 18 / 20 / 22 (CI matrix). Modern browsers (Chrome, Edge, Safari, Firefox).
 
 Optional environment variables:
 
@@ -475,9 +481,17 @@ ai-tycoon/
 
 ### Docs
 
-- [`CHANGELOG.md`](./CHANGELOG.md) — feature drops by iteration
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — project layout + how to add modals / shortcuts / achievements / platforms
+- [`CHANGELOG.md`](./CHANGELOG.md) — feature drops by iteration (220+ iterations, 9 GitHub releases)
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — setup + how to add modals / shortcuts / achievements / platforms
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — data flow + module relationships + extension points
+- [`docs/SCREENSHOTS.md`](./docs/SCREENSHOTS.md) — visual gallery (hero, command palette, insights, detail panel, mobile)
+- [`SECURITY.md`](./SECURITY.md) — vulnerability reporting policy + response SLA
+- [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) — Contributor Covenant v2.1
 - [`LICENSE`](./LICENSE) — MIT
+
+### Reliability
+
+v1.4.0 → v1.4.6 went through **8 verification rounds** (general-purpose agent code reviews + Playwright e2e) and fixed **15 latent bugs** spanning WebSocket race conditions, rendering crashes, GPU leaks, mobile horizontal scroll, and the once-broken "While you were away" toast. See `CHANGELOG.md` iterations 200–219 for the full hunt log.
 
 ### Easter eggs
 
