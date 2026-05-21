@@ -5,6 +5,26 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.7] — 2026-05-21
+
+> v1.4.6 직후 장기 사용자용 신규 정리 기능 + 영문 README 동기화.
+>
+> 사용자 데이터 호환: 변경 없음 (사용자가 직접 트리거할 때만 데이터 삭제).
+> SW 캐시: v40 → v41.
+>
+> **신규 기능**
+> - **메모 태그 매니저에 오프라인 메모 일괄 정리** (iter 222) — 한 달 이상 쓰면 자연스럽게
+>   쌓이는 stale note (종료된 sessionId 의 메모) 를 한 번에 정리. 현재 살아있는 에이전트의
+>   sessionId/pid 집합과 비교해 `offline / N/M offline` 배지 + 상단 정리 버튼.
+>   인라인 확인 strip (native confirm 안 씀, 기본 포커스 '아니오' 로 실수 방지).
+>
+> **문서**
+> - **README 영문 섹션 v1.4.6 동기화** (iter 221) — 업적 21→23, i18n 70+→130+, 명령 팔레트
+>   22→35+, hashtag autocomplete + 모바일 responsive + 키보드 navigation 디테일 + Reliability
+>   섹션 (8 verification rounds / 15 bug fixes) 추가
+
 ### Iteration 222 — 메모 태그 매니저에 orphan 표시 + 일괄 정리
 - 장기 사용자가 오래된 sessionId 의 메모 누적되면 사이드바 태그 바가 stale 데이터로 채워짐
 - 설정 → 메모 태그 매니저에서 **현재 살아있는 에이전트의 sessionId/pid 집합**(`liveKeys`) 과 비교:

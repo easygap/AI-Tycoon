@@ -7,7 +7,7 @@
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-1.4.6-d97757.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.4.7-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
 
 <p align="center">
@@ -22,10 +22,11 @@
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
 
-### 🛠️ v1.4.x 안정성 패치 라인 (v1.4.1 ~ v1.4.6)
+### 🛠️ v1.4.x 안정성 패치 라인 (v1.4.1 ~ v1.4.7)
 v1.4.0 직후 8번의 검증 라운드 (general-purpose agent 코드 리뷰 5회 + Playwright e2e 3회) 를 거치며
-누적 **15개의 잠재 버그**를 잡았습니다. 정식 patch 6종으로 컷:
+누적 **15개의 잠재 버그**를 잡고, 장기 사용자를 위한 신규 정리 기능 1개를 더했습니다. 정식 patch 7종으로 컷:
 
+- **v1.4.7** — 메모 태그 매니저에 **오프라인 에이전트 메모 일괄 정리** 기능 + README 영문 섹션 v1.4.6 동기화
 - **v1.4.6** — *모바일 가로 스크롤 fix (high)* — 768px 이하에서 document horizontal scroll 발생하던 버그 + OSS hygiene (이슈/PR 템플릿, SECURITY.md, CODE_OF_CONDUCT.md, .gitattributes, ARCHITECTURE.md)
 - **v1.4.5** — 마무리 컷 — 메모 export 코드블록 보존, Playwright 라이브 audit (이슈 0건), README 정리
 - **v1.4.4** — 데이터 영속 모듈 패치 — *자리 비운 사이 토스트 부풀림 (high)*, 자정 status timer 누락, 백업 restore 원자성·버전 가드
