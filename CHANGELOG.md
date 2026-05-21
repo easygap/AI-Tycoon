@@ -5,6 +5,21 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 224 — panel.js 코드 리뷰: high-severity 2건 + XSS 1건 픽스
+- general-purpose agent 로 `js/panel.js` (3000+ lines) 비-hashtag 부분 코드 리뷰
+- **panel.js:3540/3584 — `themeForAgent` 정의 안 됨 (high)** — 프로젝트 드릴다운 모달 (project-overlay)
+  의 에이전트 row + 태스크 row 렌더에서 `ReferenceError: themeForAgent is not defined` throw
+  → 모달 열면 빈 상태로 보이고 콘솔 에러. `getAgentTheme(a)` (190줄에 정의) 로 정정
+- **panel.js:3421/3565 — pid 타입 mismatch (high)** — Insights 피드 + 프로젝트 모달의 에이전트
+  row 클릭이 `S.selectedPid = pid` (string from data-attr) 로 저장하는데, `updateDetailPanel:2112`
+  은 `a.pid === S.detailPid` strict 비교. `a.pid` 가 number 면 매칭 실패 → 디테일 패널이
+  바로 닫히는 silent UX 깨짐. 해당 site 에서 `S.liveAgents.find(...).pid` 의 원본 타입 그대로
+  저장하도록 정정
+- **panel.js:2081/2084 — 보스 큐 inline onclick XSS (medium)** — `onclick="bossReviewAction('${entry.pid}','yes')"`
+  의 entry.pid 에 `'` 또는 `\` 포함될 경우 attribute 깨짐 + 잠재 XSS. `data-boss-review-pid` +
+  `data-boss-decision` 으로 두고 addEventListener 위임으로 변경
+- SW 캐시 v41 → v42
+
 ### Iteration 223 — feat/themes-and-polish → main PR 머지 (#4)
 - v1.3.0 ~ v1.4.7 의 모든 작업이 (224 commits) `feat/themes-and-polish` 에 누적된 상태였음
 - 정식 release line 을 main 위에 두기 위해 PR #4 생성 후 merge
