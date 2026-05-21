@@ -5,6 +5,25 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.8] — 2026-05-21
+
+> v1.4.7 직후 `panel.js` 비-hashtag 부분 코드 리뷰 (iter 224) 로 발견한 high 2건 + medium 1건 픽스.
+>
+> 사용자 데이터 호환: 변경 없음. SW 캐시: v41 → v42.
+>
+> **버그 픽스**
+> - **프로젝트 드릴다운 모달 ReferenceError (high)** — `themeForAgent` 가 panel.js 안에 정의 안 됨.
+>   project-overlay 의 에이전트 row + 태스크 row 렌더에서 throw → 모달 열면 빈 상태 + 콘솔 에러.
+>   `getAgentTheme(a)` (190줄에 정의) 로 정정. **iter 223 의 main 머지 이후 가장 영향 큰 fix.**
+> - **Insights/프로젝트 row 클릭 시 디테일 패널 silent 닫힘 (high)** — `data-pid` (string) 를
+>   그대로 `S.detailPid` 에 저장 → `updateDetailPanel` 의 `a.pid === S.detailPid` strict 비교 실패.
+>   `S.liveAgents.find(...).pid` 의 원본 타입 (number/string) 그대로 저장하도록 정정.
+> - **보스 큐 inline onclick XSS 회피 (medium)** — `entry.pid` (외부 도구 / 데모 데이터 출처)
+>   에 `'`/`\\` 포함될 경우 attribute 깨짐 + 잠재 XSS. `data-boss-review-pid` + `data-boss-decision`
+>   + addEventListener 위임으로 안전화.
+
 ### Iteration 224 — panel.js 코드 리뷰: high-severity 2건 + XSS 1건 픽스
 - general-purpose agent 로 `js/panel.js` (3000+ lines) 비-hashtag 부분 코드 리뷰
 - **panel.js:3540/3584 — `themeForAgent` 정의 안 됨 (high)** — 프로젝트 드릴다운 모달 (project-overlay)
