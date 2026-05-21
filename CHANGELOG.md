@@ -5,6 +5,19 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 218 — CODE_OF_CONDUCT.md + .gitattributes 정규화
+- **`CODE_OF_CONDUCT.md`** (루트) — Contributor Covenant v2.1 기반 한국어 행동 강령
+  - 약속 4가지 (존중·포용·건설적 비평·투명)
+  - 받아들이지 않는 행동 5가지 명시
+  - 적용 범위 + 신고 채널 + 처리 단계
+  - 신고자 신원 보호 + 보복 금지 명시
+- **`.gitattributes`** (루트) — 그동안 매 commit 마다 출력되던 CRLF/LF 경고 정리
+  - `* text=auto eol=lf` 베이스라인
+  - `.bat`/`.cmd`/`.ps1` 만 CRLF 예외
+  - `.png`/`.ico` binary, `.svg` 는 LF 텍스트
+  - `.md`/`.js`/`.css`/`.html`/`.json`/`.yml` 모두 LF 강제
+- `CONTRIBUTING.md` 하단에 "행동 강령" + "보안 이슈" 섹션 추가, COC/SECURITY 양쪽 link
+
 ### Iteration 217 — GitHub 프로젝트 hygiene 파일 4종 추가
 - 실제 OSS 프로젝트가 갖춰야 할 standard files 4종 작성:
 - `.github/ISSUE_TEMPLATE/bug_report.md` — 버그 리포트 템플릿

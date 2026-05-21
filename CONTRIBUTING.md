@@ -159,6 +159,15 @@ Add new modules to the `SHELL` list when you introduce one. CI runs both
   konami, empty CTA, mini-map. New animated elements should check the media
   query.
 
+## 행동 강령
+
+이슈 / PR / Discussions 등 모든 협업 채널은 [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) 를
+따릅니다. 한 줄 요약: 서로 존중하고, 거절도 이유를 적어요.
+
+## 보안 이슈
+
+일반 버그가 아닌 보안 취약점이라면 [`SECURITY.md`](./SECURITY.md) 의 신고 채널을 이용해 주세요.
+
 ## License
 
 MIT. Contributions are accepted under the same license.
