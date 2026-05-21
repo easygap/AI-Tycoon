@@ -52,6 +52,17 @@ VS Code 스타일 빠른 검색. 에이전트 fuzzy 검색 + 모든 액션 + **�
 
 ---
 
+## 모바일 (390×844)
+
+iPhone 14 Pro 비슷한 viewport. 사이드바는 토글 형태로 숨겨지고, 헤더 HUD + 팀 레이더 +
+캔버스 + 모바일 우선 작업 dock 이 세로로 쌓입니다. 가로 스크롤 없이 깔끔하게 맞아요.
+
+<p align="center">
+  <img src="mobile.png" alt="AI Tycoon 모바일 화면 — 390px 폭, 세로 레이아웃" width="390">
+</p>
+
+---
+
 ## 캡처 방법
 
 ```bash
