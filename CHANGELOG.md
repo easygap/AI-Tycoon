@@ -5,7 +5,15 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 223 — feat/themes-and-polish → main PR 머지 (#4)
+- v1.3.0 ~ v1.4.7 의 모든 작업이 (224 commits) `feat/themes-and-polish` 에 누적된 상태였음
+- 정식 release line 을 main 위에 두기 위해 PR #4 생성 후 merge
+- 머지 commit: `60f833c`
+- 10개의 GitHub Release tag (v1.3.0 ~ v1.4.7) 가 이제 main 브랜치 ancestry 에 모두 위치
+- PR description 에 hashtag 시스템 / 키보드 워크플로우 / 8회 검증 라운드 / 15 bug fixes /
+  OSS hygiene 정비 / 인프라 갱신 / 데이터 호환성을 종합 정리
+
+
 
 ## [1.4.7] — 2026-05-21
 
