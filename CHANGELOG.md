@@ -5,6 +5,18 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+### Iteration 222 — 메모 태그 매니저에 orphan 표시 + 일괄 정리
+- 장기 사용자가 오래된 sessionId 의 메모 누적되면 사이드바 태그 바가 stale 데이터로 채워짐
+- 설정 → 메모 태그 매니저에서 **현재 살아있는 에이전트의 sessionId/pid 집합**(`liveKeys`) 과 비교:
+  - **`offline / 오프라인` 배지** — 모든 메모가 오프라인이면 전체 표시, 일부면 `N/M offline` 표시
+  - 모두 오프라인인 칩은 opacity 0.6 으로 흐릿하게
+  - 상단에 `오프라인 에이전트 메모 정리 (N개)` 버튼 — orphan note 1개 이상이면 노출
+- 인라인 확인 (native confirm 안 씀): 클릭 시 `정말 N개 지울까요? ` strip 으로 swap, 기본 포커스 '아니오'
+- 확정 시 모든 orphan note 키를 localStorage 에서 일괄 제거 → invalidate → updatePanel
+- 토스트로 `오프라인 메모 정리 완료 · N개 메모 삭제됨` 피드백
+- KO/EN i18n 분기, 다크 모드 색상 매핑 (indigo 정리 버튼 / amber partial 배지)
+- SW 캐시 v40 → v41
+
 ### Iteration 221 — README 영문 섹션 v1.4.6 동기화
 - 영문 bottom 섹션 (English overview) 이 v1.4.0 이전 정보로 굳어 있어 갱신:
   - 업적 21 → **23**, i18n 키 70+ → **130+** (실제 count 반영)

@@ -4093,6 +4093,87 @@ body.dark .settings-tag-delete:focus-visible {
 }
 body.dark .settings-tags-empty { color: #a89c8e; }
 
+/* iter 222 — 오프라인(orphan) 태그 표시 + 일괄 정리 버튼 */
+.settings-tags-cleanup {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.10);
+    border: 1px solid rgba(99, 102, 241, 0.32);
+    color: #4f46e5;
+    cursor: pointer;
+    margin-bottom: 8px;
+    transition: background-color 140ms var(--ease-out, ease-out),
+                border-color 140ms var(--ease-out, ease-out);
+}
+.settings-tags-cleanup iconify-icon { font-size: 14px; }
+.settings-tags-cleanup:hover,
+.settings-tags-cleanup:focus-visible {
+    background: rgba(99, 102, 241, 0.20);
+    border-color: rgba(99, 102, 241, 0.50);
+}
+.settings-tag-orphan-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(100, 116, 139, 0.16);
+    color: #475569;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+.settings-tag-orphan-badge.is-partial {
+    background: rgba(245, 158, 11, 0.16);
+    color: #b45309;
+    text-transform: none;
+}
+.settings-tag-row.is-all-orphan .agent-tag-chip {
+    opacity: 0.6; /* 모두 오프라인이면 칩 자체도 흐릿하게 */
+}
+.settings-tags-cleanup-confirm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    background: rgba(220, 38, 38, 0.06);
+    border: 1px solid rgba(220, 38, 38, 0.22);
+    border-radius: 8px;
+}
+.settings-tags-cleanup-confirm .settings-tag-delete-prompt {
+    margin-right: auto;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #b91c1c;
+}
+body.dark .settings-tags-cleanup {
+    background: rgba(165, 180, 252, 0.12);
+    border-color: rgba(165, 180, 252, 0.32);
+    color: #c7d2fe;
+}
+body.dark .settings-tags-cleanup:hover,
+body.dark .settings-tags-cleanup:focus-visible {
+    background: rgba(165, 180, 252, 0.22);
+    border-color: rgba(165, 180, 252, 0.50);
+}
+body.dark .settings-tag-orphan-badge {
+    background: rgba(148, 163, 184, 0.18);
+    color: #cbd5e1;
+}
+body.dark .settings-tag-orphan-badge.is-partial {
+    background: rgba(251, 191, 36, 0.16);
+    color: #fcd34d;
+}
+body.dark .settings-tags-cleanup-confirm {
+    background: rgba(248, 113, 113, 0.08);
+    border-color: rgba(248, 113, 113, 0.32);
+}
+body.dark .settings-tags-cleanup-confirm .settings-tag-delete-prompt { color: #fca5a5; }
+
 /* 인라인 rename input + 저장/취소 (native prompt 대체) */
 .settings-tag-rename-input {
     font-size: 12px;
