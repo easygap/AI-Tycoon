@@ -324,19 +324,27 @@ function pickWeather(now) {
     }
     return { kind: "clear", until: now + 8 * 60 * 1000 };
 }
+// GPU 메모리 누수 방지용 — drawWeather 가 매 프레임 새 Graphics 만들고 removeChildren() 만 해서
+// PixiJS v8 환경에서 GPU 버퍼가 해제 안 되던 문제 (비 내릴 때 누적). 단일 Graphics 재사용 + clear().
+let _weatherGfx = null;
 function drawWeather() {
     if (!weatherFX) return;
     const now = Date.now();
     if (now >= _weatherState.until) {
         Object.assign(_weatherState, pickWeather(now), { drops: [] });
     }
-    weatherFX.removeChildren();
+    const PIXI = window.PIXI;
+    if (!PIXI) return;
+    // 단일 persistent Graphics — 매 프레임 clear() 후 다시 그리기. 새 객체 안 만듦.
+    if (!_weatherGfx) {
+        _weatherGfx = new PIXI.Graphics();
+        weatherFX.addChild(_weatherGfx);
+    }
+    if (typeof _weatherGfx.clear === "function") _weatherGfx.clear();
     if (_weatherState.kind !== "rain") return;
     const w = app?.screen?.width || S.canvasW || 0;
     const h = app?.screen?.height || S.canvasH || 0;
     if (w <= 0 || h <= 0) return;
-    const PIXI = window.PIXI;
-    if (!PIXI) return;
     if (_weatherState.drops.length === 0) {
         const count = Math.min(60, Math.round((w * h) / 18000));
         for (let i = 0; i < count; i++) {
@@ -349,7 +357,7 @@ function drawWeather() {
             });
         }
     }
-    const g = new PIXI.Graphics();
+    const g = _weatherGfx;
     const motion = motionFactor() * 1.6 + 0.4;
     _weatherState.drops.forEach(d => {
         d.y += d.speed * motion;
@@ -366,7 +374,6 @@ function drawWeather() {
             }
         }
     });
-    weatherFX.addChild(g);
 }
 
 function activeAgentCount() {

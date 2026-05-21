@@ -31,10 +31,11 @@ const CURSOR_STORAGE = path.join(HOME, "AppData", "Roaming", "Cursor", "User", "
 const PORT = parseInt(process.env.PORT, 10) || 3777;
 const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL, 10) || 2000;
 const HEARTBEAT_INTERVAL = 10000; // 10s
+const QUIET = process.env.QUIET === "1" || process.env.LOG_LEVEL === "warn" || process.env.LOG_LEVEL === "error";
 
 // ── State ────────────────────────────────────────────────────
 const STARTED_AT = Date.now();
-const VERSION = "1.0.0";
+const VERSION = "1.4.7";
 let lastState = null;
 let clients = new Set();
 let watchDebounceTimer = null;
@@ -44,6 +45,9 @@ let lastStateJSON = ""; // diff baseline for broadcast gating
 let lastGoodProcesses = []; // cache: last successful process detection result
 let lastGoodExternalAIs = []; // cache: last successful external AI detection
 let lastDiagnostics = null; // lightweight detector health shared through heartbeat
+let pollTimer = null; // setInterval handle so shutdown can stop it
+let heartbeatTimer = null; // setInterval handle for heartbeat
+let isShuttingDown = false;
 
 // ── Per-session sticky state (prevents oscillation) ──
 // sessionId → { role, roleVotes: {role: count}, status, statusHoldUntil }
@@ -112,6 +116,35 @@ const httpServer = http.createServer((req, res) => {
             "Cache-Control": "no-cache, no-store, must-revalidate",
         });
         res.end();
+        return;
+    }
+
+    // /api/agents — JSON snapshot of currently detected agents (for integrations)
+    if (urlPath === "/api/agents") {
+        const agents = (lastState?.agents || []).map(a => ({
+            pid: a.pid,
+            platform: a.platform,
+            platformName: a.platformName,
+            projectName: a.projectName,
+            role: a.role,
+            status: a.status,
+            isRunning: a.isRunning,
+            memoryMB: a.memoryMB,
+            needsReview: a.needsReview,
+            totalTasks: a.totalTasks,
+            completedTasks: a.completedTasks,
+            currentTask: a.currentTask ? {
+                id: a.currentTask.id,
+                subject: a.currentTask.subject,
+                status: a.currentTask.status,
+            } : null,
+        }));
+        res.writeHead(200, {
+            "Content-Type": "application/json; charset=utf-8",
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Access-Control-Allow-Origin": "*",
+        });
+        res.end(JSON.stringify({ ok: true, count: agents.length, agents }, null, 2));
         return;
     }
 
@@ -206,7 +239,7 @@ const wss = new WebSocketServer({ server: httpServer });
 
 wss.on("connection", (ws) => {
     clients.add(ws);
-    console.log(`[WS] Client connected (total: ${clients.size})`);
+    if (!QUIET) console.log(`[WS] Client connected (total: ${clients.size})`);
 
     // Send current state immediately
     if (lastState) {
@@ -215,7 +248,7 @@ wss.on("connection", (ws) => {
 
     ws.on("close", () => {
         clients.delete(ws);
-        console.log(`[WS] Client disconnected (total: ${clients.size})`);
+        if (!QUIET) console.log(`[WS] Client disconnected (total: ${clients.size})`);
     });
 });
 
@@ -233,7 +266,7 @@ function broadcast(msg) {
 
 /** Heartbeat — lets client detect stale connections */
 function startHeartbeat() {
-    setInterval(() => {
+    heartbeatTimer = setInterval(() => {
         const msg = JSON.stringify({
             type: "heartbeat",
             ts: Date.now(),
@@ -771,8 +804,15 @@ async function pollAndBroadcast() {
             const memChanged = proc && prevMem > 0 && Math.abs(memKB - prevMem) > 5000; // >5MB change = active
             if (proc) prevMemory[session._pid] = memKB;
 
-            // Also consider recent prompt as activity signal
-            const hasRecentPrompt = latestPrompt && (Date.now() - latestPrompt.timestamp) < 300000; // <5min
+            // Also consider recent prompt as activity signal.
+            // history.jsonl entries 는 timestamp 가 ISO string 일 수 있어 Number 변환 필요 —
+            // 안 그러면 (Date.now() - "2026-05-19T...") = NaN → < 300000 false → 신호 누락
+            const promptTs = latestPrompt
+                ? (typeof latestPrompt.timestamp === "number"
+                    ? latestPrompt.timestamp
+                    : Date.parse(latestPrompt.timestamp))
+                : 0;
+            const hasRecentPrompt = Number.isFinite(promptTs) && (Date.now() - promptTs) < 300000; // <5min
             const isActive = hasTempActivity || sessionFresh || memChanged || hasRecentPrompt;
 
             // ── Role: majority-vote with sticky hold ──
@@ -1113,6 +1153,21 @@ async function pollAndBroadcast() {
         // Merge Claude + external agents
         const allAgents = [...filteredAgents, ...externalAgents];
 
+        // 메모리 누수 방지 — 사라진 PID 의 prev 상태 정리.
+        // 오래 띄워둔 서버에서 ext-codex-${uuid} 같은 외부 세션 keyspace 가 무제한 늘어나던 문제.
+        const livePidSet = new Set(allAgents.map(a => String(a.pid)));
+        for (const key of Object.keys(prevMemory)) {
+            if (!livePidSet.has(key)) delete prevMemory[key];
+        }
+        for (const key of Object.keys(extPrevState)) {
+            if (!livePidSet.has(key)) delete extPrevState[key];
+        }
+        // stickyState 는 sessionId 키 — 살아있는 세션 ID 들 모아 비교
+        const liveSidSet = new Set(allAgents.map(a => String(a.sessionId || "")).filter(Boolean));
+        for (const sid of Object.keys(stickyState)) {
+            if (!liveSidSet.has(sid)) delete stickyState[sid];
+        }
+
         const diagnostics = {
             lastPollAt: Date.now(),
             pollInterval: POLL_INTERVAL,
@@ -1133,9 +1188,9 @@ async function pollAndBroadcast() {
         };
         lastDiagnostics = diagnostics;
 
-        // Debug log: show detected agents
+        // Debug log: show detected agents (suppressed in quiet mode)
         const prevCount = lastState?.agents?.length ?? -1;
-        if (allAgents.length !== prevCount) {
+        if (!QUIET && allAgents.length !== prevCount) {
             console.log(`[POLL] ${processes.length} claude + ${externalAIs.length} external → ${allAgents.length} agents`);
             allAgents.forEach(a => {
                 console.log(`  → [${a.platform}] ${a.pid} | ${a.projectName} | ${a.status} | mem=${a.memoryMB}MB`);
@@ -1185,6 +1240,7 @@ httpServer.listen(PORT, () => {
     console.log("");
     console.log("  ╔══════════════════════════════════════╗");
     console.log("  ║   AI TYCOON — Pixel Agent Office     ║");
+    console.log(`  ║   v${VERSION.padEnd(34)}║`);
     console.log("  ║                                      ║");
     console.log(`  ║   http://localhost:${PORT}              ║`);
     console.log("  ║   WebSocket: ws://localhost:" + PORT + "     ║");
@@ -1195,11 +1251,11 @@ httpServer.listen(PORT, () => {
     console.log(`  Claude Dir: ${CLAUDE_DIR}`);
     console.log(`  Sessions:   ${SESSIONS_DIR}`);
     console.log(`  Tasks:      ${TASKS_DIR}`);
-    console.log(`  Platform:   ${process.platform}`);
+    console.log(`  Platform:   ${process.platform} · Node ${process.version}`);
     console.log("");
 
     pollAndBroadcast();
-    setInterval(pollAndBroadcast, POLL_INTERVAL);
+    pollTimer = setInterval(pollAndBroadcast, POLL_INTERVAL);
     startHeartbeat();
     watchSessions();
     watchTasks();
@@ -1208,15 +1264,52 @@ httpServer.listen(PORT, () => {
 });
 
 // ── Graceful shutdown ────────────────────────────────────────
-process.on("SIGTERM", () => {
-    console.log("[SERVER] Shutting down...");
-    wss.close();
-    httpServer.close();
-    process.exit(0);
+function gracefulShutdown(signal) {
+    if (isShuttingDown) return; // idempotent: double Ctrl+C shouldn't crash
+    isShuttingDown = true;
+    console.log(`\n[SERVER] ${signal} received, shutting down gracefully...`);
+
+    // 1. Stop background loops so we don't fire new broadcasts mid-shutdown
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+    if (watchDebounceTimer) { clearTimeout(watchDebounceTimer); watchDebounceTimer = null; }
+
+    // 2. Notify all connected clients so the UI can show a friendly toast
+    const farewell = JSON.stringify({
+        type: "server_shutdown",
+        ts: Date.now(),
+        message: "서버가 잠시 후 종료됩니다. 곧 다시 연결을 시도할게요.",
+    });
+    clients.forEach(ws => {
+        try {
+            safeSend(ws, farewell);
+            ws.close(1001, "Server shutting down");
+        } catch (e) { /* ignore */ }
+    });
+
+    // 3. Close the WS + HTTP server, then exit
+    wss.close(() => {
+        httpServer.close(() => {
+            console.log("[SERVER] All connections closed. Bye! 👋");
+            process.exit(0);
+        });
+    });
+
+    // 4. Force-exit safeguard if something hangs (e.g. lingering sockets)
+    setTimeout(() => {
+        console.warn("[SERVER] Forced shutdown after 3s timeout.");
+        process.exit(1);
+    }, 3000).unref();
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+// Catch uncaught errors so the process doesn't die silently
+process.on("uncaughtException", (err) => {
+    console.error("[SERVER] Uncaught exception:", err);
+    gracefulShutdown("uncaughtException");
 });
-process.on("SIGINT", () => {
-    console.log("[SERVER] Interrupted, shutting down...");
-    wss.close();
-    httpServer.close();
-    process.exit(0);
+process.on("unhandledRejection", (reason) => {
+    console.error("[SERVER] Unhandled rejection:", reason);
 });

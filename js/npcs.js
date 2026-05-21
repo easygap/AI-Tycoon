@@ -327,7 +327,8 @@ function moveAlongPath(animFrame) {
         robot.progress = 0;
         robot.idx = (robot.idx + 1) % ROBOT_PATH.length;
         // Occasionally pause to "clean"
-        if (Math.random() < 0.18) robot.pauseTimer = 60 + Math.random() * 120;
+        // floor 안 하면 decrement 가 fractional 값 통과해서 정확히 0 안 나옴 → 영원히 멈춤 상태로 갇힘
+        if (Math.random() < 0.18) robot.pauseTimer = Math.floor(60 + Math.random() * 120);
     }
     robot.dustPhase += 0.18;
     void animFrame;
@@ -341,7 +342,7 @@ function drawCleaningRobot(ctx, animFrame) {
     const ty = from.y + (to.y - from.y) * t;
     const px = tx * TILE;
     const py = ty * TILE;
-    const moving = robot.pauseTimer === 0;
+    const moving = robot.pauseTimer <= 0;
 
     // Tiny dust cloud trail behind, when moving
     if (moving) {

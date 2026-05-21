@@ -24,6 +24,7 @@ const KIND_META = {
     "task-done": { icon: "solar:check-circle-bold",   color: "#0ea5e9", bg: "rgba(14,165,233,0.95)" },
     review:    { icon: "solar:bell-bold",             color: "#f97316", bg: "rgba(249,115,22,0.95)" },
     info:      { icon: "solar:info-circle-bold",      color: "#a78bfa", bg: "rgba(167,139,250,0.95)" },
+    system:    { icon: "solar:server-bold",           color: "#475569", bg: "rgba(71,85,105,0.95)" },
 };
 
 function ensureStack() {
@@ -101,12 +102,13 @@ export function showToast(kind, title, body, opts = {}) {
     root.appendChild(card);
     stack.push(card);
     requestAnimationFrame(() => card.classList.add("is-shown"));
+    const lifetime = Math.max(800, Number(opts.duration) || TTL_MS);
     setTimeout(() => {
         card.classList.remove("is-shown");
         setTimeout(() => card.remove(), 240);
         const i = stack.indexOf(card);
         if (i >= 0) stack.splice(i, 1);
-    }, TTL_MS);
+    }, lifetime);
 }
 
 function escapeHtml(s) {

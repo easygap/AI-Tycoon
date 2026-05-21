@@ -717,14 +717,15 @@ function drawWhiteboard(px, py) {
     ctx.fillStyle = PAL.whiteboard;
     ctx.fillRect(px + 5, py + 5, TILE - 10, TILE - 13);
 
-    // Show real project names from active agents
-    const activeProjects = S.liveAgents.filter(a => a.isRunning).map(a => a.projectName);
+    // Show real project names from active agents.
+    // 빈 projectName 인 에이전트 (cwd 못 잡힌 경우) 가 있어서 fallback `""` 안 깔면 substring 에서 throw.
+    const activeProjects = S.liveAgents.filter(a => a.isRunning).map(a => a.projectName || "");
     const colors = ["rgba(5,150,105,0.4)", "rgba(37,99,235,0.35)", "rgba(217,119,6,0.35)", "rgba(220,50,100,0.3)"];
     ctx.font = "2.5px Pretendard, sans-serif";
     ctx.textAlign = "left";
     for (let i = 0; i < Math.min(activeProjects.length, 4); i++) {
         ctx.fillStyle = colors[i % colors.length];
-        ctx.fillText(activeProjects[i].substring(0, 8), px + 7, py + 8 + i * 3.5);
+        ctx.fillText((activeProjects[i] || "").substring(0, 8), px + 7, py + 8 + i * 3.5);
     }
     if (activeProjects.length === 0) {
         ctx.fillStyle = "rgba(0,0,0,0.08)";
@@ -1139,19 +1140,30 @@ function drawAgent(agent, v) {
         ctx.globalAlpha = 1;
     }
 
-    // Typing dots when actively coding (and not currently speaking)
-    if (agent.isRunning && status === "coding" && !(v.speechTimer > 0 && v.speechText)) {
+    // Typing / thinking dots when actively coding or thinking
+    // (and not currently speaking)
+    const showDots = agent.isRunning &&
+        (status === "coding" || status === "thinking") &&
+        !(v.speechTimer > 0 && v.speechText);
+    if (showDots) {
         const tdy = by - 18;
+        const isThinking = status === "thinking";
         const dots = 3;
         const pmetaTint = PLATFORM_META[agent.platform];
-        const dotColor = pmetaTint?.color || "#059669";
+        const codingColor = pmetaTint?.color || "#059669";
+        // Thinking dots: slower, amber tone, slightly larger
+        const dotColor = isThinking ? "#d97706" : codingColor;
+        const speed    = isThinking ? 0.09 : 0.18;
+        const offset   = isThinking ? 0.75 : 0.55;
+        const radius   = isThinking ? 1.15 : 0.95;
+        const lift     = isThinking ? 1.1 : 1.6;
         for (let i = 0; i < dots; i++) {
-            const phase = (t * 0.18) - i * 0.55;
-            const bouncY = Math.max(0, Math.sin(phase) * 1.6);
+            const phase = (t * speed) - i * offset;
+            const bouncY = Math.max(0, Math.sin(phase) * lift);
             ctx.fillStyle = dotColor;
             ctx.globalAlpha = 0.35 + Math.max(0, Math.sin(phase)) * 0.55;
             ctx.beginPath();
-            ctx.arc(x - 4 + i * 4, tdy - bouncY, 0.95, 0, Math.PI * 2);
+            ctx.arc(x - 4 + i * 4, tdy - bouncY, radius, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.globalAlpha = 1;
@@ -1249,7 +1261,9 @@ function drawSubAgents() {
     Object.entries(byParent).forEach(([pid, subs]) => {
         const parent = S.visualAgents[pid];
         if (!parent) return;
-        const agent = S.liveAgents.find(a => a.pid === pid);
+        // pid 는 Object.entries() 에서 string 으로 나오는데 a.pid 는 보통 number/string 혼재.
+        // strict 비교하면 사일런트로 undefined 반환 → 모든 sub-agent 렌더 스킵되던 잠재 버그.
+        const agent = S.liveAgents.find(a => String(a.pid) === pid);
         if (!agent) return;
 
         // Sort by slot index
