@@ -5,6 +5,1425 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.7] — 2026-05-21
+
+> v1.4.6 직후 장기 사용자용 신규 정리 기능 + 영문 README 동기화.
+>
+> 사용자 데이터 호환: 변경 없음 (사용자가 직접 트리거할 때만 데이터 삭제).
+> SW 캐시: v40 → v41.
+>
+> **신규 기능**
+> - **메모 태그 매니저에 오프라인 메모 일괄 정리** (iter 222) — 한 달 이상 쓰면 자연스럽게
+>   쌓이는 stale note (종료된 sessionId 의 메모) 를 한 번에 정리. 현재 살아있는 에이전트의
+>   sessionId/pid 집합과 비교해 `offline / N/M offline` 배지 + 상단 정리 버튼.
+>   인라인 확인 strip (native confirm 안 씀, 기본 포커스 '아니오' 로 실수 방지).
+>
+> **문서**
+> - **README 영문 섹션 v1.4.6 동기화** (iter 221) — 업적 21→23, i18n 70+→130+, 명령 팔레트
+>   22→35+, hashtag autocomplete + 모바일 responsive + 키보드 navigation 디테일 + Reliability
+>   섹션 (8 verification rounds / 15 bug fixes) 추가
+
+### Iteration 222 — 메모 태그 매니저에 orphan 표시 + 일괄 정리
+- 장기 사용자가 오래된 sessionId 의 메모 누적되면 사이드바 태그 바가 stale 데이터로 채워짐
+- 설정 → 메모 태그 매니저에서 **현재 살아있는 에이전트의 sessionId/pid 집합**(`liveKeys`) 과 비교:
+  - **`offline / 오프라인` 배지** — 모든 메모가 오프라인이면 전체 표시, 일부면 `N/M offline` 표시
+  - 모두 오프라인인 칩은 opacity 0.6 으로 흐릿하게
+  - 상단에 `오프라인 에이전트 메모 정리 (N개)` 버튼 — orphan note 1개 이상이면 노출
+- 인라인 확인 (native confirm 안 씀): 클릭 시 `정말 N개 지울까요? ` strip 으로 swap, 기본 포커스 '아니오'
+- 확정 시 모든 orphan note 키를 localStorage 에서 일괄 제거 → invalidate → updatePanel
+- 토스트로 `오프라인 메모 정리 완료 · N개 메모 삭제됨` 피드백
+- KO/EN i18n 분기, 다크 모드 색상 매핑 (indigo 정리 버튼 / amber partial 배지)
+- SW 캐시 v40 → v41
+
+### Iteration 221 — README 영문 섹션 v1.4.6 동기화
+- 영문 bottom 섹션 (English overview) 이 v1.4.0 이전 정보로 굳어 있어 갱신:
+  - 업적 21 → **23**, i18n 키 70+ → **130+** (실제 count 반영)
+  - 명령 팔레트 22 commands → **35+ commands** + dynamic `#tag` filters 추가
+  - 메모: **hashtag autocomplete** (↑↓/Enter/Tab) + Cmd+S/Cmd+Enter 단축키 명시
+  - 메모 hashtag organization 섹션 — 8 touchpoints 강조
+  - 모바일 responsive bullet 추가 (≤768px, collapsible sidebar, no document scroll)
+  - 키보드 navigation 디테일 (`j/k` cycle, `N` note 등)
+- Run 섹션에 `npm run lint` / `npm run icons` 추가, smoke count 26 → 38, Node 18/20/22 CI 명시
+- Docs 섹션에 ARCHITECTURE / SCREENSHOTS / SECURITY / CODE_OF_CONDUCT 4종 link
+- **신규: Reliability 섹션** — 8 verification rounds + 15 bug fixes 강조 (v1.4.x 패치 라인 신뢰성 정보)
+
+## [1.4.6] — 2026-05-21
+
+## [1.4.6] — 2026-05-21
+
+> v1.4.5 직후 모바일 audit + OSS 프로젝트 hygiene 정비 묶음. **모바일 가로 스크롤 high-severity 버그** 하나 + 인프라/문서 4종.
+>
+> 사용자 데이터 호환: 변경 없음.
+> SW 캐시: v39 → v40.
+>
+> **버그 픽스**
+> - **모바일 가로 스크롤 발생 (high)** — `iPhone 14 Pro` 등 768px 이하에서 document 자체가
+>   가로로 늘어나 사용자에게 보기 흉한 horizontal scrollbar 노출되던 문제. `agent-focus-rail`
+>   의 flex 자식들이 viewport 폭 초과로 body 너비를 끌어올림. `@media (max-width: 768px)` 에
+>   `html, body { overflow-x: hidden; max-width: 100vw }` defensive + rail 에 `width:
+>   calc(100% - 28px)` 명시. 모바일 사용자에게 직접 영향.
+>
+> **인프라 / 문서**
+> - **`docs/ARCHITECTURE.md`** (267 lines, iter 216) — 데이터 흐름 / 모듈 관계 / 확장 포인트
+> - **`docs/SCREENSHOTS.md`** + 5종 캡처 (iter 215) — hero/팔레트/인사이트/디테일/모바일
+> - **`.github/ISSUE_TEMPLATE/`** + **`PULL_REQUEST_TEMPLATE.md`** (iter 217) — 표준 OSS 템플릿
+> - **`SECURITY.md`** (iter 217) — 취약점 신고 정책, 응답 SLA
+> - **`CODE_OF_CONDUCT.md`** + **`.gitattributes`** (iter 218) — Contributor Covenant 한국어 + line ending 정규화
+
+### Iteration 219 — 모바일 가로 스크롤 fix (real bug found by Playwright audit)
+- Playwright 로 iPhone 14 Pro (390×844) viewport 시뮬레이션
+- **document 가로 스크롤 발생 발견** — `docScrollWidth: 642` 이 `vw: 390` 넘김 (252px overflow)
+- 원인: `.agent-focus-rail` (실시간 직원 포커스 row) 의 자식 chip 들이 `flex: 0 0 156px`
+  로 자연 폭이 viewport 폭 초과. rail 자체엔 `overflow-x: auto` 가 있지만 chip 들이
+  body 의 contentSize 까지 끌어올림
+- **2단계 fix:**
+  1. rail 에 `width: calc(100% - 28px); min-width: 0;` 명시 → flex 자식 자유롭게 shrink
+  2. `@media (max-width: 768px)` 에 `html, body { overflow-x: hidden; max-width: 100vw }`
+     defensive — 어떤 자식이 실수로 폭 넘어도 document 스크롤은 절대 안 생기게
+- 결과: `docScrollWidth: 390 = vw` (가로 스크롤 0), rail 내부 swipe 는 정상 동작 유지
+- 모바일 스크린샷 캡처 → `docs/mobile.png` 추가 + `SCREENSHOTS.md` 에 모바일 섹션 추가
+- SW 캐시 v39 → v40
+
+### Iteration 218 — CODE_OF_CONDUCT.md + .gitattributes 정규화
+- **`CODE_OF_CONDUCT.md`** (루트) — Contributor Covenant v2.1 기반 한국어 행동 강령
+  - 약속 4가지 (존중·포용·건설적 비평·투명)
+  - 받아들이지 않는 행동 5가지 명시
+  - 적용 범위 + 신고 채널 + 처리 단계
+  - 신고자 신원 보호 + 보복 금지 명시
+- **`.gitattributes`** (루트) — 그동안 매 commit 마다 출력되던 CRLF/LF 경고 정리
+  - `* text=auto eol=lf` 베이스라인
+  - `.bat`/`.cmd`/`.ps1` 만 CRLF 예외
+  - `.png`/`.ico` binary, `.svg` 는 LF 텍스트
+  - `.md`/`.js`/`.css`/`.html`/`.json`/`.yml` 모두 LF 강제
+- `CONTRIBUTING.md` 하단에 "행동 강령" + "보안 이슈" 섹션 추가, COC/SECURITY 양쪽 link
+
+### Iteration 217 — GitHub 프로젝트 hygiene 파일 4종 추가
+- 실제 OSS 프로젝트가 갖춰야 할 standard files 4종 작성:
+- `.github/ISSUE_TEMPLATE/bug_report.md` — 버그 리포트 템플릿
+  - 환경 정보 필드 (버전 / OS / 브라우저 / Node / 모니터링 도구) + 재현 단계 + 콘솔 에러 가이드
+- `.github/ISSUE_TEMPLATE/feature_request.md` — 기능 제안 템플릿
+  - 문제 → 해결책 → 대안 → 관련 컨텍스트 구조, 직접 구현 의향 옵션
+- `.github/ISSUE_TEMPLATE/config.yml` — blank issue 비활성화 + Discussions/CHANGELOG/ARCHITECTURE 외부 링크
+- `.github/PULL_REQUEST_TEMPLATE.md` — PR 본문 골격
+  - 변경 종류 7개 체크박스 + 검증 체크리스트 (lint/test/데모/다크모드/i18n/모바일) + CHANGELOG 알림
+- `SECURITY.md` (루트) — 취약점 신고 정책
+  - 지원 버전 표 (1.4.x latest), GitHub Security Advisory / 이메일 신고 경로
+  - 응답 SLA (critical 7일, high 14일, medium/low 다음 정규 릴리즈)
+  - 스코프 (server.js / 브라우저 JS / 빌드 스크립트 / PWA) + 스코프 밖 명시
+  - **알려진 보안 고려사항** — localhost only 바인딩, localStorage 평문 저장 등 design choice 공개
+
+### Iteration 216 — docs/ARCHITECTURE.md 아키텍처 노트 작성
+- 새 contributor 가 코드 진입 시 *어떻게 도는지* 한눈에 알 수 있는 가이드 부재가 문제
+- 큰 그림 ASCII 다이어그램 + 서버/클라이언트 모듈 관계 + 데이터 흐름 한 사이클 +
+  localStorage 영속화 키 표 + Hashtag 시스템 흐름 + 캔버스 레이어 분리 + 테스팅 + 디자인 결정
+  총 10개 섹션으로 구성
+- 핵심 모듈 (`server.js`, `js/state.js`, `js/ws.js`, `js/renderer.js`, `js/pixiOverlay.js`,
+  `js/panel.js`) 의 역할 + 새 기능 추가 시 어디 손대야 하는지 명시
+- 검증 라운드 (iter 200~215) 14건 fix 의 패턴도 한 섹션으로 정리 — 같은 패턴 재사용 가능
+- `CONTRIBUTING.md` 상단에서 이 문서를 명시적으로 link
+- `README.md` 의 "자세한 변경 내역" 줄에 ARCHITECTURE / SCREENSHOTS 둘 다 link
+
+### Iteration 215 — 기능별 스크린샷 갤러리 추가 (docs/SCREENSHOTS.md)
+- iter 214 의 hero 만으로는 제품의 깊이가 안 보임 — 핵심 기능 3가지를 추가 캡처:
+  - `docs/cmdpalette.png` — 명령 팔레트 (`Ctrl+K`) "필터" 검색 시 **hashtag 별 필터 명령 자동 노출** 증명
+  - `docs/insights.png` — 인사이트 모달 (오늘 통계, MVP, 진행 중인 프로젝트, 24시간 히트맵)
+  - `docs/detail.png` — 디테일 패널 + 카드 hashtag 칩 + 메모리 그래프
+- `docs/SCREENSHOTS.md` 새 파일 — 4개 캡처를 설명과 함께 한 곳에서 갤러리로 보여줌
+- README hero 캡션에 `전체 스크린샷 갤러리 →` 링크 추가
+- Playwright MCP 자동화로 1440×900 해상도 일관 캡처
+
+### Iteration 214 — README 에 라이브 hero 스크린샷 (라이트 + 다크)
+- 그동안 README 가 픽셀아트 아이콘만 보여줘서 새 방문자가 "실제 화면이 어떻게 생겼나" 알 수 없었음
+- Playwright 로 demo 모드 띄워서 1440×900 해상도 hero 스크린샷 캡처:
+  - `docs/hero-light.png` — 라이트 모드, 5명 데모 에이전트, 해시태그 칩, 사이드바 데이터 시각화
+  - `docs/hero-dark.png` — 같은 화면의 다크 모드
+- README 상단 badge 바로 아래에 `<picture>` element 로 `prefers-color-scheme` 분기 — GitHub 의
+  다크 모드 사용자는 자동으로 다크 hero 보임
+- 캡처 전 sample 메모 3개 (`#frontend`, `#backend #리팩터링`, `#bug`) 박아 해시태그 시스템 자연스럽게 노출
+
+### Iteration 213 — v1.4.5 마무리 patch cut (위 [1.4.5] 참고)
+
+## [1.4.5] — 2026-05-19
+
+> v1.4.x 안정성 패치 라인의 마무리 컷. 헬퍼 모듈 코드 리뷰 라운드 (iter 210) +
+> Playwright 라이브 UI audit (iter 211) + README 정리 (iter 212) 를 묶음.
+>
+> 사용자 데이터 호환: 변경 없음. SW 캐시: v38 → v39.
+>
+> **변경**
+> - **메모 export 코드블록 silent 손상 fix (low)** — `standupExport.js` 의 notes export 가
+>   ``` 시퀀스를 `''` 로 강제 치환해서 코드 스니펫 깨지던 문제. CommonMark nested fence 로 안전 격리
+> - **Playwright 라이브 UI audit (이슈 0건)** — 실제 브라우저로 핵심 UI / iter 175 now 마커 /
+>   업적 / 명령 팔레트 / 콘솔 에러까지 점검 → 모두 정상, **release-ready 안정 plateau 도달 확인**
+> - **README 에 v1.4.x 안정성 패치 라인 섹션 추가** — 7번의 검증 라운드 + 14개 fix 의 한눈 요약
+>
+> 이 patch 로 v1.4.x 라인은 14개 잠재 버그 모두 잡힌 상태로 마감.
+
+### Iteration 212 — README 에 v1.4.x 안정성 패치 라인 요약 섹션 추가
+- v1.4.0 만 README "새 소식" 에 있고 v1.4.1~v1.4.4 patch release 정보는 CHANGELOG 깊숙이만 있어서
+  사용자가 patch 별 변경사항 한눈에 안 보임
+- v1.4.0 새 소식 위에 **"v1.4.x 안정성 패치 라인"** 섹션 추가
+- 7번의 검증 라운드 (agent 코드 리뷰 5회 + Playwright e2e 2회) 로 누적 14건 fix 했음을 한 줄로 명시
+- v1.4.1~v1.4.4 각 patch 의 핵심 fix 를 한 줄씩 — high-severity 는 *italics* 강조
+
+### Iteration 211 — Playwright 으로 UI 라이브 시각 audit (이슈 0건)
+- 실제 브라우저 띄워서 demo agents 살아있는 환경에서 핵심 UI 점검:
+  - 헤더 / 사이드바 / 캔버스 모두 정상 렌더 (캔버스 909×1199)
+  - 6개 에이전트 카드 표시, has-note 클래스 / 칩 정상 동작
+  - Insights 모달 hourly heatmap (iter 175 검증): 24개 시간 셀,
+    `is-now` 클래스 + ▼ ::before pseudo + `aria-current="true"` + `aria-label="17:00 · 지금"` 모두 OK
+  - 업적 23개 그리드 표시, 9개 unlocked
+  - Ctrl+K 명령 팔레트: 11개 결과 (에이전트 fuzzy match 정상)
+- **콘솔 에러 0, 경고 0** — 라이브 환경에서 깨진 부분 없음
+- Welcome 모달, 다크 모드, 한글 IME 입력, conn-text "실시간 · 4998ms" 모두 정상
+- 코드 리뷰 라운드 + e2e 시각 audit 양쪽에서 high/medium 발견 0 → release-ready 안정 plateau 도달 확인
+
+### Iteration 210 — 헬퍼 모듈 코드 리뷰 + 메모 export 코드블록 보존 fix
+- `standupExport.js`, `snapshot.js`, `toasts.js`, `sound.js`, `achievements.js`, `tour.js`,
+  `notifications.js` 직접 코드 리뷰. high/medium 이슈는 없음 — 여기까지 코드베이스가
+  견고하게 다듬어져 있음을 재확인.
+
+**standupExport.js — 메모 코드블록 silent 손상 픽스 (low)**
+- 기존엔 `notes 본문.replace(/```/g, "''")` 로 backtick fence 자체를 강제 치환
+- 개발자가 메모에 코드 스니펫 \`\`\`js console.log()\`\`\` 적었으면 export 결과가
+  `'' js console.log() ''` 로 깨져서 의도 손실
+- 픽스: 메모에 ``` 가 있으면 더 긴 `~~~~markdown` fence 로 감싸서 nested 코드블록 안전 격리
+  (CommonMark 의 nested fence 규칙 사용 — 안쪽 ``` 가 plain text 로 렌더됨)
+- ``` 가 없는 메모는 기존처럼 그대로 출력
+- 사용자 노트 데이터 변조 0 (round-trip preservable)
+- SW 캐시 v38 → v39
+
+## [1.4.4] — 2026-05-19
+
+## [1.4.4] — 2026-05-19
+
+> v1.4.3 직후 데이터 모듈 코드 리뷰 (`backup.js` · `stats.js` · `awaySummary.js`) 로
+> 발견한 high 1건 + medium 2건 일괄 패치.
+>
+> 사용자 데이터 호환: 변경 없음 (백업 v2 차단만 추가).
+> SW 캐시: v37 → v38.
+>
+> **버그 픽스**
+> - **자리 비운 사이 토스트 완전 망가짐 (high)** — `onVisible()` 가 `snapshot` 을 null 처리한 *뒤에*
+>   diff 호출 → 항상 `{}` 와 비교 → "현재까지 누적된 모든 이벤트" 가 통째로 새 이벤트로 잡혀
+>   토스트가 부풀려져 표시되던 버그. `prevSnapshot` 으로 보관 후 diff
+> - **자정 rollover 시 status timer 정산 누락 (medium)** — 어제 23:30 ~ 오늘 00:00 의 코딩
+>   시간 등이 통계에서 사라지던 문제. rolloverNow 시점까지 prevDay 의 statusMinutes 에 크레딧
+> - **백업 restore 비원자성 (medium)** — 옛 키 삭제 → 새 키 setItem 순서라 중간 quota 실패 시
+>   부분 데이터 손실 가능. snapshotBefore 에 stash 후 모든 write 성공해야 옛 키 삭제 + 실패 시
+>   rollback. 미래 버전 백업 (`version > 1`) 차단도 추가
+>
+> 모두 직접 (claude) 코드 리뷰로 발견. agent rate-limit 우회 — 코드 리뷰 ownership 은 사람도 가능.
+
+### Iteration 208 — 데이터 모듈 코드 리뷰 3건 픽스 (away 토스트 · 자정 status 분 · 백업 원자성)
+- 직접 (agent rate-limit 으로) `backup.js`, `stats.js`, `awaySummary.js` 코드 리뷰
+  → high 1건 + medium 2건 픽스
+
+**awaySummary.js — 자리 비운 사이 토스트 비교 객체 null 버그 (high)**
+- `onVisible()` 가 `snapshot = null` 처리한 *뒤에* `diff(snapshot || {}, now)` 호출
+- `snapshot || {}` 가 항상 `{}` 로 평가되어 결과적으로 **diff 가 "지금까지 누적된 모든 이벤트"** 를
+  전부 새 이벤트로 잡음 → 자리 비운 사이 토스트 가 사용자가 비운 시간만의 변화가 아니라
+  세션 전체 이벤트 카운트로 부풀려져 표시됨
+- 픽스: 비교용 `prevSnapshot` 을 따로 보관한 뒤 reset → diff 에 정확한 이전 값 전달
+
+**stats.js — 자정 rollover 시 status timer 정산 누락 (medium)**
+- `recordStateSnapshot` 이 자정 넘어 새 todayKey 가 되면 `memo.lastStatusTick.clear()` 만 하고
+  지금까지 누적된 분을 *어제* 의 `statusMinutes` 에 안 더했음
+- 결과: 자정 부근 (예: 어제 23:30 ~ 오늘 00:00) 의 코딩 시간 등이 통계에서 사라짐
+- 픽스: 자정 감지 직후 rolloverNow 시점까지의 시간을 prevDay 의 statusMinutes 에 크레딧
+
+**backup.js — restore 비원자성 (medium)**
+- 기존 코드는 (1) 옛 ai-tycoon-* 키 모두 삭제 → (2) 새 키 setItem 순서.
+  중간에 quota 에러 등으로 (2) 가 실패하면 사용자 데이터 부분적 소실
+- 버전 호환성 가드도 없어 미래 버전 백업이 데이터 덮어쓰기 가능
+- 픽스:
+  1. `version > 1` 차단 (미래 포맷 거부)
+  2. 백업 전 `snapshotBefore` 에 기존 키 모두 stash
+  3. 새 키 모두 write 성공 후 잔여 옛 키 삭제 (원자성)
+  4. write 도중 throw 면 새 키 제거 + snapshotBefore 복원 (rollback)
+- 결과: quota / 디스크 풀 / 권한 등 어떤 단계에서 실패해도 데이터 손실 없음
+- SW 캐시 v37 → v38
+
+## [1.4.3] — 2026-05-19
+
+## [1.4.3] — 2026-05-19
+
+> v1.4.2 직후 렌더링 모듈 코드 리뷰 (`renderer.js` · `pixiOverlay.js` · `npcs.js` 등) 로
+> 발견한 high-severity 4건 일괄 패치.
+>
+> 사용자 데이터 호환: 변경 없음. 마이그레이션 불필요.
+> SW 캐시: v36 → v37.
+>
+> **버그 픽스**
+> - **null projectName 으로 canvas throw** — `a.projectName` 이 null/undefined 면 화이트보드
+>   text render 의 `.substring()` 에서 throw 발생 → 캔버스 전체 그리기 멈춤
+> - **sub-agent 렌더 silent 누락** — `Object.entries(byParent)` 의 string 키와 `a.pid` 의 strict
+>   비교 실패로 모든 sub-agent 가 안 그려지던 잠재 버그
+> - **청소 로봇 NPC 무한 정지** — `pauseTimer` 가 fractional (예: 159.7) 이면 `=== 0` 비교에 절대
+>   안 걸려 로봇이 영구 멈춤 상태로 갇히던 문제
+> - **비 weather Graphics GPU 누수** — `drawWeather()` 가 매 프레임 새 `PIXI.Graphics` 만들고
+>   `removeChildren()` 만 호출. PixiJS v8 에서는 GPU 리소스 해제 안 됨 → 비 내릴 때 누적
+>
+> 모두 general-purpose agent 코드 리뷰로 발견 (사용자 보고 없음). 잠재 영향은 컸지만
+> 빈도가 낮아 production hit 가능성은 medium 정도였음.
+
+### Iteration 206 — 렌더링 모듈 코드 리뷰 4건 픽스 (렌더 throw · 누락 · 누수 · 정지)
+- general-purpose agent 로 `renderer.js`, `pixiOverlay.js`, `timeOfDay.js`, `seasons.js`,
+  `npcs.js` 코드 리뷰 → high 3건 + low/med 1건 픽스
+
+**renderer.js:727 — null projectName 에서 substring throw (high)**
+- `a.projectName` 이 null/undefined 인 에이전트가 있으면 (cwd 못 잡힌 케이스) 화이트보드
+  텍스트 렌더에서 throw → 캔버스 그리기 전체 멈춤
+- map 단계와 fillText 단계 양쪽에 `|| ""` fallback
+
+**renderer.js:1264 — sub-agent pid string/number mismatch (high)**
+- `Object.entries(byParent)` 가 string 키 주는데 `a.pid === pid` 는 strict 비교
+- 사일런트로 undefined → return → 모든 sub-agent 렌더 스킵되던 잠재 버그
+- 다른 곳과 동일하게 `String(a.pid) === pid` 비교
+
+**npcs.js:330 — 청소 로봇 fractional pauseTimer 무한정지 (high)**
+- `Math.random() * 120` 결과로 159.7 같은 fractional 값이 `pauseTimer-- === 0` 비교에 절대 안 걸림
+- decrement 가 음수 통과해도 `=== 0` 만 안 맞으면 `moving` 계속 false → 로봇 영구 정지
+- `Math.floor(60 + Math.random() * 120)` 으로 정수화 + `=== 0` → `<= 0` 방어 처리
+
+**pixiOverlay.js:352 — 비 weather Graphics GPU 누수 (high)**
+- `drawWeather()` 가 매 프레임 `new PIXI.Graphics()` 만들고 `removeChildren()` 만 호출
+- PixiJS v8 의 `removeChildren()` 는 GPU 리소스 해제 안 함 → 비 내릴 때 GPU 버퍼 누적
+- 단일 persistent `_weatherGfx` 재사용 + `.clear()` 로 매 프레임 그리기 — 객체 생성 0
+- SW 캐시 v36 → v37
+
+## [1.4.2] — 2026-05-19
+
+## [1.4.2] — 2026-05-19
+
+> v1.4.1 직후 코어 비-UI 로직 (WebSocket · 서버 폴링 · 상태 정합) 잠재 버그 4건 일괄 패치.
+> general-purpose agent 코드 리뷰로 발견한 medium 2건 + low 2건.
+>
+> 사용자 데이터 호환: 변경 없음. 마이그레이션 불필요.
+> SW 캐시: v35 → v36.
+>
+> **버그 픽스**
+> - **WebSocket 재연결 race (medium)** — 사용자가 backoff 중 \"즉시 재연결\" 누르면 parallel
+>   WebSocket 2개가 동시에 살아 onmessage 가 중복 처리되던 문제. `S.reconnectTimer` 핸들 추적
+> - **종료된 에이전트의 stale pid 누수 (medium)** — `selectedPid` 만 정리되고 `detailPid` /
+>   `directorFocusPid` 는 그대로 남아 디테일 패널이 빈 데이터로 렌더하던 문제
+> - **server.js 의 prevMemory/stickyState/extPrevState 무제한 성장 (low/med)** — 며칠 띄워둔
+>   서버에서 `ext-codex-${uuid}` 등 외부 세션 keyspace 가 누적되던 문제. 매 poll 끝에 정리
+> - **`history.jsonl` 의 ISO string timestamp NaN 비교 (low)** — `Date.now() - "2026-..."` = NaN
+>   → "최근 프롬프트" 신호 누락. `Number.isFinite` + `Date.parse` 가드
+
+### Iteration 204 — 코어 모듈 코드 리뷰 4건 픽스 (ws · 메모리 · 타임스탬프)
+- general-purpose agent 로 `js/ws.js`, `js/state.js`, `js/agentPriority.js`,
+  `server.js`, `js/crossTab.js` 코드 리뷰 → 8건 후보 중 medium 2건 + low 2건 픽스
+
+**ws.js — 재연결 경쟁 상태 (medium)**
+- `aiTycoonReconnect()` 가 backoff 중 예약된 `setTimeout(connectWS)` 를 취소하지 않아
+  사용자가 \"즉시 재연결\" 누르면 parallel WebSocket 2개가 열리고 onmessage 가 중복 처리
+- `S.reconnectTimer` 핸들 추가 — aiTycoonReconnect / onopen / scheduleReconnect 자체에서 정리
+- scheduleReconnect 가 이미 예약된 상태면 early-return → 중복 backoff 예약 차단
+
+**ws.js — detailPid / directorFocusPid 누수 (medium)**
+- 에이전트가 liveAgents 에서 사라질 때 `selectedPid` 만 정리, `detailPid` 와
+  `directorFocusPid` 는 그대로 둬서 디테일 패널이 stale pid 로 계속 렌더 시도 + 카메라가
+  사라진 캐릭터 자리 응시
+- 같은 cleanup 블록에서 셋 다 동시에 nullify
+
+**server.js — prevMemory / stickyState / extPrevState 무제한 성장 (low/med)**
+- 세션/외부 PID 가 churn 할 때마다 key 만 늘고 정리 안 함. 며칠 띄워두면 `ext-codex-${uuid}`
+  keyspace 만 수천 개로 부풀 가능성
+- 매 poll 끝에 `livePidSet` / `liveSidSet` 와 비교해서 사라진 키 제거
+
+**server.js:808 — promptTimestamp NaN 비교 (low)**
+- `latestPrompt.timestamp` 가 ISO string 인 경우 (`history.jsonl` 일부 케이스) `Date.now() - "..."` = NaN
+- `Number.isFinite(promptTs)` 가드 + `Date.parse` 정규화 후 비교 → "최근 프롬프트 있음" 신호 누락 방지
+- SW 캐시 v35 → v36
+
+## [1.4.1] — 2026-05-18
+
+## [1.4.1] — 2026-05-18
+
+> v1.4.0 직후 코드 리뷰 + Playwright e2e 검증으로 발견한 3가지 버그/UX 갭 패치.
+>
+> - **태그 매니저 캐시 invalidate 버그픽스** (iter 200) — settings 의 rename/delete 가
+>   localStorage 만 갱신하고 `_tagCache` 무효화 누락 → 사이드바/카드/팔레트 가 1초 동안 stale.
+>   `invalidateTagCache` 를 export 하고 `window.aiTycoonInvalidateTagCache` 로 노출.
+>   `applyTagRename` / `applyTagDelete` 에서 즉시 호출.
+> - **CONTRIBUTING.md hashtag 시스템 문서화** (iter 201) — 8개 터치포인트 + 핵심 헬퍼
+>   + 정규식 위치 + 캐시 정합 노트. 새 contrib 가 같은 실수 안 만들도록.
+> - **orphan tag empty state UX 분기** (iter 202) — 노트는 있는데 그 노트의 에이전트가
+>   현재 `liveAgents` 에 없는 케이스 → "이미 적었는데?" 혼란 방지.
+>   `'#tag' 태그가 적힌 에이전트가 오프라인입니다 / #tag agent is offline` 분기.
+>
+> 사용자 데이터 호환: 변경 없음 (v1.4.0 그대로 호환).
+> SW 캐시: v33 → v35.
+
+### Iteration 202 — Playwright e2e 검증 + orphan tag empty state 분기
+- Playwright MCP 로 실제 브라우저에서 hashtag 시스템 전체 흐름 검증
+  - 메모 저장 → tags-bar 칩 등장 → 카드 칩 등장 → 클릭 → visibility-summary 칩 컬러 매칭 모두 OK
+- 검증 중 발견한 진짜 UX 갭: 에이전트가 종료된 뒤에도 그 노트는 `localStorage` 에 남아
+  사이드바 칩에는 보이지만 클릭하면 0건 → 기존 empty state 가 *"메모에 #tag 적으세요"* 라고
+  안내해서 "이미 적었는데?" 혼란
+- **orphan tag 분기 추가** — `extractTagsFromNotes()` 가 해당 태그를 알고 있지만 매칭된 카드가
+  0건이면:
+  - 제목: `'#tag' 태그가 적힌 에이전트가 오프라인입니다 / #tag agent is offline`
+  - 본문: `#tag 이(가) 적힌 에이전트가 지금은 켜져 있지 않아요. 다시 실행되면 태그도 돌아옵니다.`
+- 일반 hashtag 검색 (태그 자체가 어디에도 없음) 분기와 별개 메시지 — UX 명확성 향상
+- SW 캐시 v34 → v35
+
+### Iteration 201 — CONTRIBUTING.md hashtag 시스템 / 새 스크립트 문서화
+- v1.4.0 까지 추가된 사항을 contrib 가이드에 반영
+- 파일 카운트 `35+ → 36+` (install-app-icon.js 추가)
+- `npm run icons` / `npm run build` 명령 안내
+- `scripts/install-app-icon.js` 항목 추가
+- `icons/` 설명: 이제 PNG (1순위) + SVG (fallback) + ICO (IE 호환)
+- shortcuts-overlay 가 `탐색/화면/캔버스/메모` 4그룹 으로 나뉜다는 안내 (iter 189 반영)
+- **신규: 메모 hashtag 시스템 섹션** — 8개 터치포인트 + 핵심 헬퍼 (`extractTagsFromText`,
+  `extractTagsFromNotes`, `invalidateTagCache`, `tagHueFor`) + 정규식 위치 명시
+- **신규: 코딩 컨벤션에 캐시 정합 노트** — `setAgentNote` 우회 시 invalidate 호출 필수
+  (iter 200 의 잠재 버그를 직접 언급해서 같은 실수 막음)
+
+### Iteration 200 — 태그 매니저 mutation 후 캐시 invalidate (버그픽스)
+- iter 196/197 의 `applyTagRename` / `applyTagDelete` 가 localStorage 만 갱신하고
+  `_tagCache` (iter 194 의 1초 TTL) 무효화는 안 해서, 직후 패널 리렌더가 최대 1초 동안
+  **stale 한 태그 리스트** 그리던 잠재 버그
+- 사이드바 tags-bar / 카드 chip / 명령 팔레트 / empty state 모두 1초 동안 옛 태그 보여줌
+- 코드 리뷰 (agent 활용) 로 발견 → 픽스
+- `panel.js` 의 `invalidateTagCache` 를 export, `main.js` 에서 `window.aiTycoonInvalidateTagCache` 로 노출
+- `applyTagRename`/`applyTagDelete` 가 localStorage 쓰고 즉시 invalidate → 그 다음 `updatePanel()` 콜이 최신 데이터로 렌더
+- SW 캐시 v33 → v34
+
+## [1.4.0] — 2026-05-18
+
+## [1.4.0] — 2026-05-18
+
+> hashtag 시스템을 완전히 끝까지 밀어붙인 minor.
+> v1.3.0 의 사이드바 칩 + 디테일 패널 칩 + 자동완성에 더해, 이번엔 메모 안 어디서나 보이고,
+> 어디서나 클릭으로 필터되고, 한 곳에서 일괄 관리 가능.
+>
+> **새 기능 (iter 196-198 + v1.3.1 누적분)**
+> - 메모 태그 관리자 (settings → 메모 태그) — 인라인 rename / delete
+> - 에이전트 카드 안 hashtag 칩 (최대 2개 + `+N`)
+> - 메모 textarea hashtag 자동완성 (↑↓/Enter/Tab)
+> - 명령 팔레트 hashtag 필터 명령 (`필터: #frontend (3)`)
+> - visibility-summary 의 `#tag` 칩 컬러 매칭
+> - hashtag 0건 empty state 친절한 안내
+> - 단축키 모달 '메모' 그룹
+> - 100+ 메모 환경 TTL 캐시 최적화
+> - `npm run icons` PNG/ICO 자동 분기
+> - 메모 입력 중 디테일 패널 re-render skip (autocomplete/IME 핫픽스)
+> - native prompt/confirm → 디자인 톤 인라인 UI (rename input + 저장/취소, delete 예/아니오)
+
+### Iteration 198 — 에이전트 카드 안에 hashtag 칩 노출
+- 카드의 task 라인 아래에 메모 hashtag 를 최대 2개까지 컴팩트 칩 (`.agent-card-tag-chip`)
+- 2개 초과면 `+N` overflow 표시, title 에 나머지 모두
+- 클릭 → 사이드바 검색에 `#tag` 박혀 즉시 필터 (다른 칩들과 동일 흐름)
+- `mousedown stopPropagation` + `click stopPropagation` 으로 카드 selectAgent / Shift+Click pin 토글 안 건드림
+- `extractTagsFromText(noteText)` 신규 export — 단일 메모 → unique 태그 배열 (순서 보존)
+- 9.5px 미니 사이즈로 카드 시각 밀도 보호하면서 hashtag 발견성 끌어올림
+- 다크 모드 hsl 매핑 포함
+- SW 캐시 v32 → v33
+
+### Iteration 197 — 태그 관리자: native prompt/confirm → 인라인 UI
+- iter 196 의 `window.prompt`/`window.confirm` 은 OS 기본 다이얼로그라 디자인 톤 깨짐
+- 행 안에서 액션 버튼 영역 자체를 인라인 UI 로 swap:
+  - **rename**: input + 저장/취소 버튼, input focus + selectall + Enter 커밋 / Esc 취소
+  - **delete**: "모든 메모에서 #tag 를 지울까요?" + 예/아니오, 기본 포커스는 '아니오' 에 두어 실수 방지
+- 인디고/레드 톤 + 다크 모드 대응 (`#a5b4fc` / `#fca5a5` 라인)
+- 검증 실패 시 input 그대로 두고 select + 토스트 — 사용자가 즉시 수정
+- `applyTagRename` / `applyTagDelete` 로 실제 mutation 로직 분리 — 테스트 가능성/재사용
+- SW 캐시 v31 → v32
+
+### Iteration 196 — 설정에 '메모 태그' 관리자 추가
+- 모든 메모를 스캔해 #태그 목록 + 카운트 칩으로 노출 (사이드바 칩과 동일 컬러)
+- **이름 변경** — `prompt()` 로 새 이름 입력, 정규식 검증 (2~32자, 한/영/숫자/_)
+  → `#oldtag` → `#newtag` 로 모든 메모 안에서 일괄 치환
+  → 단어 경계 (`(?![A-Za-z0-9_가-힣])`) 로 `#frontend` 가 `#frontend-ui` 까지 잘못 잡지 않게
+- **삭제** — `confirm()` 후 `#tag` 만 제거, 앞뒤 공백 정리, 메모가 다 비면 키 자체 삭제
+- 변경 후 토스트로 "X 개 메모 갱신됨" 안내
+- `updatePanel` / `updateDetailPanel` 즉시 호출 → 사이드바 바·디테일 칩 즉시 반영
+- KO/EN 분기: `메모 태그 / Note tags`, `이름 변경 / Rename`, `삭제 / Delete`
+- 다크 모드 — indigo (rename) / red (delete) 톤 매핑
+- 태그 0개 environment 에서는 친절한 안내 메시지로 빈 상태
+- SW 캐시 v30 → v31
+
+## [1.3.1] — 2026-05-18
+
+## [1.3.1] — 2026-05-18
+
+> v1.3.0 직후 hashtag 시스템 + 메모 UX 마무리 폴리시 8개를 모아 patch 컷.
+>
+> - **메모 hashtag 자동완성** (iter 188) — `#` 타이핑 시 기존 태그 floating list, ↑↓/Enter/Tab
+> - **명령 팔레트 hashtag 필터 명령** (iter 193) — `필터: #frontend (3)` 형식 동적 추가
+> - **메모 입력 중 디테일 패널 re-render skip** (iter 190) — autocomplete/IME 깨짐 핫픽스
+> - **hashtag 0건 empty state** (iter 191) — 일반 검색과 다른 친절한 안내
+> - **visibility-summary 의 #tag 칩** (iter 192) — 태그 컬러 그대로 적용
+> - **단축키 모달 '메모' 그룹** (iter 189) — Cmd+S / Cmd+Enter / # 자동완성 명시
+> - **`npm run icons` PNG·ICO 자동 분기** (iter 187) — 일회용 스크립트 통합
+> - **태그 추출 1초 TTL 캐시** (iter 194) — 100+ 메모 환경 jank 방지
+
+### Iteration 194 — extractTagsFromNotes 1초 TTL 캐시
+- 한 render cycle 안에서 사이드바 바·디테일 패널·empty state·명령 팔레트가 동시 호출
+  → 메모 100개 × 5번 호출 = 500회 정규식 실행 부담
+- 1초 TTL 캐시 + `setAgentNote` 시 즉시 invalidate 로 freshness 보존
+- 캐시 hit 시 즉시 같은 `[{tag, count}]` 배열 반환 — 정렬도 한 번만
+- 실측 영향은 작지만 100+ 메모 환경에서 사이드 패널 jank 방지
+- `invalidateTagCache()` 내부 함수 — 외부 노출은 안 함 (panel 내부에서만 트리거)
+- SW 캐시 v29 → v30
+
+### Iteration 193 — 명령 팔레트에서 hashtag 필터 명령 노출
+- 메모에 실제 박혀있는 hashtag 마다 동적으로 `필터: #frontend (3)` 형식 명령 추가
+- 검색·필터 그룹 안에 들어가 Ctrl+K 한 번이면 발견 가능
+- Tab/Enter 로 즉시 `#tag` 검색 트리거 — 사이드바 칩 클릭과 동일 효과
+- count 함께 표시해서 가장 자주 쓰는 태그가 어떤 건지 한눈에
+- 메모가 추가/삭제될 때마다 자동 갱신 (각 render 마다 `extractTagsFromNotes` 재호출)
+- `extractTagsFromNotes` 를 commandPalette.js 에서 import (panel.js 기존 export 재사용)
+- KO/EN 분기 — `Filter by #frontend` / `필터: #frontend`
+- SW 캐시 v28 → v29
+
+### Iteration 192 — visibility-summary 의 hashtag 검색은 tag-chip 풍으로
+- 검색어가 `#tag` 형식이면 그동안 `"#frontend"` 처럼 따옴표 + 초록 톤으로만 보여 단조로움
+- 이제 `tagHueFor()` hue 그대로 받아서 사이드바 태그 칩과 같은 색상으로 렌더
+- `#` 기호는 opacity 0.6 으로 살짝 죽이고 태그명만 강조
+- 일반 텍스트 검색은 기존 초록 톤 유지 — hashtag 모드와 시각 구분
+- 다크 모드 색상도 함께 매핑
+- SW 캐시 v27 → v28
+
+### Iteration 191 — hashtag 0건 empty state 친절한 안내
+- `#tag` 필터 결과가 0건이면 일반 "검색 결과 없음" 보다 더 구체적인 메시지로 분기
+- 제목: `'#frontend' 태그가 붙은 에이전트가 없습니다 / No agents tagged #frontend`
+- 본문: `에이전트 디테일 패널을 열어서 메모에 #frontend 을(를) 적으면 필터 대상이 됩니다`
+  → 새 사용자가 hashtag 시스템 어떻게 키우는지 자연스럽게 배움
+- 아이콘 `solar:hashtag-linear`, indigo 톤 배경 (`#6366f1`) — 사이드바 칩 컬러와 일관
+- `.agent-empty-hashtag` 모디파이어 클래스 + 다크 모드 대응
+- SW 캐시 v26 → v27
+
+### Iteration 190 — 메모 입력 중에는 디테일 패널 re-render skip
+- WS tick (~500ms) 마다 `updateDetailPanel` 이 innerHTML 갈아엎어서 textarea 포커스 / hashtag
+  autocomplete / IME 조합 상태가 매번 깨지던 잠재 버그 (iter 188 의 autocomplete 가 더
+  드러나게 함)
+- 같은 PID 재렌더 시점에서 `document.activeElement === detail-note-input` 이거나
+  `#detail-note-autocomplete` 가 열려 있으면 그 tick 의 re-render 자체를 skip
+- 다른 영역 (메모리 그래프, 상태) 은 다음 tick 에 자연스럽게 갱신 — 잠시 stale 해도 무해
+- PID 가 바뀌면 (다른 카드 클릭) 무조건 재렌더 — 그 땐 사용자가 메모 흐름 중일 리 없음
+- 결과: hashtag 자동완성 도중 깜박임 사라짐, IME 조합 깨짐도 함께 해소
+- SW 캐시 v25 → v26
+
+### Iteration 189 — 단축키 모달에 '메모' 그룹 추가
+- iter 188 의 hashtag 자동완성 + 기존 메모 단축키 (Cmd+S / Cmd+Enter) 를
+  shortcuts modal 의 새로운 '메모 / Notes' 섹션에 명시
+- 새 키: `shortcuts.notesGroup`, `noteSave`, `noteSaveClose`, `noteHashtag`, `noteEscape`
+- KO/EN 양쪽 모두 추가
+- 사용자가 ? 또는 F1 으로 도움말 열 때 자동완성 트릭을 발견할 수 있게
+- SW 캐시 v24 → v25
+
+### Iteration 188 — 메모 textarea hashtag 자동완성
+- 메모 input 에서 `#` 타이핑 시 기존 태그 중 prefix 매칭되는 6개를 floating list 로 노출
+- ↑/↓ 키로 선택 이동, Enter/Tab 으로 삽입, Esc 로 닫기
+- 마우스 클릭도 지원 (`mousedown preventDefault` 로 textarea blur 차단)
+- 삽입 시 `#prefix` 패턴을 `#fulltag ` (뒤에 공백) 로 치환 → 다음 단어 즉시 이어쓰기
+- caret 위치 기반: `before` + `inserted` + `after` 로 자른 후 다시 합치고 selectionRange 재설정
+- 한글 IME 조합 중에는 list 안 띄움 (조합 끝나면 한 번 갱신)
+- 검색 정확히 같은 태그는 list 에서 제외 (이미 있음)
+- count 배지로 해당 태그가 몇 개 메모에 있는지 표시
+- 다크 모드 hsl 색상 매핑 포함
+- SW 캐시 v23 → v24
+
+### Iteration 187 — `npm run icons` 가 ICO 도 자동 처리
+- iter 179 의 `install-app-icon.js` (PNG only) + iter 181 의 `extract-png-from-ico.js`
+  (ICO only, 일회용) 가 따로 있던 걸 통합
+- 단일 `scripts/install-app-icon.js` 가 확장자 (.png / .ico) 보고 알아서 분기
+- 입력 우선순위: `--src=<path>` > `icons/source.png` > `icons/icon.ico` > `icons/source.ico`
+- ICO 멀티사이즈는 가장 큰 엔트리 자동 선택 (size4 기준)
+- 일회용 `extract-png-from-ico.js` 삭제 → 스크립트 트리 깔끔 (4개)
+- 사용자는 PNG 든 ICO 든 떨궈 두고 `npm run icons` 한 번이면 끝
+
+## [1.3.0] — 2026-05-18
+
+> v1.2.0 이후 ~30 iteration 동안 누적된 키보드 워크플로우 · hashtag 시스템 · 픽셀아트
+> 앱 아이콘 등을 묶어서 공식 릴리즈로 컷. 자세한 iter 별 변경은 아래 Iteration 144~184
+> 참고. 주요 하이라이트:
+>
+> - **메모 hashtag 시스템** (iter 180, 183, 184) — 사이드바 + 디테일 패널 양쪽에 stable color 칩
+> - **사이드바 검색 최근 5개 칩** (iter 178)
+> - **j/k + ‹ / › 디테일 prev/next** (iter 176, 177)
+> - **Insights 히트맵 ▼ now 마커** (iter 175)
+> - **새 픽셀아트 PNG 앱 아이콘** (iter 179, 181) + `scripts/extract-png-from-ico.js`
+> - **[hidden] 글로벌 안전망** (iter 157) — CSS specificity vs hidden attribute 버그 일괄 해소
+> - **메모 단축키 풀스택** — Cmd+S 저장, Cmd+Enter 저장+닫기, N 으로 포커스
+> - **conn-dot WS pulse + 수동 재연결** (iter 153, 163)
+> - **모든 사이드/디테일/캔버스/HUD/대기열/브리핑** KO/EN i18n
+>
+> v1.2.0 → v1.3.0 디프 한 줄 요약: **에이전트 정리·라벨링·키보드 워크플로우** 가 본격적으로 자리잡음.
+
+### Iteration 184 — 디테일 패널 메모에 해당 에이전트의 hashtag 칩
+- 메모 textarea 바로 아래 이 에이전트의 메모 안에 들어 있는 hashtag 만 칩으로 노출
+- 칩 클릭 시 사이드바 검색에 `#tag` 박아 같은 태그의 다른 에이전트로 점프
+- iter 183 의 stable color (`tagHueFor`) 그대로 재사용 — 사이드바/디테일 양쪽 색 일관
+- 디테일 칩은 사이드바보다 살짝 작게 (font 10.5px, padding 2/7) — 공간 절약
+- 중복 태그 제거 (Set), 정규식은 사이드바 bar 와 동일 (`/#([A-Za-z0-9_가-힣]{2,32})/g`)
+- 메모에 태그 없으면 칩 영역 자체를 렌더링 안 함 (DOM 깔끔)
+- 다국어: aria-label "이 메모의 태그 / Hashtags in this note"
+- SW 캐시 v22 → v23
+
+### Iteration 183 — hashtag 칩에 태그별 stable 컬러
+- 모든 태그 칩이 같은 indigo 였던 시각적 단조로움 해소
+- `tagHueFor(tag)` — 문자열 hash → 0~359 hue, 같은 태그는 항상 같은 색
+- CSS custom property `--tag-hue` 로 주입, hsl() 로 base/hover/active 상태 자동 파생
+- `lightness 96%` (light bg) → `38%` (text) → `52%` (active solid) 한 hue 로 5단계 색조
+- 다크 모드는 `hsla 30~78% lightness` 로 별도 매핑 — 어둡고 채도 살아있게
+- 같은 hue 라도 모드 따라 보색 톤 자동 보정
+- SW 캐시 v21 → v22
+
+### Iteration 181 — 픽셀아트 앱 아이콘 실제 PNG 적용
+- 사용자가 떨어뜨려준 `icons/icon.ico` (128×128 PNG-in-ICO) 에서 PNG 비트맵 추출
+- `scripts/extract-png-from-ico.js` — Node 내장 API 만으로 ICONDIR/ICONDIRENTRY 파싱 후
+  payload 가 PNG 시그니처면 그대로 `icons/icon.png` 으로 write
+- 결과: 128×128 RGBA 픽셀아트 (소년이 'AI TYCOON' 액자 올려다보는 햇살 가득한 방)
+- `manifest.webmanifest`: 사이즈 `1024x1024` → 실제 `128x128` 로 정확히 명시
+- `index.html`: `<link rel="shortcut icon" href="icons/icon.ico">` 도 추가
+  (IE/구형 Edge favicon 호환), PNG `sizes="128x128"` 명시
+- `sw.js`: `/icons/icon.ico` 도 SHELL_ASSETS 에 추가, VERSION v20 → v21
+- 브라우저 탭/PWA 설치 아이콘/SNS 공유 미리보기 전부 새 픽셀아트로 전환됨
+
+### Iteration 180 — 메모 hashtag 자동 추출 → 사이드바 칩 필터
+- 사용자가 메모에 `#frontend` `#bug` `#리팩터링` 같이 적으면 자동으로 수집
+- 사이드바 검색 영역 바로 아래 `agent-tags-bar` 에 상위 8개 태그 칩으로 노출
+- 칩 클릭 → 검색창에 `#tag` 박아 필터 (이미 검색이 메모도 매칭하므로 즉시 동작)
+- 활성 태그는 indigo 솔리드 칩으로 강조 + 다시 클릭하면 토글 해제
+- 카운트 배지 — 같은 태그가 몇 개 에이전트 메모에 있는지 한눈에
+- 같은 메모 안 동일 태그 중복 카운트 방지 (Set 으로 노트 단위 dedupe)
+- 정규식 `/#([A-Za-z0-9_가-힣]{2,32})/g` — 2~32자, 한/영/숫자/_ 허용
+- `setAgentNote` 호출 직후 `renderAgentTagsBar()` 도 즉시 호출 → 저장 즉시 새 태그 반영
+- KO/EN: `태그 / Tags` 레이블
+- 다크 모드 대응 색상 (#a5b4fc 계열) 포함
+- SW 캐시 v19 → v20
+
+### Iteration 179 — 픽셀아트 PNG 앱 아이콘 설치 파이프라인
+- 사용자가 손그림 픽셀아트 이미지를 앱 아이콘으로 쓸 수 있도록 인프라 구성
+- `manifest.webmanifest`: `icons/icon.png` 을 first entry 로 (purpose any, 1024×1024)
+  → 기존 SVG 들은 fallback 으로 유지
+- `index.html`: `<link rel="icon" type="image/png">` 추가, `apple-touch-icon` 도 PNG 로,
+  og:image / twitter:image 도 PNG 참조 (SNS 공유 미리보기 화질 향상)
+- `sw.js`: `/icons/icon.png` 을 SHELL_ASSETS 에 추가 (오프라인 캐시), VERSION v18 → v19
+- `scripts/install-app-icon.js` 신규 — 원본 PNG 를 `icons/source.png` 에 두고
+  `npm run icons` 실행하면 헤더 검증(시그니처/크기) 후 `icons/icon.png` 으로 복사.
+  외부 의존성 0, 순수 Node API
+- `package.json`: `"icons": "node scripts/install-app-icon.js"` 스크립트 추가
+- `.gitignore`: `icons/source.png` 추가 — 원본 staging 파일은 commit 안 함
+
+> **사용자 액션 필요**: 첨부한 픽셀아트 PNG 를 `icons/source.png` 또는 `icons/icon.png` 으로
+> 저장 후 `npm run icons` 실행. 그러면 매니페스트/파비콘/og:image/SW 캐시 모두 자동으로
+> 새 아트워크를 가리킵니다.
+
+### Iteration 178 — 사이드바 검색 최근 5개 히스토리 칩
+- 검색 input 포커스 + 빈 입력 일 때 최근 5개 검색어를 칩으로 노출
+- Enter 또는 blur 시 commit — `localStorage` 키 `ai-tycoon-search-history`
+- 동일 검색어 (대소문자 무시) 재타이핑 시 중복 제거 후 최상단으로
+- 1글자 검색어는 노이즈로 간주, 저장 안 함
+- 칩 클릭 시 input 채움 + setAgentSearch + 즉시 히스토리 상단 갱신
+- `전체 지우기` 버튼으로 히스토리 일괄 삭제 가능
+- KO/EN: `최근 / Recent`, `전체 지우기 / Clear`
+- 다크 모드 대응 색상 (#fdba74 계열) 포함
+- `mousedown` preventDefault 로 칩 클릭 시 input blur 방지
+- SW 캐시 v17 → v18
+
+### Iteration 177 — 디테일 패널 ‹ / › 이전·다음 에이전트 버튼
+- 키보드 안 쓰는(터치/마우스) 사용자를 위한 prev/next 버튼을 디테일 패널 헤더에 추가
+- `data-detail-nav="prev|next"` 두 개 버튼 — 클릭 시 `window.cycleAgentFocus(±1)` 호출
+- 결과적으로 j/k 단축키와 완전히 동일한 코드 패스 (사이드바 가시 카드 순서 + scrollIntoView)
+- 버튼 title 에 `(j)` / `(k)` 단축키 힌트 — 키보드 단축키 발견 가능성 향상
+- index.html: `cycleAgentFocus` 를 `window` 에 노출
+- 핀/닫기 버튼과 같은 30px 사각 디자인, hover 시 오렌지 강조 (디테일 패널 톤과 일치)
+- 다크 모드 대응 색상 포함
+- SW 캐시 v16 → v17
+
+### Iteration 176 — j/k 키 순회가 사이드바 정렬·필터 반영
+- 기존 `cycleAgentFocus` 는 `liveAgents.filter(isRunning)` 순서로만 돌아서
+  사이드바 정렬·검색·필터를 무시 — 사용자가 보는 카드 순서와 다름
+- 이제 `#agents-list .agent-card` (offsetParent 로 hidden 제외) 의 DOM 순서대로 순회
+- 새 카드로 이동하면 `scrollIntoView({block:"nearest", behavior:"smooth"})` 로 시야 확보
+- `window.updatePanel` / `window.updateDetailPanel` 를 main.js 에서 노출하고
+  순회 직후 즉시 호출 — 다음 WS 틱(~500ms) 기다리지 않고 반응적으로 리렌더
+- 사이드바가 비어 있으면 (필터에 다 걸러진 경우) 기존 running 폴백 유지
+- 미선택 상태에서 `j` 누르면 첫 카드, `k` 누르면 마지막 카드로 진입
+- SW 캐시 v15 → v16
+
+### Iteration 175 — Insights 시간대 히트맵 'now' 셀에 ▼ 마커
+- 기존엔 현재 시각 셀에 살짝 outline 만 들어가서 "지금이 어딘지" 한눈에 안 띔
+- 셀 상단에 작은 ▼ 삼각형 마커 + 1.8s 부드러운 바운스 애니메이션
+- bar gradient 도 emerald → 오렌지로 전환해 현재 시각임을 색으로도 강조
+- `aria-current="true"` + `aria-label="HH:00 · 지금"` 로 스크린리더 안내
+- `prefers-reduced-motion` 환경에서는 마커 애니메이션 정지
+- 다크 모드 대응 색상 (#fdba74 계열) 도 함께 추가
+- SW 캐시 v14 → v15 로 bump
+
+### Iteration 174 — 디테일 패널 다른 에이전트로 전환 시 스크롤 위로 자동
+- 이전 카드의 스크롤 위치가 남아있어 새 카드 열어도 한참 아래가 보이던 불편 해소
+- `container._lastRenderedPid` 로 PID 변경 감지, 변경 시 `scrollTop = 0`
+- 같은 PID 재렌더(주기적 갱신) 때는 스크롤 위치 그대로 유지 — 메모 작성 중 갑자기 튀어오르지 않음
+- detail-close-btn 에 `title="Esc"` 추가로 키보드 안내
+
+### Iteration 173 — 사이드바 검색 Enter 로 첫 결과 자동 선택
+- 검색 input 에 `Enter` 누르면 현재 보이는 첫 번째 카드를 자동 클릭 (selectAgent 효과)
+- 검색 → 좁힘 → Enter → 디테일 패널 열림 → `N` 으로 메모, 한 손 키보드 워크플로우
+- 한글 IME 조합 중에는 Enter 무시 (자모 결합용 Enter 와 충돌 방지)
+- Esc/clear 등 기존 동작은 그대로 유지
+- 새 `handleAgentSearchKey(event)` 헬퍼로 인라인 onkeydown 정리
+
+### Iteration 172 — 명령 팔레트 placeholder 에도 '메모' 명시
+- iter 93 메모 매칭과 짝을 이루도록 팔레트 input placeholder 도 갱신
+- KO `에이전트, 프로젝트, 명령…` → `에이전트·프로젝트·메모·명령…`
+- EN `Agents, projects, commands…` → `Agents, projects, notes, commands…`
+
+### Iteration 171 — 검색 placeholder 에 '메모' 명시 추가
+- iter 92 에서 메모도 검색 매칭 대상이 됐지만 placeholder 는 그대로라 사용자가 모름
+- KO: `직원, 프로젝트, 작업 검색` → `직원·프로젝트·작업·메모 검색`
+- EN: `Search agents, projects, tasks` → `Search agents, projects, tasks, notes`
+- 사용자가 메모 키워드로도 검색 가능하다는 걸 placeholder 만 봐도 알게 됨
+
+### Iteration 170 — 'icon-only' 복사 버튼 클릭 시 토스트로 결과 안내
+- `.detail-copy-btn.icon-only` 버튼이 30px 폭이라 기존의 `복사됨` 텍스트 교체가 잘려 보이지 않던 케이스
+- icon-only 면 토스트로 `복사됨 / Copied to clipboard` + 복사된 내용 80자 프리뷰 노출
+- 일반(아이콘+텍스트) 버튼은 기존처럼 인라인 교체 + KO/EN 분기
+- `is-copied` 클래스는 두 경우 모두 1.3초 동안 유지 (배경 emerald 강조)
+
+### Iteration 169 — 메모 푸터에 단축키 힌트 칩
+- 디테일 패널 메모 푸터에 `⌘S 저장 · ⌘⏎ 저장+닫기` (Mac) / `CtrlS · Ctrl⏎` (Win/Linux) 힌트
+- iter 117/167/168 에 추가한 단축키 흐름이 처음 사용자에게도 자연스럽게 보임
+- macOS 자동 감지로 `⌘` 표기, 그 외 `Ctrl`
+- KO/EN 분기, 다크 모드 별도 톤
+
+### Iteration 168 — 'N' 단축키 — 선택된 에이전트 메모로 빠르게 포커스
+- 글로벌 단축키에 `N` 추가 — `#detail-note-input` 이 있으면 그 textarea 로 포커스 + 커서 끝으로
+- 디테일 패널이 없으면 토스트로 "에이전트를 먼저 선택해 주세요" 안내
+- 메모 작성 → Cmd+S 저장 → 또는 Cmd+Enter 저장+닫기 흐름의 시작점이 됨
+- 단축키 모달 cheatsheet + README 표 + i18n 키 모두 갱신
+
+### Iteration 167 — 메모 textarea 의 Cmd/Ctrl+Enter — 저장 + 디테일 패널 닫기
+- iter 117 의 Cmd/Ctrl+S 즉시 저장에 더해, Cmd/Ctrl+Enter 면 저장 + 디테일 패널 즉시 닫힘
+- 메모 다 적었을 때 한 번의 키 조합으로 작업 완료
+- `window.closeDetail` 을 index.html 에서 외부 노출해 다른 모듈에서도 호출 가능
+
+### Iteration 166 — 메모 글자 수 카운터/색상 모두 즉시 갱신
+- iter 165 의 색상 강조는 즉시였지만 카운터 숫자는 디바운스 220ms 후에야 갱신돼서 어색
+- `applyLimitWarn()` 가 `is-saved` 상태가 아니면 카운터 숫자(`로컬에만 저장 · N/500`)도 같이 갱신
+- 저장됨 표시는 1.2초 그대로 유지 (덮어쓰지 않음)
+- 사용자가 글자 입력하는 순간 색 + 숫자 모두 즉시 반응
+
+### Iteration 165 — 메모 글자 수 임계값 시각 강조
+- 메모 길이가 420자 이상이면 footer 카운터에 호박색(`data-warn="mid"`)
+- 480자 이상이면 진한 빨강(`data-warn="high"`) 으로 강조해 maxlength 500 도달 직전 알림
+- 저장됨 / 복귀 / 디테일 패널 첫 렌더 모두에서 일관 적용
+- 다크 모드 별도 톤
+
+### Iteration 164 — Insights 모달 'mood line' 클릭 시 최활발 직원 포커스
+- 활성 직원이 1명 이상일 때만 mood line 에 cursor: pointer + 클릭 가능 표시
+- 클릭하면 `agentSortByLivePriority` 로 가장 활발한 친구를 골라 포커스 + 모달 자동 닫힘
+- title 안내 (KO `클릭하면 가장 활발한 직원으로 포커스` / EN `Click to focus the most active agent`)
+- 활성 0명일 때는 평소처럼 표시 전용 (잘못된 클릭 안 잡힘)
+
+### Iteration 163 — 새 데이터 들어올 때 conn-dot 짧은 ring pulse
+- `handleState()` 진입 시 `#conn-dot.is-pulsing` 토글 → 800ms emerald ring 펄스
+- 매번 reflow 강제(`void offsetWidth`)해 같은 프레임 안 재트리거도 자연스럽게 재시작
+- 헤더 connection 배지가 'Live' 상태인지 시각적으로 확인 가능 (정지 = 데이터 멈춤)
+- `prefers-reduced-motion` 사용자에겐 펄스 비활성화
+
+### Iteration 162 — 디테일 패널 메모리 스파크라인 hover 시 정확한 값
+- 각 데이터 포인트에 `<circle r="2.4">` + `<title>` 를 합성해서 OS 네이티브 툴팁으로 `HH:MM · NMB` 노출
+- 평소엔 opacity 거의 0 (투명) 이고 hover 시 CSS 로 r=3.5 + opacity 1 강조
+- 스파크라인의 60개 샘플 중 어느 시점에 메모리가 튀었는지 마우스 대보면 즉시 확인 가능
+- 시각적 잡음 최소, hover 시에만 보이게
+
+### Iteration 161 — 명령 팔레트에 '활동 로그 비우기' 추가
+- `tools` 그룹에 새 명령 — `S.workEvents` + `S.activityLog` 동시 비움
+- 사이드 패널 하단 활동 타임라인 + 시스템 로그 + 캔버스 work-stream 모두 깨끗
+- 실제 에이전트 상태는 그대로, 표시만 리셋
+- 토스트로 결과 안내 (KO/EN)
+
+### Iteration 160 — 디테일 패널 메타 행에 '출근' 시각 추가
+- `agent.startTime` 이 있으면 `09:23 · 2시간 전` 형식으로 출근 시각 + 경과 시간 표시
+- 메타 행에 `출근 / Started` 라벨로 PID/세션/경로와 함께 나란히
+- `copyAgentValue` 에 `started` 분기 추가 (ISO 타임스탬프 복사)
+- 영어 모드에서는 `Started` 라벨 + 같은 포맷
+
+### Iteration 159 — 핀된 에이전트가 사이드바 정렬에서 항상 상단
+- `compareAgentPriority()` 의 첫 비교 단계로 `context.pinnedKeys` 기반 핀 우선순위 추가
+- 핀된 친구는 어떤 정렬 모드 (상태/메모리/플랫폼/프로젝트/최근) 에서도 항상 위로 올라옴
+- `panel.js priorityContext()` / `main.js agentPriorityContext()` 둘 다 이미 `pinnedKeys` 를 넘겨주고 있어서 자동 동작
+- `pinnedKeys` 가 빈 배열이면 기존 동작 그대로 (regression 무방)
+
+### Iteration 158 — 데모 모드 start/stop 활동 로그도 KO/EN
+- `startDemo` / `stopDemo` 의 `addLog` 메시지가 한국어 하드코딩이라 영어 모드에서도 한국어가 떴음
+- KO `데모 모드 ON · 합성 에이전트 표시` / `데모 모드 OFF`
+- EN `Demo mode on · showing synthetic agents` / `Demo mode off`
+- 토스트는 이미 i18n 됐고 (iter 85), 로그도 같이 정리
+
+### Iteration 157 — 전역 `[hidden] { display: none !important }` 안전망
+- iter 156 의 데모 CTA 와 동일 패턴 버그가 잠재한 셀렉터 5종 발견
+  - `.header-stuck-chip` / `.header-demo-chip` / `.header-privacy-chip` (헤더 모드 칩)
+  - `.insights-week-chip` (Insights 주간 누적 칩)
+  - `.welcome-overlay` / `.modal-overlay` (opacity 로 가려져서 시각적으론 OK 였지만 hidden 자체는 무력)
+- 모두 `display: inline-flex / inline-block / flex` 가 HTML `hidden` 속성을 덮어쓰는 구조
+- 전역 한 줄 `[hidden] { display: none !important; }` 로 일괄 해결
+- SW v13 → v14 캐시 갱신
+
+### Iteration 156 — 버그픽스: '데모 모드' CTA 가 에이전트 있어도 안 사라지는 문제
+- `.empty-cta { display: flex }` 가 HTML `hidden` 속성(보통 `display: none`) 을 specificity 로 덮어쓰던 CSS 버그
+- `refreshEmptyCta()` 가 `cta.hidden = true` 로 잘 바꿔도 시각적으로는 계속 떠 있어서 사용자가 헷갈림
+- 한 줄 추가 (`.empty-cta[hidden] { display: none !important; }`) 로 해결
+- SW v12 → v13 bump 해 브라우저 캐시 갱신
+
+### Iteration 155 — CONTRIBUTING.md 최신 모듈/스크립트 목록 동기화
+- `npm run lint` 단계가 빠져있던 Setup/Testing 섹션에 추가
+- 모듈 목록에 `awaySummary.js`, `commandPalette.js`, `privacyMode.js`, `standupExport.js` 4개 추가 (iter 55~71 사이 새 모듈)
+- 업적 카운트 21 → 24, smoke 테스트 30 → 38, CI Node 18/20/22 명시
+- 신규 기여자가 폴더 구조 / 테스트 흐름 정확히 파악 가능
+
+### Iteration 154 — 명령 팔레트에 'WebSocket 재연결' 명령
+- 헤더 conn-badge 외에 Ctrl+K 에서도 빠르게 재연결 트리거 가능
+- `tools` 그룹에 `WebSocket 즉시 재연결` 추가, `aiTycoonReconnect()` 호출
+- 사이드 패널 시스템 헬스 카드의 재연결 안내 보면서 팔레트 한 번에 처리
+
+### Iteration 153 — 헤더 연결 상태 배지 클릭으로 즉시 재연결
+- `conn-badge` 를 `<div>` → `<button>` 으로 변경 + `aiTycoonReconnect()` 핸들러 연결
+- 새 `window.aiTycoonReconnect()`: 기존 WS 닫고 reconnectAttempt 리셋한 뒤 `connectWS()` 재호출
+- 자동 재연결 (지수 backoff) 이 답답할 때 명시적으로 한 번에 트리거 가능
+- title 안내 + cursor: pointer 추가, hover 시 더 진한 배경
+
+### Iteration 152 — 사이드바 가시성 요약 칩을 클릭 가능한 액션 필터로
+- `고정 N / 작업 N / 검토 N / 최근 N` 칩들을 `<span>` → `<button>` 으로 바꿔 액션 필터 트리거
+- 같은 액션 다시 클릭하면 'all' 로 토글, 다른 거 누르면 그쪽으로 전환
+- hover 시 살짝 떠오르고 그림자 추가, `vs-chip` 공통 클래스로 시각 통일
+- 표시 전용이던 요약 줄이 즉시 액션 가능한 컨트롤로 승격
+
+### Iteration 151 — Insights '완료 태스크' 라벨 옆 '7일 누적' 칩
+- 라벨 줄에 작은 라벤더 칩 추가 (`7일 · 42` / `7d · 42`)
+- `recentDays(7)` 합산으로 최근 7일간 누적 완료 태스크 표시
+- 합이 0이면 자연스럽게 숨김
+- hover 시 `최근 7일 누적: N개 완료` 툴팁
+- 어제 대비 ±N 칩과 함께 시간 비교 두 축 (어제 vs 주간) 모두 제공
+
+## [1.2.0] — iter 90-149 누적 릴리즈
+- 명령 팔레트 22 → 32+ 명령으로 확장 (정렬·리셋·컴팩트·메모/스탠드업/백업 export 등)
+- Strict 프라이버시 모드 (Shift+P 더블탭) — hover unblur 차단으로 화면 녹화 완전 안전
+- 헤더 칩 3종 (`멈춤` ⚠ / `데모` / `프라이버시`) — 활성 모드 한눈에 + 클릭으로 즉시 해제
+- 디테일 패널 / 사이드 패널 / HUD / 운영 브리핑 / 보고 대기열 / 캔버스 툴팁 등 거의 모든 UI 가 KO/EN 일관
+- 한글 IME 처리: 사이드바 / 팔레트 / 단축키 모달 / 메모 textarea 4개 입력
+- 검색 매치 노란 마커 하이라이트 (사이드바 + 팔레트), 메모 검색 매칭, 메모리 추세 화살표
+- 카드 Shift+클릭 으로 핀 토글, F1 도움말, Cmd/Ctrl+S 메모 즉시 저장
+- 사이드바 '위로' 부유 버튼, 워크 이벤트 → 카드 자동 스크롤
+- 'while you were away' 토스트, 'today's MVP' 카드, 'NEW' 펄스, 신선도 색상 코딩
+- `npm run lint` (node --check 35개 파일) + CI 통합
+- `package.json` / `server.js` 의 VERSION 1.1.0 → 1.2.0
+
+### Iteration 149 — `npm run lint` — 가벼운 syntax 일괄 점검
+- 새 `scripts/lint.js` — `js/`, `scripts/`, `server.js`, `sw.js` 의 모든 .js 파일을 `node --check` 로 일괄 검사
+- `package.json scripts.lint` 등록, `npm run lint` 한 줄로 35개 파일 검증
+- GitHub Actions CI 도 `npm run lint` 후 `npm test` 순으로 갱신 (Node 18/20/22 matrix 그대로)
+- ESLint 도입은 과해서 보류, 일단 syntax 회귀만이라도 확실히 잡음
+
+### Iteration 148 — README 단축키 표 최신 단축키 5종 반영
+- F1 (도움말 표준) 추가, Shift+P 빠르게 두 번 누르면 Strict 안내
+- 명령 팔레트 32+ 명령 (현재 누적), Shift+Click 핀 토글, Cmd/Ctrl+S 메모 저장 항목 추가
+- README 첫 방문 사용자에게 모든 단축키가 한눈에 보이도록 정리
+
+### Iteration 147 — 팔레트에 컴팩트 카드 토글 명령
+- 사이드 패널 우측의 작은 컴팩트 토글 버튼을 누르지 않아도 Ctrl+K 로 빠르게 전환
+- 명령 이름: `에이전트 카드 컴팩트 보기 토글`
+- display 그룹에 묶여 보라색 strip + 기존 시네마/프라이버시/다크 토글 옆에 자연스럽게
+
+### Iteration 146 — 명령 팔레트에 정렬 기준 5종 추가
+- 사이드 패널의 정렬 select 박스에만 있던 5가지 정렬을 Ctrl+K 에서도 빠르게 전환
+- `정렬: 상태순 / 메모리순 / 플랫폼순 / 프로젝트순 / 최근 활동순`
+- 모두 `filter` 그룹에 묶여 좌측 연두 strip 으로 일관
+
+### Iteration 145 — 명령 팔레트에 reset/clear 명령 3종 추가
+- 화면이 검색/필터/핀으로 좁아졌을 때 한 번에 깨끗하게 정리할 수 있도록 추가
+- `검색 비우기` — `clearAgentSearch()` 호출
+- `필터 모두 초기화 (전체 보기)` — 상태/플랫폼/액션 필터 + 검색 모두 리셋
+- `모든 핀 해제` — `pinnedAgentKeys` 비우고 localStorage 정리, 토스트로 결과 안내
+- 모두 `filter` 그룹에 묶여 좌측 연두 strip + Ctrl+K 빠른 접근
+
+### Iteration 144 — 운영 브리핑 패널의 액션 라벨도 KO/EN
+- "운영 브리핑" kicker → "Operator brief"
+- 액션 라벨 7종 (검토 대기/포커스/신호 지연/고정 직원/진행 작업/최근 활동/대기 직원)
+  → Pending review/Focus/Stale signal/Pinned/In progress/Recent/Standing by
+- 빈 상태 fallback "전체 직원 · N명 활성" → "All agents · N active"
+- 헬스 + 브리핑 + 대기열 세 카드 모두 KO/EN 자연스럽게 정리 완료
+
+### Iteration 143 — 보고 대기열(Boss queue) UI 도 KO/EN 분기
+- 사이드 패널 상단의 보고 대기열 패널: 헤딩/카운트/단계 라벨/액션 버튼 모두 다국어
+- 단계: 보고 중/이동 중/처리됨/대기 중 → reporting/walking/handled/waiting
+- 버튼: 승인/반려 → Approve/Deny
+- `N건 → N items` 단위도 분기
+- 이제 사이드 패널의 모든 영역(헬스/브리핑/대기열/카드 리스트/활동) 이 KO/EN 일관
+
+### Iteration 142 — 카드 Shift+클릭으로 핀 토글
+- 사이드바 카드의 작은 핀 버튼 안 찾고 카드 본문 어디나 Shift+클릭으로 핀 토글
+- Shift+Enter / Shift+Space 도 동일 동작 (키보드 사용자도)
+- 단축키 모달에 `Shift+Click — 카드 Shift+클릭으로 핀 토글` 한 줄 추가, KO/EN 분기
+
+### Iteration 141 — 명령 팔레트 푸터/placeholder 도 KO/EN
+- `↑↓ 이동 / enter 선택 / esc 닫기` 푸터 라벨을 `move / select / close` 영어 분기
+- `data-foot-tx` 속성으로 깔끔하게 동기화, 매 render 마다 갱신해 언어 전환 즉시 반영
+- 입력 placeholder `에이전트, 프로젝트, 명령…` → `Agents, projects, commands…`
+- 팔레트 안의 모든 텍스트가 이제 KO/EN 일관
+
+### Iteration 140 — 팔레트 결과 카운트를 에이전트/명령 별도로 분리
+- 푸터 카운트가 `5개 결과` 단일 숫자에서 `3 agents · 2 cmds` 형식으로
+- 검색을 좁히면서 어느 카테고리에서 매칭됐는지 즉시 인지
+- 3개 미만일 때는 잡음 줄이려 빈 문자열 유지 (기존 동작)
+
+### Iteration 139 — 워크 이벤트 클릭 시 사이드바 카드로도 자동 스크롤
+- 데스크탑에서 캔버스 좌하단 work-stream 또는 활동 타임라인의 이벤트를 클릭하면
+  카메라뿐 아니라 사이드바 에이전트 카드까지 부드럽게 스크롤되어 보임
+- 카드에 `data-card-pid` 속성 추가, `inspectWorkEvent` 가 60ms 후 `scrollIntoView`
+- `behavior: "smooth"`, `block: "nearest"` 로 자연스러운 이동
+- 모바일은 기존 동작(`openMobilePanel`) 그대로
+
+### Iteration 138 — 명령 팔레트 액션 결과의 그룹별 좌측 색상 strip
+- 22개 명령이 6 그룹(display/modal/filter/theme/lang/tools) 으로 분류돼 있어 시각 구분 필요
+- 각 액션 결과 줄 좌측에 3×22px 색상 strip 추가
+  - display 보라 / modal 시안 / filter 연두 / theme 주황 / lang 노랑 / tools 회색
+- 부제 `명령` → 그룹 이름(`display`, `tools` 등) 으로 변경해 검색·필터에도 도움
+- `data-group` 속성으로 깔끔하게 분리
+
+### Iteration 137 — 명령 팔레트 결과 아바타에 상태 색상 dot
+- 결과 줄 아바타 우하단에 10px 둥근 dot 으로 status meta color 표시 (coding=초록, idle=회색, offline=흐릿한 회색 등)
+- 흰색/검정 보더 링으로 라이트/다크 모드 모두 또렷하게
+- hover 시 status 라벨 툴팁
+- 결과 줄에서 핀 ★, 메모 📝, 상태 ● 3가지 시각 신호가 한꺼번에 정리됨
+
+### Iteration 136 — 명령 팔레트 결과에도 동일한 검색 하이라이트
+- 사이드바와 동일한 패턴으로 결과 행의 에이전트 이름/프로젝트, 명령 제목에 매칭 부분 노란 마커
+- `<mark class="search-match">` CSS 를 공통 사용해 시각 일관성 유지
+- 에이전트와 명령 두 결과 타입 모두 적용
+- 빈 검색 시에는 자연스럽게 표시 안 됨 (query 없으면 헬퍼가 원본 그대로 반환)
+
+### Iteration 135 — 검색어 매치 부분 노란 마커로 하이라이트
+- 새 `highlightTokens(safeText, query)` 헬퍼 — `esc()` 처리된 텍스트만 받아 매칭 부분을 `<mark class="search-match">` 로 감쌈
+- 카드의 에이전트 이름 / 프로젝트명 / 작업 텍스트 3곳에 적용
+- 검색어가 어디에 매치됐는지 즉시 시각 확인 가능
+- 정규식 메타 문자 이스케이프, 다중 토큰(OR) 지원, 대소문자 무시
+- 다크모드 색감 별도 (`amber-300/32%`)
+
+### Iteration 134 — 디테일 패널 메모리 스파크라인 좌측 시간 라벨도 KO/EN
+- SVG sparkline 의 좌측에 표시되는 `Nm ago / N분 전` 라벨을 다국어 분기
+- 영어 모드에서 그래프 좌측에 한국어 '분 전' 이 뜨던 자잘한 leak 정리
+
+### Iteration 133 — HUD 진단(`renderDetectorHealth`) 영역도 KO/EN
+- HUD 좌상단 진단 라인 / 칩 / 힌트 모두 다국어
+- 6가지 state title (탐지 준비 중/서버 연결 대기/수집 중/일부 지연/정상/준비 완료) → 영어
+- 5가지 hint (근무/재연결/지연/시작 안내) 영어
+- 칩 라벨 (Claude, 세션/프로세스/AI 신호, 준비/대기) 영어 분기
+- 호버 ageLabel 도 `갱신` → `updated` 형식
+
+### Iteration 132 — 시스템 헬스 상태/감지기/연결 라벨 추가 KO/EN
+- `detectorLabel`: 정상/캐시/지연/대기 → OK/cached/slow/wait
+- `connectionHealth`: 재연결/응답 없음/느림 → Reconnect/No response/Slow (Live는 유지)
+- `healthSnapshot`: 탐지 정상/서버 연결 대기/진단 수집 중/탐지 일부 지연/직원 감지 대기/검토 필요 모두 영어 분기
+- 디테일 힌트(`N명 감지 · M명 작업 중` 등)도 영어 분기
+
+### Iteration 131 — 시스템 헬스 패널 라벨 모두 KO/EN
+- 사이드 패널 상단의 시스템 상태 카드: `시스템 상태 / 프로세스 / AI 앱 / 세션 / 진단 복사 / 새로고침`
+- 영어: `System status / Processes / AI apps / Sessions / Copy diagnostics / Reload`
+- detector / stat / button 영역 모두 동시에 분기
+- 헤더 영역은 그대로 (Codex/Cursor 같은 고유 명은 유지)
+
+### Iteration 130 — '운영 브리핑' 헤드라인 7종도 KO/EN 분기
+- `briefHeadline()` 의 7가지 상태별 title + detail 모두 다국어
+- 연결 대기 / 검토 우선 / 신호 확인 / 고정 직원 추적 / 작업 흐름 정상 / 대기 직원 확인 / 직원 감지 대기
+- EN: Connecting / Review first / Signal check / Tracking pinned / All flowing / Standing by / Waiting for agents
+- 디테일도 `재연결 3회 → Reconnect 3x`, `5명 확인 대기 → 5 waiting for review` 등 일관 분기
+
+### Iteration 129 — `workEventMeta` 기본값 라벨도 KO/EN
+- 이벤트 객체에 라벨이 비어있는 경우 사용되는 폴백 라벨 6종 (출근/퇴근/새 작업/검토/태스크 시작/완료) 다국어
+- 현재 언어 기준으로 사용해 사이드 패널 작업 스트림과 디테일 패널 모두 일관
+- ws.js 에서 이미 라벨 박아주는 경우엔 그 라벨 우선 (regression 안전)
+
+### Iteration 128 — '연결 종료' / '작업실에서 나갔어요' 도 KO/EN
+- 상태가 `offline` 으로 떨어졌을 때 work-event 라벨/본문을 다국어로
+- `연결 종료` → `Disconnected`, `작업실에서 나갔어요` → `Left the office`
+- (퇴근 이벤트와는 별개 이벤트, 같은 문구지만 분기 위치 다름)
+
+### Iteration 127 — 작업 이벤트 라벨/알림 메시지 KO/EN 분기
+- `addAgentEvent` 의 라벨 5종 (검토 요청 / 새 작업 / 태스크 시작 / 태스크 시작 / 완료) → `Review / New work / Task start / Done`
+- 검토 요청 fallback 텍스트 `확인이 필요해요` → `Needs review`
+- 데스크탑 알림 (`notify`) 의 `검토 요청: ${text}` / `완료!` 도 영어 분기 (`Review needed:` / `done!`)
+- 사이드 패널의 'work stream' 영역이 KO/EN 모두 자연스럽게
+
+### Iteration 126 — 활동 로그(`addLog`) 메시지 7개도 KO/EN
+- `ws.js` 안에서 `addLog()` 호출 7곳을 모두 다국어 분기
+- 서버 연결/종료/응답 없음, 에이전트 출근/퇴근, 태스크 시작, 출근/퇴근 이벤트 라벨까지
+- 재연결 카운터(`재연결 (3) → Reconnect (3)`) 와 연결 끊김 안내 툴팁/aria-label 도 분기
+- 이제 사이드 패널 하단 활동 로그가 영어 모드에서도 자연스럽게 영문으로
+
+### Iteration 125 — 사이드바 가시성 요약(visibility summary) 줄도 KO/EN
+- `전체 보기 / N명 / 고정 N / 작업 N / 검토 N / 최근 N` 모두 KO/EN 분기
+- 영어 모드: `Show all / N people / Pinned N / Working N / Review N / Recent N`
+- "명" 은 한국어에서 붙여 쓰고, "people" 은 영어에서 띄어 쓰도록 자연어 조사 처리
+- 검색 위 한 줄짜리 요약 띠가 영어 사용자에게도 자연스러움
+
+### Iteration 124 — 포커스 레일(focus rail) 안내 문구 KO/EN 분기
+- 포커스된 에이전트가 있을 때 `추적 중` 라벨 → `Tracking`
+- 없을 때 `대기 중 / 새 에이전트 활동을 기다리는 중 / 서버 연결을 기다리는 중`
+  → `Standing by / Waiting for new agent activity / Waiting for the server connection`
+- 사이드 패널 상단 포커스 영역의 영어 모드도 자연스럽게
+
+### Iteration 123 — 캔버스 서브 에이전트(태스크) hover 툴팁도 KO/EN
+- 서브 에이전트 / 부모 / 상태 / 활동 / 설명 / 대기 라벨 + `작업 중 / 완료 / 대기` 상태값 모두 분기
+- `Sub agent / Parent / Status / Activity / Desc / Wait / Working / Done / Pending`
+- "Task X 완료 필요" → "Task X needs to complete"
+- 캔버스 부유 툴팁 두 종류(에이전트/서브태스크) 모두 다국어 완료
+
+### Iteration 122 — 캔버스 hover 툴팁 다국어 처리
+- 캔버스에서 에이전트에 마우스 올렸을 때 뜨는 툴팁의 8개 라벨을 KO/EN 분기
+- 상태/메모리/태스크/서브/경로/완료 → Status/Memory/Task/Sub/Path/Done
+- `대기 중` → `Idle`, `N개 활성` → `N active`
+- 영문 사용자가 호버해도 더 이상 한국어 라벨 안 보임
+
+### Iteration 121 — 사이드바 카드 본문의 '대기 중' / '개 태스크' 다국어
+- 작업 텍스트 fallback 인 `대기 중` → `Idle`
+- 태스크 카운트 `${n}개 태스크` → `${n} task(s)` (단수/복수 처리)
+- 디테일 패널에 이어 카드 본문 텍스트도 KO/EN 모두 자연스럽게
+
+### Iteration 120 — 디테일 패널의 신호/이벤트 영역도 KO/EN 분기
+- `인식 근거 → Detection basis`, `최근 신호 → Recent signals`
+- `최근 ${age} → Last ${age}`
+- `최근 이벤트 수집 중 → Collecting recent events`
+- 디테일 패널의 거의 모든 라벨이 이제 다국어 완비
+
+### Iteration 119 — 디테일 패널의 메모리/태스크/메타 라벨 KO/EN 분기
+- 메모리 사용량 / 태스크 / "데이터 수집 중" / "등록된 태스크 없음" / "+N개 더" 모두 KO/EN
+- 메타 행 라벨 (PID / 세션 / 경로) → (PID / Session / Path) 분기
+- copy 버튼의 aria-label suffix 도 KO `복사` / EN `copy` 자동 매칭
+- 영어 모드 디테일 패널이 완전히 자연스러워짐
+
+### Iteration 118 — 디테일 패널 메모 UI 다국어 처리
+- 메모 섹션 제목 / placeholder / aria-label / 글자 카운터 / `저장됨` 토스트 / `지우기` 버튼 모두 KO/EN 분기
+- IIFE 로 한 번에 합성해 렌더링 분기 깔끔하게
+- KO: `개인 메모 / 이 에이전트에 대한 메모… / 저장됨 / 지우기`
+- EN: `Personal note / Anything to remember about this agent… / Saved / Clear`
+
+### Iteration 117 — 메모 textarea 의 Cmd/Ctrl+S 즉시 저장
+- 220ms 디바운스 기다리지 않고 명시적으로 저장하고 싶을 때 표준 단축키 지원
+- 브라우저의 '페이지 저장' 기본 동작은 textarea 안에서만 막음 (다른 곳에서는 그대로)
+- 저장 후 `flashSaved()` 로 1.2초 초록 '저장됨' 피드백 동일하게 발화
+- 디바운스 타이머도 함께 클리어해 중복 저장 방지
+
+### Iteration 116 — F1 키도 단축키 도움말 열기에 매핑
+- 기존 `?` / `Ctrl+/` 외에 표준 도움말 키인 `F1` 추가
+- `preventDefault()` 로 브라우저 기본 도움말 가로채기 방지
+- 단축키 모달 cheatsheet 에 `F1 — 단축키 도움말 (F1 표준)` 한 줄 추가
+- KO/EN i18n 키 `shortcuts.helpF1`
+
+### Iteration 115 — 헤더 프라이버시 칩이 Strict 일 때 색·라벨 강조
+- `aiTycoonPrivacy.isStrict()` 결과를 `refreshDemoChip` 사이클에서 함께 확인
+- 칩에 `.is-strict` 클래스 부여 → 더 진한 인디고/바이올렛 색감
+- 라벨 텍스트가 자동으로 `Strict` 로 바뀜 (원래 라벨은 `data-origText` 에 보존했다가 strict 해제 시 복원)
+- 다크 모드 별도 색감
+- iter 114 strict 모드 도입 후 헤더에서도 즉시 구분 가능
+
+### Iteration 114 — Strict 프라이버시 모드 (호버 미리보기 차단)
+- `Shift+P` 빠르게 두 번 (600ms 이내) → strict 모드 토글
+- strict 일 때는 `body.privacy-strict` 클래스로 hover 시 unblur 비활성화 → 화면 녹화/공유 시 완전 안전
+- 배지 색감 더 진한 인디고/바이올렛 그라데이션 + 텍스트 `프라이버시 (Strict)` 표시
+- 명령 팔레트에 `Strict 프라이버시 (호버 미리보기 차단)` 항목 추가
+- `localStorage` `ai-tycoon-privacy-strict` 키로 영속, KO/EN 토스트 안내
+
+### Iteration 113 — 명령 팔레트 푸터에 결과 개수 표시
+- 푸터 우측에 `5개 결과` 형식의 카운트 칩 추가 (auto margin 으로 우측 정렬)
+- 결과 3개 미만일 때는 시각 잡음 줄이려고 빈 문자열
+- 검색어 입력하면서 매칭이 어떻게 좁혀지는지 즉시 확인 가능
+- `aria-live="polite"` 로 스크린 리더에도 변경 안내
+
+### Iteration 112 — 팔레트 빈 검색 시 정렬 순서: 최근 → 핀 → 나머지
+- 빈 검색 시 결과 정렬을 3단계로 명확히 분리: ① 최근 방문 LRU 순 → ② 핀된 에이전트 → ③ 나머지(점수 내림차순)
+- 빈 검색에서도 핀이 항상 상단에 노출되어 자주 보는 에이전트가 클릭 한 번으로 도달
+- 핀 + 최근 방문 + 점수 세 신호를 명확히 우선순위화 (이전엔 recent 만 처리, 핀은 검색 점수에만 영향)
+
+### Iteration 111 — 명령 팔레트 결과에 메모 노트 아이콘 (📝)
+- iter 93 에서 메모 매칭은 했는데, 결과 줄에 어떤 친구가 메모를 갖고 있는지 시각 표시는 없었음
+- 제목 줄 끝에 작은 노트 이모지 칩 추가, hover 시 메모 첫 140자 OS 툴팁
+- 핀 별(iter 106) + 최근 칩(iter 72) + 메모 노트(이번 iter) 3종으로 결과 한 줄에서 컨텍스트 즉시 파악
+
+### Iteration 110 — `formatTimeAgo` 도 KO/EN 분기 (앱 전반 일관)
+- 카드/디테일 패널/이벤트 스트림 등에서 두루 쓰이는 `formatTimeAgo()` 가 한국어만 반환했음
+- 현재 언어가 `en` 이면 `just now / 3m ago / 2h ago` 형식으로 자연스럽게 출력
+- KO 는 기존 `방금 전 / N분 전 / N시간 전` 그대로
+- 이 한 줄 변경으로 영어 모드의 시간 표시가 동시에 모두 자연스러워짐
+
+### Iteration 109 — 필터/검색 결과 0건 카드도 KO/EN 분기
+- 사이드바에서 검색 또는 필터로 0건이 나올 때 표시되는 빈 카드의 제목/본문/리셋 버튼 모두 다국어
+- 검색 0건: `No results / Double-check the name, project, or work text. / Clear search`
+- 필터 0건: `No agents match the filter / Pick a different action filter or go back to all. / Reset action filter`
+- 전체 필터 안내: `Switch the filter back to All to see everyone. / Show all`
+
+### Iteration 108 — 작업 스트림 빈 상태 메시지 다국어 처리
+- 활동 타임라인이 비어있을 때 표시되는 "활동 수집 중" 메시지를 KO/EN 분기
+- 영어 사용자에게 `Collecting activity…` + `Events show up here as agents start working.` 노출
+- 그 외에는 기존 한국어 그대로
+
+### Iteration 107 — 메모 있는 카드 hover 시 미리보기 툴팁
+- `has-note` 카드의 `title` 속성에 `📝 메모 첫 140자` 박아두기
+- 디테일 패널 열지 않고도 OS 네이티브 툴팁으로 메모 확인 가능
+- 공백은 단일 스페이스로 정규화, 최대 140자 컷
+- `dataset.notePreview` 도 함께 박아 다른 모듈에서 활용 가능
+
+### Iteration 106 — 명령 팔레트 결과에서 핀된 에이전트 우선 + 별 표시
+- `agentPriority.isAgentPinned` 를 import 해서 결과 빌더에서 핀 확인
+- 같은 검색어에서 핀된 에이전트는 점수 `+2` 가산 → 상단으로 정렬
+- 결과 줄의 아바타 우상단에 작은 노란색 ★ 칩 표시 (고정됨)
+- 자주 보는 에이전트를 핀 해놓으면 Ctrl+K 에서도 항상 위로
+
+### Iteration 105 — 헤더에 프라이버시 모드 활성 칩
+- 프라이버시 모드 ON 상태일 때만 헤더에 회색-슬레이트 칩 표시 + 닫힌 눈 아이콘
+- 클릭하면 `aiTycoonPrivacy.toggle()` 로 즉시 해제
+- 좌하단 보라색 배지(iter 61)에 더해 헤더에도 같은 정보가 있어 어디서든 한눈에 인지
+- DEMO 칩과 동일한 구조/스타일로 헤더 일관성
+- KO `프라이버시` / EN `Privacy` 다국어
+
+### Iteration 104 — 헤더 DEMO 칩 클릭으로 데모 즉시 종료
+- `<div>` 였던 데모 칩을 `<button>` 으로 바꾸고 `aiTycoonDemo.toggle()` 핸들러 연결
+- 호버 시 배경 진해지고 살짝 위로 떠오름, active 시 원래대로
+- `header.demoTitle` / `header.demoAria` i18n 키로 KO/EN 동작 안내
+- 표시만 하던 칩이 액션 가능한 컨트롤이 됨
+
+### Iteration 103 — 데모 모드 활성 시 헤더에 'DEMO' 보라색 칩
+- `aiTycoonDemo.isEnabled()` 결과를 5초마다 polling 해서 헤더 칩 표시
+- 보라/인디고 그라데이션 칩 + ▶ 아이콘으로 '재생 중' 느낌
+- 데모 모드 종료 시 즉시 숨김 (`refreshDemoChip()` 가 `refreshTabCount` 안에서 같이 호출)
+- KO "데모" / EN "DEMO" 다국어
+- 가짜 직원 보고 있다는 걸 항상 명확히 인지
+
+### Iteration 102 — 헤더 stuck 칩에 i18n 적용
+- 라벨 / title / aria-label 을 `header.stuckLabel` · `header.stuckTitle` · `header.stuckAria` 3개 키로 분리
+- KO 그대로 "멈춤" 유지, EN "stuck" / "Jump to the most-stuck agent" / "Jump to stuck agent" 로 자연스럽게
+- 영어 사용자에게도 통일된 헤더 경험 제공
+
+### Iteration 101 — 헤더에 멈춤 카운트 칩 + 한 번에 포커스
+- 헤더 연결 상태 옆에 호박색 `⏳ N 멈춤` 칩, stuck 0명이면 자동 숨김
+- 5초 인터벌(`refreshTabCount`)에 함께 갱신되어 항상 신선
+- 클릭 시 `focusFirstStuckAgent()` 가 가장 오래 멈춰있던 친구로 포커스
+- 2.4초 주기 펄스 애니메이션, `prefers-reduced-motion` 사용자는 정적 표시
+- 다크 모드 별도 톤 (amber-400)
+
+### Iteration 100 — package.json 메타데이터 보강 (출시 준비)
+- `description` 을 영문 → 한국어 + 지원 플랫폼 8종 명시로 갱신
+- `homepage` / `repository` / `bugs` URL 명시
+- `keywords` 15종 추가: claude-code, ai-agent, dashboard, pixel-art, real-time, websocket, pwa, cursor, codex, copilot, ollama, lm-studio, monitoring, developer-tools 등
+- 향후 npm 검색이나 GitHub topic 노출 시 발견성 ↑
+- JSON 파싱 / smoke 테스트(38/38) 정상 통과 확인
+
+### Iteration 99 — 서버 부팅 배너에 버전 + Node 표기
+- ASCII 박스 아래쪽 부분에 `v1.1.0` 줄과 `Platform: win32 · Node v22.x` 한 줄 보강
+- `VERSION` 상수를 그대로 가져오므로 다음 릴리즈부터 자동 갱신
+- 운영 환경에서 어떤 빌드가 떴는지 SSH 로 봐도 즉시 식별
+
+### Iteration 98 — 에이전트 메모 textarea 도 IME 조합 처리
+- 메모 자동저장(디바운스 220ms)이 한글 IME 조합 중에는 자모 단위로 박힐 수 있어 막음
+- `compositionend` 시점에는 디바운스 무시하고 즉시 저장 + '저장됨' 피드백
+- 영문 입력은 기존 디바운스 그대로 (이벤트 미발생)
+- 사이드바 / Ctrl+K / 단축키 모달에 이어 4개 입력 모두 일관된 IME 처리
+
+### Iteration 97 — 단축키 모달 검색 input 도 한글 IME 조합 보류
+- 사이드바 / Ctrl+K 와 동일한 패턴: `compositionstart`/`compositionend` 으로 조합 플래그
+- 단축키 검색에서 한글 키워드 입력 시 자모 단위 필터링 깜빡임 제거
+- 앱 전반의 입력 UX 가 한글 사용자에게 일관되게 부드러워짐
+
+### Iteration 96 — 명령 팔레트 input 도 한글 IME 조합 보류
+- 사이드바 검색(iter 95)과 동일한 패턴: `compositionstart` → `_imeComposing=true`, `compositionend` → `false` 후 한 번에 `render()`
+- Ctrl+K 열고 한글로 빠르게 타이핑할 때 자모 단위 결과 깜빡임 사라짐
+- 영문 입력에는 영향 없음
+
+### Iteration 95 — 검색 input 의 한글 IME 조합 중 검색 보류
+- `compositionstart` 에 `_imeComposing=true`, `compositionend` 에 `false` 플래그 토글
+- `oninput` 은 조합 중이 아닐 때만 `setAgentSearch` 호출 → 자모 단위 매칭으로 인한 깜빡임 방지
+- 조합이 끝나면 한 번에 갱신, 디바운스(iter 94)와 조합되어 부드러운 한글 입력 경험
+- 영문 입력에는 영향 없음
+
+### Iteration 94 — 사이드바 검색 입력 120ms 디바운스
+- `setAgentSearch()` 가 빈 문자열일 때만 즉시 반영, 그 외엔 120ms 디바운스
+- 빠른 타이핑 + 한글 IME 조합 시 매 키스트로크마다 풀 패널 렌더링 부담을 줄임
+- 검색어는 localStorage 에 즉시 저장 (탭 닫혀도 보존)
+- X 버튼 클릭이나 ESC 로 검색 비우는 경우는 디바운스 우회
+
+### Iteration 93 — 명령 팔레트도 메모 매칭에 포함
+- `commandPalette.js` 의 `scoreAgent()` haystack 에 메모 본문 추가
+- 사이드바 검색과 동일한 키워드(예: "리팩터링", "디자인") 로 Ctrl+K 에서도 즉시 도달
+- 두 검색이 같은 데이터 소스를 보게 되어 사용자 멘탈 모델 일관성 ↑
+
+### Iteration 92 — 사이드바 검색이 개인 메모 텍스트도 매칭
+- `agentSearchText(agent)` 가 `getAgentNote(agent)` 결과를 haystack 에 포함
+- 메모에 "리팩터링", "디자인 작업" 같은 단서를 적어두면 그 키워드로 빠르게 에이전트 찾기
+- 빈 메모는 자동으로 필터링되어 노이즈 없음
+- 단순 한 줄 변경이지만 메모 + 검색 두 기능을 연결해 활용도 ↑
+
+### Iteration 91 — Insights 모달의 완료 태스크에 '어제 대비' 델타 칩
+- "완료 태스크" 카드 숫자 옆에 `+5` / `-2` / `±0` 형식의 작은 칩 추가
+- `yesterdayStats()` 가 있는 날부터만 표시 — 첫날엔 자연스럽게 숨김
+- tone (up/down/flat) 별로 emerald · rose · slate 색상 분기, 다크 모드 별도
+- 호버 시 `어제 대비: +5` 툴팁
+- 어제와 비교하면서 "오늘 더 일했나" 즉시 가늠 가능
+
+### Iteration 90 — README 상단에 v1.1.0 새 소식 요약 배너
+- README 최상단에 버전 배지 추가 (`version-1.1.0`)
+- "🆕 v1.1.0 새 소식 (요약)" 섹션으로 핵심 신기능 12개 한 줄씩 정리
+- 자세한 변경은 `CHANGELOG.md` 링크로 안내
+- 처음 저장소에 들어오는 사람도 최신 변경 사항을 즉시 인지
+
+## [1.1.0] — Iter 54-88 모음 릴리즈
+- 명령 팔레트(Ctrl/Cmd+K), 프라이버시 모드(Shift+P), 에이전트 메모, 컴팩트 뷰,
+  '오늘의 MVP' 카드, '자리 비운 사이' 토스트, 멈춤 감지, 신선도 색상 코딩,
+  HUD 타이틀 인라인 편집, 스토리지 사용량 표시, 데모/스탠드업/메모 export,
+  단축키 검색, macOS ⌘ 자동 표시, '위로' 부유 버튼 등 다수
+- 업적 21 → 24개로 확장
+- Smoke 테스트 32 → 38개로 확장 (API JSON 계약 검증 포함)
+- 서버 graceful shutdown 추가
+- `package.json` / `server.js` 의 VERSION 1.0.0 → 1.1.0 로 올림
+
+### Iteration 88 — 카드 신호 라인에 신선도 색상 코딩
+- `.agent-signal-line` 에 `data-freshness` 속성 (fresh / recent / warm / stale)
+- `< 1분` 초록(emerald), `< 5분` 호박(amber), `< 30분` 회색(neutral), 그 이상 흐린 회색(zinc)
+- 레이더 아이콘과 "최근 N분" 텍스트가 함께 색이 변해 한눈에 활동 신선도 파악
+- 다크 모드 별도 톤
+- 카드 하나하나 클릭하지 않아도 어느 친구가 방금 일했는지 색으로 즉시 인지
+
+### Iteration 87 — 단축키 모달에 키워드 검색 입력
+- 모달 상단에 검색바 추가, 공백으로 분리된 토큰 모두 매칭(AND) 되는 항목만 표시
+- 매칭이 없는 그룹 헤더는 자동으로 숨김, 결과 0건이면 안내 문구
+- 모달 열 때마다 검색어 자동 리셋 + 80ms 후 포커스 — 즉시 타이핑 가능
+- KO `단축키 또는 동작 검색…` / EN `Search shortcuts or actions…`
+- 단축키 18+ 개가 쌓여서 빠르게 찾는 게 어려웠던 문제 해소
+
+### Iteration 86 — 사이드 패널 '위로' 부유 버튼
+- 에이전트 리스트 스크롤이 240px 이상 내려가면 우하단에 작은 ↑ 버튼이 등장
+- 클릭하면 `behavior: "smooth"` 로 부드럽게 최상단 복귀
+- position: sticky + 음수 margin 트릭으로 컨테이너 우하단 모서리에 고정
+- 다크 모드 호박색 톤, hover 시 살짝 위로 떠오름
+- 카드 10+ 누적 시 다시 올라오는 게 귀찮던 점 해소
+
+### Iteration 85 — 데모 모드 토글 시 안내 토스트
+- `setDemoEnabled` 에서 상태 변화가 있을 때만 토스트로 ON/OFF 안내
+- KO `데모 모드 ON / 합성 직원이 등장합니다. 한 번 더 누르면 종료돼요.`
+- EN `Demo mode on / Fake agents will appear. Click again to stop.`
+- 부팅 시 이전 상태 복원되는 경우(`enabled === true` 그대로)에는 발화하지 않음 — 시끄러움 방지
+- 처음 데모 모드를 켜는 사용자가 "진짜 합류한 직원인가?" 헷갈리지 않게
+
+### Iteration 84 — 설정 → 데이터에 브라우저 저장 공간 사용량 표시
+- `ai-tycoon-*` 키 개수와 합산 바이트(KB) 를 백업 안내 문구 바로 아래에 노출
+- 다국어 (KO `브라우저 저장 공간: 28개 키 · 14.2 KB`, EN `Browser storage: 28 keys · 14.2 KB`)
+- 백업 / 초기화 누르기 전에 얼마나 쌓였는지 가늠 가능
+- 다크 모드 별도 톤, 아이콘 + tabular-nums
+
+### Iteration 83 — HUD 작업실 타이틀 인라인 편집 (더블클릭 / Enter)
+- HUD 상단의 "실시간 작업실" 타이틀을 더블클릭 또는 포커스 후 Enter 키로 즉시 인라인 입력 전환
+- Enter → 저장, Esc → 취소, blur → 저장 (트리플 안전)
+- 호버 시 점선 outline 으로 클릭 가능 신호, focus-visible 시 키보드 사용자도 인지
+- 설정 모달 들어가지 않고도 헤더에서 바로 워크스페이스 이름 변경
+- 다크 모드 별도 색감, 입력 시 호박색 보더 + 그림자
+
+### Iteration 82 — 설정 → 데이터 섹션에 스탠드업/메모 export 버튼
+- 명령 팔레트에만 있던 두 export 기능을 설정 모달에서도 두 버튼으로 노출
+- `일일 리포트 (.md)` + `에이전트 메모 (.md)` 한 쌍으로 CSV 옆에 배치
+- `settings.exportStandup` / `settings.exportNotes` i18n 키 추가 (KO/EN)
+- 키보드 단축키를 모르는 사용자도 GUI 에서 자연스럽게 발견 가능
+
+### Iteration 81 — 신규 기능 연계 업적 3종 추가
+- **단축 마법사** (`cmdk-wizard`): 명령 팔레트(Ctrl+K)를 5번 열기 — `bumpCounter("paletteOpens")`
+- **메모장이** (`note-keeper`): 3개 이상 에이전트에 메모 저장 — localStorage 직접 카운트
+- **조용한 모드** (`incognito`): 프라이버시 모드 처음 켜기 — `setFlag("privacyEverOn", true)`
+- `window.aiTycoonAchievements`에 `bumpCounter`/`setFlag` 노출해 다른 모듈에서 호출
+- 업적 총 24개 (기존 21개 → 24개)
+
+### Iteration 80 — 메모 자동 저장 시 '저장됨' 시각 피드백
+- 디테일 패널 메모를 220ms 디바운스로 저장하는데, 저장 시점이 안 보여서 사용자가 헷갈릴 수 있었음
+- 저장 직후 푸터 힌트를 1.2초간 초록색 "저장됨 · N/500" 으로 강조 후 원래 문구로 복귀
+- "지우기" 버튼 클릭 시에도 동일 피드백
+- `is-saved` 클래스 + CSS 트랜지션, 다크 모드 별도 톤
+
+### Iteration 79 — 에이전트 메모 일괄 Markdown 내보내기
+- `buildNotesMarkdown` / `downloadNotesMarkdown` 함수 추가 (`standupExport.js`)
+- 저장된 모든 `ai-tycoon-agent-notes` 항목을 sessionId/PID 별로 묶어 Markdown 헤더 + 본문 출력
+- 현재 살아있는 에이전트와 매칭되면 이름/프로젝트도 헤더에 포함
+- 명령 팔레트에 "에이전트 메모 내보내기 (Markdown)" 항목
+- 메모가 0개일 때도 안전하게 빈 안내 출력, KO/EN 다국어
+
+### Iteration 78 — macOS 사용자에게 Ctrl 대신 ⌘ 자동 표시
+- `<kbd>` 요소 중 `data-mod-key` 속성을 가진 것들을 macOS 에서는 `⌘` 로 갈아끼움
+- 검색바 Ctrl+K 칩, 단축키 도움말 모달의 Ctrl 키 모두 자동 변환
+- `navigator.platform` 으로 Mac/iPad/iPhone 감지, 그 외에는 그대로 Ctrl
+- DOMContentLoaded + 400ms 추가 호출로 헬프 모달이 늦게 그려져도 반영
+
+### Iteration 77 — 멈춘 에이전트 수를 브라우저 탭 제목에 노출
+- `refreshTabCount` 가 stuck 에이전트도 계산해 `⚠ N · (M) 작업실 · AI Tycoon` 형식으로 제목 갱신
+- 다른 탭에서 작업하다 페이지 안 봐도 멈춤 상태를 즉시 인지
+- 5초 인터벌 그대로 사용, 추가 코드 없이 기존 카운터에 한 줄만 더함
+- 임계값(5분)은 `panel.js` 의 `isAgentStuck` 과 동일하게 유지
+
+### Iteration 76 — 빈 상태 카드에 지원 AI 도구 8종 + 데모 CTA
+- 에이전트가 0명일 때 단순한 텍스트 대신 지원 플랫폼 8개를 컬러 칩으로 나열
+- Claude · Codex · Cursor · Copilot · Ollama · LM Studio · Jan · GPT4All
+- "데모 모드로 미리 보기" 그라데이션 버튼으로 처음 보는 사용자가 빈 화면이 아니라 살아있는 작업실을 즉시 체험 가능
+- KO/EN 다국어 분기
+- 다크 모드 톤 분리
+
+### Iteration 75 — 멈춤 감지 1회 토스트 알림
+- 에이전트가 처음으로 stuck 상태(`isAgentStuck` true)로 전환되는 순간 한 번만 토스트
+- 클릭하면 해당 에이전트로 포커스 (review 톤 사용)
+- 다시 움직이면 `_stuckNotified` Set 에서 제거 → 다음에 또 멈추면 한 번 더 알림
+- 패널을 안 보고 있어도 책상에서 일하다 알 수 있음
+- KO/EN 다국어 메시지
+
+### Iteration 74 — 멈춘 에이전트 감지 칩 (5분 무신호 + 작업중 상태)
+- `isAgentStuck(agent)` 헬퍼: 상태가 coding/thinking/searching/reviewing 인데 신호 age > 5분이면 `true`
+- 해당 카드에 `.is-stuck` 클래스로 호박색 보더, 헤더 행에 `멈춤?` 칩 표시
+- 호버 시 "5분 이상 활동 신호 없음 — 멈춘 것 같아요" 툴팁
+- 다크 모드 별도 색감, 모래시계 아이콘으로 직관적
+- 프롬프트 입력 기다리며 멈춘 세션을 빠르게 발견할 수 있음
+
+### Iteration 73 — 디테일 패널 프로젝트 칩 클릭 시 동일 프로젝트만 필터
+- 디테일 패널 상단의 프로젝트 이름을 클릭 가능한 칩으로 변경
+- 클릭하면 검색창에 프로젝트명이 자동 입력 → 같은 프로젝트의 다른 에이전트만 노출
+- 이미 동일한 검색어 상태면 한 번 더 누를 때 해제 (토글)
+- 색상 닷 + 필터 아이콘으로 클릭 가능함을 시각적으로 안내
+- 다크/라이트 별도 톤
+
+### Iteration 72 — 명령 팔레트 최근 방문 기억
+- Ctrl+K 열고 빈 입력 상태일 때 최근 방문한 에이전트 최대 5명을 상단에 노출
+- LRU 큐로 `ai-tycoon-cmdk-recent` localStorage 키에 sessionId/pid 저장
+- "최근" 칩으로 시각 구분, 같은 작업으로 다시 돌아갈 때 한 번 더 검색할 필요 없음
+- 다크 모드 전용 라벤더 톤, 모바일에서도 자연스럽게
+
+### Iteration 71 — 일일 스탠드업 리포트 Markdown 내보내기
+- 새 `js/standupExport.js`: 오늘 작업을 Markdown 형식으로 정리해서 다운로드
+- 구조: `한눈에` (활성/완료/진행) → `에이전트별 작업` (이름/프로젝트/플랫폼/완료/진행 + 현재 작업) → `최근 이벤트` (10건)
+- KO/EN 다국어, 파일명 `ai-tycoon-standup-YYYY-MM-DD.md`
+- 명령 팔레트에 "일일 리포트 (Markdown)" 항목 추가
+- 일일 스탠드업 / 데일리 리포트 / 주간 보고에 그대로 붙여넣기 가능
+- SW v12, smoke test 38개로 확장
+
+### Iteration 70 — About 카드에 Service Worker 버전 표시
+- 설정 → 정보 카드에 SW 캐시 버전 줄 추가 (`SW: ai-tycoon-shell-v11`)
+- `/sw.js`를 `cache: no-store` 옵션으로 fetch 해서 VERSION 상수를 정규식으로 추출
+- 사용자가 캐시가 최신인지, 새 SW 가 잘 활성화됐는지 한눈에 확인 가능
+- 라이브 서버 API + SW 정적 자산 두 출처를 모두 표시해 디버깅 친화
+
+### Iteration 69 — README 대규모 업데이트 (iter 54-68 반영)
+- "UX 폴리시" 섹션 상단에 11개 신규 기능 강조: 명령 팔레트, 프라이버시 모드, 메모, 컴팩트 뷰, 상태 칩, 프로젝트 닷, NEW 펄스, MVP 카드, 자리 비운 사이, 메모리 추세, 5-step 투어
+- 단축키 표 갱신: `Shift+P`(프라이버시), `Ctrl+K`(팔레트) 분리, `/`(검색)·`Ctrl+/`(도움말 대체) 명확화
+- 테마 개수 4→6 (사쿠라/바다 포함), 업적 14→21 (콘도드 등)
+- English 섹션 동기화 + Polish 카테고리 확장
+
+### Iteration 68 — 에이전트별 개인 메모
+- 디테일 패널 하단에 "개인 메모" 텍스트 영역 — 최대 500자
+- 입력 220ms 디바운스 → `localStorage` (`ai-tycoon-agent-notes`) 에 sessionId/PID 키로 저장
+- 메모가 있는 에이전트 카드 좌상단에 황금색 점 표시 (`.has-note::before`)
+- 디테일 패널의 footer에 글자 수 카운터 + "지우기" 버튼
+- `data-privacy` 속성으로 프라이버시 모드에서도 자동 블러 처리
+- 같은 에이전트를 다음에 열 때 메모가 그대로 — 컨텍스트 유지
+
+### Iteration 67 — 컴팩트 에이전트 카드 모드 (토글)
+- 정렬 드롭다운 옆 작은 리스트 아이콘 버튼 → 클릭 시 컴팩트 보기 토글
+- 컴팩트 모드: 카드 패딩 축소, 서브태스크 리스트 숨김, 신호 라인 제거, 보더 슬림화
+- 많은 에이전트(10+) 운영 시 한 화면에 더 많이 표시
+- 상태는 `ai-tycoon-agents-compact` localStorage 키로 영속
+- 토글 시 토스트로 ON/OFF 피드백, 다크 모드 별도 색감
+- `aria-pressed` 접근성 + 활성 시 보라색 강조
+
+### Iteration 66 — 설정 모달의 "새 소식" (What's new) 패널
+- 설정 모달에 최근 12개 변경 사항 중 상위 6개를 인라인 표시
+- 다국어 (KO/EN), 아이콘별 색감 (ok/feature/highlight/design/stable 5톤)
+- 그라데이션 카드 + "전체 변경 사항 보기 →" 링크 → GitHub CHANGELOG.md
+- 설정 열 때마다 자동 갱신, 다크모드 별도 색감
+
+### Iteration 65 — Smoke test에 API JSON 계약 검증 추가
+- `/api/health` 응답을 JSON 으로 파싱하여 `ok / version / startedAt / uptimeMs / nodeVersion / platform / clients / agents.total / agents.running / pollIntervalMs` 9개 필드 존재 확인
+- `/api/agents` 응답 구조 검증 (`ok / count / agents[]`)
+- `/api/agents` CORS 헤더 (`Access-Control-Allow-Origin: *`) 확인
+- 단순 substring 검사에서 실제 API 계약 회귀 방지로 한 단계 업그레이드
+- 총 검증 항목 34개 → 37개
+
+### Iteration 64 — 명령 팔레트 발견성 강화 (투어 + 검색바 힌트)
+- 검색 입력창 우측에 `Ctrl K` 키캡 칩 — 클릭하면 명령 팔레트 즉시 오픈
+- 호버 시 보라색 강조, 모바일(<480px) 자동 숨김, 다크모드 별도 색감
+- 온보딩 투어에 5번째 스텝 추가: 검색바를 가리키며 "명령 팔레트 (Ctrl+K)" 안내
+- 신규 사용자는 첫 방문 시 바로, 기존 사용자는 검색 칩으로 자연스럽게 발견
+
+### Iteration 63 — 메모리 추세 화살표 (▲ / ▼)
+- 에이전트 카드의 메모리 옆에 30초 전 대비 추세 화살표 표시
+- ▲ 빨강 = +30MB 이상 증가, ▼ 초록 = -30MB 이상 감소, 그 사이는 표시 없음
+- `memoryTrend(agent)` 헬퍼: S.memoryHistory에서 timestamp로 ~30초 전 샘플 검색
+- 호버 시 정확한 증감량을 툴팁으로 (`+45MB` 등), aria-label 도 포함
+- 가벼운 ‑ 카드 레이아웃에 영향 없음 (8px 인라인 텍스트)
+
+### Iteration 62 — 명령 팔레트 명령 22종 확장
+- 6개 카테고리 × 22명령으로 확장: Display (다크/프라이버시/시네마), Modal (인사이트/설정/도움말), Filter (전체/코딩/대기/오프라인), Theme (6종), Language (한/영), Tools (데모/스냅샷/백업/음소거)
+- 빈 검색 시 자주 쓰는 6개 기본 표시, 입력 시 22개 전체에서 매칭
+- `window.toggleCinemaMode` / `window.applyTheme` 글로벌 노출 — 팔레트에서 즉시 호출 가능
+- 이제 Ctrl+K 만으로 거의 모든 기능에 도달 가능 — 마우스 없이 운영
+
+### Iteration 61 — 프라이버시 모드 (Shift+P)
+- 새 `js/privacyMode.js`: 프롬프트·프로젝트명·태스크·로그를 `filter: blur(4px)`로 가림
+- 좌하단 'EYE_CLOSED + 프라이버시 모드' 보라색 배지로 모드 활성화 시각화 (X 버튼으로 즉시 해제)
+- 흐려진 텍스트에 hover 하면 잠깐 또렷해짐 — 본인은 읽을 수 있고 화면 공유 시청자는 못 읽음
+- `Shift+P` 단축키 + 명령 팔레트에 '프라이버시 모드 토글' 항목 추가
+- 토글 시 토스트로 ON/OFF 안내, 상태는 localStorage 에 영구 저장
+- 모든 민감한 셀렉터 통합: 카드 / 디테일 / 인사이트 / 토스트 / 명령 팔레트 / `[data-privacy]` 지정 가능
+- SW v11, smoke test 34개로 확장
+
+### Iteration 60 — 명령 팔레트 (Ctrl+K / Cmd+K)
+- 새 `js/commandPalette.js` — VS Code 스타일 빠른 검색 모달
+- 입력 즉시 에이전트 이름 / 프로젝트 / 플랫폼 / 현재 작업 텍스트 / PID 를 다중 토큰으로 매칭, 상위 8명 표시
+- 추가로 글로벌 명령 6종 (다크 토글, 데모 토글, 인사이트, 스냅샷, 설정, 도움말) 결과
+- ↑↓ 키 네비게이션 + Enter 실행 + Esc 닫기 + 클릭 + 호버 미리보기
+- 카드는 18% 위에서 페이드인, 라이트/다크 양쪽 톤 매칭, 모바일 96vw 너비 대응
+- 기존 Ctrl+K (검색바 포커스)는 / 단축키로 분리, Ctrl+K 는 팔레트 전용
+- SW v10, smoke test 33개로 확장
+
+### Iteration 59 — 프로젝트별 일관된 색상 닷
+- 에이전트 카드 헤더에 프로젝트 이름 앞 작은 8px 컬러 닷 추가
+- `projectColor(name)` 헬퍼: 프로젝트 이름의 32-bit 해시 → HSL 360° 분포 → 안정적 색상
+- 같은 프로젝트의 모든 에이전트는 똑같은 닷 색상으로 묶여 시각적 그룹핑이 명확해짐
+- 흰색 보더 링으로 다크/라이트 모두에서 닷이 또렷하게 보이도록 조정
+- 카드 헤더 레이아웃을 flex로 다듬어 긴 프로젝트명도 잘 잘림
+
+### Iteration 58 — 사이드 패널 상단에 상태별 요약 칩
+- 에이전트 목록 위에 한 줄짜리 상태 분포 칩 (`6 코딩 · 2 생각 · 1 검토 · 3 대기 …`)
+- 0이 아닌 상태만 표시, 활동량 큰 순으로 배치
+- 코딩/대기/오프라인 칩은 클릭 가능 — 클릭하면 해당 상태 필터, 다시 클릭하면 전체로 토글
+- 활성 필터와 동기화되어 현재 어떤 필터가 적용됐는지 한눈에 확인
+- 다크모드 색감 별도, `color-mix()` 로 자동 톤 매칭
+
+### Iteration 57 — "방금 출근" 펄스 + NEW 배지
+- 새로 등장한 에이전트 카드는 60초 동안 초록 보더 펄스 + 우측 상단 NEW 칩
+- `S.visualAgents[pid].joinedAt`를 ws.js에서 기록해 두고 panel.js 에서 `(now - joinedAt) < 60s` 일 때 `.is-new` 클래스 부여
+- `agentJoinPulse` (그림자 링 확산) + `agentJoinBadge` (페이드인-아웃) keyframes
+- `prefers-reduced-motion` 사용자는 정적 상태로 표시
+- 다크모드는 더 진한 emerald 보더로 톤 매칭
+
+### Iteration 56 — Insights 모달에 "오늘의 MVP" 카드
+- 새 섹션이 Insights 모달의 플랫폼 분포와 Top 5 프로젝트 사이에 등장
+- 점수 = (완료 태스크 × 3) + 최근 work-event 개수 + (실행 중이면 +1) 으로 가장 활발한 에이전트 1명을 선정
+- 황금 트로피 아이콘 + 에이전트 아바타 + 프로젝트 이름 + 통계 — 클릭하면 해당 에이전트로 포커스
+- 점수가 0이면 섹션 자체를 숨김 (조용한 시간에 빈 카드 안 보이도록)
+- 다국어 키 `insights.mvp` (KO "오늘의 MVP" / EN "Today's MVP") 추가
+- 다크모드 전용 색감 / 모바일 그리드 재배치 포함
+
+### Iteration 55 — "자리 비운 사이" 요약 토스트
+- New `js/awaySummary.js`: listens to `visibilitychange`, snapshots the work-event tally when the tab hides, and on return (after ≥ 30 s away) shows a single concise toast — e.g. `완료 2 · 검토 요청 1 · 출근 1` — so users don't miss what happened while they were elsewhere
+- Bilingual: KO `자리 비운 사이 (3분)` / EN `While you were away (3 min)`
+- Toggle via `aiTycoonAwaySummary.setEnabled(false)` or localStorage `ai-tycoon-away-summary`; on by default
+- SW bumped to v9; smoke test now exercises 32 endpoints
+
+### Iteration 54 — Graceful server shutdown + client toast
+- `SIGTERM` / `SIGINT` now stops poll & heartbeat intervals first, then broadcasts a `server_shutdown` JSON message to every WS client so the UI can show a friendly toast before the socket closes
+- Uses `wss.close()` → `httpServer.close()` for clean drains, with a 3-second safety-net `setTimeout` that force-exits if anything hangs
+- New `uncaughtException` / `unhandledRejection` handlers route through the same shutdown path so a crash doesn't leave half-broadcast state behind
+- Client side: ws.js shows a 6 s "system" toast (`서버가 종료됩니다 — 다시 켜지면 자동 재연결할게요`) and logs the event; toasts.js gains a `system` kind (slate icon) + optional `duration` override
+
 ### Iteration 40 — Typing dots above coding agents
 - Three small bouncing dots above any agent currently `coding`, tinted with their platform colour
 - Hidden when a speech bubble is up to avoid visual collision

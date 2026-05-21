@@ -92,9 +92,25 @@ export function recordStateSnapshot(agents) {
     const blob = loadBlob();
     const day = ensureToday(blob);
 
-    // Rollover detection — if day changed, reset memo
+    // Rollover detection — if day changed, reset memo.
+    // 단, status timer (lastStatusTick) 는 지금까지 누적된 분을 *이전 날짜* 의 statusMinutes 에
+    // 먼저 크레딧해야 함. 안 그러면 자정 부근 "어제 23:30 ~ 오늘 00:00" 분이 사라짐.
     const k = todayKey();
     if (memo.lastSavedDayKey && memo.lastSavedDayKey !== k) {
+        // 이전 날짜의 status timer 정산 후 클리어
+        const prevDayKey = memo.lastSavedDayKey;
+        const prevDay = blob.days[prevDayKey];
+        if (prevDay) {
+            const rolloverNow = Date.now();
+            memo.lastStatusTick.forEach(prev => {
+                if (!prev) return;
+                const elapsedMin = (rolloverNow - prev.since) / 60000;
+                if (elapsedMin > 0 && elapsedMin < 60) {
+                    prevDay.statusMinutes[prev.status] =
+                        (prevDay.statusMinutes[prev.status] || 0) + elapsedMin;
+                }
+            });
+        }
         memo.seenPids.clear();
         memo.lastStatusTick.clear();
     }

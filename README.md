@@ -1,12 +1,93 @@
 # AI Tycoon
 
+<p align="center">
+  <img src="icons/icon.png" alt="AI Tycoon — 픽셀아트 오피스 아이콘" width="128" height="128">
+</p>
+
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
+[![Version](https://img.shields.io/badge/version-1.4.7-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/hero-dark.png">
+    <img src="docs/hero-light.png" alt="AI Tycoon 라이브 대시보드 — 픽셀아트 오피스 안의 AI 에이전트들, 사이드바의 에이전트 카드와 해시태그 칩, 헤더 HUD" width="900">
+  </picture>
+  <br>
+  <sub><em>데모 모드로 띄운 라이브 화면 — 라이트 / 다크 모드 자동 전환 · <a href="docs/SCREENSHOTS.md">전체 스크린샷 갤러리 →</a></em></sub>
+</p>
 
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
+
+### 🛠️ v1.4.x 안정성 패치 라인 (v1.4.1 ~ v1.4.7)
+v1.4.0 직후 8번의 검증 라운드 (general-purpose agent 코드 리뷰 5회 + Playwright e2e 3회) 를 거치며
+누적 **15개의 잠재 버그**를 잡고, 장기 사용자를 위한 신규 정리 기능 1개를 더했습니다. 정식 patch 7종으로 컷:
+
+- **v1.4.7** — 메모 태그 매니저에 **오프라인 에이전트 메모 일괄 정리** 기능 + README 영문 섹션 v1.4.6 동기화
+- **v1.4.6** — *모바일 가로 스크롤 fix (high)* — 768px 이하에서 document horizontal scroll 발생하던 버그 + OSS hygiene (이슈/PR 템플릿, SECURITY.md, CODE_OF_CONDUCT.md, .gitattributes, ARCHITECTURE.md)
+- **v1.4.5** — 마무리 컷 — 메모 export 코드블록 보존, Playwright 라이브 audit (이슈 0건), README 정리
+- **v1.4.4** — 데이터 영속 모듈 패치 — *자리 비운 사이 토스트 부풀림 (high)*, 자정 status timer 누락, 백업 restore 원자성·버전 가드
+- **v1.4.3** — 렌더링 모듈 패치 — *canvas null projectName throw (high)*, sub-agent pid 비교 실패, 청소 로봇 fractional pauseTimer 영구 정지, 비 weather Graphics GPU 누수
+- **v1.4.2** — 코어 비-UI 패치 — WebSocket 재연결 race, 종료된 에이전트 detailPid 누수, server.js prev 상태 맵 무제한 성장, history.jsonl ISO timestamp NaN 비교
+- **v1.4.1** — UX·캐시 정합 패치 — 태그 매니저 캐시 invalidate 누락, orphan tag empty state 친절한 안내, CONTRIBUTING hashtag 시스템 문서화
+
+전체 finding 과 디테일은 [`CHANGELOG.md`](./CHANGELOG.md) 의 Iteration 200~219 참고.
+
+### 🆕 v1.4.0 새 소식 (요약)
+- **메모 hashtag 자동완성** — textarea 에서 `#` 입력 시 기존 태그 floating list (↑↓/Enter/Tab)
+- **설정 → 메모 태그 관리자** — 모든 메모를 스캔해 #태그 목록, 인라인 이름 변경·삭제 (단어 경계 안전 매칭)
+- **에이전트 카드 안에 hashtag 칩** — 카드별 최대 2개 + `+N` overflow, 클릭 시 즉시 필터
+- **명령 팔레트 hashtag 필터 명령** — `필터: #frontend (3)` 형식 동적 추가
+- **visibility-summary 의 #tag 칩** — 태그 컬러 그대로 적용, 일반 검색과 시각 구분
+- **hashtag 0건 empty state** — `'#frontend' 태그가 붙은 에이전트가 없습니다` + 사용법 힌트
+- **메모 입력 중 디테일 패널 re-render skip** — autocomplete/IME 깨짐 핫픽스
+- **단축키 모달 '메모' 그룹** — `Cmd+S` · `Cmd+Enter` · `#` 자동완성 명시
+- **`extractTagsFromNotes` 1초 TTL 캐시** — 100+ 메모 환경에서도 jank 없음
+- **`npm run icons` PNG·ICO 자동 분기** — 일회용 추출 스크립트 통합
+- SW 캐시 v23 → **v33**
+
+### 🆕 v1.3.0 새 소식 (요약)
+- **메모 hashtag** — 메모에 `#frontend` `#리팩터링` 같이 적으면 자동 수집 → 사이드바 상단에 태그별 stable 컬러 칩으로 노출. 클릭 한 번에 같은 태그의 에이전트들로 필터
+- **디테일 패널의 hashtag 칩** — 현재 에이전트가 가진 태그를 메모 아래에 작게 표시, 클릭 시 같은 태그 다른 에이전트로 점프
+- **사이드바 검색 최근 5개 칩** — 자주 쓰는 프로젝트명/메모 키워드를 클릭으로 재선택
+- **`j/k` 키 + 디테일 ‹ / › 버튼** — 사이드바 정렬·필터 그대로 따라 에이전트 순회 + 카드 자동 스크롤
+- **Insights 시간대 히트맵 ▼ 마커** — 현재 시각 셀에 오렌지 바운스 화살표
+- **새 픽셀아트 앱 아이콘** — PWA 설치본·favicon·SNS 공유 미리보기 전부 갱신 (`scripts/extract-png-from-ico.js`)
+- **사이드바 Enter 로 첫 결과 선택**, 디테일 PID 변경 시 스크롤 위로 자동
+- **메모 글자 수 임계 경고 색**, 메모 푸터 단축키 힌트 (⌘S / ⌘⏎), `N` 단축키로 메모 빠른 포커스
+- **`[hidden] { display: none !important; }` 글로벌 안전망** — 모드 칩·CTA 가 hidden 속성 무시하던 버그 일괄 해소
+- **conn-dot WS 상태 pulse**, `aiTycoonReconnect()` 노출 + 명령 팔레트 명령
+- SW 캐시 v11 → **v23**, smoke 38개·lint 37개 그대로 통과
+
+### 🆕 v1.2.0 새 소식 (요약)
+- **명령 팔레트 32+ 명령** — 검색/팔레트/단축키 모달 모두에 한글 IME 매끄럽게
+- **Strict 프라이버시 모드** (`Shift+P` 더블탭) — hover unblur 차단으로 화면 녹화 안전
+- **헤더 모드 칩 3종** (`⚠ 멈춤` / `DEMO` / `프라이버시`) — 활성 모드 즉시 인지 + 클릭으로 해제
+- **검색 매치 노란 하이라이트** (사이드바 + 팔레트), 메모도 검색 매칭
+- **카드 Shift+클릭 으로 핀 토글**, F1 도움말, Cmd/Ctrl+S 메모 즉시 저장
+- **워크 이벤트 → 카드 자동 스크롤**, 사이드바 '위로' 부유 버튼
+- **신선도 색상 코드** (1분/5분/30분), 메모리 추세 ▲/▼
+- **운영 브리핑 / 헬스 / 보고 대기열** 등 사이드 패널 거의 모든 영역 KO/EN 일관
+- `npm run lint` (35개 .js syntax 일괄 검사) + CI 통합
+
+### 🆕 v1.1.0 새 소식 (요약)
+- **명령 팔레트** (`Ctrl/Cmd+K`) — 22개 명령 + 에이전트 fuzzy 검색
+- **프라이버시 모드** (`Shift+P`) — 프롬프트·프로젝트명 즉시 블러 (화면 공유 안전)
+- **에이전트별 개인 메모** — 디테일 패널에 500자 메모, 카드에 황금 점 표시
+- **컴팩트 카드 뷰** — 10명 이상에서 한 화면에 더 많이
+- **신선도 색상 코드** — 1분/5분/30분 임계값으로 카드 활동성 직관 표시
+- **멈춘 에이전트 감지** — 5분 무신호 → 칩 + 토스트 + 탭 제목 ⚠ 배지
+- **오늘의 MVP 카드 · 자리 비운 사이 요약** — Insights 모달과 토스트로 자동 정리
+- **HUD 작업실 타이틀 인라인 편집** — 더블클릭으로 즉시 수정
+- **macOS ⌘ 키 자동 표시** · **단축키 모달 검색** · **위로 부유 버튼**
+- **일일 리포트 / 메모 일괄 export** (`.md`) — 스탠드업·아카이브 친화
+- **서버 graceful shutdown** — SIGTERM/SIGINT 시 WS 클라이언트에 작별 인사
+- 업적 21 → **24개**, smoke 테스트 32 → **38개**
+
+자세한 변경 내역은 [`CHANGELOG.md`](./CHANGELOG.md), 코드 아키텍처는 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md), 스크린샷 갤러리는 [`docs/SCREENSHOTS.md`](./docs/SCREENSHOTS.md) 참고.
 
 Claude Code · Cursor · Codex 같은 AI 에이전트가 지금 어떤 작업을 하고 있는지 자동으로 감지하고, 픽셀 아트 오피스 안의 캐릭터로 보여줍니다.
 
@@ -35,7 +116,7 @@ AI Tycoon은 현재 내 컴퓨터에서 돌아가는 AI 작업을 **게임처럼
 - **시간대 조명** — 시계 시간에 맞춰 창밖 하늘이 새벽·낮·황혼·밤으로 자동 전환 (Pixi 앰비언트 틴트 + 윈도우 별/달/태양 궤도)
 - **빗방울 날씨** — 시간당 8% 확률로 비 효과
 - **백그라운드 NPC** — 청소 로봇, 종이비행기, 휴게실 고양이, 야간 보안 순찰, 배송 NPC
-- **오피스 테마 4종** — 클래식 / 카페 / 숲속 / 심야 (light/dark 양쪽 팔레트)
+- **오피스 테마 6종** — 클래식 / 카페 / 숲속 / 심야 / 사쿠라 / 바다 (light/dark 양쪽 팔레트)
 - **자동 시즌 장식** — 12월 크리스마스 트리+눈, 10-11월 잭오랜턴+거미줄, 3-4월 벚꽃
 - **인테리어 디테일** — 책상별 램프(저녁 글로우), 커피잔/포스트잇/식물/책 변형, 캘린더·CAFE 네온·모티브 포스터
 
@@ -49,7 +130,7 @@ AI Tycoon은 현재 내 컴퓨터에서 돌아가는 AI 작업을 **게임처럼
 - **차트 hover 툴팁** — 5가지 지표(태스크/직원/출근/이벤트) 풍부한 정보
 
 ### 🏆 게임화
-- **업적 14종** — 첫 연결, 10/50태스크, 멀티플랫폼, 야간 작업, 3/7일 연속, 5+ 동시 등
+- **업적 21종** — 첫 연결, 10/50태스크, 멀티플랫폼, 야간 작업, 3/7일 연속, 5+ 동시, 콘도드 등
 - **컨페티 폭발** + 토스트 팝업 + 헤더 미해제 카운트 뱃지
 
 ### 🌐 i18n & 접근성
@@ -66,21 +147,32 @@ AI Tycoon은 현재 내 컴퓨터에서 돌아가는 AI 작업을 **게임처럼
 - **URL 단축 라우팅** — `?action=insights` / `?action=settings`
 
 ### 🎯 UX 폴리시
-- **첫 실행 환영 카드** + 4-step 스포트라이트 투어 + 회전 "혹시 알고 계셨나요?" 팁
-- **단축키 모달** (`?` 키) — 16+ 글로벌 단축키 정리
+- **명령 팔레트** (`Ctrl/Cmd+K`) — VS Code 스타일, 에이전트·22개 명령(필터·테마·언어·도구) fuzzy 검색
+- **프라이버시 모드** (`Shift+P`) — 프롬프트·프로젝트명·태스크를 즉시 블러, 화면 공유 안전
+- **에이전트별 개인 메모** — 디테일 패널에 500자 메모, sessionId/PID 키로 영속, 카드에 황금 닷 표시
+- **컴팩트 뷰 토글** — 정렬 옆 리스트 아이콘으로 카드 슬림화, 10+ 에이전트 운영에 유리
+- **상태별 요약 칩** — 사이드 패널 상단에 6/2/1/3 (코딩/생각/검토/대기) 한눈에, 클릭 시 필터
+- **프로젝트별 색상 닷** — 같은 프로젝트의 모든 에이전트가 같은 색상으로 묶임
+- **"NEW" 펄스** — 방금 출근한 에이전트에 60초간 초록 보더 + 칩 강조
+- **"오늘의 MVP" 카드** — Insights 모달에서 가장 활발한 에이전트 1명 자동 선정
+- **"자리 비운 사이" 요약** — 탭을 30초+ 떠나 있다 돌아오면 그동안 일어난 일 한 줄 요약 토스트
+- **메모리 추세 화살표** — 30초 전 대비 ▲/▼ 화살표로 증감 표시 (호버 시 정확한 MB)
+- **첫 실행 환영 카드** + 5-step 스포트라이트 투어 + 회전 "혹시 알고 계셨나요?" 팁
+- **단축키 모달** (`?` 키) — 18+ 글로벌 단축키 정리
 - **PNG 스냅샷** (`P`) — Canvas + Pixi 합성 다운로드
 - **시네마 모드** (`Z`) — 모든 오버레이 숨김 (클린 스크린샷용)
 - **사운드 토글** (`M`) — 한 키로 음소거 on/off
 - **에이전트 순회** (`J`/`K`) — vim 스타일 prev/next 포커스
 - **인사이트 모달** (`I`), **설정 모달** (`,`), **성능 HUD** (`Ctrl+Shift+P`)
 - **미니맵** — 줌 1.1x 이상 시 자동 노출, 클릭→패닝
-- **통합 설정 모달** — 다크/언어/밀도/테마/HUD/사운드/볼륨/알림/시즌/시간 강제/백업/복원/모두 초기화
+- **통합 설정 모달** — 다크/언어/밀도/테마/HUD/사운드/볼륨/알림/시즌/시간 강제/백업/복원/모두 초기화 + "새 소식" 인라인 changelog
 - **사운드 미리듣기** — 4종 효과음 즉시 시청
 - **작업실 이름** — 페이지 타이틀과 HUD에 사용자 정의 이름
 - **백업/복원** — 모든 prefs·통계·업적 JSON export/import
 - **CSV 통계 받기** — 일자별 14일 데이터 다운로드
 - **시간 스크럽 슬라이더** — 0~23:59 데모/스크린샷용 시각 강제
 - **자동 SW 업데이트 알림** — 새 버전 감지 시 토스트 + Refresh 액션
+- **서버 graceful shutdown** — SIGTERM/SIGINT 시 WS 클라이언트에 작별 인사 후 깔끔하게 종료
 
 ### 📱 모바일
 - 핀치 줌, 한 손가락 패닝
@@ -133,10 +225,12 @@ npm start
 http://localhost:3777
 ```
 
-환경 변수로 포트와 폴링 주기를 변경할 수 있습니다.
+환경 변수로 포트와 폴링 주기, 로그 출력을 조절할 수 있습니다.
 
 ```bash
 PORT=8080 POLL_INTERVAL=3000 npm start
+QUIET=1 npm start                          # 폴링/WS 로그 억제
+LOG_LEVEL=warn npm start                   # 위와 동일
 ```
 
 스타일을 수정한 뒤 Tailwind 유틸리티를 다시 생성하려면:
@@ -150,6 +244,27 @@ npm run build
 ```bash
 npm test
 ```
+
+REST API 엔드포인트 (모니터링·통합용):
+
+```bash
+curl http://localhost:3777/api/health     # 버전·가동시간·에이전트 통계
+curl http://localhost:3777/api/agents     # 현재 활성 에이전트 JSON 스냅샷
+```
+
+URL 쿼리로 임베드/공유 외관 강제:
+
+| 쿼리 | 의미 |
+|---|---|
+| `?clean=1` | 시네마 모드 (모든 오버레이 숨김) + 환영/투어 자동 dismiss |
+| `?demo=1` | 합성 직원 데모 자동 활성화 |
+| `?theme=midnight` | `classic / cafe / forest / midnight / sakura / ocean` |
+| `?lang=en` | `ko / en` |
+| `?dark=1` 또는 `?dark=0` | 다크모드 명시 강제 |
+| `?action=insights` | 인사이트 모달 자동 오픈 |
+| `?action=settings` | 설정 모달 자동 오픈 |
+
+예: `/?clean=1&demo=1&theme=midnight&lang=en` — 회사 상태판용 시연
 
 ---
 
@@ -210,17 +325,22 @@ ai-tycoon/
 
 | 키 | 동작 |
 |---|---|
-| `?` | 단축키 도움말 |
+| `?` · `Ctrl+/` · `F1` | 단축키 도움말 |
 | `,` | 설정 모달 |
 | `I` | 인사이트 |
 | `P` | PNG 스냅샷 |
+| `Shift+P` | 프라이버시 모드 (블러) — 빠르게 두 번 누르면 Strict |
 | `D` | 다크 모드 |
 | `M` | 사운드 음소거 토글 |
 | `Z` | 시네마 모드 (오버레이 숨김) |
 | `F` | 가장 활발한 직원 포커스 |
 | `J` / `K` | 다음 / 이전 직원 |
 | `H` · `0` | 전체 보기로 리셋 |
-| `/` · `Ctrl+K` | 에이전트 검색 |
+| `/` | 에이전트 검색바 포커스 |
+| `Ctrl+K` · `Cmd+K` | 명령 팔레트 (32+ 명령) |
+| `Shift+Click` | 에이전트 카드 핀 토글 |
+| `Cmd/Ctrl+S` · `Cmd/Ctrl+Enter` | 메모 즉시 저장 / 저장 + 패널 닫기 |
+| `N` | 선택된 에이전트의 메모로 빠르게 포커스 |
 | `Ctrl+Shift+P` | 성능 HUD |
 | `Esc` | 모달 / 검색 닫기 |
 | ↑↑↓↓←→←→BA | 히든 업적 🎮 |
@@ -252,7 +372,7 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 #### Visual richness
 - **Time-of-day lighting** — sky, sun/moon, stars and ambient tint follow the real clock; sunrise/sunset/midnight palettes
 - **Weather** — occasional rain (8%/hour)
-- **4 office themes** — Classic / Cafe / Forest / Midnight, light & dark each
+- **6 office themes** — Classic / Cafe / Forest / Midnight / Sakura / Ocean, light & dark each
 - **Seasonal decor** — Christmas tree + snow (Dec), jack-o-lantern + spider web (Oct/Nov), cherry blossoms (Mar/Apr)
 - **Background NPCs** — cleaning robot, paper airplane, breakroom cat, night security guard, delivery courier
 - **Desk personalities** — lamps that glow at night, coffee mugs / sticky notes / succulents / book stacks
@@ -264,12 +384,13 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 - **Rich hover tooltips** on every chart
 
 #### Gamification
-- **14 achievements** — first connect, 10/50 tasks, multi-platform, night owl, streaks, full house, …
+- **23 achievements** — first connect, 10/50 tasks, multi-platform, night owl, streaks, full house, Konami code, …
 - **Confetti** + toast popups + header unseen-count badge
 
 #### i18n & accessibility
-- **KO/EN toggle** — 70+ strings, persisted preference
-- Keyboard navigation, `prefers-reduced-motion`, ARIA labels, focus traps
+- **KO/EN toggle** — 130+ strings, persisted preference
+- Keyboard navigation (`j/k` cycle, `N` note, `Ctrl+K` palette, `?` help), `prefers-reduced-motion`, ARIA labels, focus traps
+- **Mobile responsive** — `≤768px` viewport with collapsible sidebar + horizontal-scroll focus rail (no document scroll)
 
 #### Audio & alerts
 - **Desktop notifications** — Web Notifications API for task done / review requests (when tab in background)
@@ -280,14 +401,25 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 - **URL shortcuts** — `?action=insights` / `?action=settings`
 
 #### Polish
-- First-run welcome card with pixel-art preview
-- Rotating "Did you know?" tips
+- **Command palette** (`Ctrl/Cmd+K`) — VS-Code-style fuzzy search across agents + 35+ commands (filter / theme / lang / tools / **dynamic `#tag` filters**)
+- **Privacy mode** (`Shift+P`, double-tap for Strict) — blur prompts, project names, tasks — safe for screen sharing
+- **Per-agent personal notes** with **hashtag autocomplete** — 500-char textarea, `#frontend` auto-suggested (↑↓/Enter/Tab), `Cmd+S` save / `Cmd+Enter` save+close
+- **Hashtag organization** — `#tag` in notes auto-collected into 8 touchpoints (sidebar bar, card chips, detail panel chips, command palette, settings manager, …)
+- **Compact view toggle** — slim cards for 10+ agents
+- **Status summary chips** — "6 coding · 2 thinking · 1 review · 3 idle" above the agent list, click to filter
+- **Per-project color dots** — agents on the same project share a stable HSL color
+- **"NEW" pulse** — freshly joined agents pulse green for 60 s
+- **"Today's MVP" card** — top agent of the day highlighted in Insights
+- **"While you were away"** — recap toast when you return after 30+ s
+- **Memory trend arrows ▲/▼** — quick visual cue vs 30 s ago
+- First-run welcome card + 5-step spotlight tour + rotating "Did you know?" tips
 - Keyboard shortcuts modal (`?`)
 - **PNG snapshot export** (`P`) — Canvas + Pixi composite download
 - **Performance HUD** (`Ctrl+Shift+P`) — FPS, heap, sprite count
 - **Mini-map** — appears when zoomed in, click to pan
-- **Settings modal** (`,`) — dark / lang / density / theme / sound / notify / season / time / backup / reset
+- **Settings modal** (`,`) — dark / lang / density / theme / sound / notify / season / time / backup / reset + inline "What's new" panel
 - **Backup & restore** — full JSON export/import of prefs, stats, achievements
+- **Graceful server shutdown** — SIGTERM/SIGINT broadcasts farewell to all WS clients
 - Pinch-zoom, single-finger pan, mobile priority dock
 
 ### Run
@@ -295,8 +427,12 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 ```bash
 npm install
 npm start          # http://localhost:3777
-npm test           # smoke check: 26 assets + modules
+npm run lint       # node --check on every .js (36+ files)
+npm test           # smoke check: 38 assets/modules/API contract
+npm run icons      # install a new pixel-art PNG/ICO as app icon
 ```
+
+Tested on Node 18 / 20 / 22 (CI matrix). Modern browsers (Chrome, Edge, Safari, Firefox).
 
 Optional environment variables:
 
@@ -346,9 +482,17 @@ ai-tycoon/
 
 ### Docs
 
-- [`CHANGELOG.md`](./CHANGELOG.md) — feature drops by iteration
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — project layout + how to add modals / shortcuts / achievements / platforms
+- [`CHANGELOG.md`](./CHANGELOG.md) — feature drops by iteration (220+ iterations, 9 GitHub releases)
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — setup + how to add modals / shortcuts / achievements / platforms
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — data flow + module relationships + extension points
+- [`docs/SCREENSHOTS.md`](./docs/SCREENSHOTS.md) — visual gallery (hero, command palette, insights, detail panel, mobile)
+- [`SECURITY.md`](./SECURITY.md) — vulnerability reporting policy + response SLA
+- [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) — Contributor Covenant v2.1
 - [`LICENSE`](./LICENSE) — MIT
+
+### Reliability
+
+v1.4.0 → v1.4.6 went through **8 verification rounds** (general-purpose agent code reviews + Playwright e2e) and fixed **15 latent bugs** spanning WebSocket race conditions, rendering crashes, GPU leaks, mobile horizontal scroll, and the once-broken "While you were away" toast. See `CHANGELOG.md` iterations 200–219 for the full hunt log.
 
 ### Easter eggs
 

@@ -4,13 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Tycoon</title>
+    <!-- PNG 우선 (실제 픽셀아트 아트워크), SVG 는 fallback, .ico 는 IE/구형 Edge favicon 호환 -->
+    <link rel="icon" type="image/png" sizes="128x128" href="icons/icon.png">
     <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
-    <link rel="apple-touch-icon" href="icons/icon.svg">
+    <link rel="shortcut icon" href="icons/icon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="icons/icon.png">
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#d97757">
     <meta name="description" content="Live pixel-art office dashboard for AI agents running on your machine">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- Social share previews -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="AI Tycoon — 픽셀 아트 AI 작업실">
+    <meta property="og:description" content="로컬에서 돌아가는 AI 에이전트들을 픽셀 아트 오피스로 시각화하는 실시간 대시보드. Claude · Cursor · Codex · Copilot 자동 감지.">
+    <meta property="og:image" content="icons/icon.png">
+    <meta property="og:site_name" content="AI Tycoon">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="AI Tycoon">
+    <meta name="twitter:description" content="A live pixel-art office dashboard for AI agents running on your machine.">
+    <meta name="twitter:image" content="icons/icon.png">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="AI Tycoon">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.min.css">
@@ -50,11 +64,39 @@
                 <span class="text-[15px] font-bold text-zinc-800 tracking-tight">AI Tycoon</span>
             </div>
 
-            <!-- Connection Status -->
-            <div id="conn-badge" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-[11px] text-zinc-500 shrink-0">
+            <!-- Connection Status — 클릭하면 즉시 재연결 시도 -->
+            <button id="conn-badge" type="button" onclick="window.aiTycoonReconnect?.()" class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-[11px] text-zinc-500 shrink-0 cursor-pointer transition hover:bg-zinc-200" title="클릭하면 즉시 재연결" aria-label="WebSocket 재연결">
                 <div id="conn-dot" class="w-1.5 h-1.5 rounded-full bg-zinc-400"></div>
                 <span id="conn-text" data-i18n="conn.connecting">연결 중</span>
-            </div>
+            </button>
+
+            <!-- 프라이버시 모드 활성 시에만 — 헤더에서도 한눈에 인지. 클릭하면 종료. -->
+            <button id="header-privacy-chip" type="button" class="header-privacy-chip"
+                onclick="window.aiTycoonPrivacy?.toggle?.()"
+                data-i18n-attr="title:header.privacyTitle,aria-label:header.privacyAria"
+                title="프라이버시 모드 — 클릭하면 종료" aria-label="프라이버시 모드 종료" hidden>
+                <iconify-icon icon="solar:eye-closed-bold" aria-hidden="true"></iconify-icon>
+                <span data-i18n="header.privacyLabel">프라이버시</span>
+            </button>
+
+            <!-- 데모 모드 활성 시에만 표시 — 가짜 데이터 본다는 걸 명확히. 클릭하면 데모 종료. -->
+            <button id="header-demo-chip" type="button" class="header-demo-chip"
+                onclick="window.aiTycoonDemo?.toggle?.()"
+                data-i18n-attr="title:header.demoTitle,aria-label:header.demoAria"
+                title="데모 모드 — 클릭하면 종료" aria-label="데모 모드 종료" hidden>
+                <iconify-icon icon="solar:play-bold" aria-hidden="true"></iconify-icon>
+                <span data-i18n="header.demoLabel">데모</span>
+            </button>
+
+            <!-- 멈춘 에이전트 카운트 (있을 때만 표시) -->
+            <button id="header-stuck-chip" type="button" class="header-stuck-chip"
+                onclick="focusFirstStuckAgent()"
+                data-i18n-attr="title:header.stuckTitle,aria-label:header.stuckAria"
+                title="가장 오래 멈춘 에이전트로 이동" aria-label="멈춘 에이전트 이동" hidden>
+                <iconify-icon icon="solar:hourglass-line-linear" aria-hidden="true"></iconify-icon>
+                <span id="header-stuck-count">0</span>
+                <span class="header-stuck-label" data-i18n="header.stuckLabel">멈춤</span>
+            </button>
 
             <!-- Clock + time-of-day band -->
             <div class="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-50 ring-1 ring-zinc-200/60 shrink-0">
@@ -192,7 +234,7 @@
                             <span id="hud-live-dot" class="live-dot"></span>
                             <span id="hud-conn-text" data-i18n="hud.waiting">연결 중</span>
                         </div>
-                        <div class="hud-title" data-i18n="hud.realtimeOffice">실시간 작업실</div>
+                        <div class="hud-title" id="hud-title" data-i18n="hud.realtimeOffice" title="더블클릭으로 작업실 이름 편집" tabindex="0" role="button" aria-label="작업실 이름 편집 (더블클릭 또는 Enter)">실시간 작업실</div>
                         <div class="hud-metrics">
                             <div>
                                 <span id="hud-active">0</span>
@@ -260,7 +302,7 @@
                 <div id="detail-panel" class="hidden shrink-0 border-b border-amber-200/40 p-3 overflow-y-auto max-h-[50%]" tabindex="-1"></div>
 
                 <!-- Agents Section -->
-                <div class="flex-1 overflow-y-auto p-3">
+                <div class="flex-1 overflow-y-auto p-3" id="agents-scroll-container">
                     <div class="flex items-center gap-2 mb-2">
                         <iconify-icon icon="solar:users-group-rounded-linear" class="text-amber-500 text-sm"></iconify-icon>
                         <h3 id="agents-heading" class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase" data-i18n="panel.agents">에이전트</h3>
@@ -268,11 +310,16 @@
                     </div>
                     <div class="agent-search-shell mb-2">
                         <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon>
-                        <input id="agent-search" class="agent-search-input" type="search" placeholder="직원, 프로젝트, 작업 검색" data-i18n-placeholder="panel.searchPlaceholder" aria-label="에이전트 검색" autocomplete="off" oninput="setAgentSearch(this.value)" onkeydown="if(event.key==='Escape'&&this.value){clearAgentSearch();event.stopPropagation();}">
+                        <input id="agent-search" class="agent-search-input" type="search" placeholder="직원·프로젝트·작업·메모 검색" data-i18n-placeholder="panel.searchPlaceholder" aria-label="에이전트 검색" autocomplete="off" oninput="if(!this._imeComposing)setAgentSearch(this.value)" oncompositionstart="this._imeComposing=true" oncompositionend="this._imeComposing=false;setAgentSearch(this.value)" onkeydown="handleAgentSearchKey(event)">
                         <button id="agent-search-clear" type="button" class="agent-search-clear" onclick="clearAgentSearch()" aria-label="검색어 지우기" hidden>
                             <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                         </button>
+                        <button id="agent-search-cmdk" type="button" class="agent-search-cmdk" onclick="window.aiTycoonCommandPalette?.open?.()" title="명령 팔레트 (Ctrl+K / Cmd+K)" aria-label="명령 팔레트 열기">
+                            <kbd data-mod-key>Ctrl</kbd><kbd>K</kbd>
+                        </button>
                     </div>
+                    <div id="agent-search-history" class="agent-search-history mb-2" hidden></div>
+                    <div id="agent-tags-bar" class="agent-tags-bar mb-2" hidden aria-label="메모 태그 필터"></div>
                     <div id="agent-visibility-summary" class="agent-visibility-summary mb-2" aria-live="polite"></div>
                     <div id="action-filter" class="action-filter-bar mb-2" aria-label="다음 행동 필터"></div>
                     <!-- Filter & Sort -->
@@ -291,7 +338,11 @@
                             <option value="project">프로젝트순</option>
                             <option value="recent">최근 활동순</option>
                         </select>
+                        <button id="agents-compact-toggle" type="button" class="agents-compact-toggle" onclick="toggleAgentsCompact()" aria-pressed="false" title="컴팩트 보기" aria-label="컴팩트 보기 토글">
+                            <iconify-icon icon="solar:list-linear" aria-hidden="true"></iconify-icon>
+                        </button>
                     </div>
+                    <div id="agents-status-summary" class="agents-status-summary" aria-label="상태별 에이전트 수" hidden></div>
                     <div id="agents-list" class="flex flex-col gap-2"></div>
                 </div>
 
@@ -337,8 +388,11 @@
                     <div class="insights-stat">
                         <iconify-icon icon="solar:checklist-bold" aria-hidden="true"></iconify-icon>
                         <div>
-                            <div class="insights-stat-value" id="insights-completed">0</div>
-                            <div class="insights-stat-label" data-i18n="insights.completed">완료 태스크</div>
+                            <div class="insights-stat-value" id="insights-completed">0<span id="insights-completed-delta" class="insights-delta" hidden></span></div>
+                            <div class="insights-stat-label">
+                                <span data-i18n="insights.completed">완료 태스크</span>
+                                <span class="insights-week-chip" id="insights-week-chip" hidden></span>
+                            </div>
                         </div>
                     </div>
                     <div class="insights-stat">
@@ -363,6 +417,14 @@
                         <span data-i18n="insights.platforms">플랫폼 분포</span>
                     </h3>
                     <div id="insights-platforms" class="insights-platforms"></div>
+                </section>
+
+                <section class="insights-section" id="insights-mvp-section" hidden>
+                    <h3 class="insights-section-title">
+                        <iconify-icon icon="solar:cup-star-bold" aria-hidden="true"></iconify-icon>
+                        <span data-i18n="insights.mvp">오늘의 MVP</span>
+                    </h3>
+                    <button type="button" id="insights-mvp" class="insights-mvp-card"></button>
                 </section>
 
                 <section class="insights-section">
@@ -717,13 +779,23 @@
                             <div class="about-version" id="settings-about-version">v—</div>
                             <div class="about-line" id="settings-about-uptime">—</div>
                             <div class="about-line" id="settings-about-node">—</div>
+                            <div class="about-line" id="settings-about-sw">—</div>
                         </div>
                     </div>
                 </section>
 
                 <section class="settings-section">
+                    <h3 class="settings-section-title" data-i18n="settings.whatsNew">새 소식</h3>
+                    <div id="settings-whatsnew" class="whatsnew-card" aria-live="polite"></div>
+                </section>
+
+                <section class="settings-section">
                     <h3 class="settings-section-title" data-i18n="settings.help">도움말</h3>
                     <div class="settings-row settings-row-vertical">
+                        <button type="button" class="settings-action" onclick="closeSettings(); setTimeout(openShortcuts, 280);">
+                            <iconify-icon icon="solar:command-linear" aria-hidden="true"></iconify-icon>
+                            <span data-i18n="settings.openShortcuts">단축키 보기</span>
+                        </button>
                         <button type="button" class="settings-action" onclick="settingsReplayTour()">
                             <iconify-icon icon="solar:route-linear" aria-hidden="true"></iconify-icon>
                             <span data-i18n="settings.replayTour">투어 다시 보기</span>
@@ -744,6 +816,13 @@
                 </section>
 
                 <section class="settings-section">
+                    <h3 class="settings-section-title" data-i18n="settings.tagsTitle">메모 태그</h3>
+                    <div class="settings-row settings-row-vertical">
+                        <p class="settings-help" data-i18n="settings.tagsHelp">메모에 적은 #해시태그를 한 번에 이름 바꾸거나 모든 메모에서 지울 수 있어요.</p>
+                        <div id="settings-tags-manager" class="settings-tags-manager" aria-live="polite"></div>
+                    </div>
+                </section>
+                <section class="settings-section">
                     <h3 class="settings-section-title" data-i18n="settings.data">데이터</h3>
                     <div class="settings-row settings-row-vertical">
                         <div class="settings-button-pair">
@@ -760,8 +839,19 @@
                             <iconify-icon icon="solar:document-text-linear" aria-hidden="true"></iconify-icon>
                             <span data-i18n="settings.exportCsv">일자별 통계 CSV 받기</span>
                         </button>
+                        <div class="settings-button-pair">
+                            <button type="button" class="settings-action" onclick="window.aiTycoonStandup?.download?.()">
+                                <iconify-icon icon="solar:document-add-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.exportStandup">일일 리포트 (.md)</span>
+                            </button>
+                            <button type="button" class="settings-action" onclick="window.aiTycoonNotes?.download?.()">
+                                <iconify-icon icon="solar:notebook-bookmark-linear" aria-hidden="true"></iconify-icon>
+                                <span data-i18n="settings.exportNotes">에이전트 메모 (.md)</span>
+                            </button>
+                        </div>
                         <input id="settings-restore-input" type="file" accept="application/json,.json" hidden onchange="settingsRestoreFile(this.files[0])">
                         <p class="settings-help" data-i18n="settings.backupHelp">현재 환경설정·통계·업적을 JSON 파일로 내보내거나, 같은 형식의 파일을 불러와 복원합니다.</p>
+                        <div class="storage-usage" id="settings-storage-usage" aria-live="polite"></div>
                         <div class="settings-button-pair">
                             <button type="button" class="settings-danger" onclick="settingsResetStats()">
                                 <iconify-icon icon="solar:database-linear" aria-hidden="true"></iconify-icon>
@@ -795,12 +885,26 @@
                 </button>
             </header>
             <div class="modal-body">
+                <div class="shortcuts-search-shell">
+                    <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon>
+                    <input id="shortcuts-search" type="search" class="shortcuts-search-input"
+                        placeholder="단축키 또는 동작 검색…"
+                        data-i18n-placeholder="shortcuts.searchPlaceholder"
+                        aria-label="단축키 검색"
+                        oninput="if(!this._imeComposing)filterShortcuts(this.value)"
+                        oncompositionstart="this._imeComposing=true"
+                        oncompositionend="this._imeComposing=false;filterShortcuts(this.value)"
+                        autocomplete="off">
+                </div>
+                <div id="shortcuts-empty" class="shortcuts-empty" hidden>검색 결과가 없습니다.</div>
                 <section class="shortcuts-group">
                     <h3 class="shortcuts-group-title" data-i18n="shortcuts.navGroup">탐색</h3>
                     <ul class="shortcuts-list">
                         <li><span class="shortcuts-keys"><kbd>/</kbd></span><span data-i18n="shortcuts.searchFocus">에이전트 검색 포커스</span></li>
-                        <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>K</kbd></span><span data-i18n="shortcuts.searchAlt">에이전트 검색 (대체)</span></li>
+                        <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>K</kbd></span><span data-i18n="shortcuts.cmdPalette">명령 팔레트 (Cmd+K)</span></li>
                         <li><span class="shortcuts-keys"><kbd>Esc</kbd></span><span data-i18n="shortcuts.escClose">검색·모달 닫기</span></li>
+                        <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>/</kbd></span><span data-i18n="shortcuts.helpAlt">단축키 도움말 (대체)</span></li>
+                        <li><span class="shortcuts-keys"><kbd>F1</kbd></span><span data-i18n="shortcuts.helpF1">단축키 도움말 (F1 표준)</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
@@ -809,6 +913,8 @@
                         <li><span class="shortcuts-keys"><kbd>D</kbd></span><span data-i18n="shortcuts.darkToggle">다크 모드 전환</span></li>
                         <li><span class="shortcuts-keys"><kbd>F</kbd></span><span data-i18n="shortcuts.focusActive">가장 활발한 직원 포커스</span></li>
                         <li><span class="shortcuts-keys"><kbd>J</kbd> / <kbd>K</kbd></span><span data-i18n="shortcuts.cycleAgents">다음 / 이전 직원</span></li>
+                        <li><span class="shortcuts-keys"><kbd>Shift</kbd>+<kbd>Click</kbd></span><span data-i18n="shortcuts.pinShift">카드 Shift+클릭으로 핀 토글</span></li>
+                        <li><span class="shortcuts-keys"><kbd>N</kbd></span><span data-i18n="shortcuts.noteFocus">선택된 에이전트의 메모로 포커스</span></li>
                         <li><span class="shortcuts-keys"><kbd>H</kbd></span><span data-i18n="shortcuts.resetView">전체 보기로 리셋</span></li>
                         <li><span class="shortcuts-keys"><kbd>?</kbd></span><span data-i18n="shortcuts.help">이 도움말 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>I</kbd></span><span data-i18n="shortcuts.insights">인사이트 열기</span></li>
@@ -816,7 +922,8 @@
                         <li><span class="shortcuts-keys"><kbd>Z</kbd></span><span data-i18n="shortcuts.cinema">시네마 모드 (오버레이 숨김)</span></li>
                         <li><span class="shortcuts-keys"><kbd>,</kbd></span><span data-i18n="shortcuts.settings">설정 열기</span></li>
                         <li><span class="shortcuts-keys"><kbd>P</kbd></span><span data-i18n="shortcuts.snapshot">스냅샷 저장</span></li>
-                        <li><span class="shortcuts-keys"><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></span><span data-i18n="shortcuts.perfHud">성능 오버레이</span></li>
+                        <li><span class="shortcuts-keys"><kbd>Shift</kbd>+<kbd>P</kbd></span><span data-i18n="shortcuts.privacy">프라이버시 모드 토글</span></li>
+                        <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></span><span data-i18n="shortcuts.perfHud">성능 오버레이</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
@@ -826,6 +933,15 @@
                         <li><span class="shortcuts-keys"><kbd>0</kbd></span><span data-i18n="shortcuts.zoomReset">줌 리셋</span></li>
                         <li><span class="shortcuts-keys"><kbd>드래그</kbd></span><span data-i18n="shortcuts.panning">패닝</span></li>
                         <li><span class="shortcuts-keys"><kbd>더블클릭</kbd></span><span data-i18n="shortcuts.dblZoom">줌 리셋</span></li>
+                    </ul>
+                </section>
+                <section class="shortcuts-group">
+                    <h3 class="shortcuts-group-title" data-i18n="shortcuts.notesGroup">메모</h3>
+                    <ul class="shortcuts-list">
+                        <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>S</kbd></span><span data-i18n="shortcuts.noteSave">메모 즉시 저장</span></li>
+                        <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>Enter</kbd></span><span data-i18n="shortcuts.noteSaveClose">저장 + 디테일 패널 닫기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>#</kbd>+타이핑</span><span data-i18n="shortcuts.noteHashtag">메모에 #태그 입력 시 기존 태그 자동완성 (↑↓ 선택, Enter/Tab 삽입)</span></li>
+                        <li><span class="shortcuts-keys"><kbd>Esc</kbd></span><span data-i18n="shortcuts.noteEscape">자동완성 닫기</span></li>
                     </ul>
                 </section>
             </div>
@@ -915,6 +1031,8 @@
         if (dp) dp.classList.add("hidden");
         if (window.__clearDetailPid) window.__clearDetailPid();
     }
+    // 외부 모듈에서도 호출 가능하도록 노출 (메모 Cmd+Enter 등)
+    window.closeDetail = closeDetail;
     function toggleSidePanel() {
         const panel = document.getElementById("side-panel");
         if (!panel) return;
@@ -1008,6 +1126,66 @@
         overlay.classList.remove("is-visible");
         setTimeout(() => { overlay.hidden = true; }, 240);
     }
+    // ── What's new (recent release notes inline) ──
+    // Hand-maintained: keep in sync with the top of CHANGELOG.md so users
+    // can see recent improvements without leaving the app.
+    const WHATSNEW_ENTRIES = [
+        { ko: "Smoke 테스트가 /api/health · /api/agents JSON 계약까지 검증", en: "Smoke tests now validate /api/health & /api/agents JSON shape", icon: "solar:test-tube-bold", tone: "ok" },
+        { ko: "명령 팔레트 검색바 힌트 + 투어 안내로 발견성 ↑", en: "Cmd palette discoverability via search-bar chip + tour", icon: "solar:command-square-bold", tone: "feature" },
+        { ko: "메모리 추세 화살표 ▲ / ▼ (30초 비교)", en: "Memory trend arrows on agent cards (30 s window)", icon: "solar:arrow-up-linear", tone: "feature" },
+        { ko: "명령 팔레트 22종 명령 (테마·필터·언어 등)", en: "Command palette expanded to 22 commands", icon: "solar:command-bold", tone: "feature" },
+        { ko: "프라이버시 모드 (Shift+P) — 화면 공유용 블러", en: "Privacy mode (Shift+P) — blur sensitive text", icon: "solar:eye-closed-bold", tone: "feature" },
+        { ko: "명령 팔레트 (Ctrl/Cmd+K) — VS Code 스타일 빠른 이동", en: "Command palette (Ctrl/Cmd+K)", icon: "solar:command-bold", tone: "highlight" },
+        { ko: "프로젝트별 일관된 색상 닷 (같은 프로젝트끼리 시각 그룹)", en: "Per-project color dots — visual grouping", icon: "solar:palette-bold", tone: "design" },
+        { ko: "사이드 패널 상단 상태별 요약 칩", en: "Status summary chips above the agent list", icon: "solar:chart-bold", tone: "design" },
+        { ko: "신규 출근 에이전트 NEW 펄스 (60초)", en: "NEW pulse on freshly joined agents (60 s)", icon: "solar:user-plus-bold", tone: "design" },
+        { ko: "Insights 모달에 '오늘의 MVP' 카드", en: "'Today's MVP' card in the Insights modal", icon: "solar:cup-star-bold", tone: "feature" },
+        { ko: "탭 복귀 시 '자리 비운 사이' 요약 토스트", en: "'While you were away' summary on tab return", icon: "solar:bell-bold", tone: "feature" },
+        { ko: "서버 graceful shutdown — WS 클라이언트 작별 인사", en: "Server graceful shutdown with farewell to WS clients", icon: "solar:server-bold", tone: "stable" },
+    ];
+    // 브라우저 localStorage 안에 ai-tycoon-* 로 시작하는 키들의 합산 바이트 + 개수 표시
+    // 파워 유저가 "백업 / 초기화 누르기 전에 얼마나 쌓였지?" 가늠하는 용도.
+    function renderStorageUsage() {
+        const el = document.getElementById("settings-storage-usage");
+        if (!el) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        let keys = 0;
+        let bytes = 0;
+        try {
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (!k || !k.startsWith("ai-tycoon-")) continue;
+                const v = localStorage.getItem(k) || "";
+                keys++;
+                // UTF-16 라서 정확하진 않지만 대략값 — 표시 목적엔 충분
+                bytes += (k.length + v.length) * 2;
+            }
+        } catch { /* private mode 등에서 접근 불가 */ }
+        const kb = (bytes / 1024).toFixed(1);
+        const label = lang === "en"
+            ? `<iconify-icon icon="solar:database-linear" aria-hidden="true"></iconify-icon><span>Browser storage: <strong>${keys}</strong> keys · <strong>${kb}</strong> KB</span>`
+            : `<iconify-icon icon="solar:database-linear" aria-hidden="true"></iconify-icon><span>브라우저 저장 공간: <strong>${keys}</strong>개 키 · <strong>${kb}</strong> KB</span>`;
+        el.innerHTML = label;
+    }
+
+    function renderWhatsNew() {
+        const el = document.getElementById("settings-whatsnew");
+        if (!el) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        // Limit to top 6 for compactness
+        const items = WHATSNEW_ENTRIES.slice(0, 6).map(entry => {
+            const text = lang === "en" ? entry.en : entry.ko;
+            return `<li class="whatsnew-item" data-tone="${entry.tone}">
+                <iconify-icon icon="${entry.icon}" aria-hidden="true"></iconify-icon>
+                <span>${text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</span>
+            </li>`;
+        }).join("");
+        const footHref = "https://github.com/easygap/AI-Tycoon/blob/main/CHANGELOG.md";
+        const footText = lang === "en" ? "View full changelog →" : "전체 변경 사항 보기 →";
+        el.innerHTML = `<ul class="whatsnew-list">${items}</ul>
+            <a class="whatsnew-foot" href="${footHref}" target="_blank" rel="noopener noreferrer">${footText}</a>`;
+    }
+
     // ── Settings modal ──
     function openSettings() {
         const overlay = document.getElementById("settings-overlay");
@@ -1077,6 +1255,19 @@
             }
             if (n) n.textContent = `Node ${info.nodeVersion} · ${info.platform}`;
         }).catch(() => {});
+        // Service Worker cache version — fetch the SW file and extract VERSION constant
+        const swEl = document.getElementById("settings-about-sw");
+        if (swEl) {
+            const langNow = window.aiTycoonI18n?.getLang?.() || "ko";
+            swEl.textContent = langNow === "en" ? "SW: checking…" : "SW: 확인 중…";
+            fetch("/sw.js", { cache: "no-store" }).then(r => r.ok ? r.text() : "").then(text => {
+                const m = text.match(/VERSION\s*=\s*["']([^"']+)["']/);
+                const ver = m ? m[1] : "unknown";
+                swEl.textContent = `SW: ${ver}`;
+            }).catch(() => {
+                swEl.textContent = "SW: —";
+            });
+        }
         // Workspace name
         const wsName = localStorage.getItem("ai-tycoon-workspace-name") || "";
         const wsNameInput = document.getElementById("settings-workspace-name");
@@ -1099,8 +1290,297 @@
         const seasonNow = localStorage.getItem("ai-tycoon-season") || "auto";
         const seasonSel = document.getElementById("settings-season");
         if (seasonSel) seasonSel.value = seasonNow;
+        // What's new
+        renderWhatsNew();
+        // 브라우저 스토리지 사용량 (ai-tycoon-* 키)
+        renderStorageUsage();
+        // 메모 태그 관리자 (rename/delete) 패널
+        renderTagsManager();
 
         openModalOverlay(overlay);
+    }
+
+    // ── 메모 태그 관리자 ─────────────────────────────────────────────
+    // 모든 메모를 스캔해 #태그 목록을 만들고, rename/delete 액션을 노출.
+    // localStorage 의 `ai-tycoon-agent-notes` 를 직접 다룸.
+    function renderTagsManager() {
+        const container = document.getElementById("settings-tags-manager");
+        if (!container) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const t = (k) => window.aiTycoonI18n?.t?.(k) || k;
+        const NOTE_KEY = "ai-tycoon-agent-notes";
+        const TAG_RE = /#([A-Za-z0-9_가-힣]{2,32})/g;
+        let notes;
+        try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+        catch { notes = {}; }
+        // 현재 살아있는 에이전트의 key 집합 — orphan 여부 판정용
+        const S = window.S;
+        const liveKeys = new Set(
+            (S?.liveAgents || []).map(a => String(a.sessionId || a.pid || "")).filter(Boolean)
+        );
+        // 태그 → { count, orphanCount } 로 분리 카운트
+        const counts = new Map(); // tag → { total, orphan }
+        let orphanNoteKeys = []; // orphan note 의 key 모음 (일괄 정리용)
+        for (const [noteKey, text] of Object.entries(notes)) {
+            if (typeof text !== "string") continue;
+            const isOrphan = !liveKeys.has(noteKey);
+            if (isOrphan) orphanNoteKeys.push(noteKey);
+            const seen = new Set();
+            let m; TAG_RE.lastIndex = 0;
+            while ((m = TAG_RE.exec(text)) !== null) {
+                const tag = m[1].toLowerCase();
+                if (seen.has(tag)) continue;
+                seen.add(tag);
+                const c = counts.get(tag) || { total: 0, orphan: 0 };
+                c.total++;
+                if (isOrphan) c.orphan++;
+                counts.set(tag, c);
+            }
+        }
+        const tags = [...counts.entries()].sort((a, b) => b[1].total - a[1].total || a[0].localeCompare(b[0]));
+        if (tags.length === 0) {
+            container.innerHTML = `<p class="settings-help settings-tags-empty">${t("settings.tagsEmpty")}</p>`;
+            return;
+        }
+        // tag 별 stable hue — panel.js 의 tagHueFor 와 동일 알고리즘 (small 중복이라 inline)
+        const hueFor = (s) => {
+            let h = 0;
+            for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+            return Math.abs(h) % 360;
+        };
+        const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+        const orphanLabel = lang === "en" ? "offline" : "오프라인";
+        const cleanupBtnLabel = lang === "en"
+            ? `Clean up offline notes (${orphanNoteKeys.length})`
+            : `오프라인 에이전트 메모 정리 (${orphanNoteKeys.length}개)`;
+        // 상단 정리 버튼 (orphan note 가 1개 이상 있을 때만 노출)
+        const cleanupBtn = orphanNoteKeys.length > 0
+            ? `<button type="button" class="settings-tags-cleanup" data-cleanup-orphans>
+                <iconify-icon icon="solar:eraser-linear" aria-hidden="true"></iconify-icon>
+                <span>${escA(cleanupBtnLabel)}</span>
+            </button>`
+            : "";
+        container.innerHTML = cleanupBtn + tags.map(([tag, c]) => {
+            const hue = hueFor(tag);
+            const allOrphan = c.orphan === c.total && c.total > 0;
+            const someOrphan = c.orphan > 0 && c.orphan < c.total;
+            const orphanBadge = allOrphan
+                ? `<span class="settings-tag-orphan-badge" title="${escA(lang === "en" ? "Every note with this tag is from an offline agent" : "이 태그의 모든 메모가 오프라인 에이전트의 것")}">${escA(orphanLabel)}</span>`
+                : someOrphan
+                    ? `<span class="settings-tag-orphan-badge is-partial" title="${escA(lang === "en" ? "Partly offline" : "일부 오프라인")}">${c.orphan}/${c.total} ${escA(orphanLabel)}</span>`
+                    : "";
+            return `<div class="settings-tag-row${allOrphan ? " is-all-orphan" : ""}" style="--tag-hue:${hue}">
+                <span class="agent-tag-chip" style="--tag-hue:${hue}" aria-hidden="true">
+                    <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${escA(tag)}</span><span class="agent-tag-chip-count">${c.total}</span>
+                </span>
+                ${orphanBadge}
+                <div class="settings-tag-actions">
+                    <button type="button" class="settings-tag-rename" data-tag-rename="${escA(tag)}">${t("settings.tagsRename")}</button>
+                    <button type="button" class="settings-tag-delete" data-tag-delete="${escA(tag)}">${t("settings.tagsDelete")}</button>
+                </div>
+            </div>`;
+        }).join("");
+        // orphan 일괄 정리 버튼 핸들러
+        container.querySelector("[data-cleanup-orphans]")?.addEventListener("click", () => {
+            beginCleanupOrphans(orphanNoteKeys);
+        });
+        // 이벤트 위임 — 행 안에서 인라인 입력/확인으로 swap (native prompt/confirm 안 씀)
+        container.querySelectorAll("[data-tag-rename]").forEach(btn => {
+            btn.addEventListener("click", () => beginInlineRename(btn));
+        });
+        container.querySelectorAll("[data-tag-delete]").forEach(btn => {
+            btn.addEventListener("click", () => beginInlineDelete(btn));
+        });
+    }
+    // 인라인 rename UI — 액션 버튼 영역을 input + 저장/취소로 바꿈
+    function beginInlineRename(triggerBtn) {
+        const row = triggerBtn.closest(".settings-tag-row");
+        if (!row) return;
+        const tag = triggerBtn.dataset.tagRename;
+        const actions = row.querySelector(".settings-tag-actions");
+        if (!actions) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const saveLabel = lang === "en" ? "Save" : "저장";
+        const cancelLabel = lang === "en" ? "Cancel" : "취소";
+        const placeholder = lang === "en" ? "new name (no #)" : "새 이름 (# 없이)";
+        const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+        const original = actions.innerHTML;
+        actions.innerHTML = `
+            <input type="text" class="settings-tag-rename-input" value="${escA(tag)}"
+                placeholder="${escA(placeholder)}" maxlength="32" autocomplete="off"
+                aria-label="${escA(lang === "en" ? "New tag name" : "새 태그 이름")}">
+            <button type="button" class="settings-tag-rename-save">${escA(saveLabel)}</button>
+            <button type="button" class="settings-tag-rename-cancel">${escA(cancelLabel)}</button>
+        `;
+        const input = actions.querySelector(".settings-tag-rename-input");
+        const saveBtn = actions.querySelector(".settings-tag-rename-save");
+        const cancelBtn = actions.querySelector(".settings-tag-rename-cancel");
+        // 포커스 + 텍스트 전체 선택 — 사용자가 바로 새 이름 타이핑 가능
+        input.focus({ preventScroll: true });
+        input.select();
+        const restore = () => { actions.innerHTML = original; renderTagsManager(); };
+        const commit = () => {
+            const newTag = String(input.value || "").trim().replace(/^#+/, "").toLowerCase();
+            if (!/^[A-Za-z0-9_가-힣]{2,32}$/.test(newTag)) {
+                window.aiTycoonToasts?.show?.("warning",
+                    lang === "en" ? "Invalid tag" : "사용할 수 없는 태그",
+                    lang === "en"
+                        ? "2-32 chars; letters, numbers, _, Korean only."
+                        : "2~32자, 한/영/숫자/_ 만 가능합니다.");
+                input.focus({ preventScroll: true });
+                input.select();
+                return;
+            }
+            if (newTag === tag) { restore(); return; }
+            applyTagRename(tag, newTag);
+        };
+        saveBtn.addEventListener("click", commit);
+        cancelBtn.addEventListener("click", restore);
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") { e.preventDefault(); commit(); }
+            else if (e.key === "Escape") { e.preventDefault(); restore(); }
+        });
+    }
+    function applyTagRename(oldTag, newTag) {
+        const t = (k) => window.aiTycoonI18n?.t?.(k) || k;
+        const NOTE_KEY = "ai-tycoon-agent-notes";
+        let notes;
+        try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+        catch { notes = {}; }
+        const escOld = oldTag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const re = new RegExp(`#${escOld}(?![A-Za-z0-9_가-힣])`, "gi");
+        let changed = 0;
+        for (const key of Object.keys(notes)) {
+            const before = notes[key];
+            const after = before.replace(re, `#${newTag}`);
+            if (before !== after) { notes[key] = after; changed++; }
+        }
+        try { localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch { /* quota */ }
+        // 캐시 무효화 — 패널 리렌더가 stale 한 1초 TTL 데이터 안 잡도록
+        window.aiTycoonInvalidateTagCache?.();
+        window.aiTycoonToasts?.show?.("info",
+            t("settings.tagsRenameDone"),
+            `#${oldTag} → #${newTag} · ${changed}`);
+        try {
+            window.updatePanel?.();
+            window.updateDetailPanel?.();
+        } catch { /* ignore */ }
+        renderTagsManager();
+    }
+    // 인라인 delete confirm — 액션 버튼 영역을 "정말 지울까요? 예/아니오" 로 바꿈
+    function beginInlineDelete(triggerBtn) {
+        const row = triggerBtn.closest(".settings-tag-row");
+        if (!row) return;
+        const tag = triggerBtn.dataset.tagDelete;
+        const actions = row.querySelector(".settings-tag-actions");
+        if (!actions) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const yesLabel = lang === "en" ? "Yes, delete" : "예, 지우기";
+        const noLabel = lang === "en" ? "No" : "아니오";
+        const promptText = lang === "en"
+            ? `Remove #${tag} from every note?`
+            : `모든 메모에서 #${tag} 를 지울까요?`;
+        const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+        const original = actions.innerHTML;
+        actions.innerHTML = `
+            <span class="settings-tag-delete-prompt">${escA(promptText)}</span>
+            <button type="button" class="settings-tag-delete-yes">${escA(yesLabel)}</button>
+            <button type="button" class="settings-tag-delete-no">${escA(noLabel)}</button>
+        `;
+        const yesBtn = actions.querySelector(".settings-tag-delete-yes");
+        const noBtn = actions.querySelector(".settings-tag-delete-no");
+        // 기본 포커스를 '아니오' 에 두어 키 Enter 로 실수로 삭제하지 않게
+        noBtn.focus({ preventScroll: true });
+        const restore = () => { actions.innerHTML = original; renderTagsManager(); };
+        yesBtn.addEventListener("click", () => applyTagDelete(tag));
+        noBtn.addEventListener("click", restore);
+        actions.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") { e.preventDefault(); restore(); }
+        });
+    }
+    function applyTagDelete(tag) {
+        const t = (k) => window.aiTycoonI18n?.t?.(k) || k;
+        const NOTE_KEY = "ai-tycoon-agent-notes";
+        let notes;
+        try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+        catch { notes = {}; }
+        const escT = tag.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const re = new RegExp(`\\s?#${escT}(?![A-Za-z0-9_가-힣])\\s?`, "gi");
+        let changed = 0;
+        for (const key of Object.keys(notes)) {
+            const before = notes[key];
+            const after = before.replace(re, " ").replace(/[ \t]{2,}/g, " ").trim();
+            if (before !== after) {
+                if (after) notes[key] = after;
+                else delete notes[key];
+                changed++;
+            }
+        }
+        try { localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch { /* quota */ }
+        // 캐시 무효화 — 패널 리렌더가 stale 한 1초 TTL 데이터 안 잡도록
+        window.aiTycoonInvalidateTagCache?.();
+        window.aiTycoonToasts?.show?.("info",
+            t("settings.tagsDeleteDone"),
+            `#${tag} · ${changed}`);
+        try {
+            window.updatePanel?.();
+            window.updateDetailPanel?.();
+        } catch { /* ignore */ }
+        renderTagsManager();
+    }
+    // orphan note 일괄 정리 — 인라인 확인 (native confirm 안 씀)
+    function beginCleanupOrphans(orphanKeys) {
+        const container = document.getElementById("settings-tags-manager");
+        const btn = container?.querySelector("[data-cleanup-orphans]");
+        if (!btn) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const yesLabel = lang === "en" ? `Yes, delete ${orphanKeys.length}` : `예, ${orphanKeys.length}개 지우기`;
+        const noLabel = lang === "en" ? "No" : "아니오";
+        const promptText = lang === "en"
+            ? `Remove all notes from offline agents (${orphanKeys.length})? Their tags will go away too. This cannot be undone.`
+            : `오프라인 에이전트의 메모 ${orphanKeys.length}개를 모두 지울까요? 메모에 적힌 태그도 함께 사라지며 되돌릴 수 없습니다.`;
+        const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+        const original = btn.outerHTML;
+        // 버튼을 confirm strip 으로 swap
+        const wrap = document.createElement("div");
+        wrap.className = "settings-tags-cleanup-confirm";
+        wrap.innerHTML = `
+            <span class="settings-tag-delete-prompt">${escA(promptText)}</span>
+            <button type="button" class="settings-tag-delete-yes">${escA(yesLabel)}</button>
+            <button type="button" class="settings-tag-delete-no">${escA(noLabel)}</button>
+        `;
+        btn.replaceWith(wrap);
+        const restore = () => renderTagsManager();
+        wrap.querySelector(".settings-tag-delete-no")?.addEventListener("click", restore);
+        wrap.querySelector(".settings-tag-delete-no")?.focus({ preventScroll: true });
+        wrap.querySelector(".settings-tag-delete-yes")?.addEventListener("click", () => {
+            applyOrphanCleanup(orphanKeys);
+        });
+        wrap.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") { e.preventDefault(); restore(); }
+        });
+    }
+    function applyOrphanCleanup(orphanKeys) {
+        const t = (k) => window.aiTycoonI18n?.t?.(k) || k;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const NOTE_KEY = "ai-tycoon-agent-notes";
+        let notes;
+        try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+        catch { notes = {}; }
+        let removed = 0;
+        for (const k of orphanKeys) {
+            if (notes[k] !== undefined) { delete notes[k]; removed++; }
+        }
+        try { localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch { /* quota */ }
+        window.aiTycoonInvalidateTagCache?.();
+        window.aiTycoonToasts?.show?.("info",
+            lang === "en" ? "Offline notes cleaned up" : "오프라인 메모 정리 완료",
+            lang === "en" ? `${removed} notes removed` : `${removed}개 메모 삭제됨`);
+        try {
+            window.updatePanel?.();
+            window.updateDetailPanel?.();
+        } catch { /* ignore */ }
+        renderTagsManager();
     }
     function closeSettings() { closeModalOverlay(document.getElementById("settings-overlay")); }
     function settingsToggleDark(on) {
@@ -1133,24 +1613,54 @@
     function cycleAgentFocus(direction) {
         const S = window.S;
         if (!S || !S.liveAgents || S.liveAgents.length === 0) return;
-        const running = S.liveAgents.filter(a => a.isRunning);
-        if (running.length === 0) return;
-        const ids = running.map(a => String(a.pid));
-        const current = String(S.directorFocusPid || S.selectedPid || ids[0]);
+        // 사이드바에 실제로 표시된 카드 순서대로 순회 (필터/검색/정렬 반영).
+        // 빈 사이드바이면 fall back 으로 liveAgents 의 running 사용.
+        const cards = Array.from(document.querySelectorAll("#agents-list .agent-card"))
+            .filter(el => el.offsetParent !== null && el.dataset && el.dataset.cardPid);
+        let ids;
+        let cardByPid = null;
+        if (cards.length > 0) {
+            ids = cards.map(el => String(el.dataset.cardPid));
+            cardByPid = new Map(cards.map(el => [String(el.dataset.cardPid), el]));
+        } else {
+            const running = S.liveAgents.filter(a => a.isRunning);
+            if (running.length === 0) return;
+            ids = running.map(a => String(a.pid));
+        }
+        const current = String(S.detailPid || S.directorFocusPid || S.selectedPid || ids[0]);
         let idx = ids.indexOf(current);
-        if (idx < 0) idx = 0;
+        if (idx < 0) idx = direction > 0 ? -1 : 0; // 미선택 상태에선 다음=첫, 이전=마지막
         const nextIdx = (idx + direction + ids.length) % ids.length;
         const nextPid = ids[nextIdx];
         S.directorFocusPid = nextPid;
         S.directorMode = true;
         S.selectedPid = nextPid;
         S.detailPid = nextPid;
-        const next = running[nextIdx];
+        // 새로 선택된 카드를 사이드바에서 시야로 스크롤.
+        if (cardByPid) {
+            const card = cardByPid.get(nextPid);
+            if (card && typeof card.scrollIntoView === "function") {
+                card.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            }
+        }
+        // 즉시 패널/디테일 리렌더 — 다음 WS 틱 기다리지 않고 반응적으로.
+        if (typeof window.updatePanel === "function") {
+            try { window.updatePanel(); } catch { /* ignore */ }
+        }
+        if (typeof window.updateDetailPanel === "function") {
+            try { window.updateDetailPanel(); } catch { /* ignore */ }
+        }
+        const nextAgent = S.liveAgents.find(a => String(a.pid) === nextPid);
         const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const label = nextAgent
+            ? (nextAgent.projectName || nextAgent.platformName || "Agent")
+            : "Agent";
         window.aiTycoonToasts?.show?.("info",
-            next.projectName || next.platformName || "Agent",
+            label,
             `${nextIdx + 1} / ${ids.length} · ${lang === "en" ? "agent focused" : "에이전트 포커스"}`);
     }
+    // 디테일 패널의 ‹ / › 버튼이나 다른 모듈에서 호출할 수 있게 노출.
+    if (typeof window !== "undefined") window.cycleAgentFocus = cycleAgentFocus;
     function toggleCinemaMode() {
         _cinemaMode = !_cinemaMode;
         document.body.classList.toggle("cinema-mode", _cinemaMode);
@@ -1163,6 +1673,32 @@
                 ? (lang === "en" ? "All overlays hidden. Press Z to bring back." : "오버레이를 모두 숨겼어요. Z 키로 복귀.")
                 : "");
     }
+    // 사이드바 검색 input 의 키 처리 — Esc 는 검색 비우기, Enter 는 첫 결과 자동 선택
+    function handleAgentSearchKey(event) {
+        const input = event.target;
+        if (!input) return;
+        if (event.key === "Escape" && input.value) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof window.clearAgentSearch === "function") window.clearAgentSearch();
+            return;
+        }
+        if (event.key === "Enter" && !input._imeComposing) {
+            event.preventDefault();
+            // Enter = "이 검색어로 결정" — 히스토리에 commit
+            const val = (input.value || "").trim();
+            if (val && typeof window.aiTycoonSaveSearchTerm === "function") {
+                window.aiTycoonSaveSearchTerm(val);
+            }
+            // 첫 번째로 보이는 카드를 그대로 클릭 (selectAgent 호출 효과)
+            const firstCard = document.querySelector("#agents-list .agent-card");
+            if (firstCard) {
+                firstCard.click();
+                // 사이드바에서 캔버스/디테일 패널로 자연스럽게 시선 이동
+                input.blur();
+            }
+        }
+    }
     function applyHudVisibility() {
         const hudOn = localStorage.getItem("ai-tycoon-hud") !== "false";
         const wsOn = localStorage.getItem("ai-tycoon-workstream") !== "false";
@@ -1172,6 +1708,9 @@
         if (ws) ws.style.display = wsOn ? "" : "none";
     }
     document.addEventListener("DOMContentLoaded", () => setTimeout(applyHudVisibility, 50));
+    // Expose for command palette / external scripts
+    window.toggleCinemaMode = toggleCinemaMode;
+    window.applyTheme = (theme) => { try { settingsPickTheme(theme); } catch { /* ignore */ } };
     function settingsPickTheme(theme) {
         localStorage.setItem("ai-tycoon-theme", theme);
         document.querySelectorAll(".theme-swatch").forEach(s => {
@@ -1337,15 +1876,153 @@
             hudTitle.textContent = name || base;
         }
     }
+    function refreshDemoChip() {
+        const chip = document.getElementById("header-demo-chip");
+        if (chip) chip.hidden = !window.aiTycoonDemo?.isEnabled?.();
+        const pchip = document.getElementById("header-privacy-chip");
+        if (pchip) {
+            const on = !!window.aiTycoonPrivacy?.isEnabled?.();
+            pchip.hidden = !on;
+            // strict 모드면 더 진한 색 + 'Strict' 라벨로 구분
+            const strict = !!window.aiTycoonPrivacy?.isStrict?.();
+            pchip.classList.toggle("is-strict", strict);
+            const labelEl = pchip.querySelector("span[data-i18n='header.privacyLabel']");
+            if (labelEl && !labelEl.dataset.origText) labelEl.dataset.origText = labelEl.textContent;
+            if (labelEl) labelEl.textContent = strict ? "Strict" : (labelEl.dataset.origText || "프라이버시");
+        }
+    }
     function refreshTabCount() {
-        const agents = (window.__aiTycoonAgents || []).filter(a => a.isRunning);
+        refreshDemoChip();
+        const all = window.__aiTycoonAgents || [];
+        const agents = all.filter(a => a.isRunning);
         const name = localStorage.getItem("ai-tycoon-workspace-name") || "";
         const base = name ? `${name} · AI Tycoon` : "AI Tycoon";
-        document.title = agents.length > 0 ? `(${agents.length}) ${base}` : base;
+
+        // 멈춘 친구 수도 함께 노출 — 다른 탭에 있어도 알아챌 수 있게.
+        // panel.js 의 isAgentStuck 과 동일 임계값 (5분) 사용.
+        const STUCK_MS = 5 * 60 * 1000;
+        const stuckAgents = agents.filter(a => {
+            const active = ["coding", "thinking", "searching", "reviewing"].includes(a.status);
+            if (!active) return false;
+            const ts = a?.signals?.lastActivityAt || a?.signals?.lastSeenAt || 0;
+            return ts > 0 && (Date.now() - ts) > STUCK_MS;
+        });
+        const stuckCount = stuckAgents.length;
+
+        let title = base;
+        if (agents.length > 0) title = `(${agents.length}) ${title}`;
+        if (stuckCount > 0) title = `⚠ ${stuckCount} · ${title}`;
+        document.title = title;
+
+        // 헤더 칩 갱신 — stuck 0명이면 숨김
+        const chip = document.getElementById("header-stuck-chip");
+        const countEl = document.getElementById("header-stuck-count");
+        if (chip && countEl) {
+            chip.hidden = stuckCount === 0;
+            countEl.textContent = String(stuckCount);
+        }
+        window.__aiTycoonStuckAgents = stuckAgents;
     }
+    // 헤더 칩 클릭 시 가장 오래 멈춰있던 친구로 포커스 이동
+    function focusFirstStuckAgent() {
+        const list = window.__aiTycoonStuckAgents || [];
+        if (list.length === 0) return;
+        // age 가 가장 큰 (= ts 가 가장 작은) 친구를 우선
+        const sorted = [...list].sort((a, b) => {
+            const at = a?.signals?.lastActivityAt || a?.signals?.lastSeenAt || 0;
+            const bt = b?.signals?.lastActivityAt || b?.signals?.lastSeenAt || 0;
+            return at - bt;
+        });
+        const target = sorted[0];
+        if (!target || !window.S) return;
+        window.S.selectedPid = target.pid;
+        window.S.detailPid = target.pid;
+        window.S.directorFocusPid = target.pid;
+        window.S.directorMode = true;
+    }
+    window.focusFirstStuckAgent = focusFirstStuckAgent;
     // Refresh tab title roughly every 5 seconds to track running agent count
     setInterval(refreshTabCount, 5000);
     document.addEventListener("DOMContentLoaded", () => setTimeout(applyWorkspaceName, 80));
+
+    // 사이드 패널 에이전트 리스트가 충분히 스크롤되면 우하단에 '위로' 버튼 띄움.
+    // 카드가 많아져서 한참 내려갔을 때 다시 위로 올라오는 게 귀찮아서 추가.
+    function setupAgentsScrollTop() {
+        const cont = document.getElementById("agents-scroll-container");
+        if (!cont) return;
+        let btn = document.getElementById("agents-scroll-top-btn");
+        if (!btn) {
+            btn = document.createElement("button");
+            btn.id = "agents-scroll-top-btn";
+            btn.type = "button";
+            btn.className = "agents-scroll-top-btn";
+            btn.setAttribute("aria-label", "에이전트 목록 위로");
+            btn.title = "위로";
+            btn.innerHTML = '<iconify-icon icon="solar:arrow-up-linear" aria-hidden="true"></iconify-icon>';
+            btn.addEventListener("click", () => cont.scrollTo({ top: 0, behavior: "smooth" }));
+            cont.appendChild(btn);
+        }
+        const update = () => {
+            const visible = cont.scrollTop > 240;
+            btn.classList.toggle("is-visible", visible);
+        };
+        cont.addEventListener("scroll", update, { passive: true });
+        update();
+    }
+    document.addEventListener("DOMContentLoaded", () => setTimeout(setupAgentsScrollTop, 120));
+
+    // HUD 타이틀 더블클릭 → 그 자리에서 작업실 이름을 바꿀 수 있게.
+    // 설정 모달 들어갔다 나오는 거 번거로우니까 즉석 편집.
+    function startHudTitleEdit() {
+        const el = document.getElementById("hud-title");
+        if (!el || el.querySelector("input")) return;
+        const current = localStorage.getItem("ai-tycoon-workspace-name") || "";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.value = current;
+        input.maxLength = 40;
+        input.className = "hud-title-input";
+        input.placeholder = "예: 서준의 작업실";
+        const finish = (commit) => {
+            const val = (input.value || "").trim().slice(0, 40);
+            if (commit) {
+                if (val) localStorage.setItem("ai-tycoon-workspace-name", val);
+                else localStorage.removeItem("ai-tycoon-workspace-name");
+                applyWorkspaceName();
+            } else {
+                applyWorkspaceName();
+            }
+        };
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") { e.preventDefault(); finish(true); }
+            else if (e.key === "Escape") { e.preventDefault(); finish(false); }
+        });
+        input.addEventListener("blur", () => finish(true));
+        el.textContent = "";
+        el.appendChild(input);
+        input.focus();
+        input.select();
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+        const el = document.getElementById("hud-title");
+        if (!el) return;
+        el.addEventListener("dblclick", startHudTitleEdit);
+        el.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !el.querySelector("input")) {
+                e.preventDefault();
+                startHudTitleEdit();
+            }
+        });
+    });
+
+    // macOS 사용자에게는 Ctrl 대신 ⌘ 키로 표기 — 키 자체는 동일(metaKey/ctrlKey 양쪽 처리)
+    // data-mod-key 속성이 붙은 <kbd> 만 갈아끼움. 헬프 모달이 늦게 그려져도 한 번 더 돌리도록.
+    function applyModKey() {
+        const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+        if (!isMac) return;
+        document.querySelectorAll("kbd[data-mod-key]").forEach(el => { el.textContent = "⌘"; });
+    }
+    document.addEventListener("DOMContentLoaded", () => { applyModKey(); setTimeout(applyModKey, 400); });
 
     function settingsExportCsv() {
         try {
@@ -1442,6 +2119,7 @@
         location.reload();
     }
 
+    let _insightsRefreshTimer = null;
     function openInsights() {
         const overlay = document.getElementById("insights-overlay");
         if (window.refreshInsights) window.refreshInsights();
@@ -1460,10 +2138,43 @@
                 window.aiTycoonAchievements.markAllSeen();
             }
         }
+        // Live-refresh while the modal is open so numbers stay accurate
+        if (_insightsRefreshTimer) clearInterval(_insightsRefreshTimer);
+        _insightsRefreshTimer = setInterval(() => {
+            if (overlay && !overlay.hidden && window.refreshInsights) window.refreshInsights();
+        }, 5000);
     }
-    function closeInsights() { closeModalOverlay(document.getElementById("insights-overlay")); }
-    function openShortcuts() { openModalOverlay(document.getElementById("shortcuts-overlay")); }
+    function closeInsights() {
+        closeModalOverlay(document.getElementById("insights-overlay"));
+        if (_insightsRefreshTimer) { clearInterval(_insightsRefreshTimer); _insightsRefreshTimer = null; }
+    }
+    function openShortcuts() {
+        openModalOverlay(document.getElementById("shortcuts-overlay"));
+        // 열 때마다 검색 박스 리셋해서 항상 전체 목록부터 보이게
+        const inp = document.getElementById("shortcuts-search");
+        if (inp) { inp.value = ""; filterShortcuts(""); setTimeout(() => inp.focus({ preventScroll: true }), 80); }
+    }
     function closeShortcuts() { closeModalOverlay(document.getElementById("shortcuts-overlay")); }
+    // 단축키 모달 안의 항목을 키워드로 필터링.
+    // 키캡 텍스트와 동작 설명 모두에서 매칭 (공백 분리한 토큰 AND).
+    function filterShortcuts(query) {
+        const q = (query || "").trim().toLowerCase();
+        const tokens = q.split(/\s+/).filter(Boolean);
+        let totalVisible = 0;
+        document.querySelectorAll("#shortcuts-overlay .shortcuts-group").forEach(section => {
+            let groupVisible = 0;
+            section.querySelectorAll(".shortcuts-list li").forEach(li => {
+                const text = li.textContent.toLowerCase();
+                const match = tokens.length === 0 || tokens.every(t => text.includes(t));
+                li.style.display = match ? "" : "none";
+                if (match) groupVisible++;
+            });
+            section.style.display = groupVisible > 0 ? "" : "none";
+            totalVisible += groupVisible;
+        });
+        const empty = document.getElementById("shortcuts-empty");
+        if (empty) empty.hidden = totalVisible > 0;
+    }
     function openProject(name) {
         if (!name || !window.refreshProject) return;
         window.refreshProject(name);
@@ -1493,6 +2204,21 @@
         if (project && !project.hidden) { closeProject(); event.stopPropagation(); return; }
         const insights = document.getElementById("insights-overlay");
         if (insights && !insights.hidden) { closeInsights(); event.stopPropagation(); return; }
+    });
+
+    // Combined modifier shortcuts (Ctrl+/ for shortcuts help — i18n keyboard friendly)
+    // F1 도 표준적인 도움말 키라서 함께 매핑 (브라우저 기본 도움말 가로채지 않도록 preventDefault)
+    document.addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey) {
+            if (event.key === "/") {
+                event.preventDefault();
+                openShortcuts();
+            }
+        }
+        if (event.key === "F1" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            event.preventDefault();
+            openShortcuts();
+        }
     });
 
     // Global single-letter shortcuts (only when not typing)
@@ -1537,6 +2263,21 @@
             event.preventDefault();
             if (typeof window.resetCameraView === "function") window.resetCameraView();
         }
+        // 'N' = 선택된 에이전트의 메모 textarea 로 빠르게 포커스 (편집 시작).
+        // 디테일 패널이 열려있지 않으면 짧은 토스트로 안내.
+        else if (k === "n" || k === "N") {
+            event.preventDefault();
+            const input = document.getElementById("detail-note-input");
+            if (input) {
+                input.focus({ preventScroll: false });
+                input.selectionStart = input.selectionEnd = input.value.length;
+            } else {
+                const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+                window.aiTycoonToasts?.show?.("info",
+                    lang === "en" ? "Select an agent first" : "에이전트를 먼저 선택해 주세요",
+                    lang === "en" ? "Open a card to edit its note." : "카드를 열면 메모를 바로 편집할 수 있어요.");
+            }
+        }
     });
     document.addEventListener("DOMContentLoaded", showWelcomeIfNeeded);
 
@@ -1546,6 +2287,44 @@
         const action = params.get("action");
         if (action === "insights") setTimeout(openInsights, 500);
         else if (action === "settings") setTimeout(openSettings, 500);
+        // ?clean=1 — auto-enable cinema mode (good for embeds / status-board mirrors)
+        if (params.get("clean") === "1") {
+            // Suppress welcome + tour so the embed is immediately clean
+            try { localStorage.setItem("ai-tycoon-welcomed-v1", "true"); } catch { /* ignore */ }
+            try { localStorage.setItem("ai-tycoon-tour-done", "true"); } catch { /* ignore */ }
+            try { localStorage.setItem("ai-tycoon-tips-dismissed-v1", "true"); } catch { /* ignore */ }
+            setTimeout(() => {
+                if (typeof toggleCinemaMode === "function") toggleCinemaMode();
+            }, 600);
+        }
+        // ?theme= : classic / cafe / forest / midnight / sakura / ocean
+        const themeParam = params.get("theme");
+        if (themeParam && ["classic","cafe","forest","midnight","sakura","ocean"].includes(themeParam)) {
+            try { localStorage.setItem("ai-tycoon-theme", themeParam); } catch { /* ignore */ }
+            if (typeof window.aiTycoonForceRepaint === "function") {
+                setTimeout(window.aiTycoonForceRepaint, 200);
+            }
+        }
+        // ?lang=ko/en
+        const langParam = params.get("lang");
+        if (langParam === "ko" || langParam === "en") {
+            try { localStorage.setItem("ai-tycoon-lang", langParam); } catch { /* ignore */ }
+            if (window.aiTycoonI18n) {
+                setTimeout(() => window.aiTycoonI18n.setLang(langParam), 200);
+            }
+        }
+        // ?dark=1/0 — explicit dark mode override
+        const darkParam = params.get("dark");
+        if (darkParam === "1" || darkParam === "0") {
+            try { localStorage.setItem("ai-tycoon-dark", darkParam === "1" ? "true" : "false"); } catch { /* ignore */ }
+            document.body.classList.toggle("dark", darkParam === "1");
+        }
+        // ?demo=1 — auto-enable synthetic agent demo
+        if (params.get("demo") === "1") {
+            setTimeout(() => {
+                if (window.aiTycoonDemo) window.aiTycoonDemo.setEnabled(true);
+            }, 400);
+        }
     });
 
     // ── Service worker (PWA offline support) ──

@@ -132,6 +132,29 @@ function normalizeSearch(value) {
     return String(value ?? "").toLocaleLowerCase("ko-KR").replace(/\s+/g, " ").trim();
 }
 
+/** 검색어 토큰을 `<mark>` 로 감싸 하이라이트. esc() 처리된 안전한 텍스트만 받음.
+ *  소문자 비교지만 원본 대소문자는 보존. 토큰 없으면 입력 그대로 반환. */
+function highlightTokens(safeText, query) {
+    if (!safeText || !query) return safeText;
+    const tokens = String(query)
+        .toLocaleLowerCase("ko-KR")
+        .split(/\s+/)
+        .filter(Boolean)
+        .filter(t => t.length >= 1);
+    if (tokens.length === 0) return safeText;
+    // 정규식 메타 문자 이스케이프 후 OR 패턴
+    const reSrc = tokens
+        .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+        .join("|");
+    if (!reSrc) return safeText;
+    try {
+        const re = new RegExp(`(${reSrc})`, "ig");
+        return safeText.replace(re, '<mark class="search-match">$1</mark>');
+    } catch {
+        return safeText;
+    }
+}
+
 function agentSearchText(agent) {
     const theme = getAgentTheme(agent);
     const status = agent.isRunning ? agent.status : "offline";
@@ -145,6 +168,9 @@ function agentSearchText(agent) {
         ...(agent.tasks || []).flatMap(task => [task.subject, task.activeForm, task.status]),
     ].filter(Boolean).join(" ");
 
+    // 내가 직접 단 메모도 검색 대상에 포함 — "리팩터링" 같은 단서로 빠르게 찾을 수 있게.
+    const note = getAgentNote(agent) || "";
+
     return normalizeSearch([
         theme.name,
         agent.projectName,
@@ -157,6 +183,7 @@ function agentSearchText(agent) {
         meta.label,
         status,
         taskText,
+        note,
     ].filter(Boolean).join(" "));
 }
 
@@ -215,19 +242,48 @@ function updateSearchControls(filteredAgents) {
     const review = filteredAgents.filter(agent => agent.needsReview || agent.status === "reviewing").length;
     const pinned = filteredAgents.filter(isAgentPinned).length;
     const recent = filteredAgents.filter(agent => Date.now() - timestampValue(agent) < 10 * 60 * 1000).length;
-    const searchLabel = normalizedQuery
-        ? `<span class="visibility-query">"${esc(query)}"</span>`
-        : `<span>전체 보기</span>`;
+    const lgV = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const labels = lgV === "en"
+        ? { all: "Show all", count: "people", view: "view", pinned: "Pinned", working: "Working", review: "Review", recent: "Recent" }
+        : { all: "전체 보기", count: "명", view: "보기", pinned: "고정", working: "작업", review: "검토", recent: "최근" };
+    // 검색어가 `#tag` 형식이면 quoted 텍스트 대신 tag-chip 풍으로 렌더 — 사이드바 태그 바와 일관.
+    let searchLabel;
+    if (normalizedQuery) {
+        const rawQ = String(query || "").trim();
+        if (rawQ.startsWith("#") && rawQ.length > 1) {
+            const tag = rawQ.slice(1).toLowerCase();
+            const hue = tagHueFor(tag);
+            searchLabel = `<span class="visibility-query visibility-query-tag" style="--tag-hue:${hue}"><span class="visibility-query-hash">#</span>${esc(tag)}</span>`;
+        } else {
+            searchLabel = `<span class="visibility-query">"${esc(query)}"</span>`;
+        }
+    } else {
+        searchLabel = `<span>${esc(labels.all)}</span>`;
+    }
+    const countSuffix = lgV === "en" ? ` ${labels.count}` : labels.count; // "명" 은 붙여 쓰고 "people" 은 띄움
 
+    // 핀/검토/최근 같은 카운트 칩을 클릭 가능한 액션 필터 트리거로
     summary.innerHTML = `
         <span>${searchLabel}</span>
-        <span class="tabular-nums">${visible}/${total}명</span>
-        ${actionMeta && actionMeta.key !== "all" ? `<span class="action-visibility">${esc(actionMeta.label)} 보기</span>` : ""}
-        ${pinned ? `<span class="pinned-visibility tabular-nums">고정 ${pinned}</span>` : ""}
-        <span class="tabular-nums">작업 ${working}</span>
-        ${review ? `<span class="needs-attention tabular-nums">검토 ${review}</span>` : ""}
-        ${recent ? `<span class="tabular-nums">최근 ${recent}</span>` : ""}
+        <span class="tabular-nums">${visible}/${total}${countSuffix}</span>
+        ${actionMeta && actionMeta.key !== "all" ? `<span class="action-visibility">${esc(actionMeta.label)} ${esc(labels.view)}</span>` : ""}
+        ${pinned ? `<button type="button" class="pinned-visibility tabular-nums vs-chip" data-action="pinned">${esc(labels.pinned)} ${pinned}</button>` : ""}
+        <button type="button" class="tabular-nums vs-chip" data-action="working">${esc(labels.working)} ${working}</button>
+        ${review ? `<button type="button" class="needs-attention tabular-nums vs-chip" data-action="review">${esc(labels.review)} ${review}</button>` : ""}
+        ${recent ? `<button type="button" class="tabular-nums vs-chip" data-action="recent">${esc(labels.recent)} ${recent}</button>` : ""}
     `;
+    // 클릭 핸들러 — 같은 액션이면 토글로 'all', 다른 액션이면 그걸로 전환
+    summary.querySelectorAll(".vs-chip[data-action]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const k = btn.getAttribute("data-action");
+            if (!k) return;
+            if (S.activeActionFilter === k) {
+                window.setActionFilter?.("all");
+            } else {
+                window.setActionFilter?.(k);
+            }
+        });
+    });
 }
 
 function effectivePixiDensity() {
@@ -276,11 +332,50 @@ function agentSignalInfo(agent) {
     const activityAt = numeric(signals.lastActivityAt, timestampValue(agent));
     const basis = activityAt || seenAt;
     const age = basis > 0 ? Math.max(0, Date.now() - basis) : 0;
-    const ageLabel = basis > 0 ? formatTimeAgo(age) : "수집 중";
+    const lg = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const ageLabel = basis > 0 ? formatTimeAgo(age) : (lg === "en" ? "collecting" : "수집 중");
     const sourceLabel = sources.length
         ? sources.slice(0, 3).map(source => SIGNAL_LABELS[source] || source).join("/")
         : (agent?.platform || "signal");
     return { sources, sourceLabel, ageLabel, seenAt, activityAt, age };
+}
+
+/** 작업 중(또는 생각/검토 중) 상태에서 N분간 활동 신호가 없으면 'stuck'으로 본다.
+ *  세션이 끊긴 건 아닌데 프롬프트 답을 기다리며 멈춰있는 경우를 잡아내려고. */
+const STUCK_THRESHOLD_MS = 5 * 60 * 1000;
+function isAgentStuck(agent) {
+    if (!agent?.isRunning) return false;
+    const activeStatuses = ["coding", "thinking", "searching", "reviewing"];
+    if (!activeStatuses.includes(agent.status)) return false;
+    const info = agentSignalInfo(agent);
+    return info.age > STUCK_THRESHOLD_MS;
+}
+
+// 한 번 알린 에이전트는 다시 안 알림 (해제됐다가 다시 멈출 때만 한 번 더)
+const _stuckNotified = new Set();
+function maybeFireStuckToast(agent) {
+    if (typeof window === "undefined") return;
+    const key = String(agent?.pid || "");
+    if (!key) return;
+    const stuck = isAgentStuck(agent);
+    if (stuck && !_stuckNotified.has(key)) {
+        _stuckNotified.add(key);
+        try {
+            const idx = (S.liveAgents || []).indexOf(agent);
+            const theme = AGENT_THEMES[(idx >= 0 ? idx : 0) % AGENT_THEMES.length];
+            const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+            const title = lang === "en"
+                ? `${theme.name} looks stuck`
+                : `${theme.name} 멈춘 것 같아요`;
+            const body = lang === "en"
+                ? `${agent.projectName || ""} · No signals for 5+ min`
+                : `${agent.projectName || ""} · 5분+ 무신호`;
+            window.aiTycoonToasts?.show?.("review", title, body, { pid: agent.pid });
+        } catch { /* 알림 실패는 치명적이지 않음 */ }
+    } else if (!stuck && _stuckNotified.has(key)) {
+        // 다시 움직였으면 상태 초기화 → 다음에 또 멈추면 한 번 더 알림
+        _stuckNotified.delete(key);
+    }
 }
 
 function renderDiagnosticChip(label, value, tone = "neutral") {
@@ -305,43 +400,52 @@ function renderDetectorHealth(active, working) {
     const codexSignals = numeric(diagnostics.codexSessionCount, 0) + numeric(diagnostics.cursorWorkspaceCount, 0);
 
     const lastSignalAt = numeric(diagnostics.lastPollAt, S.lastStateAt || S.lastHeartbeat || 0);
-    const ageLabel = lastSignalAt > 0 ? `${formatTimeAgo(Math.max(0, Date.now() - lastSignalAt))} 갱신` : "수집 중";
+    const lgDH = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lgDH === "en";
+    const ageLabel = lastSignalAt > 0
+        ? (en ? `updated ${formatTimeAgo(Math.max(0, Date.now() - lastSignalAt))}` : `${formatTimeAgo(Math.max(0, Date.now() - lastSignalAt))} 갱신`)
+        : (en ? "collecting" : "수집 중");
 
     let state = "scanning";
-    let title = "탐지 준비 중";
+    let title = en ? "Preparing detection" : "탐지 준비 중";
     if (!S.connected) {
         state = "offline";
-        title = "서버 연결 대기";
+        title = en ? "Waiting for server" : "서버 연결 대기";
     } else if (!hasDiagnostics) {
         state = "scanning";
-        title = "탐지 수집 중";
+        title = en ? "Collecting detection" : "탐지 수집 중";
     } else if (delayed) {
         state = "degraded";
-        title = "탐지 일부 지연";
+        title = en ? "Some detectors delayed" : "탐지 일부 지연";
     } else if (S.liveAgents.length > 0) {
         state = "live";
-        title = "탐지 정상";
+        title = en ? "Detection OK" : "탐지 정상";
     } else {
         state = "ready";
-        title = "시작 준비 완료";
+        title = en ? "Ready to start" : "시작 준비 완료";
     }
 
-    let hint = `${active.length}명 근무 중 · ${working.length}명 집중 처리 중`;
+    let hint = en
+        ? `${active.length} on duty · ${working.length} focused`
+        : `${active.length}명 근무 중 · ${working.length}명 집중 처리 중`;
     if (!S.connected) {
-        hint = "서버 신호를 다시 붙이는 중입니다";
+        hint = en ? "Reconnecting to the server signal…" : "서버 신호를 다시 붙이는 중입니다";
     } else if (delayed) {
-        hint = "마지막 정상 탐지 값을 유지하고 있습니다";
+        hint = en ? "Keeping the last good values" : "마지막 정상 탐지 값을 유지하고 있습니다";
     } else if (S.liveAgents.length === 0 && !diagnostics.claudeDirExists && externalCount === 0) {
-        hint = "AI 세션을 실행하면 작업실에 자동으로 나타납니다";
+        hint = en ? "Launch any AI session and it'll show up here" : "AI 세션을 실행하면 작업실에 자동으로 나타납니다";
     } else if (S.liveAgents.length === 0) {
-        hint = "탐지기는 준비됐고 실시간 활동을 기다리는 중입니다";
+        hint = en ? "Detectors ready, waiting for live activity" : "탐지기는 준비됐고 실시간 활동을 기다리는 중입니다";
     }
 
+    const claudeChip = en
+        ? (diagnostics.claudeDirExists ? "ready" : "wait")
+        : (diagnostics.claudeDirExists ? "준비" : "대기");
     const chips = [
-        renderDiagnosticChip("Claude", diagnostics.claudeDirExists ? "준비" : "대기", diagnostics.claudeDirExists ? "ok" : "warn"),
-        renderDiagnosticChip("세션", sessionCount.toLocaleString(), sessionCount > 0 ? "ok" : "neutral"),
-        renderDiagnosticChip("프로세스", processCount.toLocaleString(), processCount > 0 ? "ok" : "neutral"),
-        renderDiagnosticChip("AI 신호", (externalCount + codexSignals).toLocaleString(), externalCount + codexSignals > 0 ? "ok" : "neutral"),
+        renderDiagnosticChip("Claude", claudeChip, diagnostics.claudeDirExists ? "ok" : "warn"),
+        renderDiagnosticChip(en ? "Sessions" : "세션", sessionCount.toLocaleString(), sessionCount > 0 ? "ok" : "neutral"),
+        renderDiagnosticChip(en ? "Processes" : "프로세스", processCount.toLocaleString(), processCount > 0 ? "ok" : "neutral"),
+        renderDiagnosticChip(en ? "AI signals" : "AI 신호", (externalCount + codexSignals).toLocaleString(), externalCount + codexSignals > 0 ? "ok" : "neutral"),
     ].join("");
 
     el.dataset.state = state;
@@ -364,28 +468,32 @@ function detectorTone(status) {
 }
 
 function detectorLabel(status) {
+    const lg = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lg === "en";
     return {
-        fresh: "정상",
-        cached: "캐시",
-        timeout: "지연",
-    }[status] || "대기";
+        fresh: en ? "OK" : "정상",
+        cached: en ? "cached" : "캐시",
+        timeout: en ? "slow" : "지연",
+    }[status] || (en ? "wait" : "대기");
 }
 
 function connectionHealth() {
     const age = Math.max(0, Date.now() - numeric(S.lastHeartbeat, Date.now()));
+    const lg = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lg === "en";
     if (!S.connected) {
         return {
             tone: "bad",
-            label: "재연결",
-            detail: `${S.reconnectAttempt || 0}회 시도`,
+            label: en ? "Reconnect" : "재연결",
+            detail: en ? `${S.reconnectAttempt || 0} attempts` : `${S.reconnectAttempt || 0}회 시도`,
             ageLabel: formatTimeAgo(age),
         };
     }
     if (age > 22000) {
-        return { tone: "bad", label: "응답 없음", detail: formatTimeAgo(age), ageLabel: formatTimeAgo(age) };
+        return { tone: "bad", label: en ? "No response" : "응답 없음", detail: formatTimeAgo(age), ageLabel: formatTimeAgo(age) };
     }
     if (age > 12000) {
-        return { tone: "warn", label: "느림", detail: formatTimeAgo(age), ageLabel: formatTimeAgo(age) };
+        return { tone: "warn", label: en ? "Slow" : "느림", detail: formatTimeAgo(age), ageLabel: formatTimeAgo(age) };
     }
     return { tone: "ok", label: "Live", detail: formatTimeAgo(age), ageLabel: formatTimeAgo(age) };
 }
@@ -396,31 +504,39 @@ function healthSnapshot(active, working, review) {
     const hasDiagnostics = Object.keys(diagnostics).length > 0;
     const delayed = Object.values(detectorStatus).some(status => status === "cached" || status === "timeout");
     const lastSignalAt = numeric(diagnostics.lastPollAt, S.lastStateAt || S.lastHeartbeat || 0);
-    const ageLabel = lastSignalAt > 0 ? formatTimeAgo(Math.max(0, Date.now() - lastSignalAt)) : "수집 중";
+    const lgHS = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lgHS === "en";
+    const ageLabel = lastSignalAt > 0 ? formatTimeAgo(Math.max(0, Date.now() - lastSignalAt)) : (en ? "collecting" : "수집 중");
 
     let state = "ready";
-    let title = "탐지 정상";
-    let hint = `${active.length}명 감지 · ${working.length}명 작업 중`;
+    let title = en ? "Detection OK" : "탐지 정상";
+    let hint = en
+        ? `${active.length} detected · ${working.length} working`
+        : `${active.length}명 감지 · ${working.length}명 작업 중`;
     if (!S.connected) {
         state = "offline";
-        title = "서버 연결 대기";
-        hint = `재연결 ${S.reconnectAttempt || 0}회 시도 중입니다.`;
+        title = en ? "Waiting for server" : "서버 연결 대기";
+        hint = en
+            ? `Reconnecting (${S.reconnectAttempt || 0} attempts).`
+            : `재연결 ${S.reconnectAttempt || 0}회 시도 중입니다.`;
     } else if (!hasDiagnostics) {
         state = "scanning";
-        title = "진단 수집 중";
-        hint = "탐지기가 첫 상태를 보내는 중입니다.";
+        title = en ? "Collecting diagnostics" : "진단 수집 중";
+        hint = en ? "Detectors are sending their first state." : "탐지기가 첫 상태를 보내는 중입니다.";
     } else if (delayed) {
         state = "degraded";
-        title = "탐지 일부 지연";
-        hint = "마지막 정상 값을 유지하고 있습니다.";
+        title = en ? "Some detectors delayed" : "탐지 일부 지연";
+        hint = en ? "Keeping the last good values." : "마지막 정상 값을 유지하고 있습니다.";
     } else if (S.liveAgents.length === 0) {
         state = "empty";
-        title = "직원 감지 대기";
-        hint = "AI 세션을 실행하면 자동으로 작업실에 나타납니다.";
+        title = en ? "Waiting for agents" : "직원 감지 대기";
+        hint = en ? "Launch any AI session and it'll show up here." : "AI 세션을 실행하면 자동으로 작업실에 나타납니다.";
     } else if (review.length > 0) {
         state = "attention";
-        title = "검토 필요";
-        hint = `${review.length}명의 직원이 확인을 기다립니다.`;
+        title = en ? "Review needed" : "검토 필요";
+        hint = en
+            ? `${review.length} agent${review.length > 1 ? "s" : ""} waiting for review.`
+            : `${review.length}명의 직원이 확인을 기다립니다.`;
     }
 
     return { diagnostics, detectorStatus, hasDiagnostics, delayed, lastSignalAt, ageLabel, state, title, hint };
@@ -434,9 +550,13 @@ function renderSystemHealth(active, working, review) {
     const diagnostics = health.diagnostics;
     const detectorStatus = health.detectorStatus;
     const connection = connectionHealth();
+    const lgH = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const labels = lgH === "en"
+        ? { processes: "Processes", external: "AI apps", session: "Sessions", proc: "Processes", kicker: "System status", copy: "Copy diagnostics", reload: "Reload" }
+        : { processes: "프로세스", external: "AI 앱", session: "세션", proc: "프로세스", kicker: "시스템 상태", copy: "진단 복사", reload: "새로고침" };
     const detectorRows = [
-        ["processes", "프로세스"],
-        ["external", "AI 앱"],
+        ["processes", labels.processes],
+        ["external", labels.external],
         ["codex", "Codex"],
         ["cursor", "Cursor"],
     ].map(([key, label]) => {
@@ -450,8 +570,8 @@ function renderSystemHealth(active, working, review) {
     }).join("");
 
     const statRows = [
-        ["세션", numeric(diagnostics.sessionCount, S.serverState?.totalSessions || 0)],
-        ["프로세스", numeric(diagnostics.processCount, S.serverState?.totalProcesses || 0)],
+        [labels.session, numeric(diagnostics.sessionCount, S.serverState?.totalSessions || 0)],
+        [labels.proc, numeric(diagnostics.processCount, S.serverState?.totalProcesses || 0)],
         ["Codex", numeric(diagnostics.codexSessionCount, 0)],
         ["Cursor", numeric(diagnostics.cursorWorkspaceCount, 0)],
     ].map(([label, value]) => `
@@ -465,7 +585,7 @@ function renderSystemHealth(active, working, review) {
     panel.innerHTML = `
         <div class="health-head">
             <div>
-                <span class="health-kicker">시스템 상태</span>
+                <span class="health-kicker">${esc(labels.kicker)}</span>
                 <strong>${esc(health.title)}</strong>
             </div>
             <span class="health-age">${esc(health.ageLabel)}</span>
@@ -481,11 +601,11 @@ function renderSystemHealth(active, working, review) {
         <div class="health-actions">
             <button type="button" class="health-action" data-health-action="copy">
                 <iconify-icon icon="solar:copy-linear" aria-hidden="true"></iconify-icon>
-                <span>진단 복사</span>
+                <span>${esc(labels.copy)}</span>
             </button>
             <button type="button" class="health-action" data-health-action="reload">
                 <iconify-icon icon="solar:refresh-linear" aria-hidden="true"></iconify-icon>
-                <span>새로고침</span>
+                <span>${esc(labels.reload)}</span>
             </button>
         </div>
     `;
@@ -508,59 +628,74 @@ function renderSystemHealth(active, working, review) {
 }
 
 function briefHeadline(active, working, review, pinned, stale) {
+    const lgB = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lgB === "en";
+    // 짧은 문구 모음 — 운영 브리핑이라 한 줄짜리 카드 헤드라인 + 부가 디테일
     if (!S.connected) {
         return {
             tone: "offline",
             icon: "solar:plug-circle-linear",
-            title: "연결 대기",
-            detail: `재연결 ${S.reconnectAttempt || 0}회`,
+            title: en ? "Connecting…" : "연결 대기",
+            detail: en
+                ? `Reconnect ${S.reconnectAttempt || 0}x`
+                : `재연결 ${S.reconnectAttempt || 0}회`,
         };
     }
     if (review.length > 0) {
         return {
             tone: "attention",
             icon: "solar:clipboard-check-linear",
-            title: "검토 우선",
-            detail: `${review.length}명 확인 대기`,
+            title: en ? "Review first" : "검토 우선",
+            detail: en
+                ? `${review.length} waiting for review`
+                : `${review.length}명 확인 대기`,
         };
     }
     if (stale.length > 0) {
         return {
             tone: "warn",
             icon: "solar:radar-2-linear",
-            title: "신호 확인",
-            detail: `${stale.length}명 갱신 지연`,
+            title: en ? "Signal check" : "신호 확인",
+            detail: en
+                ? `${stale.length} stale signals`
+                : `${stale.length}명 갱신 지연`,
         };
     }
     if (pinned.length > 0) {
         return {
             tone: "pinned",
             icon: "solar:star-bold",
-            title: "고정 직원 추적",
-            detail: `${pinned.length}명 상단 유지`,
+            title: en ? "Tracking pinned" : "고정 직원 추적",
+            detail: en
+                ? `${pinned.length} kept on top`
+                : `${pinned.length}명 상단 유지`,
         };
     }
     if (working.length > 0) {
         return {
             tone: "live",
             icon: "solar:bolt-circle-linear",
-            title: "작업 흐름 정상",
-            detail: `${working.length}명 집중 중`,
+            title: en ? "All flowing" : "작업 흐름 정상",
+            detail: en
+                ? `${working.length} in focus`
+                : `${working.length}명 집중 중`,
         };
     }
     if (active.length > 0) {
         return {
             tone: "ready",
             icon: "solar:users-group-rounded-linear",
-            title: "대기 직원 확인",
-            detail: `${active.length}명 활성`,
+            title: en ? "Standing by" : "대기 직원 확인",
+            detail: en
+                ? `${active.length} active`
+                : `${active.length}명 활성`,
         };
     }
     return {
         tone: "empty",
         icon: "solar:radar-2-linear",
-        title: "직원 감지 대기",
-        detail: "세션 대기 중",
+        title: en ? "Waiting for agents" : "직원 감지 대기",
+        detail: en ? "Listening for sessions" : "세션 대기 중",
     };
 }
 
@@ -610,15 +745,27 @@ function renderOperatorBrief(active, working, review) {
         return info.age > 15 * 60 * 1000;
     });
     const headline = briefHeadline(activeSorted, working, reviewSorted, pinned, stale);
-    const actionLabels = {
-        review: "검토 대기",
-        focus: "포커스",
-        stale: "신호 지연",
-        pinned: "고정 직원",
-        working: "진행 작업",
-        recent: "최근 활동",
-        idle: "대기 직원",
-    };
+    const lgOB = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const enOB = lgOB === "en";
+    const actionLabels = enOB
+        ? {
+            review: "Pending review",
+            focus: "Focus",
+            stale: "Stale signal",
+            pinned: "Pinned",
+            working: "In progress",
+            recent: "Recent",
+            idle: "Standing by",
+        }
+        : {
+            review: "검토 대기",
+            focus: "포커스",
+            stale: "신호 지연",
+            pinned: "고정 직원",
+            working: "진행 작업",
+            recent: "최근 활동",
+            idle: "대기 직원",
+        };
     const actionGroups = new Map();
     activeSorted.forEach(agent => {
         const action = getAgentNextAction(agent);
@@ -654,8 +801,12 @@ function renderOperatorBrief(active, working, review) {
             key: "all",
             tone: "neutral",
             icon: "solar:list-check-linear",
-            label: activeSorted.length ? "전체 직원" : "대기 상태",
-            detail: activeSorted.length ? `${activeSorted.length}명 활성` : "탐지 준비 완료",
+            label: enOB
+                ? (activeSorted.length ? "All agents" : "Standing by")
+                : (activeSorted.length ? "전체 직원" : "대기 상태"),
+            detail: enOB
+                ? (activeSorted.length ? `${activeSorted.length} active` : "Ready to detect")
+                : (activeSorted.length ? `${activeSorted.length}명 활성` : "탐지 준비 완료"),
             value: activeSorted.length || "",
             filter: "all",
         });
@@ -671,13 +822,14 @@ function renderOperatorBrief(active, working, review) {
     });
 
     panel.dataset.tone = headline.tone;
+    const kicker = enOB ? "Operator brief" : "운영 브리핑";
     panel.innerHTML = `
         <div class="brief-head">
             <span class="brief-icon">
                 <iconify-icon icon="${esc(headline.icon)}" aria-hidden="true"></iconify-icon>
             </span>
             <div>
-                <span class="brief-kicker">운영 브리핑</span>
+                <span class="brief-kicker">${esc(kicker)}</span>
                 <strong>${esc(headline.title)}</strong>
             </div>
             <em>${esc(headline.detail)}</em>
@@ -837,14 +989,19 @@ function uniqueAgents(list) {
 
 function workEventMeta(event) {
     const fallback = STATUS_META[event.status] || STATUS_META.idle;
+    // 라벨이 이미 들어와 있으면(ws.js 에서 이미 i18n 분기) 그대로 쓰고, 없을 때만 현재 언어로 기본값.
+    const lgW = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const labels = lgW === "en"
+        ? { join: "Joined", leave: "Left", work: "New work", review: "Review", start: "Task start", done: "Done" }
+        : { join: "출근", leave: "퇴근", work: "새 작업", review: "검토 요청", start: "태스크 시작", done: "완료" };
     const byType = {
-        join: { label: event.label || "출근", icon: "solar:login-2-linear" },
-        leave: { label: event.label || "퇴근", icon: "solar:logout-2-linear" },
+        join: { label: event.label || labels.join, icon: "solar:login-2-linear" },
+        leave: { label: event.label || labels.leave, icon: "solar:logout-2-linear" },
         status: { label: event.label || fallback.label, icon: fallback.icon },
-        work: { label: event.label || "새 작업", icon: "solar:bolt-circle-linear" },
-        review: { label: event.label || "검토 요청", icon: "solar:clipboard-check-linear" },
-        "task-start": { label: event.label || "태스크 시작", icon: "solar:play-circle-linear" },
-        "task-done": { label: event.label || "완료", icon: "solar:check-circle-linear" },
+        work: { label: event.label || labels.work, icon: "solar:bolt-circle-linear" },
+        review: { label: event.label || labels.review, icon: "solar:clipboard-check-linear" },
+        "task-start": { label: event.label || labels.start, icon: "solar:play-circle-linear" },
+        "task-done": { label: event.label || labels.done, icon: "solar:check-circle-linear" },
     };
     return byType[event.type] || { label: event.label || fallback.label, icon: fallback.icon };
 }
@@ -854,6 +1011,16 @@ function inspectWorkEvent(pid, key) {
     S.inspectedEventKey = key || null;
     window.focusAgentByPid?.(pid);
     openMobilePanel("#detail-panel");
+    // 데스크탑에서 사이드 패널이 보일 때 해당 에이전트 카드까지 부드럽게 스크롤
+    // (보통 work-event 클릭하면 카메라는 옮겨가는데 사이드바는 그 자리 그대로라
+    //  어디 있는지 찾기 어려웠음.)
+    if (window.innerWidth > 480) {
+        setTimeout(() => {
+            const list = document.getElementById("agents-list");
+            const card = list?.querySelector(`[data-card-pid="${CSS.escape(String(pid))}"]`);
+            card?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+        }, 60);
+    }
 }
 
 function openMobilePanel(focusSelector) {
@@ -935,11 +1102,16 @@ function renderActivityTimeline(now) {
     if (count) count.textContent = events.length ? `${events.length}` : "";
     timeline.classList.toggle("is-empty", events.length === 0);
     if (events.length === 0) {
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const title = lang === "en" ? "Collecting activity…" : "활동 수집 중";
+        const body  = lang === "en"
+            ? "Events show up here as agents start working."
+            : "직원이 작업을 시작하면 여기에 시간순으로 쌓입니다";
         timeline.innerHTML = `
             <div class="activity-empty">
                 <iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon>
-                <strong>활동 수집 중</strong>
-                <span>직원이 작업을 시작하면 여기에 시간순으로 쌓입니다</span>
+                <strong>${esc(title)}</strong>
+                <span>${esc(body)}</span>
             </div>`;
         return;
     }
@@ -1118,6 +1290,10 @@ function copyAgentValue(agent, kind) {
     if (kind === "session") return String(agent.sessionId || "");
     if (kind === "cwd") return String(agent.cwd || "");
     if (kind === "work") return String(agent.currentWork?.prompt || getWorkText(agent) || "");
+    if (kind === "started") {
+        const ts = typeof agent.startTime === "string" ? Date.parse(agent.startTime) : Number(agent.startTime);
+        return Number.isFinite(ts) && ts > 0 ? new Date(ts).toISOString() : "";
+    }
     return "";
 }
 
@@ -1137,14 +1313,28 @@ async function copyTextToClipboard(text, button) {
             document.execCommand("copy");
             textarea.remove();
         }
+        const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
         if (button) {
-            const original = button.innerHTML;
-            button.classList.add("is-copied");
-            button.innerHTML = `<iconify-icon icon="solar:check-circle-linear" aria-hidden="true"></iconify-icon><span>복사됨</span>`;
-            setTimeout(() => {
-                button.classList.remove("is-copied");
-                button.innerHTML = original;
-            }, 1300);
+            // icon-only 버튼은 width 30px 라 '복사됨' 텍스트가 잘림 — 토스트로 알림 보완
+            const iconOnly = button.classList?.contains("icon-only");
+            if (iconOnly) {
+                try {
+                    window.aiTycoonToasts?.show?.("info",
+                        lang === "en" ? "Copied to clipboard" : "복사됨",
+                        text.length > 80 ? text.slice(0, 80) + "…" : text);
+                } catch { /* ignore */ }
+                button.classList.add("is-copied");
+                setTimeout(() => button.classList.remove("is-copied"), 1300);
+            } else {
+                const original = button.innerHTML;
+                button.classList.add("is-copied");
+                const copiedLabel = lang === "en" ? "Copied" : "복사됨";
+                button.innerHTML = `<iconify-icon icon="solar:check-circle-linear" aria-hidden="true"></iconify-icon><span>${copiedLabel}</span>`;
+                setTimeout(() => {
+                    button.classList.remove("is-copied");
+                    button.innerHTML = original;
+                }, 1300);
+            }
         }
     } catch (error) {
         console.warn("[AI Tycoon] Clipboard copy failed:", error);
@@ -1311,13 +1501,19 @@ export function updateLiveHud() {
         const status = focus.isRunning ? focus.status : "offline";
         const meta = STATUS_META[status] || STATUS_META.idle;
         const work = getWorkText(focus) || firstLine(focus.currentWork?.prompt, 56) || meta.label;
+        const lgF = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const trackingLabel = lgF === "en" ? "Tracking" : "추적 중";
         focusName.textContent = `${theme.name} · ${focus.projectName || focus.platformName || "Agent"}`;
-        focusWork.textContent = `${S.directorMode ? "추적 중" : meta.label} · ${work}`;
+        focusWork.textContent = `${S.directorMode ? trackingLabel : meta.label} · ${work}`;
         focusProgress.style.width = `${taskProgress(focus)}%`;
         focusProgress.style.background = `linear-gradient(90deg, ${theme.body}, ${meta.color})`;
     } else {
-        focusName.textContent = "대기 중";
-        focusWork.textContent = S.connected ? "새 에이전트 활동을 기다리는 중" : "서버 연결을 기다리는 중";
+        const lgF = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const idleHead = lgF === "en" ? "Standing by" : "대기 중";
+        const waitAct  = lgF === "en" ? "Waiting for new agent activity" : "새 에이전트 활동을 기다리는 중";
+        const waitConn = lgF === "en" ? "Waiting for the server connection" : "서버 연결을 기다리는 중";
+        focusName.textContent = idleHead;
+        focusWork.textContent = S.connected ? waitAct : waitConn;
         focusProgress.style.width = S.connected ? "18%" : "8%";
         focusProgress.style.background = "linear-gradient(90deg, #94a3b8, #cbd5e1)";
     }
@@ -1394,6 +1590,70 @@ function refreshEmptyCta() {
     cta.hidden = demoOn || hasAgents;
 }
 
+/** Render a one-line status breakdown above the agent list.
+ *  Each chip is clickable and toggles the corresponding status filter. */
+function renderAgentsStatusSummary() {
+    const el = document.getElementById("agents-status-summary");
+    if (!el) return;
+    const agents = S.liveAgents || [];
+    if (agents.length === 0) {
+        el.hidden = true;
+        el.innerHTML = "";
+        return;
+    }
+    const buckets = { coding: 0, thinking: 0, reviewing: 0, searching: 0, idle: 0, offline: 0 };
+    agents.forEach(a => {
+        const s = a.isRunning ? (a.status || "idle") : "offline";
+        if (buckets.hasOwnProperty(s)) buckets[s]++;
+        else buckets.idle++;
+    });
+    const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const labels = lang === "en"
+        ? { coding: "coding", thinking: "thinking", reviewing: "review", searching: "search", idle: "idle", offline: "offline" }
+        : { coding: "코딩", thinking: "생각", reviewing: "검토", searching: "검색", idle: "대기", offline: "오프라인" };
+    // Only show non-zero buckets, ordered by "activity level" descending
+    const order = ["coding", "thinking", "reviewing", "searching", "idle", "offline"];
+    const visible = order.filter(k => buckets[k] > 0);
+    if (visible.length === 0) {
+        el.hidden = true;
+        el.innerHTML = "";
+        return;
+    }
+    el.hidden = false;
+    el.innerHTML = visible.map(k => {
+        const meta = STATUS_META[k] || STATUS_META.idle;
+        const active = (S.activeFilter === k);
+        // Filter chip-style: clicking toggles the status filter
+        const filterKey = (k === "coding" || k === "idle" || k === "offline") ? k : null;
+        const role = filterKey ? "button" : "presentation";
+        const cls = `agents-status-pill${active ? " is-active" : ""}${filterKey ? " is-clickable" : ""}`;
+        const attrs = filterKey
+            ? `role="button" tabindex="0" data-status-filter="${esc(filterKey)}"`
+            : "";
+        return `<span class="${cls}" ${attrs} style="--pill-color:${meta.color}">
+            <span class="agents-status-dot" style="background:${meta.color}"></span>
+            <span class="agents-status-num">${buckets[k]}</span>
+            <span class="agents-status-label">${esc(labels[k])}</span>
+        </span>`;
+    }).join("");
+    // Wire click handlers (only on clickable pills)
+    el.querySelectorAll('[data-status-filter]').forEach(node => {
+        const fk = node.getAttribute("data-status-filter");
+        const handle = () => {
+            // Toggle: clicking the active filter goes back to "all"
+            if (S.activeFilter === fk) {
+                if (typeof window.setFilter === "function") window.setFilter("all");
+            } else if (typeof window.setFilter === "function") {
+                window.setFilter(fk);
+            }
+        };
+        node.addEventListener("click", handle);
+        node.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handle(); }
+        });
+    });
+}
+
 export function updatePanel() {
     updateFilterChips();
     refreshEmptyCta();
@@ -1408,13 +1668,50 @@ export function updatePanel() {
         countEl.textContent = `${active}/${S.liveAgents.length}`;
     }
 
+    // Status summary bar — bird's-eye breakdown so the user knows
+    // what's happening even before scanning the agent list
+    renderAgentsStatusSummary();
+
+    // 메모 hashtag 추출해서 칩 바 렌더 — `#frontend` `#bug` 같은 라벨로 빠르게 필터
+    renderAgentTagsBar();
+
     const filteredAgents = getFilteredSortedAgents();
     updateSearchControls(filteredAgents);
     if (S.liveAgents.length === 0) {
-        list.innerHTML = `<div class="agent-empty-state">
+        // 빈 상태 카드 + 지원 AI 도구 8종 로고 줄
+        // 처음 보는 사용자가 "어떤 도구를 켜면 잡히는지" 한눈에 알 수 있게.
+        const supported = [
+            { id: "claude",   label: "Claude Code" },
+            { id: "codex",    label: "Codex" },
+            { id: "cursor",   label: "Cursor" },
+            { id: "copilot",  label: "Copilot" },
+            { id: "ollama",   label: "Ollama" },
+            { id: "lmstudio", label: "LM Studio" },
+            { id: "jan",      label: "Jan" },
+            { id: "gpt4all",  label: "GPT4All" },
+        ];
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const title = lang === "en" ? "Waiting for agents" : "직원을 기다리는 중";
+        const sub = lang === "en"
+            ? "Launch any of the AI tools below and they'll show up here automatically."
+            : "아래 AI 도구 중 아무거나 켜면 자동으로 책상에 앉아요.";
+        const demoLabel = lang === "en" ? "Try demo mode" : "데모 모드로 미리 보기";
+        const platformChips = supported.map(p => {
+            const meta = PLATFORM_META[p.id] || PLATFORM_META.claude;
+            return `<span class="empty-platform-chip" style="background:${meta.badgeBg};color:${meta.color};border-color:${meta.color}55">
+                <span class="empty-platform-dot" style="background:${meta.color}"></span>
+                <span>${esc(p.label)}</span>
+            </span>`;
+        }).join("");
+        list.innerHTML = `<div class="agent-empty-state agent-empty-rich">
             <iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon>
-            <strong>직원을 기다리는 중</strong>
-            <span>Claude, Codex, Cursor 같은 AI 세션이 감지되면 자동으로 나타납니다.</span>
+            <strong>${esc(title)}</strong>
+            <span>${esc(sub)}</span>
+            <div class="empty-platforms" aria-label="${esc(lang === "en" ? "Supported AI platforms" : "지원 플랫폼")}">${platformChips}</div>
+            <button type="button" class="empty-demo-btn" onclick="window.aiTycoonDemo?.toggle?.()">
+                <iconify-icon icon="solar:play-circle-bold" aria-hidden="true"></iconify-icon>
+                <span>${esc(demoLabel)}</span>
+            </button>
         </div>`;
         return;
     }
@@ -1422,12 +1719,55 @@ export function updatePanel() {
         const hasSearch = normalizeSearch(S.agentSearchQuery);
         const hasActionFilter = S.activeActionFilter !== "all";
         const resetAction = hasSearch ? "clearAgentSearch()" : hasActionFilter ? "setActionFilter('all')" : "setFilter('all')";
-        const resetLabel = hasSearch ? "검색 지우기" : hasActionFilter ? "행동 필터 해제" : "전체 보기";
-        list.innerHTML = `<div class="agent-empty-state">
-            <iconify-icon icon="${hasSearch ? "solar:magnifer-linear" : hasActionFilter ? "solar:bolt-circle-linear" : "solar:filter-linear"}" aria-hidden="true"></iconify-icon>
-            <strong>${hasSearch ? "검색 결과가 없습니다" : "필터에 맞는 에이전트가 없습니다"}</strong>
-            <span>${hasSearch ? "직원 이름, 프로젝트, 작업 문구를 다시 확인해 주세요." : hasActionFilter ? "다른 다음 행동을 선택하거나 전체로 돌아갈 수 있습니다." : "필터를 전체로 바꾸면 모든 직원을 볼 수 있습니다."}</span>
-            <button type="button" onclick="${resetAction}">${resetLabel}</button>
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const isEn = lang === "en";
+        // 검색어가 #tag 형식이면 hashtag 전용 친절한 메시지 분기
+        const rawQ = String(S.agentSearchQuery || "").trim();
+        const isHashtagQuery = rawQ.startsWith("#") && rawQ.length > 1;
+        const tagName = isHashtagQuery ? rawQ.slice(1).toLowerCase() : "";
+        // 해당 태그가 어떤 노트엔 들어있지만 그 노트의 에이전트가 현재 liveAgents 에 없을 수도 있음.
+        // (실제 프로세스가 종료/재시작되어 sessionId 가 매칭 안 되는 케이스)
+        // → 메시지를 "에이전트 오프라인" 톤으로 바꿔야 사용자가 "안 적었나?" 헷갈리지 않음.
+        let orphanTag = false;
+        if (isHashtagQuery) {
+            const allTags = extractTagsFromNotes(); // 캐시 hit
+            orphanTag = allTags.some(t => t.tag === tagName);
+        }
+        const resetLabel = hasSearch
+            ? (isEn ? "Clear search" : "검색 지우기")
+            : hasActionFilter
+                ? (isEn ? "Reset action filter" : "행동 필터 해제")
+                : (isEn ? "Show all" : "전체 보기");
+        const titleStr = isHashtagQuery
+            ? (orphanTag
+                ? (isEn ? `#${tagName} agent is offline` : `'#${tagName}' 태그가 적힌 에이전트가 오프라인입니다`)
+                : (isEn ? `No agents tagged #${tagName}` : `'#${tagName}' 태그가 붙은 에이전트가 없습니다`))
+            : hasSearch
+                ? (isEn ? "No results" : "검색 결과가 없습니다")
+                : (isEn ? "No agents match the filter" : "필터에 맞는 에이전트가 없습니다");
+        const bodyStr = isHashtagQuery
+            ? (orphanTag
+                ? (isEn
+                    ? `The agent that has #${tagName} in its note isn't running right now. The tag will reappear when it starts again.`
+                    : `#${tagName} 이(가) 적힌 에이전트가 지금은 켜져 있지 않아요. 다시 실행되면 태그도 돌아옵니다.`)
+                : (isEn
+                    ? `Open an agent's detail panel and add #${tagName} to its note to start filtering.`
+                    : `에이전트 디테일 패널을 열어서 메모에 #${tagName} 을(를) 적으면 필터 대상이 됩니다.`))
+            : hasSearch
+                ? (isEn ? "Double-check the name, project, or work text." : "직원 이름, 프로젝트, 작업 문구를 다시 확인해 주세요.")
+                : hasActionFilter
+                    ? (isEn ? "Pick a different action filter or go back to all." : "다른 다음 행동을 선택하거나 전체로 돌아갈 수 있습니다.")
+                    : (isEn ? "Switch the filter back to All to see everyone." : "필터를 전체로 바꾸면 모든 직원을 볼 수 있습니다.");
+        const iconName = isHashtagQuery
+            ? "solar:hashtag-linear"
+            : hasSearch ? "solar:magnifer-linear"
+            : hasActionFilter ? "solar:bolt-circle-linear"
+            : "solar:filter-linear";
+        list.innerHTML = `<div class="agent-empty-state${isHashtagQuery ? " agent-empty-hashtag" : ""}">
+            <iconify-icon icon="${iconName}" aria-hidden="true"></iconify-icon>
+            <strong>${esc(titleStr)}</strong>
+            <span>${esc(bodyStr)}</span>
+            <button type="button" onclick="${resetAction}">${esc(resetLabel)}</button>
         </div>`;
         return;
     }
@@ -1441,8 +1781,25 @@ export function updatePanel() {
         const pinned = isAgentPinned(agent);
         const action = getAgentNextAction(agent);
 
+        // "Just joined" pulse — first 60 s after the visual agent was created
+        const visual = S.visualAgents[agent.pid];
+        const justJoined = visual && visual.joinedAt && (Date.now() - visual.joinedAt) < 60000;
+        const noteText = getAgentNote(agent) || "";
+        const hasNote = !!noteText;
+        const stuck = isAgentStuck(agent);
+        // 처음 stuck으로 전환된 순간에만 토스트 한 번
+        maybeFireStuckToast(agent);
         const card = document.createElement("div");
-        card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}`;
+        card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}${hasNote ? " has-note" : ""}${stuck ? " is-stuck" : ""}`;
+        // 워크 이벤트 클릭 시 해당 카드로 스크롤하기 위한 식별자
+        card.dataset.cardPid = String(agent.pid);
+        // 메모 있으면 카드에 native title 로 미리보기 — hover 시 OS 툴팁
+        // (디테일 패널 안 열고도 첫 문장 확인 가능)
+        if (hasNote) {
+            const preview = noteText.replace(/\s+/g, " ").trim().slice(0, 140);
+            card.dataset.notePreview = preview;
+            card.title = `📝 ${preview}`;
+        }
         card.dataset.action = action.key;
         card.setAttribute("role", "button");
         card.setAttribute("tabindex", "0");
@@ -1453,25 +1810,44 @@ export function updatePanel() {
             updatePanel();
             updateDetailPanel();
         };
-        card.onclick = selectAgent;
+        // 카드 클릭 — 기본은 select, Shift+클릭이면 핀 토글 (작은 핀 버튼 안 찾고 빠르게)
+        card.onclick = (event) => {
+            if (event.shiftKey) {
+                event.preventDefault();
+                toggleAgentPin(agent);
+                return;
+            }
+            selectAgent();
+        };
         card.onkeydown = (event) => {
+            // Shift+Enter/Space 도 동일하게 핀 토글
+            if ((event.key === "Enter" || event.key === " ") && event.shiftKey) {
+                event.preventDefault();
+                toggleAgentPin(agent);
+                return;
+            }
             if (event.key !== "Enter" && event.key !== " ") return;
             event.preventDefault();
             selectAgent();
         };
 
         // Show current work from latest prompt, falling back to tasks
+        const lgCard = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const idleText = lgCard === "en" ? "Idle" : "대기 중";
+        const taskCountText = (n) => lgCard === "en"
+            ? `${n} task${n > 1 ? "s" : ""}`
+            : `${n}개 태스크`;
         let task;
         if (agent.currentWork && agent.currentWork.prompt) {
             const cleaned = agent.currentWork.prompt.replace(/\[Pasted text[^\]]*\]/g, "").trim();
             const firstLine = cleaned.split("\n")[0].trim();
             task = firstLine.length > 3
                 ? firstLine.substring(0, 50)
-                : (agent.currentTask ? agent.currentTask.subject : "대기 중");
+                : (agent.currentTask ? agent.currentTask.subject : idleText);
         } else if (agent.currentTask) {
             task = agent.currentTask.subject;
         } else {
-            task = agent.tasks?.length > 0 ? `${agent.tasks.length}개 태스크` : "대기 중";
+            task = agent.tasks?.length > 0 ? taskCountText(agent.tasks.length) : idleText;
         }
         const age = workAge(agent);
         const signal = agentSignalInfo(agent);
@@ -1503,6 +1879,9 @@ export function updatePanel() {
             `</div>`;
         }
 
+        // 검색어가 있으면 카드의 이름/프로젝트/태스크 텍스트에 매칭 부분 하이라이트
+        const searchQ = normalizeSearch(S.agentSearchQuery);
+        const hl = (safe) => highlightTokens(safe, searchQ);
         card.innerHTML = `
             <div class="agent-card-inner">
                 <div class="flex items-center gap-2.5 mb-2">
@@ -1510,13 +1889,31 @@ export function updatePanel() {
                         <iconify-icon icon="${meta.icon}" style="color:${theme.body};" class="text-sm"></iconify-icon>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="text-[13px] font-bold text-zinc-800 truncate">${theme.name} · ${esc(agent.projectName)}</div>
+                        <div class="text-[13px] font-bold text-zinc-800 truncate flex items-center gap-1.5">
+                            <span class="agent-card-name">${hl(esc(theme.name))}</span>
+                            <span class="agent-card-sep" aria-hidden="true">·</span>
+                            <span class="agent-project-dot" style="background:${projectColor(agent.projectName)}" title="${esc(agent.projectName || "")}" aria-hidden="true"></span>
+                            <span class="agent-card-project truncate">${hl(esc(agent.projectName))}</span>
+                        </div>
                         <div class="text-[11px] text-zinc-400 tabular-nums font-medium flex items-center gap-1">
                             <span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badge}</span>
                             ${agent.role && ROLE_META[agent.role] ? `<span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${ROLE_META[agent.role].color}20;color:${ROLE_META[agent.role].color}">${ROLE_META[agent.role].badge}</span>` : ""}
-                            <span>${agent.memoryMB}MB${agent.processCount > 1 ? ` · ${agent.processCount}p` : ""}</span>
+                            ${stuck ? `<span class="agent-stuck-chip" title="5분 이상 활동 신호 없음 — 멈춘 것 같아요"><iconify-icon icon="solar:hourglass-line-linear" aria-hidden="true"></iconify-icon>멈춤?</span>` : ""}
+                            <span>${agent.memoryMB}MB${agent.processCount > 1 ? ` · ${agent.processCount}p` : ""}${(() => {
+                                const t = memoryTrend(agent);
+                                if (t.dir === "flat") return "";
+                                const arrow = t.dir === "up" ? "▲" : "▼";
+                                const color = t.dir === "up" ? "#ef4444" : "#10b981";
+                                const sign = t.dir === "up" ? "+" : "";
+                                return ` <span class="mem-trend" style="color:${color}" title="30초 전 대비 ${sign}${t.deltaMB}MB" aria-label="메모리 ${t.dir === "up" ? "증가" : "감소"} ${sign}${t.deltaMB}MB">${arrow}</span>`;
+                            })()}</span>
                         </div>
-                        <div class="agent-signal-line" title="${esc(signal.sourceLabel)}">
+                        <div class="agent-signal-line" title="${esc(signal.sourceLabel)}" data-freshness="${
+                            signal.age < 60_000 ? "fresh"
+                            : signal.age < 5 * 60_000 ? "recent"
+                            : signal.age < 30 * 60_000 ? "warm"
+                            : "stale"
+                        }">
                             <iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon>
                             <span>최근 ${esc(signal.ageLabel)}</span>
                             <em>${esc(signal.sourceLabel)}</em>
@@ -1536,8 +1933,27 @@ export function updatePanel() {
                     </span>
                     <span class="status-badge badge-${status}">${meta.label}</span>
                 </div>
-                <div class="text-[12px] text-zinc-500 truncate mb-1" style="word-break:keep-all;" title="${esc(task)}">${esc(task)}</div>
+                <div class="text-[12px] text-zinc-500 truncate mb-1" style="word-break:keep-all;" title="${esc(task)}">${hl(esc(task))}</div>
                 ${age ? `<div class="text-[10px] text-zinc-400 mb-1">최근 ${age}</div>` : ""}
+                ${(() => {
+                    // 메모에 박힌 hashtag 를 카드에 노출 (최대 2개, 그 외 +N).
+                    // 클릭하면 사이드바 검색에 `#tag` 박혀서 필터 — 다른 곳과 동일 흐름.
+                    if (!hasNote) return "";
+                    const cardTags = extractTagsFromText(noteText);
+                    if (cardTags.length === 0) return "";
+                    const visible = cardTags.slice(0, 2);
+                    const overflow = cardTags.length - visible.length;
+                    const chipHtml = visible.map(tg => {
+                        const hue = tagHueFor(tg);
+                        return `<button type="button" class="agent-card-tag-chip" data-card-tag="${esc(tg)}" style="--tag-hue:${hue}" title="#${esc(tg)}">
+                            <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${esc(tg)}</span>
+                        </button>`;
+                    }).join("");
+                    const more = overflow > 0
+                        ? `<span class="agent-card-tag-more" title="${esc(cardTags.slice(2).map(t => "#" + t).join(" "))}">+${overflow}</span>`
+                        : "";
+                    return `<div class="agent-card-tags" aria-label="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Tags in note" : "메모 태그")}">${chipHtml}${more}</div>`;
+                })()}
                 ${agent.totalTasks > 0 ? `
                 <div class="progress-track">
                     <div class="progress-fill" style="width:${pct}%"></div>
@@ -1546,6 +1962,21 @@ export function updatePanel() {
                 ${subHtml}` : ""}
             </div>
         `;
+        // 카드 태그 칩 클릭 → 사이드바 검색에 #tag 박기 (event.stopPropagation 으로 카드 selectAgent 방지)
+        card.querySelectorAll("[data-card-tag]").forEach(btn => {
+            btn.addEventListener("click", (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const tg = btn.dataset.cardTag;
+                if (!tg) return;
+                const q = `#${tg}`;
+                const input = document.getElementById("agent-search");
+                if (input) input.value = q;
+                window.setAgentSearch?.(q);
+            });
+            // Shift+Click 카드 (pin 토글) 등 다른 키 핸들러와 충돌 방지
+            btn.addEventListener("mousedown", (e) => e.stopPropagation());
+        });
         const pinButton = card.querySelector('[data-pin-action="toggle"]');
         if (pinButton) {
             pinButton.addEventListener("click", event => {
@@ -1612,6 +2043,17 @@ export function updateBossQueueUI() {
     }
     container.classList.remove("hidden");
 
+    const lgB = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const en = lgB === "en";
+    const phaseTxt = {
+        active:    en ? "🎯 reporting" : "🎯 보고 중",
+        walking:   en ? "🚶 walking"   : "🚶 이동 중",
+        resolved:  en ? "✅ handled"   : "✅ 처리됨",
+        waiting:   en ? "⏳ waiting"   : "⏳ 대기 중",
+    };
+    const approveLabel = en ? "Approve" : "승인";
+    const denyLabel    = en ? "Deny"    : "반려";
+
     const items = queue.map(entry => {
         const agent = S.liveAgents.find(a => a.pid === entry.pid);
         const v = S.visualAgents[entry.pid];
@@ -1620,13 +2062,12 @@ export function updateBossQueueUI() {
         const roleMeta = ROLE_META[agent.role] || ROLE_META.developer;
         const isActive = entry.phase === "activeReview";
         const isWaiting = entry.phase === "waitingAtBossArea" || entry.phase === "queuedForBoss";
-        const isWalking = entry.phase === "walkingToBoss";
         const workText = getWorkText(agent) || agent.projectName;
 
-        const phaseLabel = isActive ? "🎯 보고 중"
-            : entry.phase === "walkingToBoss" ? "🚶 이동 중"
-            : entry.phase === "reviewResolved" ? "✅ 처리됨"
-            : "⏳ 대기 중";
+        const phaseLabel = isActive ? phaseTxt.active
+            : entry.phase === "walkingToBoss" ? phaseTxt.walking
+            : entry.phase === "reviewResolved" ? phaseTxt.resolved
+            : phaseTxt.waiting;
 
         return `<div class="boss-q-item ${isActive ? "boss-q-active" : ""}">
             <div class="flex items-center gap-2 mb-1">
@@ -1638,10 +2079,10 @@ export function updateBossQueueUI() {
             <div class="text-[11px] text-zinc-500 truncate mb-1.5">${esc(workText)}</div>
             <div class="flex gap-1.5">
                 <button onclick="bossReviewAction('${entry.pid}','yes')" class="boss-q-btn boss-q-yes" ${isActive || isWaiting ? "" : "disabled"}>
-                    <iconify-icon icon="solar:check-circle-linear" class="text-xs"></iconify-icon> 승인
+                    <iconify-icon icon="solar:check-circle-linear" class="text-xs"></iconify-icon> ${esc(approveLabel)}
                 </button>
                 <button onclick="bossReviewAction('${entry.pid}','no')" class="boss-q-btn boss-q-no" ${isActive || isWaiting ? "" : "disabled"}>
-                    <iconify-icon icon="solar:close-circle-linear" class="text-xs"></iconify-icon> 반려
+                    <iconify-icon icon="solar:close-circle-linear" class="text-xs"></iconify-icon> ${esc(denyLabel)}
                 </button>
             </div>
         </div>`;
@@ -1650,8 +2091,8 @@ export function updateBossQueueUI() {
     container.innerHTML = `
         <div class="flex items-center gap-2 mb-2">
             <iconify-icon icon="solar:clipboard-check-linear" class="text-amber-500 text-sm"></iconify-icon>
-            <h3 class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">보고 대기열</h3>
-            <span class="text-[10px] text-zinc-400 tabular-nums ml-auto">${queue.length}건</span>
+            <h3 class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">${en ? "Review queue" : "보고 대기열"}</h3>
+            <span class="text-[10px] text-zinc-400 tabular-nums ml-auto">${queue.length}${en ? " items" : "건"}</span>
         </div>
         <div class="flex flex-col gap-2">${items}</div>
     `;
@@ -1664,6 +2105,7 @@ export function updateDetailPanel() {
 
     if (!S.detailPid) {
         container.classList.add("hidden");
+        container._lastRenderedPid = null;
         return;
     }
 
@@ -1671,7 +2113,29 @@ export function updateDetailPanel() {
     if (!agent) {
         container.classList.add("hidden");
         S.detailPid = null;
+        container._lastRenderedPid = null;
         return;
+    }
+
+    // 다른 에이전트로 전환된 경우 스크롤을 위로 초기화 — 이전 카드의 스크롤 위치가
+    // 남아있어서 새 카드 열어도 한참 아래쪽이 보이던 불편 해소.
+    const prevRendered = container._lastRenderedPid;
+    if (prevRendered !== agent.pid) {
+        // innerHTML 재구성 직전에 scrollTop 리셋 (innerHTML 으로 컨테이너가 비워지긴 하지만
+        // 일부 브라우저는 스크롤 위치를 부모에서 유지하기도 해서 명시적으로 0 처리)
+        container.scrollTop = 0;
+        container._lastRenderedPid = agent.pid;
+    } else {
+        // 같은 에이전트 재렌더 — 사용자가 메모 textarea 에 포커스 중이거나 hashtag
+        // autocomplete 가 열려 있으면 re-render skip. WS tick 마다 innerHTML 갈아엎으면
+        // textarea blur + autocomplete 닫힘 + 입력 흐름 깨짐.
+        // 디테일 패널의 다른 영역 (메모리 그래프, 상태 등) 은 다음 tick 에 자연스럽게 갱신됨.
+        const active = document.activeElement;
+        const isEditingNote = active && active.id === "detail-note-input";
+        const acOpen = container.querySelector("#detail-note-autocomplete:not([hidden])");
+        if (isEditingNote || acOpen) {
+            return; // skip — 사용자 흐름 보존이 우선
+        }
     }
 
     container.classList.remove("hidden");
@@ -1682,7 +2146,7 @@ export function updateDetailPanel() {
     const pinned = isAgentPinned(agent);
     const action = getAgentNextAction(agent);
 
-    // Memory graph (mini sparkline)
+    // Memory graph (mini sparkline) — 데이터 포인트 hover 시 정확한 MB + 시각 표시
     let memGraph = "";
     if (hist.length > 1) {
         const maxMB = Math.max(...hist.map(h => h.mb), 100);
@@ -1692,11 +2156,24 @@ export function updateDetailPanel() {
             const y = h - (p.mb / maxMB) * h;
             return `${x},${y}`;
         }).join(" ");
+        const ageMin = Math.round((Date.now() - (hist[0]?.ts || Date.now())) / 60000);
+        const lgMG = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const ageLabelMG = lgMG === "en" ? `${ageMin}m ago` : `${ageMin}분 전`;
+        // 각 포인트에 <circle> + <title> 로 호버 시 정확한 값 노출 (간단한 OS 툴팁)
+        const dots = hist.map((p, i) => {
+            const x = (i / (hist.length - 1)) * w;
+            const y = h - (p.mb / maxMB) * h;
+            const t = new Date(p.ts || Date.now());
+            const hh = String(t.getHours()).padStart(2, "0");
+            const mm = String(t.getMinutes()).padStart(2, "0");
+            return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2.4" fill="${theme.body}" opacity="0.0001"><title>${hh}:${mm} · ${p.mb}MB</title></circle>`;
+        }).join("");
         memGraph = `
             <svg width="${w}" height="${h}" class="mt-1">
                 <polyline points="${points}" fill="none" stroke="${theme.body}" stroke-width="1.5" stroke-linejoin="round"/>
+                ${dots}
                 <text x="${w}" y="10" text-anchor="end" fill="currentColor" font-size="9" class="text-zinc-400">${hist[hist.length-1]?.mb || 0}MB</text>
-                <text x="0" y="${h}" fill="currentColor" font-size="8" class="text-zinc-400">${Math.round((Date.now() - (hist[0]?.ts || Date.now())) / 60000)}분 전</text>
+                <text x="0" y="${h}" fill="currentColor" font-size="8" class="text-zinc-400">${esc(ageLabelMG)}</text>
             </svg>`;
     }
 
@@ -1747,17 +2224,24 @@ export function updateDetailPanel() {
                 <small>${esc(formatTimeAgo(Math.max(0, Date.now() - (event.ts || Date.now()))))}</small>
             </button>`;
         }).join("")
-        : `<div class="detail-event-empty">최근 이벤트 수집 중</div>`;
+        : (() => {
+            const lge = (window.aiTycoonI18n?.getLang?.() || "ko");
+            return `<div class="detail-event-empty">${lge === "en" ? "Collecting recent events" : "최근 이벤트 수집 중"}</div>`;
+        })();
+    const lgSig = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const sigTitle1 = lgSig === "en" ? "Detection basis" : "인식 근거";
+    const sigTitle2 = lgSig === "en" ? "Recent signals" : "최근 신호";
+    const sigRecent = lgSig === "en" ? "Last" : "최근";
     const signalHtml = `
-        <div class="detail-section-title">인식 근거</div>
+        <div class="detail-section-title">${esc(sigTitle1)}</div>
         <div class="signal-proof">
             <div class="signal-proof-head">
-                <span><iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon> 최근 ${esc(signal.ageLabel)}</span>
+                <span><iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon> ${esc(sigRecent)} ${esc(signal.ageLabel)}</span>
                 <em>${esc(signal.sourceLabel)}</em>
             </div>
             <div class="signal-proof-pills">${signalPills}</div>
         </div>
-        <div class="detail-section-title mt-3">최근 신호</div>
+        <div class="detail-section-title mt-3">${esc(sigTitle2)}</div>
         <div class="detail-event-list">${signalEventsHtml}</div>
     `;
 
@@ -1777,15 +2261,35 @@ export function updateDetailPanel() {
                 </div>
             </div>`;
         }).join("");
-        if (tasks.length > 10) taskHtml += `<div class="text-[10px] text-zinc-400">+${tasks.length - 10}개 더</div>`;
+        const lgT = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const moreLabel = lgT === "en" ? `+${tasks.length - 10} more` : `+${tasks.length - 10}개 더`;
+        if (tasks.length > 10) taskHtml += `<div class="text-[10px] text-zinc-400">${moreLabel}</div>`;
     } else {
-        taskHtml = `<div class="text-[11px] text-zinc-400">등록된 태스크 없음</div>`;
+        const lgE = (window.aiTycoonI18n?.getLang?.() || "ko");
+        taskHtml = `<div class="text-[11px] text-zinc-400">${lgE === "en" ? "No tasks registered" : "등록된 태스크 없음"}</div>`;
     }
 
+    const lgM = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const labels = lgM === "en"
+        ? { session: "Session", cwd: "Path", started: "Started", copySuffix: "copy" }
+        : { session: "세션", cwd: "경로", started: "출근", copySuffix: "복사" };
+    // 출근 시각 — 서버가 보내주는 startTime 을 'HH:MM' + 경과 시간 형태로 표시
+    let startedText = "";
+    if (agent.startTime) {
+        const ts = typeof agent.startTime === "string" ? Date.parse(agent.startTime) : Number(agent.startTime);
+        if (Number.isFinite(ts) && ts > 0) {
+            const d = new Date(ts);
+            const hh = String(d.getHours()).padStart(2, "0");
+            const mm = String(d.getMinutes()).padStart(2, "0");
+            const ago = formatTimeAgo(Math.max(0, Date.now() - ts));
+            startedText = `${hh}:${mm} · ${ago}`;
+        }
+    }
     const metaRows = [
         ["PID", agent.pid, "pid"],
-        agent.sessionId ? ["세션", agent.sessionId, "session"] : null,
-        agent.cwd ? ["경로", agent.cwd, "cwd"] : null,
+        agent.sessionId ? [labels.session, agent.sessionId, "session"] : null,
+        startedText ? [labels.started, startedText, "started"] : null,
+        agent.cwd ? [labels.cwd, agent.cwd, "cwd"] : null,
     ].filter(Boolean);
     const detailMetaHtml = metaRows.length
         ? `<div class="detail-meta-grid">
@@ -1793,7 +2297,7 @@ export function updateDetailPanel() {
                 <div class="detail-meta-row">
                     <span>${esc(label)}</span>
                     <code>${esc(value)}</code>
-                    <button type="button" class="detail-copy-btn icon-only" data-copy-kind="${esc(kind)}" aria-label="${esc(label)} 복사">
+                    <button type="button" class="detail-copy-btn icon-only" data-copy-kind="${esc(kind)}" aria-label="${esc(label)} ${esc(labels.copySuffix)}">
                         <iconify-icon icon="solar:copy-linear" aria-hidden="true"></iconify-icon>
                     </button>
                 </div>
@@ -1815,34 +2319,121 @@ export function updateDetailPanel() {
             </div>
             <div class="detail-head-actions">
                 <button type="button"
+                    class="detail-nav-btn"
+                    data-detail-nav="prev"
+                    title="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Previous agent (k)" : "이전 에이전트 (k)")}"
+                    aria-label="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Previous agent" : "이전 에이전트")}">
+                    <iconify-icon icon="solar:alt-arrow-left-linear" aria-hidden="true"></iconify-icon>
+                </button>
+                <button type="button"
+                    class="detail-nav-btn"
+                    data-detail-nav="next"
+                    title="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Next agent (j)" : "다음 에이전트 (j)")}"
+                    aria-label="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Next agent" : "다음 에이전트")}">
+                    <iconify-icon icon="solar:alt-arrow-right-linear" aria-hidden="true"></iconify-icon>
+                </button>
+                <button type="button"
                     class="detail-pin-btn${pinned ? " is-pinned" : ""}"
                     data-detail-pin
                     aria-pressed="${pinned ? "true" : "false"}"
                     aria-label="${esc(`${theme.name} ${pinned ? "고정 해제" : "고정"}`)}">
                     <iconify-icon icon="${pinned ? "solar:star-bold" : "solar:star-linear"}" aria-hidden="true"></iconify-icon>
                 </button>
-                <button onclick="closeDetail()" class="detail-close-btn" aria-label="상세 패널 닫기">
+                <button onclick="closeDetail()" class="detail-close-btn" aria-label="상세 패널 닫기" title="Esc">
                     <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                 </button>
             </div>
         </div>
         <div class="flex items-center gap-1.5 mb-1">
             <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).label}</span>
-            <span class="text-[12px] text-zinc-600">${esc(agent.projectName)}</span>
+            <button type="button"
+                class="detail-project-chip"
+                data-detail-project
+                title="이 프로젝트만 보기"
+                aria-label="이 프로젝트만 필터링">
+                <span class="agent-project-dot" style="background:${projectColor(agent.projectName)}" aria-hidden="true"></span>
+                <span>${esc(agent.projectName)}</span>
+                <iconify-icon icon="solar:filter-linear" aria-hidden="true"></iconify-icon>
+            </button>
         </div>
         <div class="text-[10px] text-zinc-400 truncate mb-3">${esc(agent.cwd || agent.platformName || "")}</div>
         ${detailMetaHtml}
 
-        <div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mb-1">메모리 사용량</div>
-        <div class="text-[10px] text-zinc-400 mb-1">PID ${agent.pid} · ${agent.memoryMB}MB</div>
-        ${memGraph || '<div class="text-[10px] text-zinc-400">데이터 수집 중...</div>'}
+        ${(() => {
+            const lg = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const memTitle  = lg === "en" ? "Memory usage" : "메모리 사용량";
+            const collecting = lg === "en" ? "Collecting data…" : "데이터 수집 중…";
+            const tasksTitle = lg === "en" ? "Tasks" : "태스크";
+            return `
+        <div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mb-1">${esc(memTitle)}</div>
+        <div class="text-[10px] text-zinc-400 mb-1">PID ${esc(String(agent.pid))} · ${agent.memoryMB}MB</div>
+        ${memGraph || `<div class="text-[10px] text-zinc-400">${esc(collecting)}</div>`}
 
         ${currentWorkHtml}
 
         ${signalHtml}
 
-        ${tasks.length > 0 ? `<div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mt-3 mb-2">태스크 (${agent.completedTasks}/${agent.totalTasks})</div>
-        <div class="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">${taskHtml}</div>` : ""}
+        ${tasks.length > 0 ? `<div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mt-3 mb-2">${esc(tasksTitle)} (${agent.completedTasks}/${agent.totalTasks})</div>
+        <div class="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">${taskHtml}</div>` : ""}`;
+        })()}
+
+        ${(() => {
+            const langN = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const noteTitle = langN === "en" ? "Personal note" : "개인 메모";
+            const placeholder = langN === "en"
+                ? "Anything to remember about this agent… (e.g. auth refactor in progress)"
+                : "이 에이전트에 대한 메모… (예: 인증 리팩터링 중)";
+            const ariaLabel = langN === "en" ? "Agent personal note" : "에이전트 개인 메모";
+            const noteVal = getAgentNote(agent) || "";
+            const hintPrefix = langN === "en" ? "Local only" : "로컬에만 저장";
+            const clearLabel = langN === "en" ? "Clear" : "지우기";
+            // macOS 면 mod 키 라벨을 ⌘ 로 — index.html 의 applyModKey 같은 효과
+            const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent || "");
+            const modKey = isMac ? "⌘" : "Ctrl";
+            const saveHint = langN === "en"
+                ? `<kbd>${modKey}S</kbd> save · <kbd>${modKey}⏎</kbd> save+close`
+                : `<kbd>${modKey}S</kbd> 저장 · <kbd>${modKey}⏎</kbd> 저장+닫기`;
+            // 이 에이전트 메모에 들어 있는 hashtag 만 추출 (사이드바 bar 와 동일 정규식).
+            // 클릭 시 사이드바 검색에 해당 #tag 박아 같은 태그의 다른 에이전트들로 점프 가능.
+            const ownTags = [];
+            const TAG_RE = /#([A-Za-z0-9_가-힣]{2,32})/g;
+            const seenTag = new Set();
+            let m;
+            while ((m = TAG_RE.exec(noteVal)) !== null) {
+                const t = m[1].toLowerCase();
+                if (!seenTag.has(t)) { seenTag.add(t); ownTags.push(t); }
+            }
+            const tagChipsHtml = ownTags.length === 0 ? "" : `
+                <div class="detail-note-tags" aria-label="${langN === "en" ? "Hashtags in this note" : "이 메모의 태그"}">
+                    ${ownTags.map(t => {
+                        const hue = tagHueFor(t);
+                        return `<button type="button" class="agent-tag-chip detail-note-tag-chip" data-detail-tag="${esc(t)}" style="--tag-hue:${hue}" title="#${esc(t)}">
+                            <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${esc(t)}</span>
+                        </button>`;
+                    }).join("")}
+                </div>`;
+            return `
+        <div class="detail-section-title mt-3">${esc(noteTitle)}</div>
+        <div class="detail-note-card">
+            <div class="detail-note-shell">
+                <textarea
+                    id="detail-note-input"
+                    class="detail-note-input"
+                    rows="2"
+                    placeholder="${esc(placeholder)}"
+                    aria-label="${esc(ariaLabel)}"
+                    maxlength="500"
+                    data-privacy>${esc(noteVal)}</textarea>
+                <div id="detail-note-autocomplete" class="detail-note-autocomplete" hidden role="listbox" aria-label="${langN === "en" ? "Hashtag suggestions" : "해시태그 제안"}"></div>
+            </div>
+            ${tagChipsHtml}
+            <div class="detail-note-foot">
+                <span class="detail-note-hint">${esc(hintPrefix)} · ${esc(String(noteVal.length))}/500</span>
+                <span class="detail-note-keys">${saveHint}</span>
+                <button type="button" class="detail-note-clear" data-detail-note-clear ${!noteVal ? "hidden" : ""}>${esc(clearLabel)}</button>
+            </div>
+        </div>`;
+        })()}
     `;
 
     container.querySelectorAll(".detail-event[data-pid]").forEach(item => {
@@ -1854,6 +2445,228 @@ export function updateDetailPanel() {
         });
     });
     container.querySelector("[data-detail-pin]")?.addEventListener("click", () => toggleAgentPin(agent));
+
+    // Prev/Next 버튼 — j/k 와 동일한 cycleAgentFocus 호출.
+    // index.html 에서 window.cycleAgentFocus 로 노출됨.
+    container.querySelectorAll("[data-detail-nav]").forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            const dir = btn.dataset.detailNav === "prev" ? -1 : +1;
+            if (typeof window.cycleAgentFocus === "function") {
+                window.cycleAgentFocus(dir);
+            }
+        });
+    });
+
+    // 디테일 패널의 hashtag 칩 — 클릭 시 사이드바 검색에 #tag 박아 동일 태그 에이전트들 목록화
+    container.querySelectorAll("[data-detail-tag]").forEach(btn => {
+        btn.addEventListener("click", (event) => {
+            event.preventDefault();
+            const tag = btn.dataset.detailTag || "";
+            if (!tag) return;
+            const query = `#${tag}`;
+            const input = document.getElementById("agent-search");
+            if (input) input.value = query;
+            if (typeof window.setAgentSearch === "function") {
+                window.setAgentSearch(query);
+            } else {
+                S.agentSearchQuery = query;
+                updatePanel();
+            }
+        });
+    });
+
+    // 프로젝트 칩 클릭 → 검색창에 프로젝트명 박아 넣어서 동일 프로젝트만 보이게
+    // (이미 동일 검색어면 토글로 해제)
+    container.querySelector("[data-detail-project]")?.addEventListener("click", () => {
+        const name = agent.projectName || "";
+        if (!name) return;
+        const cur = (S.agentSearchQuery || "").trim();
+        if (cur === name) {
+            window.clearAgentSearch?.();
+        } else if (typeof window.setAgentSearch === "function") {
+            window.setAgentSearch(name);
+            const input = document.getElementById("agent-search");
+            if (input) input.value = name;
+        }
+    });
+
+    // Notes wiring (debounced save)
+    const noteInput = container.querySelector("#detail-note-input");
+    const noteClear = container.querySelector("[data-detail-note-clear]");
+    const noteHint  = container.querySelector(".detail-note-hint");
+    // 글자 수 임계값 도달 표시 — 450자 넘으면 amber, 500자 도달이면 진한 빨강 강조
+    // 'is-saved' 상태가 아닐 때만 카운터 숫자도 즉시 갱신 (저장됨 표시는 1.2초 유지)
+    const applyLimitWarn = () => {
+        if (!noteHint) return;
+        const len = noteInput?.value.length || 0;
+        if (len >= 480) noteHint.dataset.warn = "high";
+        else if (len >= 420) noteHint.dataset.warn = "mid";
+        else delete noteHint.dataset.warn;
+        if (!noteHint.classList.contains("is-saved")) {
+            const langN = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const hintTxt = langN === "en" ? "Local only" : "로컬에만 저장";
+            noteHint.textContent = `${hintTxt} · ${len}/500`;
+        }
+    };
+    // 저장 직후 1.2초간 'saved' 상태 표시 — 디바운스 때문에 사라진 글자가 어디로 갔나 헷갈리지 않게.
+    const flashSaved = () => {
+        if (!noteHint) return;
+        const langN = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const savedTxt = langN === "en" ? "Saved" : "저장됨";
+        const hintTxt = langN === "en" ? "Local only" : "로컬에만 저장";
+        noteHint.classList.add("is-saved");
+        noteHint.textContent = `${savedTxt} · ${(noteInput?.value.length || 0)}/500`;
+        clearTimeout(noteHint._flashTimer);
+        noteHint._flashTimer = setTimeout(() => {
+            noteHint.classList.remove("is-saved");
+            noteHint.textContent = `${hintTxt} · ${(noteInput?.value.length || 0)}/500`;
+            applyLimitWarn();
+        }, 1200);
+        applyLimitWarn();
+    };
+    if (noteInput) {
+        let saveTimer = null;
+        // ── Hashtag autocomplete 상태 ─────────────────────────────────
+        // caret 직전의 `#prefix` 패턴 감지해서 floating list 노출.
+        // 마우스/키보드 모두 지원, Tab/Enter 로 삽입, Esc 로 닫기, ↑↓ 로 선택.
+        const acEl = container.querySelector("#detail-note-autocomplete");
+        let acItems = [];
+        let acIdx = 0;
+        function findHashtagAtCaret() {
+            if (!acEl) return null;
+            const caret = noteInput.selectionStart;
+            // caret 직전 텍스트에서 마지막 `#word` 패턴 찾기 (공백/줄바꿈 직후만)
+            const before = noteInput.value.slice(0, caret);
+            const m = before.match(/(^|[\s\n])#([A-Za-z0-9_가-힣]{0,32})$/);
+            if (!m) return null;
+            return { prefix: m[2].toLowerCase(), start: before.length - m[2].length - 1 /* '#' 위치 */ };
+        }
+        function refreshAutocomplete() {
+            if (!acEl) return;
+            const hit = findHashtagAtCaret();
+            if (!hit) { hideAutocomplete(); return; }
+            const allTags = extractTagsFromNotes()
+                .filter(t => t.tag !== hit.prefix) // 정확히 같은 태그는 굳이 노출 X
+                .filter(t => !hit.prefix || t.tag.includes(hit.prefix))
+                .slice(0, 6);
+            if (allTags.length === 0) { hideAutocomplete(); return; }
+            acItems = allTags;
+            acIdx = 0;
+            const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+            acEl.innerHTML = allTags.map((t, i) => {
+                const hue = tagHueFor(t.tag);
+                return `<button type="button" class="detail-note-ac-item${i === 0 ? " is-active" : ""}" data-tag="${escA(t.tag)}" data-idx="${i}" role="option" style="--tag-hue:${hue}">
+                    <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${escA(t.tag)}</span><span class="detail-note-ac-count">${t.count}</span>
+                </button>`;
+            }).join("");
+            acEl.hidden = false;
+            acEl.querySelectorAll(".detail-note-ac-item").forEach(btn => {
+                btn.addEventListener("mousedown", (e) => e.preventDefault()); // blur 방지
+                btn.addEventListener("click", () => insertTag(btn.dataset.tag));
+            });
+        }
+        function hideAutocomplete() {
+            if (!acEl) return;
+            acEl.hidden = true;
+            acEl.innerHTML = "";
+            acItems = [];
+            acIdx = 0;
+        }
+        function moveAcSelection(delta) {
+            if (!acEl || acItems.length === 0) return;
+            acIdx = (acIdx + delta + acItems.length) % acItems.length;
+            acEl.querySelectorAll(".detail-note-ac-item").forEach((el, i) => {
+                el.classList.toggle("is-active", i === acIdx);
+                if (i === acIdx) el.scrollIntoView({ block: "nearest" });
+            });
+        }
+        function insertTag(tag) {
+            const hit = findHashtagAtCaret();
+            if (!hit) { hideAutocomplete(); return; }
+            const before = noteInput.value.slice(0, hit.start);
+            const after = noteInput.value.slice(noteInput.selectionStart);
+            const inserted = `#${tag} `;
+            noteInput.value = before + inserted + after;
+            const newCaret = before.length + inserted.length;
+            noteInput.setSelectionRange(newCaret, newCaret);
+            noteInput.focus();
+            // 삽입 후 저장 즉시
+            setAgentNote(agent, noteInput.value);
+            if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
+            flashSaved();
+            hideAutocomplete();
+        }
+
+        // 한글 IME 조합 중에는 저장 보류 — 자모 단위로 저장되면 의미 없는 텍스트만 박힘
+        noteInput.addEventListener("compositionstart", () => { noteInput._imeComposing = true; });
+        noteInput.addEventListener("compositionend", () => {
+            noteInput._imeComposing = false;
+            // 조합 끝나면 즉시 한 번 저장 (디바운스 무시)
+            setAgentNote(agent, noteInput.value);
+            if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
+            flashSaved();
+            refreshAutocomplete();
+        });
+        noteInput.addEventListener("input", () => {
+            // 글자 수 강조는 디바운스 무시하고 즉시 — 사용자가 limit 다가오는 걸 바로 봐야 의미가 있음
+            applyLimitWarn();
+            if (!noteInput._imeComposing) refreshAutocomplete();
+            if (noteInput._imeComposing) return;
+            if (saveTimer) clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                setAgentNote(agent, noteInput.value);
+                if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
+                flashSaved();
+            }, 220);
+        });
+        noteInput.addEventListener("blur", () => {
+            // 클릭 핸들러 가 먼저 잡을 시간 — 다음 tick 까지 대기
+            setTimeout(hideAutocomplete, 120);
+        });
+        // Cmd/Ctrl+S 로 즉시 저장. Cmd/Ctrl+Enter 면 저장 + 디테일 패널 닫기 (메모 다 적었을 때 한 번에).
+        // 브라우저 기본 '페이지 저장' 동작은 textarea 안에서만 막음.
+        noteInput.addEventListener("keydown", (e) => {
+            const mod = e.ctrlKey || e.metaKey;
+            // Autocomplete 가 열려 있으면 위/아래/Enter/Tab/Esc 를 먼저 처리
+            if (acEl && !acEl.hidden && acItems.length > 0) {
+                if (e.key === "ArrowDown") { e.preventDefault(); moveAcSelection(+1); return; }
+                if (e.key === "ArrowUp")   { e.preventDefault(); moveAcSelection(-1); return; }
+                if (e.key === "Enter" || e.key === "Tab") {
+                    e.preventDefault();
+                    const sel = acItems[acIdx];
+                    if (sel) insertTag(sel.tag);
+                    return;
+                }
+                if (e.key === "Escape") { e.preventDefault(); hideAutocomplete(); return; }
+            }
+            if (mod && (e.key === "s" || e.key === "S")) {
+                e.preventDefault();
+                if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+                setAgentNote(agent, noteInput.value);
+                if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
+                flashSaved();
+            } else if (mod && e.key === "Enter") {
+                e.preventDefault();
+                if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; }
+                setAgentNote(agent, noteInput.value);
+                if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
+                flashSaved();
+                // 디테일 패널 닫기
+                try { window.closeDetail?.(); } catch { /* ignore */ }
+            }
+        });
+    }
+    // 초기 렌더 직후 한 번 — 저장된 메모가 이미 임계값 넘는 경우 강조 적용
+    applyLimitWarn();
+    if (noteClear) {
+        noteClear.addEventListener("click", () => {
+            setAgentNote(agent, "");
+            if (noteInput) noteInput.value = "";
+            noteClear.setAttribute("hidden", "");
+            flashSaved();
+        });
+    }
 }
 
 // ── Tooltip (mouse hover on canvas) ──
@@ -1891,15 +2704,19 @@ export function onMouseMove(e) {
         const task = agent?.tasks?.find(t => t.id === hovSub.taskId);
         const parentTheme = S.visualAgents[hovSub.parentPid]?.theme;
         if (task && parentTheme) {
-            const statusLabel = task.status === "in_progress" ? "작업 중" : task.status === "completed" ? "완료" : "대기";
+            const lgS = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const labels = lgS === "en"
+                ? { head: "Sub agent", inProgress: "Working", done: "Done", pending: "Pending", parent: "Parent", status: "Status", activity: "Activity", desc: "Desc", waiting: "Wait", needs: "needs to complete" }
+                : { head: "서브 에이전트", inProgress: "작업 중", done: "완료", pending: "대기", parent: "부모", status: "상태", activity: "활동", desc: "설명", waiting: "대기", needs: "완료 필요" };
+            const statusLabel = task.status === "in_progress" ? labels.inProgress : task.status === "completed" ? labels.done : labels.pending;
             const statusColor = task.status === "in_progress" ? "#059669" : task.status === "completed" ? "#a1a1aa" : "#d97706";
             tt.innerHTML = `
-                <b style="color:${hovSub.color}">서브 에이전트 · ${esc((task.subject || "").substring(0, 25))}</b>
-                <div class="tt-row"><span class="tt-label">부모</span><span class="tt-value">${esc(parentTheme.name)} · ${esc(agent.projectName)}</span></div>
-                <div class="tt-row"><span class="tt-label">상태</span><span class="tt-value" style="color:${statusColor}">${statusLabel}</span></div>
-                ${task.activeForm ? `<div class="tt-row"><span class="tt-label">활동</span><span class="tt-value">${esc(task.activeForm.substring(0, 25))}</span></div>` : ""}
-                ${task.description ? `<div class="tt-row"><span class="tt-label">설명</span><span class="tt-value" style="max-width:160px;white-space:normal;font-size:11px;">${esc(task.description.substring(0, 60))}</span></div>` : ""}
-                ${task.blockedBy?.length ? `<div class="tt-row"><span class="tt-label">대기</span><span class="tt-value">Task ${task.blockedBy.join(", ")} 완료 필요</span></div>` : ""}
+                <b style="color:${hovSub.color}">${esc(labels.head)} · ${esc((task.subject || "").substring(0, 25))}</b>
+                <div class="tt-row"><span class="tt-label">${esc(labels.parent)}</span><span class="tt-value">${esc(parentTheme.name)} · ${esc(agent.projectName)}</span></div>
+                <div class="tt-row"><span class="tt-label">${esc(labels.status)}</span><span class="tt-value" style="color:${statusColor}">${statusLabel}</span></div>
+                ${task.activeForm ? `<div class="tt-row"><span class="tt-label">${esc(labels.activity)}</span><span class="tt-value">${esc(task.activeForm.substring(0, 25))}</span></div>` : ""}
+                ${task.description ? `<div class="tt-row"><span class="tt-label">${esc(labels.desc)}</span><span class="tt-value" style="max-width:160px;white-space:normal;font-size:11px;">${esc(task.description.substring(0, 60))}</span></div>` : ""}
+                ${task.blockedBy?.length ? `<div class="tt-row"><span class="tt-label">${esc(labels.waiting)}</span><span class="tt-value">Task ${task.blockedBy.join(", ")} ${esc(labels.needs)}</span></div>` : ""}
             `;
             tt.className = "";
             positionTooltip(tt, e.clientX, e.clientY);
@@ -1908,18 +2725,23 @@ export function onMouseMove(e) {
         S.canvas.style.cursor = "pointer";
         const meta = (STATUS_META[hov.isRunning ? hov.status : "offline"] || STATUS_META.idle);
         const theme = AGENT_THEMES[S.liveAgents.indexOf(hov) % AGENT_THEMES.length];
-        const taskText = getWorkText(hov) || (hov.currentTask ? hov.currentTask.subject : "대기 중");
+        const lgT = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const labels = lgT === "en"
+            ? { idle: "Idle", status: "Status", mem: "Memory", task: "Task", sub: "Sub", cwd: "Path", done: "Done", active: "active" }
+            : { idle: "대기 중", status: "상태", mem: "메모리", task: "태스크", sub: "서브", cwd: "경로", done: "완료", active: "개 활성" };
+        const taskText = getWorkText(hov) || (hov.currentTask ? hov.currentTask.subject : labels.idle);
         const memClass = hov.memoryMB > 1000 ? "mem-high" : hov.memoryMB > 500 ? "mem-mid" : "mem-low";
         const subCount = (hov.tasks || []).filter(t => t.status !== "completed").length;
+        const subValue = lgT === "en" ? `${subCount} ${labels.active}` : `${subCount}${labels.active}`;
         tt.innerHTML = `
             <b style="color:${theme.bodyDark}">${esc(theme.name)} · ${esc(hov.projectName)}</b>
             <div class="tt-row"><span class="tt-label">PID</span><span class="tt-value">${hov.pid}</span></div>
-            <div class="tt-row"><span class="tt-label">상태</span><span class="tt-value" style="color:${meta.color}">${meta.label}</span></div>
-            <div class="tt-row"><span class="tt-label">메모리</span><span class="tt-value ${memClass}">${hov.memoryMB}MB</span></div>
-            <div class="tt-row"><span class="tt-label">태스크</span><span class="tt-value">${esc(taskText)}</span></div>
-            ${subCount > 0 ? `<div class="tt-row"><span class="tt-label">서브</span><span class="tt-value" style="color:#059669">${subCount}개 활성</span></div>` : ""}
-            <div class="tt-row"><span class="tt-label">경로</span><span class="tt-value" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(hov.cwd || "")}</span></div>
-            <div class="tt-row"><span class="tt-label">완료</span><span class="tt-value">${hov.completedTasks}/${hov.totalTasks}</span></div>
+            <div class="tt-row"><span class="tt-label">${esc(labels.status)}</span><span class="tt-value" style="color:${meta.color}">${meta.label}</span></div>
+            <div class="tt-row"><span class="tt-label">${esc(labels.mem)}</span><span class="tt-value ${memClass}">${hov.memoryMB}MB</span></div>
+            <div class="tt-row"><span class="tt-label">${esc(labels.task)}</span><span class="tt-value">${esc(taskText)}</span></div>
+            ${subCount > 0 ? `<div class="tt-row"><span class="tt-label">${esc(labels.sub)}</span><span class="tt-value" style="color:#059669">${esc(subValue)}</span></div>` : ""}
+            <div class="tt-row"><span class="tt-label">${esc(labels.cwd)}</span><span class="tt-value" style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(hov.cwd || "")}</span></div>
+            <div class="tt-row"><span class="tt-label">${esc(labels.done)}</span><span class="tt-value">${hov.completedTasks}/${hov.totalTasks}</span></div>
         `;
         tt.className = "";
         tt.style.left = (e.clientX + 14) + "px";
@@ -1949,6 +2771,178 @@ function platformColor(platform) {
 }
 function platformLabel(platform) {
     return PLATFORM_META[platform]?.label || platform || "Unknown";
+}
+
+// ── Per-agent personal notes (localStorage, keyed by sessionId or pid) ──
+// Keyed by sessionId when available (stable across restarts) else PID.
+const NOTE_KEY = "ai-tycoon-agent-notes";
+function noteKeyFor(agent) {
+    return String(agent?.sessionId || agent?.pid || "");
+}
+function loadAllNotes() {
+    try { return JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+    catch { return {}; }
+}
+function getAgentNote(agent) {
+    const key = noteKeyFor(agent);
+    if (!key) return "";
+    return loadAllNotes()[key] || "";
+}
+function setAgentNote(agent, value) {
+    const key = noteKeyFor(agent);
+    if (!key) return;
+    const all = loadAllNotes();
+    const trimmed = String(value || "").slice(0, 500);
+    if (trimmed) all[key] = trimmed;
+    else delete all[key];
+    try { localStorage.setItem(NOTE_KEY, JSON.stringify(all)); } catch { /* quota */ }
+    // 캐시 무효화 후 hashtag 바 갱신 — 새로 박은 #tag 가 즉시 칩으로 등장하도록
+    invalidateTagCache();
+    try { renderAgentTagsBar(); } catch { /* DOM 없을 수 있음 */ }
+}
+
+// ── Note hashtag 추출 + 사이드바 칩 바 ──────────────────────────────
+// 사용자가 메모에 `#frontend` `#bug` 같이 적으면 자동으로 수집해서
+// 사이드바 상단에 클릭형 칩으로 노출. 클릭 시 검색창에 #tag 박아 필터.
+// 1글자 태그·중복은 제거하고 한/영/숫자/_ 만 허용.
+const TAG_REGEX = /#([A-Za-z0-9_가-힣]{2,32})/g;
+// 단일 메모 텍스트에서 unique 태그 배열만 뽑기 (순서 보존).
+// 카드/디테일 등 "이 에이전트의 태그만 보고 싶다" 케이스에서 재사용.
+export function extractTagsFromText(text) {
+    if (!text || typeof text !== "string") return [];
+    const out = [];
+    const seen = new Set();
+    let m; TAG_REGEX.lastIndex = 0;
+    while ((m = TAG_REGEX.exec(text)) !== null) {
+        const tag = m[1].toLowerCase();
+        if (seen.has(tag)) continue;
+        seen.add(tag);
+        out.push(tag);
+    }
+    return out;
+}
+// extractTagsFromNotes 캐시 — 한 render cycle 안에서 여러 곳 (사이드바/팔레트/디테일/empty state)
+// 이 동시 호출하는데 매번 풀 스캔하면 메모 100개 + 호출 5번 = 500회 정규식 실행이 됨.
+// setAgentNote 시 invalidate, 또는 1초 TTL 자동 expire.
+let _tagCache = null;
+let _tagCacheExpire = 0;
+export function invalidateTagCache() {
+    _tagCache = null;
+    _tagCacheExpire = 0;
+}
+export function extractTagsFromNotes() {
+    const now = Date.now();
+    if (_tagCache && now < _tagCacheExpire) {
+        return _tagCache;
+    }
+    const all = loadAllNotes();
+    const counts = new Map();
+    for (const text of Object.values(all)) {
+        if (!text || typeof text !== "string") continue;
+        const seenInThisNote = new Set(); // 한 메모에서 동일 태그 중복 카운트 방지
+        let m;
+        TAG_REGEX.lastIndex = 0;
+        while ((m = TAG_REGEX.exec(text)) !== null) {
+            const tag = m[1].toLowerCase();
+            if (seenInThisNote.has(tag)) continue;
+            seenInThisNote.add(tag);
+            counts.set(tag, (counts.get(tag) || 0) + 1);
+        }
+    }
+    // count 내림차순, 동일 카운트면 알파벳순
+    _tagCache = [...counts.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .map(([tag, count]) => ({ tag, count }));
+    _tagCacheExpire = now + 1000; // 1초 TTL — render cycle 약 500ms 라 한 사이클 안전 커버
+    return _tagCache;
+}
+// 태그별 stable 색상 — 같은 태그는 항상 같은 hue.
+// hsl() 만 쓰고 lightness 는 60% 부근으로 잡아 다크/라이트 모두 가독성 유지.
+function tagHueFor(tag) {
+    const s = String(tag || "");
+    let hash = 0;
+    for (let i = 0; i < s.length; i++) {
+        hash = ((hash << 5) - hash + s.charCodeAt(i)) | 0;
+    }
+    return Math.abs(hash) % 360;
+}
+function renderAgentTagsBar() {
+    const bar = document.getElementById("agent-tags-bar");
+    if (!bar) return;
+    const tags = extractTagsFromNotes().slice(0, 8); // 상위 8개만
+    if (tags.length === 0) {
+        bar.hidden = true;
+        bar.innerHTML = "";
+        return;
+    }
+    const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+    const label = lang === "en" ? "Tags" : "태그";
+    // 현재 검색어가 `#tag` 형태면 매칭 칩을 active 표시
+    const currentQ = String(S.agentSearchQuery || "").trim().toLowerCase();
+    const activeTag = currentQ.startsWith("#") ? currentQ.slice(1) : "";
+    const chips = tags.map(({ tag, count }) => {
+        const isActive = activeTag === tag;
+        const hue = tagHueFor(tag);
+        // CSS custom property 로 색상 주입 → 활성/비활성/hover 상태에서 각자 다르게 쓰임
+        const styleVar = `--tag-hue:${hue}`;
+        return `<button type="button" class="agent-tag-chip${isActive ? " is-active" : ""}" data-tag="${esc(tag)}" style="${styleVar}" title="#${esc(tag)} (${count})">
+            <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${esc(tag)}</span><span class="agent-tag-chip-count">${count}</span>
+        </button>`;
+    }).join("");
+    bar.innerHTML = `<span class="agent-tags-bar-label">${esc(label)}</span>${chips}`;
+    bar.hidden = false;
+    bar.querySelectorAll("[data-tag]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const tag = btn.dataset.tag || "";
+            if (!tag) return;
+            const query = `#${tag}`;
+            const input = document.getElementById("agent-search");
+            // 이미 활성 → 토글로 해제
+            if (activeTag === tag.toLowerCase()) {
+                if (typeof window.clearAgentSearch === "function") window.clearAgentSearch();
+                return;
+            }
+            if (input) input.value = query;
+            if (typeof window.setAgentSearch === "function") {
+                window.setAgentSearch(query);
+            } else {
+                S.agentSearchQuery = query;
+                updatePanel();
+            }
+        });
+    });
+}
+
+/** Compare current memoryMB against ~30 s ago to spot trends.
+ *  Returns { dir: "up"|"down"|"flat", deltaMB: number }. */
+function memoryTrend(agent) {
+    const hist = S.memoryHistory?.[agent.pid] || [];
+    if (hist.length < 4) return { dir: "flat", deltaMB: 0 };
+    const cur = hist[hist.length - 1]?.mb ?? agent.memoryMB ?? 0;
+    // Walk back ~30 seconds. Polls run every 2 s → roughly 15 samples back.
+    const targetTs = Date.now() - 30000;
+    let past = hist[0];
+    for (let i = hist.length - 1; i >= 0; i--) {
+        if ((hist[i].ts || 0) <= targetTs) { past = hist[i]; break; }
+    }
+    const delta = cur - (past?.mb || cur);
+    // Threshold: 30 MB is the noise floor below which we call it "flat"
+    if (Math.abs(delta) < 30) return { dir: "flat", deltaMB: delta };
+    return { dir: delta > 0 ? "up" : "down", deltaMB: delta };
+}
+
+/** Stable HSL color for a project name — same name always → same dot. */
+function projectColor(name) {
+    if (!name) return "#94a3b8";
+    let hash = 0;
+    const s = String(name);
+    for (let i = 0; i < s.length; i++) {
+        hash = (hash * 31 + s.charCodeAt(i)) | 0;
+    }
+    // Avoid muddy/blueish tones near the agent theme accents; bias to warm + cool spread
+    const hue = Math.abs(hash) % 360;
+    // Mid-saturation, slightly desaturated lightness keeps the dot readable on both themes
+    return `hsl(${hue}, 62%, 56%)`;
 }
 function statusLabelI18n(statusKey) {
     const key = `status.${statusKey}`;
@@ -2000,10 +2994,63 @@ export function refreshInsights() {
         }
         moodEl.dataset.tone = tone;
         moodEl.innerHTML = `<span class="insights-mood-emoji">${emoji}</span><span>${esc(label)}</span><span class="insights-mood-num tabular-nums">${tc} ${lang === "en" ? "tasks" : "태스크"}</span>`;
+        // 활성 직원이 있을 때 mood-line 클릭 가능 — 가장 활발한 친구로 포커스 + 모달 닫기
+        moodEl.style.cursor = activeCount > 0 ? "pointer" : "";
+        moodEl.title = activeCount > 0
+            ? (lang === "en" ? "Click to focus the most active agent" : "클릭하면 가장 활발한 직원으로 포커스")
+            : "";
+        moodEl.onclick = activeCount > 0 ? () => {
+            try {
+                const top = [...agents].filter(a => a.isRunning).sort(agentSortByLivePriority)[0];
+                if (!top) return;
+                S.selectedPid = top.pid;
+                S.detailPid = top.pid;
+                S.directorFocusPid = top.pid;
+                S.directorMode = true;
+                document.getElementById("insights-overlay")?.classList?.remove("is-visible");
+                setTimeout(() => {
+                    const ov = document.getElementById("insights-overlay");
+                    if (ov) ov.hidden = true;
+                }, 280);
+            } catch { /* ignore */ }
+        } : null;
     }
 
     if (el("insights-agents")) el("insights-agents").textContent = activeCount;
-    if (el("insights-completed")) el("insights-completed").textContent = totalCompleted;
+    if (el("insights-completed")) {
+        // 완료 태스크 옆에 어제와 비교한 ±N 칩. 처음 사용 등으로 어제 데이터 없으면 숨김.
+        const completedEl = el("insights-completed");
+        const yest = yesterdayStats();
+        const yc = yest?.completedMax || 0;
+        const todayC = todayStats()?.completedMax || 0;
+        const delta = todayC - yc;
+        const langNow = (window.aiTycoonI18n?.getLang?.() || "ko");
+        const yLabel = langNow === "en" ? "vs yesterday" : "어제 대비";
+        // 어제 데이터 자체가 없으면 칩 숨김
+        if (!yest) {
+            completedEl.textContent = String(totalCompleted);
+        } else {
+            const sign = delta > 0 ? "+" : (delta < 0 ? "" : "±");
+            const tone = delta > 0 ? "up" : (delta < 0 ? "down" : "flat");
+            completedEl.innerHTML = `${totalCompleted}<span id="insights-completed-delta" class="insights-delta" data-tone="${tone}" title="${esc(yLabel)}: ${sign}${delta}">${sign}${delta}</span>`;
+        }
+    }
+    // 라벨 옆 작은 '7d N개' 칩 — 이번 주(최근 7일) 누적 완료 태스크
+    const weekChip = el("insights-week-chip");
+    if (weekChip) {
+        try {
+            const days = recentDays(7);
+            const weekSum = days.reduce((s, d) => s + (d?.completedMax || 0), 0);
+            if (weekSum > 0) {
+                weekChip.hidden = false;
+                const langW = (window.aiTycoonI18n?.getLang?.() || "ko");
+                weekChip.textContent = langW === "en" ? `7d · ${weekSum}` : `7일 · ${weekSum}`;
+                weekChip.title = langW === "en" ? `Last 7 days: ${weekSum} completed` : `최근 7일 누적: ${weekSum}개 완료`;
+            } else {
+                weekChip.hidden = true;
+            }
+        } catch { /* stats 가 비어도 안전 */ }
+    }
     if (el("insights-ongoing")) el("insights-ongoing").textContent = totalOngoing;
     if (el("insights-ram")) {
         el("insights-ram").innerHTML = totalRam.toLocaleString() + '<span class="insights-unit">MB</span>';
@@ -2048,6 +3095,70 @@ export function refreshInsights() {
                     </div>
                 `;
             }).join("");
+        }
+    }
+
+    // Today's MVP — agent with the highest combined score:
+    //   score = completedTasks*3 + recent work-event count + (running ? 1 : 0)
+    // Only shown when there's at least one agent that actually scored something
+    const mvpSection = el("insights-mvp-section");
+    const mvpEl = el("insights-mvp");
+    if (mvpSection && mvpEl) {
+        const eventCounts = new Map();
+        (S.workEvents || []).forEach(ev => {
+            const pid = String(ev?.pid || "");
+            if (!pid) return;
+            eventCounts.set(pid, (eventCounts.get(pid) || 0) + 1);
+        });
+        const scored = agents.map(a => {
+            const ev = eventCounts.get(String(a.pid)) || 0;
+            const score = (a.completedTasks || 0) * 3 + ev + (a.isRunning ? 1 : 0);
+            return { a, ev, score };
+        }).filter(x => x.score > 0)
+          .sort((a, b) => b.score - a.score);
+
+        if (scored.length === 0) {
+            mvpSection.hidden = true;
+            mvpEl.innerHTML = "";
+        } else {
+            mvpSection.hidden = false;
+            const winner = scored[0];
+            const a = winner.a;
+            const theme = getAgentTheme(a);
+            const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
+            const project = a.projectName || a.platformName || "—";
+            const initial = (theme.name || "?").charAt(0);
+            const completedLabel = lang === "en" ? "completed" : "완료";
+            const eventsLabel = lang === "en" ? "events" : "이벤트";
+            const reasonText = lang === "en"
+                ? "Most active today"
+                : "오늘 가장 바쁘게 일했어요";
+            mvpEl.innerHTML = `
+                <span class="insights-mvp-crown" aria-hidden="true">
+                    <iconify-icon icon="solar:cup-star-bold"></iconify-icon>
+                </span>
+                <span class="insights-mvp-avatar" style="background:${theme.body};color:#fff">${esc(initial)}</span>
+                <div class="insights-mvp-info">
+                    <div class="insights-mvp-name">${esc(theme.name)}</div>
+                    <div class="insights-mvp-project">${esc(project)}</div>
+                    <div class="insights-mvp-reason">${esc(reasonText)}</div>
+                </div>
+                <div class="insights-mvp-stats">
+                    <span><strong>${a.completedTasks || 0}</strong> ${esc(completedLabel)}</span>
+                    <span><strong>${winner.ev}</strong> ${esc(eventsLabel)}</span>
+                </div>
+            `;
+            mvpEl.onclick = () => {
+                S.selectedPid = a.pid;
+                S.detailPid = a.pid;
+                S.directorFocusPid = a.pid;
+                S.directorMode = true;
+                document.getElementById("insights-overlay")?.classList?.remove("is-visible");
+                setTimeout(() => {
+                    const overlay = document.getElementById("insights-overlay");
+                    if (overlay) overlay.hidden = true;
+                }, 280);
+            };
         }
     }
 
@@ -2237,8 +3348,11 @@ export function refreshInsights() {
                 <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#10b981"></span>${esc(weekLabel)} <strong>${v}</strong></div>
                 <div class="chart-tooltip-row"><span class="chart-tooltip-dot" style="background:#ff8a4c"></span>${esc(todayLabel)} <strong>${todayV}</strong></div>
             `;
+            const nowAttrs = isNow
+                ? ` aria-current="true" aria-label="${esc(`${hourLabel} · ${lang === "en" ? "Now" : "지금"}`)}"`
+                : "";
             return `
-                <div class="insights-hour-cell${isNow ? " is-now" : ""}" data-tooltip="${esc(tooltip)}">
+                <div class="insights-hour-cell${isNow ? " is-now" : ""}" data-tooltip="${esc(tooltip)}"${nowAttrs}>
                     <div class="insights-hour-bar" style="--intensity:${intensity.toFixed(2)}"></div>
                     <div class="insights-hour-dot" style="opacity:${dotSize.toFixed(2)}"></div>
                     <div class="insights-hour-label">${h % 3 === 0 ? String(h).padStart(2, "0") : "·"}</div>

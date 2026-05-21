@@ -1,0 +1,25 @@
+# 모든 텍스트 파일은 git 내부적으로 LF 로 저장, checkout 시 OS 별 자동 변환.
+# 그동안 매 commit 마다 출력되던 CRLF/LF 경고를 정리.
+* text=auto eol=lf
+
+# Windows-only 스크립트 — CRLF 유지 (만일 추가될 경우 대비)
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# 이미지·아이콘은 binary — 줄 변환 안 함
+*.png binary
+*.ico binary
+*.svg text eol=lf
+*.webmanifest text eol=lf
+
+# Markdown / JS / CSS / HTML / JSON 은 LF 강제
+*.md text eol=lf
+*.js text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf

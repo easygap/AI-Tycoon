@@ -2,7 +2,7 @@
 //  AI TYCOON — Entry Point (init, loop, input, visual AI)
 // ============================================================
 
-import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts, bossQueueEntry, bossQueueAdd, bossQueueRemove, bossQueueResolve } from "./state.js";
+import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts, spawnYawn, bossQueueEntry, bossQueueAdd, bossQueueRemove, bossQueueResolve } from "./state.js";
 import {
     TILE, COLS, ROWS,
     ZOOM_MIN, ZOOM_MAX, ZOOM_STEP,
@@ -14,7 +14,7 @@ import {
 } from "./constants.js";
 import { connectWS, setConn } from "./ws.js";
 import { render } from "./renderer.js";
-import { updatePanel, updateDetailPanel, updateBossQueueUI, updateLiveHud, onMouseMove } from "./panel.js";
+import { updatePanel, updateDetailPanel, updateBossQueueUI, updateLiveHud, onMouseMove, invalidateTagCache } from "./panel.js";
 import { initPixiOverlay, resizePixiOverlay, renderPixiOverlay, getPixiOverlayDebug } from "./pixiOverlay.js";
 import { compareAgentPriority } from "./agentPriority.js";
 import { applyToDom as applyI18nToDom, onLangChange, getLang, t } from "./i18n.js";
@@ -31,6 +31,10 @@ import "./toasts.js";
 import "./tour.js";
 import "./crossTab.js";
 import "./konami.js";
+import "./awaySummary.js";
+import "./commandPalette.js";
+import "./privacyMode.js";
+import "./standupExport.js";
 
 // ── Console branding (devtools welcome) ──
 if (typeof console !== "undefined") {
@@ -49,6 +53,12 @@ if (typeof window !== "undefined") {
     window.aiTycoonOverlayDebug = getPixiOverlayDebug;
     // Expose shared state for one-shot helpers (toasts, mini-map, etc.)
     window.S = S;
+    // index.html 의 cycleAgentFocus 등 인라인 핸들러에서 즉시 리렌더 호출할 수 있도록.
+    // ESM import 만으로는 window scope 에 노출되지 않아 명시적으로 바인딩.
+    window.updatePanel = updatePanel;
+    window.updateDetailPanel = updateDetailPanel;
+    // 태그 매니저 (settings) 가 localStorage 직접 수정하는 케이스용 — invalidate 후 리렌더
+    window.aiTycoonInvalidateTagCache = invalidateTagCache;
 }
 
 const PANEL_FOCUSABLE = [
@@ -136,7 +146,10 @@ function isTypingTarget(target) {
 function handleGlobalShortcuts(event) {
     const key = event.key;
     const typing = isTypingTarget(event.target);
-    if ((key === "/" && !typing) || ((event.ctrlKey || event.metaKey) && key.toLowerCase() === "k")) {
+    // "/" focuses the side-panel search box. Ctrl/Cmd+K is owned by the
+    // command palette (see js/commandPalette.js) and is no longer routed
+    // here so the two shortcuts feel like distinct tools.
+    if (key === "/" && !typing) {
         event.preventDefault();
         window.focusAgentSearch?.();
         return;
@@ -307,11 +320,23 @@ function init() {
         updatePanel();
         updateLiveHud();
     };
+    // 검색 입력 디바운스 — 한글 IME 와 빠른 타이핑 모두 매 키스트로크마다 풀 패널 렌더링이
+    // 부담스러워서 120ms 묶음 처리. 빈 문자열은 즉시 반영 (사용자가 X 버튼 누른 경우).
+    let _searchDebounceTimer = null;
     window.setAgentSearch = (value) => {
-        S.agentSearchQuery = String(value || "");
-        localStorage.setItem("ai-tycoon-agent-search", S.agentSearchQuery);
-        updatePanel();
-        updateLiveHud();
+        const str = String(value || "");
+        S.agentSearchQuery = str;
+        try { localStorage.setItem("ai-tycoon-agent-search", str); } catch { /* ignore */ }
+        if (_searchDebounceTimer) clearTimeout(_searchDebounceTimer);
+        if (str === "") {
+            updatePanel();
+            updateLiveHud();
+            return;
+        }
+        _searchDebounceTimer = setTimeout(() => {
+            updatePanel();
+            updateLiveHud();
+        }, 120);
     };
     window.clearAgentSearch = () => {
         S.agentSearchQuery = "";
@@ -340,7 +365,132 @@ function init() {
         focusInput();
         requestAnimationFrame(focusInput);
     };
+
+    // ─── 검색 히스토리 (최근 5개) ──────────────────────────────────────
+    // 검색어를 commit 하는 시점(Enter 또는 blur)에 저장 → 빈 입력 + 포커스 시 칩으로 노출.
+    // 의도: 자주 쓰는 프로젝트명/메모 키워드를 한 번 친 후 재타이핑 부담 해소.
+    const SEARCH_HISTORY_KEY = "ai-tycoon-search-history";
+    const SEARCH_HISTORY_MAX = 5;
+    function readSearchHistory() {
+        try {
+            const raw = localStorage.getItem(SEARCH_HISTORY_KEY);
+            if (!raw) return [];
+            const arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr.filter(s => typeof s === "string" && s.trim()) : [];
+        } catch { return []; }
+    }
+    function writeSearchHistory(list) {
+        try { localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(list.slice(0, SEARCH_HISTORY_MAX))); }
+        catch { /* quota or no storage */ }
+    }
+    window.aiTycoonSaveSearchTerm = (term) => {
+        const trimmed = String(term || "").trim();
+        if (!trimmed) return;
+        // 너무 짧으면 (1글자) 무시 — 의미 없는 노이즈
+        if (trimmed.length < 2) return;
+        const list = readSearchHistory().filter(s => s.toLowerCase() !== trimmed.toLowerCase());
+        list.unshift(trimmed);
+        writeSearchHistory(list);
+        renderSearchHistory();
+    };
+    window.aiTycoonClearSearchHistory = () => {
+        try { localStorage.removeItem(SEARCH_HISTORY_KEY); } catch { /* ignore */ }
+        renderSearchHistory();
+    };
+    function renderSearchHistory() {
+        const wrap = document.getElementById("agent-search-history");
+        const input = document.getElementById("agent-search");
+        if (!wrap || !input) return;
+        const list = readSearchHistory();
+        const focused = document.activeElement === input;
+        const empty = !input.value;
+        // 포커스 + 빈 입력 + 히스토리 있을 때만 노출
+        if (!focused || !empty || list.length === 0) {
+            wrap.hidden = true;
+            wrap.innerHTML = "";
+            return;
+        }
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const recentLabel = lang === "en" ? "Recent" : "최근";
+        const clearLabel = lang === "en" ? "Clear" : "전체 지우기";
+        const escAttr = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        const chips = list.map(term =>
+            `<button type="button" class="agent-search-history-chip" data-term="${escAttr(term)}" title="${escAttr(term)}">${escAttr(term)}</button>`
+        ).join("");
+        wrap.innerHTML = `
+            <span class="agent-search-history-label">${recentLabel}</span>
+            ${chips}
+            <button type="button" class="agent-search-history-clear" data-search-history-clear>${clearLabel}</button>
+        `;
+        wrap.hidden = false;
+        wrap.querySelectorAll(".agent-search-history-chip").forEach(btn => {
+            btn.addEventListener("mousedown", (e) => e.preventDefault()); // blur 방지
+            btn.addEventListener("click", () => {
+                const term = btn.dataset.term || "";
+                input.value = term;
+                window.setAgentSearch(term);
+                // commit 도 즉시 — 다시 history 상단으로 끌어올리기
+                window.aiTycoonSaveSearchTerm(term);
+                input.focus({ preventScroll: true });
+                wrap.hidden = true;
+            });
+        });
+        wrap.querySelector("[data-search-history-clear]")?.addEventListener("mousedown", (e) => e.preventDefault());
+        wrap.querySelector("[data-search-history-clear]")?.addEventListener("click", () => {
+            window.aiTycoonClearSearchHistory();
+            input.focus({ preventScroll: true });
+        });
+    }
+    // 포커스/블러/입력 시 재렌더
+    document.addEventListener("DOMContentLoaded", () => {
+        const input = document.getElementById("agent-search");
+        if (!input) return;
+        input.addEventListener("focus", renderSearchHistory);
+        input.addEventListener("blur", () => {
+            // 클릭 핸들러가 먼저 잡을 시간 확보
+            setTimeout(() => {
+                // 검색어가 비어있지 않고 사용자가 떠나면 commit
+                const val = (input.value || "").trim();
+                if (val) window.aiTycoonSaveSearchTerm(val);
+                renderSearchHistory();
+            }, 120);
+        });
+        input.addEventListener("input", renderSearchHistory);
+    });
+    // Enter 키 commit 도 핸들러에서 추가로 호출하기 위해 노출 (handleAgentSearchKey 에서 사용)
+    window.aiTycoonRenderSearchHistory = renderSearchHistory;
     window.setSortOrder = (s) => { S.sortOrder = s; localStorage.setItem("ai-tycoon-sort", s); updatePanel(); };
+    // Compact agents list toggle — slim, single-line cards for power users
+    window.toggleAgentsCompact = () => {
+        const cur = localStorage.getItem("ai-tycoon-agents-compact") === "true";
+        const next = !cur;
+        localStorage.setItem("ai-tycoon-agents-compact", next ? "true" : "false");
+        document.body.classList.toggle("agents-compact", next);
+        const btn = document.getElementById("agents-compact-toggle");
+        if (btn) {
+            btn.setAttribute("aria-pressed", next ? "true" : "false");
+            btn.classList.toggle("is-active", next);
+        }
+        try {
+            const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+            window.aiTycoonToasts?.show?.("info",
+                next ? (lang === "en" ? "Compact view" : "컴팩트 보기 ON")
+                     : (lang === "en" ? "Default view" : "기본 보기"),
+                next ? (lang === "en" ? "Slim agent cards" : "에이전트 카드를 좁게 표시") : "");
+        } catch { /* ignore */ }
+    };
+    // Apply initial compact state on boot
+    (function bootAgentsCompact() {
+        const compact = localStorage.getItem("ai-tycoon-agents-compact") === "true";
+        if (compact) {
+            document.body.classList.add("agents-compact");
+            const btn = document.getElementById("agents-compact-toggle");
+            if (btn) {
+                btn.setAttribute("aria-pressed", "true");
+                btn.classList.add("is-active");
+            }
+        }
+    })();
     window.setPixiDensity = (mode = "auto") => {
         if (!PIXI_DENSITY_MODES.includes(mode)) return;
         S.pixiDensity = mode;
@@ -692,6 +842,16 @@ function updateVisuals() {
         if (v.speechTimer > 0) v.speechTimer--;
         // Clear chatPartner when speech ends
         if (v.chatPartner && v.speechTimer <= 0) v.chatPartner = null;
+
+        // Periodic yawn for resting agents (idle or offline) — about every 8-15s per agent
+        if ((status === "idle" || status === "offline") && !v.moving) {
+            // pid + animTick produces a stable but spread schedule across agents
+            const seed = (parseInt(String(agent.pid).replace(/\D/g, "") || "1", 10)) % 173;
+            const period = 480 + seed * 3;        // ~8-13 seconds at 60 fps
+            if (v.animTick > 60 && (v.animTick % period) === 0) {
+                spawnYawn(v.x, v.y - 14);
+            }
+        }
 
         // React to status change
         if (status !== v.prevStatus) {
