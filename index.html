@@ -1313,20 +1313,31 @@
         let notes;
         try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
         catch { notes = {}; }
-        // 태그 별 카운트
-        const counts = new Map();
-        for (const text of Object.values(notes)) {
+        // 현재 살아있는 에이전트의 key 집합 — orphan 여부 판정용
+        const S = window.S;
+        const liveKeys = new Set(
+            (S?.liveAgents || []).map(a => String(a.sessionId || a.pid || "")).filter(Boolean)
+        );
+        // 태그 → { count, orphanCount } 로 분리 카운트
+        const counts = new Map(); // tag → { total, orphan }
+        let orphanNoteKeys = []; // orphan note 의 key 모음 (일괄 정리용)
+        for (const [noteKey, text] of Object.entries(notes)) {
             if (typeof text !== "string") continue;
+            const isOrphan = !liveKeys.has(noteKey);
+            if (isOrphan) orphanNoteKeys.push(noteKey);
             const seen = new Set();
             let m; TAG_RE.lastIndex = 0;
             while ((m = TAG_RE.exec(text)) !== null) {
                 const tag = m[1].toLowerCase();
                 if (seen.has(tag)) continue;
                 seen.add(tag);
-                counts.set(tag, (counts.get(tag) || 0) + 1);
+                const c = counts.get(tag) || { total: 0, orphan: 0 };
+                c.total++;
+                if (isOrphan) c.orphan++;
+                counts.set(tag, c);
             }
         }
-        const tags = [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+        const tags = [...counts.entries()].sort((a, b) => b[1].total - a[1].total || a[0].localeCompare(b[0]));
         if (tags.length === 0) {
             container.innerHTML = `<p class="settings-help settings-tags-empty">${t("settings.tagsEmpty")}</p>`;
             return;
@@ -1338,18 +1349,41 @@
             return Math.abs(h) % 360;
         };
         const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
-        container.innerHTML = tags.map(([tag, count]) => {
+        const orphanLabel = lang === "en" ? "offline" : "오프라인";
+        const cleanupBtnLabel = lang === "en"
+            ? `Clean up offline notes (${orphanNoteKeys.length})`
+            : `오프라인 에이전트 메모 정리 (${orphanNoteKeys.length}개)`;
+        // 상단 정리 버튼 (orphan note 가 1개 이상 있을 때만 노출)
+        const cleanupBtn = orphanNoteKeys.length > 0
+            ? `<button type="button" class="settings-tags-cleanup" data-cleanup-orphans>
+                <iconify-icon icon="solar:eraser-linear" aria-hidden="true"></iconify-icon>
+                <span>${escA(cleanupBtnLabel)}</span>
+            </button>`
+            : "";
+        container.innerHTML = cleanupBtn + tags.map(([tag, c]) => {
             const hue = hueFor(tag);
-            return `<div class="settings-tag-row" style="--tag-hue:${hue}">
+            const allOrphan = c.orphan === c.total && c.total > 0;
+            const someOrphan = c.orphan > 0 && c.orphan < c.total;
+            const orphanBadge = allOrphan
+                ? `<span class="settings-tag-orphan-badge" title="${escA(lang === "en" ? "Every note with this tag is from an offline agent" : "이 태그의 모든 메모가 오프라인 에이전트의 것")}">${escA(orphanLabel)}</span>`
+                : someOrphan
+                    ? `<span class="settings-tag-orphan-badge is-partial" title="${escA(lang === "en" ? "Partly offline" : "일부 오프라인")}">${c.orphan}/${c.total} ${escA(orphanLabel)}</span>`
+                    : "";
+            return `<div class="settings-tag-row${allOrphan ? " is-all-orphan" : ""}" style="--tag-hue:${hue}">
                 <span class="agent-tag-chip" style="--tag-hue:${hue}" aria-hidden="true">
-                    <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${escA(tag)}</span><span class="agent-tag-chip-count">${count}</span>
+                    <span class="agent-tag-chip-hash">#</span><span class="agent-tag-chip-name">${escA(tag)}</span><span class="agent-tag-chip-count">${c.total}</span>
                 </span>
+                ${orphanBadge}
                 <div class="settings-tag-actions">
                     <button type="button" class="settings-tag-rename" data-tag-rename="${escA(tag)}">${t("settings.tagsRename")}</button>
                     <button type="button" class="settings-tag-delete" data-tag-delete="${escA(tag)}">${t("settings.tagsDelete")}</button>
                 </div>
             </div>`;
         }).join("");
+        // orphan 일괄 정리 버튼 핸들러
+        container.querySelector("[data-cleanup-orphans]")?.addEventListener("click", () => {
+            beginCleanupOrphans(orphanNoteKeys);
+        });
         // 이벤트 위임 — 행 안에서 인라인 입력/확인으로 swap (native prompt/confirm 안 씀)
         container.querySelectorAll("[data-tag-rename]").forEach(btn => {
             btn.addEventListener("click", () => beginInlineRename(btn));
@@ -1488,6 +1522,60 @@
         window.aiTycoonToasts?.show?.("info",
             t("settings.tagsDeleteDone"),
             `#${tag} · ${changed}`);
+        try {
+            window.updatePanel?.();
+            window.updateDetailPanel?.();
+        } catch { /* ignore */ }
+        renderTagsManager();
+    }
+    // orphan note 일괄 정리 — 인라인 확인 (native confirm 안 씀)
+    function beginCleanupOrphans(orphanKeys) {
+        const container = document.getElementById("settings-tags-manager");
+        const btn = container?.querySelector("[data-cleanup-orphans]");
+        if (!btn) return;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const yesLabel = lang === "en" ? `Yes, delete ${orphanKeys.length}` : `예, ${orphanKeys.length}개 지우기`;
+        const noLabel = lang === "en" ? "No" : "아니오";
+        const promptText = lang === "en"
+            ? `Remove all notes from offline agents (${orphanKeys.length})? Their tags will go away too. This cannot be undone.`
+            : `오프라인 에이전트의 메모 ${orphanKeys.length}개를 모두 지울까요? 메모에 적힌 태그도 함께 사라지며 되돌릴 수 없습니다.`;
+        const escA = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+        const original = btn.outerHTML;
+        // 버튼을 confirm strip 으로 swap
+        const wrap = document.createElement("div");
+        wrap.className = "settings-tags-cleanup-confirm";
+        wrap.innerHTML = `
+            <span class="settings-tag-delete-prompt">${escA(promptText)}</span>
+            <button type="button" class="settings-tag-delete-yes">${escA(yesLabel)}</button>
+            <button type="button" class="settings-tag-delete-no">${escA(noLabel)}</button>
+        `;
+        btn.replaceWith(wrap);
+        const restore = () => renderTagsManager();
+        wrap.querySelector(".settings-tag-delete-no")?.addEventListener("click", restore);
+        wrap.querySelector(".settings-tag-delete-no")?.focus({ preventScroll: true });
+        wrap.querySelector(".settings-tag-delete-yes")?.addEventListener("click", () => {
+            applyOrphanCleanup(orphanKeys);
+        });
+        wrap.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") { e.preventDefault(); restore(); }
+        });
+    }
+    function applyOrphanCleanup(orphanKeys) {
+        const t = (k) => window.aiTycoonI18n?.t?.(k) || k;
+        const lang = window.aiTycoonI18n?.getLang?.() || "ko";
+        const NOTE_KEY = "ai-tycoon-agent-notes";
+        let notes;
+        try { notes = JSON.parse(localStorage.getItem(NOTE_KEY) || "{}") || {}; }
+        catch { notes = {}; }
+        let removed = 0;
+        for (const k of orphanKeys) {
+            if (notes[k] !== undefined) { delete notes[k]; removed++; }
+        }
+        try { localStorage.setItem(NOTE_KEY, JSON.stringify(notes)); } catch { /* quota */ }
+        window.aiTycoonInvalidateTagCache?.();
+        window.aiTycoonToasts?.show?.("info",
+            lang === "en" ? "Offline notes cleaned up" : "오프라인 메모 정리 완료",
+            lang === "en" ? `${removed} notes removed` : `${removed}개 메모 삭제됨`);
         try {
             window.updatePanel?.();
             window.updateDetailPanel?.();
