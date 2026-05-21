@@ -5,6 +5,20 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
+_(준비 중)_
+
+## [1.4.9] — 2026-05-21
+
+> v1.4.8 직후 영문 모드 사용자가 보던 한글 누락 버그를 정리.
+>
+> 사용자 데이터 호환: 변경 없음. SW 캐시: v42 → v43.
+>
+> **i18n 완성**
+> - **팀 레이더 + 모바일 priority dock 26개 신규 i18n 키** — README 영문 섹션은 i18n 130+ 라고
+>   광고했지만 실제론 panel.js 의 두 영역이 한글 그대로였음. 영문 모드 사용자가 모바일에서
+>   접속하면 사이드바·dock 헤더에 한글 섞임 → 신뢰성 깨짐. 이제 KO/EN 양쪽 정상 표시.
+>   카운트는 `{n}` placeholder 치환 패턴 사용.
+
 ### Iteration 225 — 팀 레이더 + 모바일 dock i18n 완성 (영문 모드 한글 누락 fix)
 - iter 224 의 코드 리뷰가 보고한 "hardcoded Korean strings (low)" 중 가장 영향 큰 영역 정리
 - README 영문 섹션은 i18n 키 130+ 라고 광고했지만 실제론 panel.js 의 모바일 dock + 팀 레이더가
