@@ -5,7 +5,19 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 221 — README 영문 섹션 v1.4.6 동기화
+- 영문 bottom 섹션 (English overview) 이 v1.4.0 이전 정보로 굳어 있어 갱신:
+  - 업적 21 → **23**, i18n 키 70+ → **130+** (실제 count 반영)
+  - 명령 팔레트 22 commands → **35+ commands** + dynamic `#tag` filters 추가
+  - 메모: **hashtag autocomplete** (↑↓/Enter/Tab) + Cmd+S/Cmd+Enter 단축키 명시
+  - 메모 hashtag organization 섹션 — 8 touchpoints 강조
+  - 모바일 responsive bullet 추가 (≤768px, collapsible sidebar, no document scroll)
+  - 키보드 navigation 디테일 (`j/k` cycle, `N` note 등)
+- Run 섹션에 `npm run lint` / `npm run icons` 추가, smoke count 26 → 38, Node 18/20/22 CI 명시
+- Docs 섹션에 ARCHITECTURE / SCREENSHOTS / SECURITY / CODE_OF_CONDUCT 4종 link
+- **신규: Reliability 섹션** — 8 verification rounds + 15 bug fixes 강조 (v1.4.x 패치 라인 신뢰성 정보)
+
+## [1.4.6] — 2026-05-21
 
 ## [1.4.6] — 2026-05-21
 
