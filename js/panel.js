@@ -1212,16 +1212,16 @@ function renderMobilePriorityDock() {
     if (active.length === 0) {
         dock.innerHTML = `
             <div class="mobile-dock-head">
-                <span>대기 중</span>
-                <em>0명</em>
+                <span>${esc(i18n("mobileDock.waitingHead"))}</span>
+                <em>${esc(i18n("mobileDock.zeroCount"))}</em>
             </div>
-            <div class="mobile-dock-empty">AI 세션 감지 대기</div>
+            <div class="mobile-dock-empty">${esc(i18n("mobileDock.empty"))}</div>
             <div class="mobile-dock-actions">
                 <button type="button" class="mobile-dock-action" data-mobile-action="search">
-                    <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon><span>검색</span>
+                    <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("mobileDock.actionSearch"))}</span>
                 </button>
                 <button type="button" class="mobile-dock-action" data-mobile-action="list">
-                    <iconify-icon icon="solar:list-check-linear" aria-hidden="true"></iconify-icon><span>목록</span>
+                    <iconify-icon icon="solar:list-check-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("mobileDock.actionList"))}</span>
                 </button>
             </div>`;
     } else {
@@ -1239,7 +1239,7 @@ function renderMobilePriorityDock() {
                     class="mobile-priority-card${agent.needsReview ? " needs-review" : ""}${pinnedAgent ? " is-pinned" : ""}"
                     data-action="${esc(action.key)}"
                     data-pid="${esc(agent.pid)}"
-                    aria-label="${esc(`${theme.name}, ${agent.projectName || platform.label}, ${action.label}, ${work}${pinnedAgent ? ", 고정됨" : ""}`)}"
+                    aria-label="${esc(`${theme.name}, ${agent.projectName || platform.label}, ${action.label}, ${work}${pinnedAgent ? `, ${i18n("mobileDock.cardPinnedAria")}` : ""}`)}"
                     style="--agent-color:${theme.body}; --status-color:${meta.color};">
                     <span class="mobile-priority-avatar" aria-hidden="true">${esc(theme.name.slice(0, 1))}</span>
                     <span class="mobile-priority-copy">
@@ -1247,7 +1247,7 @@ function renderMobilePriorityDock() {
                             <strong>${esc(theme.name)}</strong>
                             <em>${esc(platform.badge)}</em>
                             <span data-tone="${esc(action.tone)}">${esc(action.label)}</span>
-                            ${agent.needsReview ? `<b>검토</b>` : ""}
+                            ${agent.needsReview ? `<b>${esc(i18n("mobileDock.cardReviewBadge"))}</b>` : ""}
                         </span>
                         <span class="mobile-priority-work">${esc(work)}</span>
                         <span class="mobile-priority-progress" aria-hidden="true"><i style="width:${pct}%"></i></span>
@@ -1258,19 +1258,19 @@ function renderMobilePriorityDock() {
 
         dock.innerHTML = `
             <div class="mobile-dock-head">
-                <span>지금 볼 일</span>
-                <em class="tabular-nums">활성 ${active.length}</em>
-                ${pinned.length ? `<em class="pinned-mobile-count tabular-nums">고정 ${pinned.length}</em>` : ""}
-                <em class="tabular-nums">작업 ${working.length}</em>
-                ${review.length ? `<b class="tabular-nums">검토 ${review.length}</b>` : ""}
+                <span>${esc(i18n("mobileDock.headTitle"))}</span>
+                <em class="tabular-nums">${esc(i18n("mobileDock.active"))} ${active.length}</em>
+                ${pinned.length ? `<em class="pinned-mobile-count tabular-nums">${esc(i18n("mobileDock.pinned"))} ${pinned.length}</em>` : ""}
+                <em class="tabular-nums">${esc(i18n("mobileDock.working"))} ${working.length}</em>
+                ${review.length ? `<b class="tabular-nums">${esc(i18n("mobileDock.review"))} ${review.length}</b>` : ""}
             </div>
             <div class="mobile-priority-list">${cardHtml}</div>
             <div class="mobile-dock-actions">
                 <button type="button" class="mobile-dock-action" data-mobile-action="search">
-                    <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon><span>검색</span>
+                    <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("mobileDock.actionSearch"))}</span>
                 </button>
                 <button type="button" class="mobile-dock-action" data-mobile-action="list">
-                    <iconify-icon icon="solar:list-check-linear" aria-hidden="true"></iconify-icon><span>목록</span>
+                    <iconify-icon icon="solar:list-check-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("mobileDock.actionList"))}</span>
                 </button>
             </div>`;
     }
@@ -1360,12 +1360,12 @@ function renderTeamRadar() {
     }
 
     const statusCounts = [
-        { key: "coding", label: "코딩", count: 0 },
-        { key: "searching", label: "검색", count: 0 },
-        { key: "thinking", label: "생각", count: 0 },
-        { key: "reviewing", label: "검토", count: 0 },
-        { key: "idle", label: "대기", count: 0 },
-        { key: "offline", label: "오프", count: 0 },
+        { key: "coding", label: i18n("radar.statusCoding"), count: 0 },
+        { key: "searching", label: i18n("radar.statusSearching"), count: 0 },
+        { key: "thinking", label: i18n("radar.statusThinking"), count: 0 },
+        { key: "reviewing", label: i18n("radar.statusReviewing"), count: 0 },
+        { key: "idle", label: i18n("radar.statusIdle"), count: 0 },
+        { key: "offline", label: i18n("radar.statusOffline"), count: 0 },
     ];
     const statusMap = new Map(statusCounts.map(item => [item.key, item]));
     const platformCounts = new Map();
@@ -1387,7 +1387,9 @@ function renderTeamRadar() {
     const loadPct = total > 0 ? Math.min(100, Math.round((loadScore / total) * 100)) : 0;
     const reviewCount = statusMap.get("reviewing").count + S.liveAgents.filter(agent => agent.needsReview && agent.status !== "reviewing").length;
     statusMap.get("reviewing").count = reviewCount;
-    const loadLabel = loadPct >= 72 ? "집중" : loadPct >= 38 ? "활성" : "여유";
+    const loadLabel = loadPct >= 72 ? i18n("radar.loadFocus")
+        : loadPct >= 38 ? i18n("radar.loadActive")
+        : i18n("radar.loadRelaxed");
     const activePct = Math.round((activeCount / total) * 100);
 
     const statusHtml = statusCounts
@@ -1397,11 +1399,12 @@ function renderTeamRadar() {
             const width = Math.max(8, Math.round((item.count / total) * 100));
             const filter = statusFilterForRadar(item.key);
             const isPressed = S.activeFilter === filter || (filter === "coding" && S.activeFilter === "coding");
+            const peopleAria = i18n("radar.peopleCount").replace("{n}", item.count);
             return `
                 <button type="button"
                     class="radar-segment${item.key === "reviewing" && reviewCount > 0 ? " needs-review" : ""}"
                     data-filter="${filter}"
-                    aria-label="${esc(item.label)} ${item.count}명 보기"
+                    aria-label="${esc(item.label)} ${esc(peopleAria)}"
                     aria-pressed="${isPressed ? "true" : "false"}"
                     style="--status-color:${meta.color}; --segment-width:${width}%;">
                     <span>${esc(item.label)}</span>
@@ -1419,13 +1422,14 @@ function renderTeamRadar() {
             return `<span class="radar-platform" style="--platform-color:${meta.color};"><i></i>${esc(meta.badge)}<b>${count}</b></span>`;
         }).join("");
 
+    const loadPctAria = i18n("radar.loadPct").replace("{n}", loadPct);
     radar.innerHTML = `
         <div class="radar-head">
             <div>
-                <span class="radar-kicker">팀 레이더</span>
-                <strong id="team-radar-title">${loadLabel}</strong>
+                <span class="radar-kicker">${esc(i18n("radar.kicker"))}</span>
+                <strong id="team-radar-title">${esc(loadLabel)}</strong>
             </div>
-            <div class="radar-score" style="--load:${loadPct}%;" aria-label="팀 부하 ${loadPct}%">
+            <div class="radar-score" style="--load:${loadPct}%;" aria-label="${esc(loadPctAria)}">
                 <span>${loadPct}</span>
             </div>
         </div>
@@ -1434,7 +1438,7 @@ function renderTeamRadar() {
         </div>
         <div class="radar-status-grid">${statusHtml}</div>
         <div class="radar-foot">
-            <span class="radar-active">${activeCount}/${total} 활성 · ${activePct}%</span>
+            <span class="radar-active">${activeCount}/${total} ${esc(i18n("radar.activeWord"))} · ${activePct}%</span>
             <span class="radar-platforms">${platformHtml}</span>
         </div>
     `;

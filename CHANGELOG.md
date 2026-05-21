@@ -5,7 +5,19 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 225 — 팀 레이더 + 모바일 dock i18n 완성 (영문 모드 한글 누락 fix)
+- iter 224 의 코드 리뷰가 보고한 "hardcoded Korean strings (low)" 중 가장 영향 큰 영역 정리
+- README 영문 섹션은 i18n 키 130+ 라고 광고했지만 실제론 panel.js 의 모바일 dock + 팀 레이더가
+  한글 그대로 → 영문 모드 사용자가 모바일에서 보면 사이드바·dock 헤더가 한글 섞임
+- **팀 레이더 14개 신규 키**: `radar.kicker`, `radar.loadFocus/Active/Relaxed`,
+  `radar.statusCoding/Searching/Thinking/Reviewing/Idle/Offline`, `radar.activeWord`,
+  `radar.peopleCount` (placeholder), `radar.loadPct` (placeholder)
+- **모바일 dock 12개 신규 키**: `mobileDock.empty`, `waitingHead`, `zeroCount`, `headTitle`,
+  `active`, `pinned`, `working`, `review`, `actionSearch`, `actionList`, `cardReviewBadge`,
+  `cardPinnedAria`
+- KO/EN 양쪽 모두 추가 — i18n 키 130+ → **156+**
+- placeholder 패턴 `{n}` → 카운트 치환 (radar.peopleCount, radar.loadPct)
+- SW 캐시 v42 → v43
 
 ## [1.4.8] — 2026-05-21
 
