@@ -2069,6 +2069,9 @@ export function updateBossQueueUI() {
             : entry.phase === "reviewResolved" ? phaseTxt.resolved
             : phaseTxt.waiting;
 
+        // entry.pid 는 외부 (외부 도구 / 데모 데이터) 출처라 ', \ 등이 섞일 수 있음 →
+        // inline onclick 안에 raw 문자열 인터폴레이션은 escape 한계 + XSS 위험.
+        // data-pid 로 두고 아래에서 addEventListener 로 위임.
         return `<div class="boss-q-item ${isActive ? "boss-q-active" : ""}">
             <div class="flex items-center gap-2 mb-1">
                 <div class="w-3 h-3 rounded-full shrink-0" style="background:${th.body}"></div>
@@ -2078,10 +2081,10 @@ export function updateBossQueueUI() {
             </div>
             <div class="text-[11px] text-zinc-500 truncate mb-1.5">${esc(workText)}</div>
             <div class="flex gap-1.5">
-                <button onclick="bossReviewAction('${entry.pid}','yes')" class="boss-q-btn boss-q-yes" ${isActive || isWaiting ? "" : "disabled"}>
+                <button type="button" data-boss-review-pid="${esc(String(entry.pid))}" data-boss-decision="yes" class="boss-q-btn boss-q-yes" ${isActive || isWaiting ? "" : "disabled"}>
                     <iconify-icon icon="solar:check-circle-linear" class="text-xs"></iconify-icon> ${esc(approveLabel)}
                 </button>
-                <button onclick="bossReviewAction('${entry.pid}','no')" class="boss-q-btn boss-q-no" ${isActive || isWaiting ? "" : "disabled"}>
+                <button type="button" data-boss-review-pid="${esc(String(entry.pid))}" data-boss-decision="no" class="boss-q-btn boss-q-no" ${isActive || isWaiting ? "" : "disabled"}>
                     <iconify-icon icon="solar:close-circle-linear" class="text-xs"></iconify-icon> ${esc(denyLabel)}
                 </button>
             </div>
@@ -2096,6 +2099,17 @@ export function updateBossQueueUI() {
         </div>
         <div class="flex flex-col gap-2">${items}</div>
     `;
+    // 위에서 raw onclick 대신 data-* 로 attach. 이벤트 위임으로 한 번에 처리.
+    container.querySelectorAll("[data-boss-review-pid]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const pid = btn.getAttribute("data-boss-review-pid");
+            const decision = btn.getAttribute("data-boss-decision");
+            if (!pid || !decision) return;
+            if (typeof window.bossReviewAction === "function") {
+                window.bossReviewAction(pid, decision);
+            }
+        });
+    });
 }
 
 // ── Agent Detail Panel ──
@@ -3415,14 +3429,16 @@ export function refreshInsights() {
                 btn.addEventListener("click", () => {
                     const pid = btn.getAttribute("data-pid");
                     if (!pid) return;
-                    // Find agent, focus camera, close modal
+                    // Find agent, focus camera, close modal — pid 매칭은 agent 의 원래 type
+                    // (number 또는 string) 으로 정규화해야 updateDetailPanel 의 strict 비교가 hit.
                     const ag = S.liveAgents.find(a => String(a.pid) === pid);
                     if (!ag) return;
-                    S.selectedPid = pid;
-                    S.detailPid = pid;
+                    // S.detailPid 는 a.pid 원본 type 그대로 저장 — strict === 비교 안전
+                    S.selectedPid = ag.pid;
+                    S.detailPid = ag.pid;
                     if (typeof window.focusActiveAgent === "function" && typeof S.directorMode !== "undefined") {
                         // Use existing focus helper — switch to director mode targeting this pid
-                        S.directorFocusPid = pid;
+                        S.directorFocusPid = ag.pid;
                         S.directorMode = true;
                     }
                     document.getElementById("insights-overlay")?.classList?.remove("is-visible");
@@ -3537,7 +3553,7 @@ export function refreshProject(projectName) {
             const taskWord = lang === "en" ? "tasks" : "태스크";
             const memWord = "MB";
             agentListEl.innerHTML = matching.map(a => {
-                const theme = themeForAgent(a);
+                const theme = getAgentTheme(a);
                 const status = a.isRunning ? a.status : "offline";
                 const meta = STATUS_META[status] || STATUS_META.idle;
                 const work = getWorkText(a) || (a.currentTask?.subject || "");
@@ -3562,9 +3578,12 @@ export function refreshProject(projectName) {
                 btn.addEventListener("click", () => {
                     const pid = btn.getAttribute("data-pid");
                     if (!pid) return;
-                    S.selectedPid = pid;
-                    S.detailPid = pid;
-                    S.directorFocusPid = pid;
+                    // 원본 agent 의 pid type 유지 (number/string 혼재 환경)
+                    const ag = S.liveAgents.find(a => String(a.pid) === pid);
+                    const targetPid = ag ? ag.pid : pid;
+                    S.selectedPid = targetPid;
+                    S.detailPid = targetPid;
+                    S.directorFocusPid = targetPid;
                     S.directorMode = true;
                     document.getElementById("project-overlay")?.classList?.remove("is-visible");
                     setTimeout(() => {
@@ -3581,7 +3600,7 @@ export function refreshProject(projectName) {
     if (tasksEl) {
         const flat = [];
         matching.forEach(a => {
-            (a.tasks || []).forEach(t => flat.push({ ...t, _agent: themeForAgent(a).name }));
+            (a.tasks || []).forEach(t => flat.push({ ...t, _agent: getAgentTheme(a).name }));
         });
         flat.sort((a, b) => {
             const order = { in_progress: 0, pending: 1, completed: 2 };
