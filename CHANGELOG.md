@@ -12,7 +12,10 @@ _(준비 중)_
 > 정식 배포 전에 꼭 짚어야 할 기반 4가지(보안·크로스플랫폼·화질·정체성)와 배포 편의를
 > 정리한 릴리즈. 기능 추가가 아니라 "이미 있는 걸 제대로 동작하게" 만드는 데 집중.
 >
-> 사용자 데이터 호환: 변경 없음. SW 캐시: v41 → v42.
+> 또한 main 과 갈라진 채 태그/릴리즈만 됐던 **v1.4.8 · v1.4.9 (+ iter 226 i18n 마무리)**
+> 작업을 3-way 머지로 main 에 다시 합쳤다 (아래 v1.4.8/v1.4.9 항목이 이제 main ancestry 에 위치).
+>
+> 사용자 데이터 호환: 변경 없음. SW 캐시: → v45.
 >
 > **보안 (출시 차단급 3건 해소)**
 > - **서버 기본 바인딩을 `0.0.0.0` → `127.0.0.1` 로 수정** — SECURITY.md 는 줄곧 "localhost 전용"
@@ -45,7 +48,7 @@ _(준비 중)_
 > - **CI 를 지원 Node 버전으로 정리** — Node 18 은 EOL + `node --check` 가 ES 모듈을 못 잡아
 >   줄곧 빨간색이었다(main 도). 매트릭스를 20/22/24 로, `engines` 를 `>=20` 으로.
 
-### Iteration 223 — 출시 준비 하드닝 (보안 · 크로스플랫폼 · DPR · 정체성 · 배포)
+### Iteration 227 — 출시 준비 하드닝 (보안 · 크로스플랫폼 · DPR · 정체성 · 배포)
 - **보안**: `httpServer.listen(PORT, HOST)` 로 기본 루프백 바인딩, `verifyClient` 로 WS Origin
   화이트리스트(localhost/127.0.0.1/::1), `/api/agents` CORS `*` 제거, `readProcesses` PID 숫자 검증
 - **크로스플랫폼**: `readProcesses`/`readExternalAIs` 를 `process.platform` 으로 분기, 비‑Windows 는
@@ -56,10 +59,79 @@ _(준비 중)_
   및 main/panel/pixiOverlay/standupExport 의 인덱스 기반 계산 일괄 치환,
   `findAgentAtDesk` 는 `homeX/homeY` 기준으로 책상 판정
 - **배포/정리**: `package.json` `bin`/`files`/`engines>=20`, `server.js` shebang + `maybeOpenBrowser`,
-  스모크 테스트 CORS 단언 반전(와일드카드 부재 검증), SW 캐시 v41 → v42, 죽은 `game.js.bak` 제거
+  스모크 테스트 CORS 단언 반전(와일드카드 부재 검증), 죽은 `game.js.bak` 제거
 - **CI**: 매트릭스 18/20/22 → 20/22/24 (EOL Node 18 제외 — `node --check` ESM 미감지로 줄곧 실패)
+- **릴리즈 라인 정합**: main 과 갈라져 있던 `feat/themes-and-polish` (v1.4.8 XSS·ReferenceError 픽스,
+  v1.4.9 팀 레이더 i18n, iter 226 디테일 패널 i18n) 를 3-way 머지로 main 에 재통합.
+  panel.js·i18n.js 는 충돌 없이 자동 머지, 버전/문서/SW 캐시(→ v45)만 수동 정리
 - 문서: README(v1.5.0 섹션 + npx + OS별 감지 + 보안 노트), SECURITY.md, ARCHITECTURE.md 동기화
 - 검증: 린트 36/36, 스모크 38/38, WS Origin 5/5(허용 3·차단 2), 127.0.0.1 바인딩·실 감지·DPR=2 렌더 확인
+
+## [1.4.9] — 2026-05-21
+
+> v1.4.8 직후 영문 모드 사용자가 보던 한글 누락 버그를 정리.
+>
+> 사용자 데이터 호환: 변경 없음. SW 캐시: v42 → v43.
+>
+> **i18n 완성**
+> - **팀 레이더 + 모바일 priority dock 26개 신규 i18n 키** — README 영문 섹션은 i18n 130+ 라고
+>   광고했지만 실제론 panel.js 의 두 영역이 한글 그대로였음. 영문 모드 사용자가 모바일에서
+>   접속하면 사이드바·dock 헤더에 한글 섞임 → 신뢰성 깨짐. 이제 KO/EN 양쪽 정상 표시.
+>   카운트는 `{n}` placeholder 치환 패턴 사용.
+
+### Iteration 225 — 팀 레이더 + 모바일 dock i18n 완성 (영문 모드 한글 누락 fix)
+- iter 224 의 코드 리뷰가 보고한 "hardcoded Korean strings (low)" 중 가장 영향 큰 영역 정리
+- README 영문 섹션은 i18n 키 130+ 라고 광고했지만 실제론 panel.js 의 모바일 dock + 팀 레이더가
+  한글 그대로 → 영문 모드 사용자가 모바일에서 보면 사이드바·dock 헤더가 한글 섞임
+- **팀 레이더 14개 신규 키**: `radar.kicker`, `radar.loadFocus/Active/Relaxed`,
+  `radar.statusCoding/Searching/Thinking/Reviewing/Idle/Offline`, `radar.activeWord`,
+  `radar.peopleCount` (placeholder), `radar.loadPct` (placeholder)
+- **모바일 dock 12개 신규 키**: `mobileDock.empty`, `waitingHead`, `zeroCount`, `headTitle`,
+  `active`, `pinned`, `working`, `review`, `actionSearch`, `actionList`, `cardReviewBadge`,
+  `cardPinnedAria`
+- KO/EN 양쪽 모두 추가 — i18n 키 130+ → **156+**
+- placeholder 패턴 `{n}` → 카운트 치환 (radar.peopleCount, radar.loadPct)
+- SW 캐시 v42 → v43
+
+## [1.4.8] — 2026-05-21
+
+> v1.4.7 직후 `panel.js` 비-hashtag 부분 코드 리뷰 (iter 224) 로 발견한 high 2건 + medium 1건 픽스.
+>
+> 사용자 데이터 호환: 변경 없음. SW 캐시: v41 → v42.
+>
+> **버그 픽스**
+> - **프로젝트 드릴다운 모달 ReferenceError (high)** — `themeForAgent` 가 panel.js 안에 정의 안 됨.
+>   project-overlay 의 에이전트 row + 태스크 row 렌더에서 throw → 모달 열면 빈 상태 + 콘솔 에러.
+>   `getAgentTheme(a)` (190줄에 정의) 로 정정. **iter 223 의 main 머지 이후 가장 영향 큰 fix.**
+> - **Insights/프로젝트 row 클릭 시 디테일 패널 silent 닫힘 (high)** — `data-pid` (string) 를
+>   그대로 `S.detailPid` 에 저장 → `updateDetailPanel` 의 `a.pid === S.detailPid` strict 비교 실패.
+>   `S.liveAgents.find(...).pid` 의 원본 타입 (number/string) 그대로 저장하도록 정정.
+> - **보스 큐 inline onclick XSS 회피 (medium)** — `entry.pid` (외부 도구 / 데모 데이터 출처)
+>   에 `'`/`\\` 포함될 경우 attribute 깨짐 + 잠재 XSS. `data-boss-review-pid` + `data-boss-decision`
+>   + addEventListener 위임으로 안전화.
+
+### Iteration 224 — panel.js 코드 리뷰: high-severity 2건 + XSS 1건 픽스
+- general-purpose agent 로 `js/panel.js` (3000+ lines) 비-hashtag 부분 코드 리뷰
+- **panel.js:3540/3584 — `themeForAgent` 정의 안 됨 (high)** — 프로젝트 드릴다운 모달 (project-overlay)
+  의 에이전트 row + 태스크 row 렌더에서 `ReferenceError: themeForAgent is not defined` throw
+  → 모달 열면 빈 상태로 보이고 콘솔 에러. `getAgentTheme(a)` (190줄에 정의) 로 정정
+- **panel.js:3421/3565 — pid 타입 mismatch (high)** — Insights 피드 + 프로젝트 모달의 에이전트
+  row 클릭이 `S.selectedPid = pid` (string from data-attr) 로 저장하는데, `updateDetailPanel:2112`
+  은 `a.pid === S.detailPid` strict 비교. `a.pid` 가 number 면 매칭 실패 → 디테일 패널이
+  바로 닫히는 silent UX 깨짐. 해당 site 에서 `S.liveAgents.find(...).pid` 의 원본 타입 그대로
+  저장하도록 정정
+- **panel.js:2081/2084 — 보스 큐 inline onclick XSS (medium)** — `onclick="bossReviewAction('${entry.pid}','yes')"`
+  의 entry.pid 에 `'` 또는 `\` 포함될 경우 attribute 깨짐 + 잠재 XSS. `data-boss-review-pid` +
+  `data-boss-decision` 으로 두고 addEventListener 위임으로 변경
+- SW 캐시 v41 → v42
+
+### Iteration 223 — feat/themes-and-polish → main PR 머지 (#4)
+- v1.3.0 ~ v1.4.7 의 모든 작업이 (224 commits) `feat/themes-and-polish` 에 누적된 상태였음
+- 정식 release line 을 main 위에 두기 위해 PR #4 생성 후 merge
+- 머지 commit: `60f833c`
+- 10개의 GitHub Release tag (v1.3.0 ~ v1.4.7) 가 이제 main 브랜치 ancestry 에 모두 위치
+- PR description 에 hashtag 시스템 / 키보드 워크플로우 / 8회 검증 라운드 / 15 bug fixes /
+  OSS hygiene 정비 / 인프라 갱신 / 데이터 호환성을 종합 정리
 
 ## [1.4.7] — 2026-05-21
 
@@ -102,8 +174,6 @@ _(준비 중)_
 - Run 섹션에 `npm run lint` / `npm run icons` 추가, smoke count 26 → 38, Node 18/20/22 CI 명시
 - Docs 섹션에 ARCHITECTURE / SCREENSHOTS / SECURITY / CODE_OF_CONDUCT 4종 link
 - **신규: Reliability 섹션** — 8 verification rounds + 15 bug fixes 강조 (v1.4.x 패치 라인 신뢰성 정보)
-
-## [1.4.6] — 2026-05-21
 
 ## [1.4.6] — 2026-05-21
 
@@ -251,8 +321,6 @@ _(준비 중)_
 
 ## [1.4.4] — 2026-05-19
 
-## [1.4.4] — 2026-05-19
-
 > v1.4.3 직후 데이터 모듈 코드 리뷰 (`backup.js` · `stats.js` · `awaySummary.js`) 로
 > 발견한 high 1건 + medium 2건 일괄 패치.
 >
@@ -302,8 +370,6 @@ _(준비 중)_
 
 ## [1.4.3] — 2026-05-19
 
-## [1.4.3] — 2026-05-19
-
 > v1.4.2 직후 렌더링 모듈 코드 리뷰 (`renderer.js` · `pixiOverlay.js` · `npcs.js` 등) 로
 > 발견한 high-severity 4건 일괄 패치.
 >
@@ -350,8 +416,6 @@ _(준비 중)_
 
 ## [1.4.2] — 2026-05-19
 
-## [1.4.2] — 2026-05-19
-
 > v1.4.1 직후 코어 비-UI 로직 (WebSocket · 서버 폴링 · 상태 정합) 잠재 버그 4건 일괄 패치.
 > general-purpose agent 코드 리뷰로 발견한 medium 2건 + low 2건.
 >
@@ -393,8 +457,6 @@ _(준비 중)_
 - `latestPrompt.timestamp` 가 ISO string 인 경우 (`history.jsonl` 일부 케이스) `Date.now() - "..."` = NaN
 - `Number.isFinite(promptTs)` 가드 + `Date.parse` 정규화 후 비교 → "최근 프롬프트 있음" 신호 누락 방지
 - SW 캐시 v35 → v36
-
-## [1.4.1] — 2026-05-18
 
 ## [1.4.1] — 2026-05-18
 
@@ -450,8 +512,6 @@ _(준비 중)_
 
 ## [1.4.0] — 2026-05-18
 
-## [1.4.0] — 2026-05-18
-
 > hashtag 시스템을 완전히 끝까지 밀어붙인 minor.
 > v1.3.0 의 사이드바 칩 + 디테일 패널 칩 + 자동완성에 더해, 이번엔 메모 안 어디서나 보이고,
 > 어디서나 클릭으로 필터되고, 한 곳에서 일괄 관리 가능.
@@ -501,8 +561,6 @@ _(준비 중)_
 - 다크 모드 — indigo (rename) / red (delete) 톤 매핑
 - 태그 0개 environment 에서는 친절한 안내 메시지로 빈 상태
 - SW 캐시 v30 → v31
-
-## [1.3.1] — 2026-05-18
 
 ## [1.3.1] — 2026-05-18
 

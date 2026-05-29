@@ -1213,16 +1213,16 @@ function renderMobilePriorityDock() {
     if (active.length === 0) {
         dock.innerHTML = `
             <div class="mobile-dock-head">
-                <span>대기 중</span>
-                <em>0명</em>
+                <span>${esc(i18n("mobileDock.waitingHead"))}</span>
+                <em>${esc(i18n("mobileDock.zeroCount"))}</em>
             </div>
-            <div class="mobile-dock-empty">AI 세션 감지 대기</div>
+            <div class="mobile-dock-empty">${esc(i18n("mobileDock.empty"))}</div>
             <div class="mobile-dock-actions">
                 <button type="button" class="mobile-dock-action" data-mobile-action="search">
-                    <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon><span>검색</span>
+                    <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("mobileDock.actionSearch"))}</span>
                 </button>
                 <button type="button" class="mobile-dock-action" data-mobile-action="list">
-                    <iconify-icon icon="solar:list-check-linear" aria-hidden="true"></iconify-icon><span>목록</span>
+                    <iconify-icon icon="solar:list-check-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("mobileDock.actionList"))}</span>
                 </button>
             </div>`;
     } else {
@@ -1240,7 +1240,7 @@ function renderMobilePriorityDock() {
                     class="mobile-priority-card${agent.needsReview ? " needs-review" : ""}${pinnedAgent ? " is-pinned" : ""}"
                     data-action="${esc(action.key)}"
                     data-pid="${esc(agent.pid)}"
-                    aria-label="${esc(`${theme.name}, ${agent.projectName || platform.label}, ${action.label}, ${work}${pinnedAgent ? ", 고정됨" : ""}`)}"
+                    aria-label="${esc(`${theme.name}, ${agent.projectName || platform.label}, ${action.label}, ${work}${pinnedAgent ? `, ${i18n("mobileDock.cardPinnedAria")}` : ""}`)}"
                     style="--agent-color:${theme.body}; --status-color:${meta.color};">
                     <span class="mobile-priority-avatar" aria-hidden="true">${esc(theme.name.slice(0, 1))}</span>
                     <span class="mobile-priority-copy">
@@ -1248,7 +1248,7 @@ function renderMobilePriorityDock() {
                             <strong>${esc(theme.name)}</strong>
                             <em>${esc(platform.badge)}</em>
                             <span data-tone="${esc(action.tone)}">${esc(action.label)}</span>
-                            ${agent.needsReview ? `<b>검토</b>` : ""}
+                            ${agent.needsReview ? `<b>${esc(i18n("mobileDock.cardReviewBadge"))}</b>` : ""}
                         </span>
                         <span class="mobile-priority-work">${esc(work)}</span>
                         <span class="mobile-priority-progress" aria-hidden="true"><i style="width:${pct}%"></i></span>
@@ -1259,19 +1259,19 @@ function renderMobilePriorityDock() {
 
         dock.innerHTML = `
             <div class="mobile-dock-head">
-                <span>지금 볼 일</span>
-                <em class="tabular-nums">활성 ${active.length}</em>
-                ${pinned.length ? `<em class="pinned-mobile-count tabular-nums">고정 ${pinned.length}</em>` : ""}
-                <em class="tabular-nums">작업 ${working.length}</em>
-                ${review.length ? `<b class="tabular-nums">검토 ${review.length}</b>` : ""}
+                <span>${esc(i18n("mobileDock.headTitle"))}</span>
+                <em class="tabular-nums">${esc(i18n("mobileDock.active"))} ${active.length}</em>
+                ${pinned.length ? `<em class="pinned-mobile-count tabular-nums">${esc(i18n("mobileDock.pinned"))} ${pinned.length}</em>` : ""}
+                <em class="tabular-nums">${esc(i18n("mobileDock.working"))} ${working.length}</em>
+                ${review.length ? `<b class="tabular-nums">${esc(i18n("mobileDock.review"))} ${review.length}</b>` : ""}
             </div>
             <div class="mobile-priority-list">${cardHtml}</div>
             <div class="mobile-dock-actions">
                 <button type="button" class="mobile-dock-action" data-mobile-action="search">
-                    <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon><span>검색</span>
+                    <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("mobileDock.actionSearch"))}</span>
                 </button>
                 <button type="button" class="mobile-dock-action" data-mobile-action="list">
-                    <iconify-icon icon="solar:list-check-linear" aria-hidden="true"></iconify-icon><span>목록</span>
+                    <iconify-icon icon="solar:list-check-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("mobileDock.actionList"))}</span>
                 </button>
             </div>`;
     }
@@ -1361,12 +1361,12 @@ function renderTeamRadar() {
     }
 
     const statusCounts = [
-        { key: "coding", label: "코딩", count: 0 },
-        { key: "searching", label: "검색", count: 0 },
-        { key: "thinking", label: "생각", count: 0 },
-        { key: "reviewing", label: "검토", count: 0 },
-        { key: "idle", label: "대기", count: 0 },
-        { key: "offline", label: "오프", count: 0 },
+        { key: "coding", label: i18n("radar.statusCoding"), count: 0 },
+        { key: "searching", label: i18n("radar.statusSearching"), count: 0 },
+        { key: "thinking", label: i18n("radar.statusThinking"), count: 0 },
+        { key: "reviewing", label: i18n("radar.statusReviewing"), count: 0 },
+        { key: "idle", label: i18n("radar.statusIdle"), count: 0 },
+        { key: "offline", label: i18n("radar.statusOffline"), count: 0 },
     ];
     const statusMap = new Map(statusCounts.map(item => [item.key, item]));
     const platformCounts = new Map();
@@ -1388,7 +1388,9 @@ function renderTeamRadar() {
     const loadPct = total > 0 ? Math.min(100, Math.round((loadScore / total) * 100)) : 0;
     const reviewCount = statusMap.get("reviewing").count + S.liveAgents.filter(agent => agent.needsReview && agent.status !== "reviewing").length;
     statusMap.get("reviewing").count = reviewCount;
-    const loadLabel = loadPct >= 72 ? "집중" : loadPct >= 38 ? "활성" : "여유";
+    const loadLabel = loadPct >= 72 ? i18n("radar.loadFocus")
+        : loadPct >= 38 ? i18n("radar.loadActive")
+        : i18n("radar.loadRelaxed");
     const activePct = Math.round((activeCount / total) * 100);
 
     const statusHtml = statusCounts
@@ -1398,11 +1400,12 @@ function renderTeamRadar() {
             const width = Math.max(8, Math.round((item.count / total) * 100));
             const filter = statusFilterForRadar(item.key);
             const isPressed = S.activeFilter === filter || (filter === "coding" && S.activeFilter === "coding");
+            const peopleAria = i18n("radar.peopleCount").replace("{n}", item.count);
             return `
                 <button type="button"
                     class="radar-segment${item.key === "reviewing" && reviewCount > 0 ? " needs-review" : ""}"
                     data-filter="${filter}"
-                    aria-label="${esc(item.label)} ${item.count}명 보기"
+                    aria-label="${esc(item.label)} ${esc(peopleAria)}"
                     aria-pressed="${isPressed ? "true" : "false"}"
                     style="--status-color:${meta.color}; --segment-width:${width}%;">
                     <span>${esc(item.label)}</span>
@@ -1420,13 +1423,14 @@ function renderTeamRadar() {
             return `<span class="radar-platform" style="--platform-color:${meta.color};"><i></i>${esc(meta.badge)}<b>${count}</b></span>`;
         }).join("");
 
+    const loadPctAria = i18n("radar.loadPct").replace("{n}", loadPct);
     radar.innerHTML = `
         <div class="radar-head">
             <div>
-                <span class="radar-kicker">팀 레이더</span>
-                <strong id="team-radar-title">${loadLabel}</strong>
+                <span class="radar-kicker">${esc(i18n("radar.kicker"))}</span>
+                <strong id="team-radar-title">${esc(loadLabel)}</strong>
             </div>
-            <div class="radar-score" style="--load:${loadPct}%;" aria-label="팀 부하 ${loadPct}%">
+            <div class="radar-score" style="--load:${loadPct}%;" aria-label="${esc(loadPctAria)}">
                 <span>${loadPct}</span>
             </div>
         </div>
@@ -1435,7 +1439,7 @@ function renderTeamRadar() {
         </div>
         <div class="radar-status-grid">${statusHtml}</div>
         <div class="radar-foot">
-            <span class="radar-active">${activeCount}/${total} 활성 · ${activePct}%</span>
+            <span class="radar-active">${activeCount}/${total} ${esc(i18n("radar.activeWord"))} · ${activePct}%</span>
             <span class="radar-platforms">${platformHtml}</span>
         </div>
     `;
@@ -1875,7 +1879,7 @@ export function updatePanel() {
                         <span class="text-[11px] text-zinc-500 truncate" style="word-break:keep-all;">${sLabel}</span>
                     </div>`;
                 }).join("") +
-                (subTasks.length > 5 ? `<div class="text-[10px] text-zinc-400">+${subTasks.length - 5}개 더</div>` : "") +
+                (subTasks.length > 5 ? `<div class="text-[10px] text-zinc-400">+${subTasks.length - 5}${(window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? " " : ""}${esc(i18n("card.subTaskMoreSuffix"))}</div>` : "") +
             `</div>`;
         }
 
@@ -1898,14 +1902,15 @@ export function updatePanel() {
                         <div class="text-[11px] text-zinc-400 tabular-nums font-medium flex items-center gap-1">
                             <span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badge}</span>
                             ${agent.role && ROLE_META[agent.role] ? `<span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${ROLE_META[agent.role].color}20;color:${ROLE_META[agent.role].color}">${ROLE_META[agent.role].badge}</span>` : ""}
-                            ${stuck ? `<span class="agent-stuck-chip" title="5분 이상 활동 신호 없음 — 멈춘 것 같아요"><iconify-icon icon="solar:hourglass-line-linear" aria-hidden="true"></iconify-icon>멈춤?</span>` : ""}
+                            ${stuck ? `<span class="agent-stuck-chip" title="${esc(i18n("card.stuckTitle"))}"><iconify-icon icon="solar:hourglass-line-linear" aria-hidden="true"></iconify-icon>${esc(i18n("card.stuckChip"))}</span>` : ""}
                             <span>${agent.memoryMB}MB${agent.processCount > 1 ? ` · ${agent.processCount}p` : ""}${(() => {
                                 const t = memoryTrend(agent);
                                 if (t.dir === "flat") return "";
                                 const arrow = t.dir === "up" ? "▲" : "▼";
                                 const color = t.dir === "up" ? "#ef4444" : "#10b981";
                                 const sign = t.dir === "up" ? "+" : "";
-                                return ` <span class="mem-trend" style="color:${color}" title="30초 전 대비 ${sign}${t.deltaMB}MB" aria-label="메모리 ${t.dir === "up" ? "증가" : "감소"} ${sign}${t.deltaMB}MB">${arrow}</span>`;
+                                const trendWord = t.dir === "up" ? i18n("card.memoryUp") : i18n("card.memoryDown");
+                                return ` <span class="mem-trend" style="color:${color}" title="${esc(i18n("card.memoryTrendUp"))} ${sign}${t.deltaMB}MB" aria-label="${esc(trendWord)} ${sign}${t.deltaMB}MB">${arrow}</span>`;
                             })()}</span>
                         </div>
                         <div class="agent-signal-line" title="${esc(signal.sourceLabel)}" data-freshness="${
@@ -1915,7 +1920,7 @@ export function updatePanel() {
                             : "stale"
                         }">
                             <iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon>
-                            <span>최근 ${esc(signal.ageLabel)}</span>
+                            <span>${esc(i18n("card.recentAge"))} ${esc(signal.ageLabel)}</span>
                             <em>${esc(signal.sourceLabel)}</em>
                         </div>
                     </div>
@@ -1958,7 +1963,7 @@ export function updatePanel() {
                 <div class="progress-track">
                     <div class="progress-fill" style="width:${pct}%"></div>
                 </div>
-                <div class="text-[11px] text-zinc-400 mt-1.5 tabular-nums font-medium">${agent.completedTasks}/${agent.totalTasks} 완료</div>
+                <div class="text-[11px] text-zinc-400 mt-1.5 tabular-nums font-medium">${agent.completedTasks}/${agent.totalTasks} ${esc(i18n("card.completed"))}</div>
                 ${subHtml}` : ""}
             </div>
         `;
@@ -2069,6 +2074,9 @@ export function updateBossQueueUI() {
             : entry.phase === "reviewResolved" ? phaseTxt.resolved
             : phaseTxt.waiting;
 
+        // entry.pid 는 외부 (외부 도구 / 데모 데이터) 출처라 ', \ 등이 섞일 수 있음 →
+        // inline onclick 안에 raw 문자열 인터폴레이션은 escape 한계 + XSS 위험.
+        // data-pid 로 두고 아래에서 addEventListener 로 위임.
         return `<div class="boss-q-item ${isActive ? "boss-q-active" : ""}">
             <div class="flex items-center gap-2 mb-1">
                 <div class="w-3 h-3 rounded-full shrink-0" style="background:${th.body}"></div>
@@ -2078,10 +2086,10 @@ export function updateBossQueueUI() {
             </div>
             <div class="text-[11px] text-zinc-500 truncate mb-1.5">${esc(workText)}</div>
             <div class="flex gap-1.5">
-                <button onclick="bossReviewAction('${entry.pid}','yes')" class="boss-q-btn boss-q-yes" ${isActive || isWaiting ? "" : "disabled"}>
+                <button type="button" data-boss-review-pid="${esc(String(entry.pid))}" data-boss-decision="yes" class="boss-q-btn boss-q-yes" ${isActive || isWaiting ? "" : "disabled"}>
                     <iconify-icon icon="solar:check-circle-linear" class="text-xs"></iconify-icon> ${esc(approveLabel)}
                 </button>
-                <button onclick="bossReviewAction('${entry.pid}','no')" class="boss-q-btn boss-q-no" ${isActive || isWaiting ? "" : "disabled"}>
+                <button type="button" data-boss-review-pid="${esc(String(entry.pid))}" data-boss-decision="no" class="boss-q-btn boss-q-no" ${isActive || isWaiting ? "" : "disabled"}>
                     <iconify-icon icon="solar:close-circle-linear" class="text-xs"></iconify-icon> ${esc(denyLabel)}
                 </button>
             </div>
@@ -2096,6 +2104,17 @@ export function updateBossQueueUI() {
         </div>
         <div class="flex flex-col gap-2">${items}</div>
     `;
+    // 위에서 raw onclick 대신 data-* 로 attach. 이벤트 위임으로 한 번에 처리.
+    container.querySelectorAll("[data-boss-review-pid]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const pid = btn.getAttribute("data-boss-review-pid");
+            const decision = btn.getAttribute("data-boss-decision");
+            if (!pid || !decision) return;
+            if (typeof window.bossReviewAction === "function") {
+                window.bossReviewAction(pid, decision);
+            }
+        });
+    });
 }
 
 // ── Agent Detail Panel ──
@@ -2186,17 +2205,17 @@ export function updateDetailPanel() {
             currentWorkHtml = `
                 <div class="detail-work-card">
                     <div class="detail-work-head">
-                        <span>현재 작업</span>
-                        <button type="button" class="detail-copy-btn" data-copy-kind="work" aria-label="현재 작업 복사">
-                            <iconify-icon icon="solar:copy-linear" aria-hidden="true"></iconify-icon><span>복사</span>
+                        <span>${esc(i18n("detail.currentWork"))}</span>
+                        <button type="button" class="detail-copy-btn" data-copy-kind="work" aria-label="${esc(i18n("detail.copyWorkAria"))}">
+                            <iconify-icon icon="solar:copy-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("detail.copy"))}</span>
                         </button>
                     </div>
                     <div class="detail-work-preview">${esc(firstLine.substring(0, 130))}</div>
                     <details class="detail-work-full">
-                        <summary>작업 원문 보기</summary>
+                        <summary>${esc(i18n("detail.viewFullWork"))}</summary>
                         <pre>${esc(cleaned)}</pre>
                     </details>
-                    <div class="detail-work-age">최근 ${workAge(agent) || "업데이트됨"}</div>
+                    <div class="detail-work-age">${esc(i18n("detail.recent"))} ${workAge(agent) || esc(i18n("detail.updated"))}</div>
                 </div>`;
         }
     }
@@ -2220,18 +2239,14 @@ export function updateDetailPanel() {
                 data-event-key="${esc(event.key || `${event.type}|${event.pid}|${event.text || ""}`)}">
                 <iconify-icon icon="${eventMeta.icon}" aria-hidden="true"></iconify-icon>
                 <span>${esc(eventMeta.label)}</span>
-                <em>${esc(firstLine(event.text || agent.projectName || "상태 갱신", 34))}</em>
+                <em>${esc(firstLine(event.text || agent.projectName || i18n("detail.statusUpdate"), 34))}</em>
                 <small>${esc(formatTimeAgo(Math.max(0, Date.now() - (event.ts || Date.now()))))}</small>
             </button>`;
         }).join("")
-        : (() => {
-            const lge = (window.aiTycoonI18n?.getLang?.() || "ko");
-            return `<div class="detail-event-empty">${lge === "en" ? "Collecting recent events" : "최근 이벤트 수집 중"}</div>`;
-        })();
-    const lgSig = (window.aiTycoonI18n?.getLang?.() || "ko");
-    const sigTitle1 = lgSig === "en" ? "Detection basis" : "인식 근거";
-    const sigTitle2 = lgSig === "en" ? "Recent signals" : "최근 신호";
-    const sigRecent = lgSig === "en" ? "Last" : "최근";
+        : `<div class="detail-event-empty">${esc(i18n("detail.collectingEvents"))}</div>`;
+    const sigTitle1 = i18n("detail.detectionBasis");
+    const sigTitle2 = i18n("detail.recentSignals");
+    const sigRecent = i18n("detail.lastWord");
     const signalHtml = `
         <div class="detail-section-title">${esc(sigTitle1)}</div>
         <div class="signal-proof">
@@ -2321,25 +2336,25 @@ export function updateDetailPanel() {
                 <button type="button"
                     class="detail-nav-btn"
                     data-detail-nav="prev"
-                    title="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Previous agent (k)" : "이전 에이전트 (k)")}"
-                    aria-label="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Previous agent" : "이전 에이전트")}">
+                    title="${esc(i18n("detail.prevAgent"))} (k)"
+                    aria-label="${esc(i18n("detail.prevAgent"))}">
                     <iconify-icon icon="solar:alt-arrow-left-linear" aria-hidden="true"></iconify-icon>
                 </button>
                 <button type="button"
                     class="detail-nav-btn"
                     data-detail-nav="next"
-                    title="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Next agent (j)" : "다음 에이전트 (j)")}"
-                    aria-label="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Next agent" : "다음 에이전트")}">
+                    title="${esc(i18n("detail.nextAgent"))} (j)"
+                    aria-label="${esc(i18n("detail.nextAgent"))}">
                     <iconify-icon icon="solar:alt-arrow-right-linear" aria-hidden="true"></iconify-icon>
                 </button>
                 <button type="button"
                     class="detail-pin-btn${pinned ? " is-pinned" : ""}"
                     data-detail-pin
                     aria-pressed="${pinned ? "true" : "false"}"
-                    aria-label="${esc(`${theme.name} ${pinned ? "고정 해제" : "고정"}`)}">
+                    aria-label="${esc(`${theme.name} ${pinned ? i18n("detail.unpinAria") : i18n("detail.pinAria")}`)}">
                     <iconify-icon icon="${pinned ? "solar:star-bold" : "solar:star-linear"}" aria-hidden="true"></iconify-icon>
                 </button>
-                <button onclick="closeDetail()" class="detail-close-btn" aria-label="상세 패널 닫기" title="Esc">
+                <button onclick="closeDetail()" class="detail-close-btn" aria-label="${esc(i18n("detail.closeAria"))}" title="Esc">
                     <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                 </button>
             </div>
@@ -3415,14 +3430,16 @@ export function refreshInsights() {
                 btn.addEventListener("click", () => {
                     const pid = btn.getAttribute("data-pid");
                     if (!pid) return;
-                    // Find agent, focus camera, close modal
+                    // Find agent, focus camera, close modal — pid 매칭은 agent 의 원래 type
+                    // (number 또는 string) 으로 정규화해야 updateDetailPanel 의 strict 비교가 hit.
                     const ag = S.liveAgents.find(a => String(a.pid) === pid);
                     if (!ag) return;
-                    S.selectedPid = pid;
-                    S.detailPid = pid;
+                    // S.detailPid 는 a.pid 원본 type 그대로 저장 — strict === 비교 안전
+                    S.selectedPid = ag.pid;
+                    S.detailPid = ag.pid;
                     if (typeof window.focusActiveAgent === "function" && typeof S.directorMode !== "undefined") {
                         // Use existing focus helper — switch to director mode targeting this pid
-                        S.directorFocusPid = pid;
+                        S.directorFocusPid = ag.pid;
                         S.directorMode = true;
                     }
                     document.getElementById("insights-overlay")?.classList?.remove("is-visible");
@@ -3537,7 +3554,7 @@ export function refreshProject(projectName) {
             const taskWord = lang === "en" ? "tasks" : "태스크";
             const memWord = "MB";
             agentListEl.innerHTML = matching.map(a => {
-                const theme = themeForAgent(a);
+                const theme = getAgentTheme(a);
                 const status = a.isRunning ? a.status : "offline";
                 const meta = STATUS_META[status] || STATUS_META.idle;
                 const work = getWorkText(a) || (a.currentTask?.subject || "");
@@ -3562,9 +3579,12 @@ export function refreshProject(projectName) {
                 btn.addEventListener("click", () => {
                     const pid = btn.getAttribute("data-pid");
                     if (!pid) return;
-                    S.selectedPid = pid;
-                    S.detailPid = pid;
-                    S.directorFocusPid = pid;
+                    // 원본 agent 의 pid type 유지 (number/string 혼재 환경)
+                    const ag = S.liveAgents.find(a => String(a.pid) === pid);
+                    const targetPid = ag ? ag.pid : pid;
+                    S.selectedPid = targetPid;
+                    S.detailPid = targetPid;
+                    S.directorFocusPid = targetPid;
                     S.directorMode = true;
                     document.getElementById("project-overlay")?.classList?.remove("is-visible");
                     setTimeout(() => {
@@ -3581,7 +3601,7 @@ export function refreshProject(projectName) {
     if (tasksEl) {
         const flat = [];
         matching.forEach(a => {
-            (a.tasks || []).forEach(t => flat.push({ ...t, _agent: themeForAgent(a).name }));
+            (a.tasks || []).forEach(t => flat.push({ ...t, _agent: getAgentTheme(a).name }));
         });
         flat.sort((a, b) => {
             const order = { in_progress: 0, pending: 1, completed: 2 };

@@ -26,3 +26,14 @@ test-results/
 
 # 앱 아이콘 설치 스크립트의 원본 staging 파일 (체크인 불필요 — 결과물 icon.png 만 commit)
 icons/source.png
+
+# Playwright / 임시 verify 스크린샷 (root 에 떨어지는 경우 있음)
+/verify-*.png
+/*-verify.png
+/index-*.png
+/catalog-*.png
+/mobile-*.png
+/cmdpalette.png
+/insights.png
+/detail.png
+/hero-*.png
