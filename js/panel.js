@@ -1879,7 +1879,7 @@ export function updatePanel() {
                         <span class="text-[11px] text-zinc-500 truncate" style="word-break:keep-all;">${sLabel}</span>
                     </div>`;
                 }).join("") +
-                (subTasks.length > 5 ? `<div class="text-[10px] text-zinc-400">+${subTasks.length - 5}개 더</div>` : "") +
+                (subTasks.length > 5 ? `<div class="text-[10px] text-zinc-400">+${subTasks.length - 5}${(window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? " " : ""}${esc(i18n("card.subTaskMoreSuffix"))}</div>` : "") +
             `</div>`;
         }
 
@@ -1902,14 +1902,15 @@ export function updatePanel() {
                         <div class="text-[11px] text-zinc-400 tabular-nums font-medium flex items-center gap-1">
                             <span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badge}</span>
                             ${agent.role && ROLE_META[agent.role] ? `<span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${ROLE_META[agent.role].color}20;color:${ROLE_META[agent.role].color}">${ROLE_META[agent.role].badge}</span>` : ""}
-                            ${stuck ? `<span class="agent-stuck-chip" title="5분 이상 활동 신호 없음 — 멈춘 것 같아요"><iconify-icon icon="solar:hourglass-line-linear" aria-hidden="true"></iconify-icon>멈춤?</span>` : ""}
+                            ${stuck ? `<span class="agent-stuck-chip" title="${esc(i18n("card.stuckTitle"))}"><iconify-icon icon="solar:hourglass-line-linear" aria-hidden="true"></iconify-icon>${esc(i18n("card.stuckChip"))}</span>` : ""}
                             <span>${agent.memoryMB}MB${agent.processCount > 1 ? ` · ${agent.processCount}p` : ""}${(() => {
                                 const t = memoryTrend(agent);
                                 if (t.dir === "flat") return "";
                                 const arrow = t.dir === "up" ? "▲" : "▼";
                                 const color = t.dir === "up" ? "#ef4444" : "#10b981";
                                 const sign = t.dir === "up" ? "+" : "";
-                                return ` <span class="mem-trend" style="color:${color}" title="30초 전 대비 ${sign}${t.deltaMB}MB" aria-label="메모리 ${t.dir === "up" ? "증가" : "감소"} ${sign}${t.deltaMB}MB">${arrow}</span>`;
+                                const trendWord = t.dir === "up" ? i18n("card.memoryUp") : i18n("card.memoryDown");
+                                return ` <span class="mem-trend" style="color:${color}" title="${esc(i18n("card.memoryTrendUp"))} ${sign}${t.deltaMB}MB" aria-label="${esc(trendWord)} ${sign}${t.deltaMB}MB">${arrow}</span>`;
                             })()}</span>
                         </div>
                         <div class="agent-signal-line" title="${esc(signal.sourceLabel)}" data-freshness="${
@@ -1919,7 +1920,7 @@ export function updatePanel() {
                             : "stale"
                         }">
                             <iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon>
-                            <span>최근 ${esc(signal.ageLabel)}</span>
+                            <span>${esc(i18n("card.recentAge"))} ${esc(signal.ageLabel)}</span>
                             <em>${esc(signal.sourceLabel)}</em>
                         </div>
                     </div>
@@ -1962,7 +1963,7 @@ export function updatePanel() {
                 <div class="progress-track">
                     <div class="progress-fill" style="width:${pct}%"></div>
                 </div>
-                <div class="text-[11px] text-zinc-400 mt-1.5 tabular-nums font-medium">${agent.completedTasks}/${agent.totalTasks} 완료</div>
+                <div class="text-[11px] text-zinc-400 mt-1.5 tabular-nums font-medium">${agent.completedTasks}/${agent.totalTasks} ${esc(i18n("card.completed"))}</div>
                 ${subHtml}` : ""}
             </div>
         `;
@@ -2204,17 +2205,17 @@ export function updateDetailPanel() {
             currentWorkHtml = `
                 <div class="detail-work-card">
                     <div class="detail-work-head">
-                        <span>현재 작업</span>
-                        <button type="button" class="detail-copy-btn" data-copy-kind="work" aria-label="현재 작업 복사">
-                            <iconify-icon icon="solar:copy-linear" aria-hidden="true"></iconify-icon><span>복사</span>
+                        <span>${esc(i18n("detail.currentWork"))}</span>
+                        <button type="button" class="detail-copy-btn" data-copy-kind="work" aria-label="${esc(i18n("detail.copyWorkAria"))}">
+                            <iconify-icon icon="solar:copy-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("detail.copy"))}</span>
                         </button>
                     </div>
                     <div class="detail-work-preview">${esc(firstLine.substring(0, 130))}</div>
                     <details class="detail-work-full">
-                        <summary>작업 원문 보기</summary>
+                        <summary>${esc(i18n("detail.viewFullWork"))}</summary>
                         <pre>${esc(cleaned)}</pre>
                     </details>
-                    <div class="detail-work-age">최근 ${workAge(agent) || "업데이트됨"}</div>
+                    <div class="detail-work-age">${esc(i18n("detail.recent"))} ${workAge(agent) || esc(i18n("detail.updated"))}</div>
                 </div>`;
         }
     }
@@ -2238,18 +2239,14 @@ export function updateDetailPanel() {
                 data-event-key="${esc(event.key || `${event.type}|${event.pid}|${event.text || ""}`)}">
                 <iconify-icon icon="${eventMeta.icon}" aria-hidden="true"></iconify-icon>
                 <span>${esc(eventMeta.label)}</span>
-                <em>${esc(firstLine(event.text || agent.projectName || "상태 갱신", 34))}</em>
+                <em>${esc(firstLine(event.text || agent.projectName || i18n("detail.statusUpdate"), 34))}</em>
                 <small>${esc(formatTimeAgo(Math.max(0, Date.now() - (event.ts || Date.now()))))}</small>
             </button>`;
         }).join("")
-        : (() => {
-            const lge = (window.aiTycoonI18n?.getLang?.() || "ko");
-            return `<div class="detail-event-empty">${lge === "en" ? "Collecting recent events" : "최근 이벤트 수집 중"}</div>`;
-        })();
-    const lgSig = (window.aiTycoonI18n?.getLang?.() || "ko");
-    const sigTitle1 = lgSig === "en" ? "Detection basis" : "인식 근거";
-    const sigTitle2 = lgSig === "en" ? "Recent signals" : "최근 신호";
-    const sigRecent = lgSig === "en" ? "Last" : "최근";
+        : `<div class="detail-event-empty">${esc(i18n("detail.collectingEvents"))}</div>`;
+    const sigTitle1 = i18n("detail.detectionBasis");
+    const sigTitle2 = i18n("detail.recentSignals");
+    const sigRecent = i18n("detail.lastWord");
     const signalHtml = `
         <div class="detail-section-title">${esc(sigTitle1)}</div>
         <div class="signal-proof">
@@ -2339,25 +2336,25 @@ export function updateDetailPanel() {
                 <button type="button"
                     class="detail-nav-btn"
                     data-detail-nav="prev"
-                    title="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Previous agent (k)" : "이전 에이전트 (k)")}"
-                    aria-label="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Previous agent" : "이전 에이전트")}">
+                    title="${esc(i18n("detail.prevAgent"))} (k)"
+                    aria-label="${esc(i18n("detail.prevAgent"))}">
                     <iconify-icon icon="solar:alt-arrow-left-linear" aria-hidden="true"></iconify-icon>
                 </button>
                 <button type="button"
                     class="detail-nav-btn"
                     data-detail-nav="next"
-                    title="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Next agent (j)" : "다음 에이전트 (j)")}"
-                    aria-label="${esc((window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? "Next agent" : "다음 에이전트")}">
+                    title="${esc(i18n("detail.nextAgent"))} (j)"
+                    aria-label="${esc(i18n("detail.nextAgent"))}">
                     <iconify-icon icon="solar:alt-arrow-right-linear" aria-hidden="true"></iconify-icon>
                 </button>
                 <button type="button"
                     class="detail-pin-btn${pinned ? " is-pinned" : ""}"
                     data-detail-pin
                     aria-pressed="${pinned ? "true" : "false"}"
-                    aria-label="${esc(`${theme.name} ${pinned ? "고정 해제" : "고정"}`)}">
+                    aria-label="${esc(`${theme.name} ${pinned ? i18n("detail.unpinAria") : i18n("detail.pinAria")}`)}">
                     <iconify-icon icon="${pinned ? "solar:star-bold" : "solar:star-linear"}" aria-hidden="true"></iconify-icon>
                 </button>
-                <button onclick="closeDetail()" class="detail-close-btn" aria-label="상세 패널 닫기" title="Esc">
+                <button onclick="closeDetail()" class="detail-close-btn" aria-label="${esc(i18n("detail.closeAria"))}" title="Esc">
                     <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                 </button>
             </div>
