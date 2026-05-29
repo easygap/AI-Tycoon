@@ -2,7 +2,7 @@
 //  AI TYCOON — Side Panel, Detail Panel, Tooltips, Filters
 // ============================================================
 
-import { S, esc, getWorkText, formatTimeAgo } from "./state.js";
+import { S, esc, getWorkText, formatTimeAgo, resolveAgentTheme } from "./state.js";
 import {
     agentNextAction,
     agentPinKey as getAgentPinKey,
@@ -188,8 +188,9 @@ function agentSearchText(agent) {
 }
 
 function getAgentTheme(agent, fallbackIndex = 0) {
+    // 고정 테마(visualAgents[pid].theme) 우선. 없을 때만 인덱스로 폴백.
     const globalIdx = S.liveAgents.indexOf(agent);
-    return AGENT_THEMES[(globalIdx >= 0 ? globalIdx : fallbackIndex) % AGENT_THEMES.length];
+    return resolveAgentTheme(agent, globalIdx >= 0 ? globalIdx : fallbackIndex);
 }
 
 function firstLine(text, max = 72) {
@@ -1775,9 +1776,8 @@ export function updatePanel() {
     filteredAgents.forEach((agent, idx) => {
         const status = agent.isRunning ? agent.status : "offline";
         const meta = STATUS_META[status] || STATUS_META.idle;
-        // Use consistent theme per agent (based on global index, not filtered index)
-        const globalIdx = S.liveAgents.indexOf(agent);
-        const theme = AGENT_THEMES[(globalIdx >= 0 ? globalIdx : idx) % AGENT_THEMES.length];
+        // 에이전트별 고정 테마 (필터/정렬 인덱스가 아니라 pid 기준이라 항상 일관)
+        const theme = resolveAgentTheme(agent, idx);
         const pinned = isAgentPinned(agent);
         const action = getAgentNextAction(agent);
 
@@ -2724,7 +2724,7 @@ export function onMouseMove(e) {
     } else if (hov) {
         S.canvas.style.cursor = "pointer";
         const meta = (STATUS_META[hov.isRunning ? hov.status : "offline"] || STATUS_META.idle);
-        const theme = AGENT_THEMES[S.liveAgents.indexOf(hov) % AGENT_THEMES.length];
+        const theme = resolveAgentTheme(hov);
         const lgT = (window.aiTycoonI18n?.getLang?.() || "ko");
         const labels = lgT === "en"
             ? { idle: "Idle", status: "Status", mem: "Memory", task: "Task", sub: "Sub", cwd: "Path", done: "Done", active: "active" }

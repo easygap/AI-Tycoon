@@ -2,7 +2,7 @@
 //  AI TYCOON — Entry Point (init, loop, input, visual AI)
 // ============================================================
 
-import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts, spawnYawn, bossQueueEntry, bossQueueAdd, bossQueueRemove, bossQueueResolve } from "./state.js";
+import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts, spawnYawn, bossQueueEntry, bossQueueAdd, bossQueueRemove, bossQueueResolve, resolveAgentTheme } from "./state.js";
 import {
     TILE, COLS, ROWS,
     ZOOM_MIN, ZOOM_MAX, ZOOM_STEP,
@@ -614,8 +614,14 @@ function resize() {
     syncSidePanelState();
     S.canvasW = isMobileOverlay ? main.clientWidth : main.clientWidth - side.offsetWidth;
     S.canvasH = main.clientHeight;
-    S.canvas.width = S.canvasW;
-    S.canvas.height = S.canvasH;
+    // 고해상도(Retina/4K) 디스플레이에서 픽셀아트가 흐릿해지지 않도록 백버퍼를
+    // devicePixelRatio 만큼 키운다. CSS 표시 크기(w-full/h-full)는 그대로 논리
+    // 픽셀이라, 브라우저가 큰 백버퍼를 1:1 device 픽셀로 매핑해 선명해진다.
+    // Pixi 오버레이도 동일한 배율(상한 2)을 써서 두 레이어 선명도가 어긋나지 않는다.
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    S.dpr = dpr;
+    S.canvas.width = Math.round(S.canvasW * dpr);
+    S.canvas.height = Math.round(S.canvasH * dpr);
     S.ctx.imageSmoothingEnabled = false;
     resizePixiOverlay();
 
@@ -679,7 +685,7 @@ function agentPriorityContext() {
 
 function describeAgent(agent) {
     if (!agent) return "선택된 직원 없음";
-    const theme = AGENT_THEMES[S.liveAgents.indexOf(agent) % AGENT_THEMES.length] || AGENT_THEMES[0];
+    const theme = resolveAgentTheme(agent);
     const status = agent.isRunning ? agent.status : "offline";
     const label = STATUS_META[status]?.label || status;
     const work = getWorkText(agent) || agent.currentWork?.prompt || agent.currentTask?.subject || "대기 중";
@@ -777,7 +783,7 @@ function selectCanvasAgent(agent, options = {}) {
     if (moveCamera) focusAgent(agent.pid, true);
     const v = S.visualAgents[agent.pid];
     if (v && burst) {
-        const theme = AGENT_THEMES[S.liveAgents.indexOf(agent) % AGENT_THEMES.length] || AGENT_THEMES[0];
+        const theme = resolveAgentTheme(agent);
         spawnParticles(v.x, v.y - 8, theme.body, 8);
         spawnHearts(v.x, v.y - 16, 2);
     }

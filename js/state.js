@@ -2,7 +2,7 @@
 //  AI TYCOON — Shared Mutable State + Small Utilities
 // ============================================================
 
-import { generateDeskSpots, MAX_PARTICLES, MAX_HEARTS } from "./constants.js";
+import { generateDeskSpots, MAX_PARTICLES, MAX_HEARTS, AGENT_THEMES } from "./constants.js";
 import { recordEvent } from "./stats.js";
 
 function readStoredStringArray(key) {
@@ -21,6 +21,7 @@ export const S = {
     ctx: null,
     canvasW: 0,
     canvasH: 0,
+    dpr: 1, // devicePixelRatio (상한 2) — 고해상도 디스플레이 선명도용 백버퍼 배율
     scale: 1,
     offsetX: 0,
     offsetY: 0,
@@ -74,6 +75,22 @@ export const S = {
 };
 
 /** Escape HTML special characters */
+// 에이전트의 테마(이름·색)는 출근 시점에 visualAgents[pid].theme 로 한 번 고정된다.
+// 이걸 단일 진실원천으로 삼아야 캔버스 아바타와 사이드바/툴팁/이벤트의 이름·색이
+// 항상 일치한다. 매번 liveAgents 배열 인덱스로 재계산하면, 중간에 한 명이 퇴근했을 때
+// 뒤쪽 직원들의 인덱스가 밀려서 같은 직원인데 이름·색이 달라 보이는 버그가 생긴다.
+export function resolveAgentTheme(agent, fallbackIndex) {
+    const fixed = agent && S.visualAgents[agent.pid]?.theme;
+    if (fixed) return fixed;
+    // 아직 시각 에이전트가 안 만들어진 첫 프레임 등에서만 인덱스로 폴백한다.
+    let idx = Number.isInteger(fallbackIndex) ? fallbackIndex : -1;
+    if (idx < 0 && agent) {
+        idx = S.liveAgents.findIndex(a => String(a.pid) === String(agent.pid));
+    }
+    if (idx < 0) idx = 0;
+    return AGENT_THEMES[idx % AGENT_THEMES.length] || AGENT_THEMES[0];
+}
+
 export function esc(str) {
     return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
