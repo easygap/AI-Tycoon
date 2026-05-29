@@ -42,6 +42,8 @@ _(준비 중)_
 > **배포**
 > - **`npx ai-tycoon` 한 줄 실행** — `bin` + shebang + `files` 화이트리스트. 부팅 시 브라우저
 >   자동 오픈(`NO_OPEN=1` 로 끔).
+> - **CI 를 지원 Node 버전으로 정리** — Node 18 은 EOL + `node --check` 가 ES 모듈을 못 잡아
+>   줄곧 빨간색이었다(main 도). 매트릭스를 20/22/24 로, `engines` 를 `>=20` 으로.
 
 ### Iteration 223 — 출시 준비 하드닝 (보안 · 크로스플랫폼 · DPR · 정체성 · 배포)
 - **보안**: `httpServer.listen(PORT, HOST)` 로 기본 루프백 바인딩, `verifyClient` 로 WS Origin
@@ -53,8 +55,9 @@ _(준비 중)_
 - **정체성**: `state.resolveAgentTheme(agent, fallbackIdx)` 신설 → `getAgentTheme`/`themeForAgent`
   및 main/panel/pixiOverlay/standupExport 의 인덱스 기반 계산 일괄 치환,
   `findAgentAtDesk` 는 `homeX/homeY` 기준으로 책상 판정
-- **배포/정리**: `package.json` `bin`/`files`, `server.js` shebang + `maybeOpenBrowser`,
+- **배포/정리**: `package.json` `bin`/`files`/`engines>=20`, `server.js` shebang + `maybeOpenBrowser`,
   스모크 테스트 CORS 단언 반전(와일드카드 부재 검증), SW 캐시 v41 → v42, 죽은 `game.js.bak` 제거
+- **CI**: 매트릭스 18/20/22 → 20/22/24 (EOL Node 18 제외 — `node --check` ESM 미감지로 줄곧 실패)
 - 문서: README(v1.5.0 섹션 + npx + OS별 감지 + 보안 노트), SECURITY.md, ARCHITECTURE.md 동기화
 - 검증: 린트 36/36, 스모크 38/38, WS Origin 5/5(허용 3·차단 2), 127.0.0.1 바인딩·실 감지·DPR=2 렌더 확인
 
