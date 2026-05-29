@@ -26,17 +26,19 @@
 기능을 더 쌓기보다, 정식 배포 전에 꼭 잡아야 할 기반 4가지를 정리한 릴리즈입니다.
 
 - **보안** — 서버를 기본적으로 `127.0.0.1` 에만 바인딩 (예전엔 의도와 달리 `0.0.0.0` 으로 떠서 같은 네트워크의 다른 기기가 내 프롬프트·프로젝트명을 들여다볼 수 있었음). WebSocket 에 **Origin 검증**을 추가해 악성 사이트가 `ws://localhost` 로 몰래 붙어 작업 내용을 가로채는 *Cross-Site WebSocket Hijacking* 을 막고, `/api/agents` 의 **CORS 와일드카드(`*`) 제거**. 외부 노출이 필요하면 `HOST` 환경변수로 직접 opt-in.
-- **크로스플랫폼** — 그동안 프로세스 감지가 PowerShell 전용이라 macOS/Linux 에선 8종 중 6종이 조용히 안 잡혔습니다. `ps`/`pgrep` 기반 경로를 추가해 **맥·리눅스에서도 Ollama 등 프로세스 기반 플랫폼이 감지**됩니다.
+- **크로스플랫폼** — 그동안 프로세스 감지가 PowerShell 전용이라 macOS/Linux 에선 8종 중 6종이 조용히 안 잡혔습니다. `ps` 기반 경로를 추가해 **맥·리눅스에서도 Ollama 등 프로세스 기반 플랫폼이 감지**됩니다.
 - **화질** — Canvas 2D 렌더러가 `devicePixelRatio` 를 반영하지 않아 Retina/4K 에서 픽셀아트가 흐릿했습니다. 백버퍼를 DPR 배율로 키워 **고해상도 디스플레이에서도 선명**하게 (Pixi 오버레이와 선명도도 일치).
 - **정체성 일관성** — 에이전트 한 명이 퇴근하면 남은 직원들의 사이드바 이름·색이 캔버스 아바타와 어긋나던 버그 수정. 테마/자리를 배열 인덱스가 아니라 **pid 기준으로 고정**.
-- **배포** — `npx ai-tycoon` 한 줄로 설치 없이 실행 + 부팅 시 브라우저 자동 오픈. SW 캐시 v41 → **v42**.
+- **배포** — `npx ai-tycoon` 한 줄로 설치 없이 실행 + 부팅 시 브라우저 자동 오픈. SW 캐시 → **v45**.
 
 자세한 내역은 [`CHANGELOG.md`](./CHANGELOG.md) 의 v1.5.0 참고.
 
-### 🛠️ v1.4.x 안정성 패치 라인 (v1.4.1 ~ v1.4.7)
-v1.4.0 직후 8번의 검증 라운드 (general-purpose agent 코드 리뷰 5회 + Playwright e2e 3회) 를 거치며
-누적 **15개의 잠재 버그**를 잡고, 장기 사용자를 위한 신규 정리 기능 1개를 더했습니다. 정식 patch 7종으로 컷:
+### 🛠️ v1.4.x 안정성 패치 라인 (v1.4.1 ~ v1.4.9)
+v1.4.0 직후 9번의 검증 라운드 (general-purpose agent 코드 리뷰 6회 + Playwright e2e 3회) 를 거치며
+누적 **18개의 잠재 버그**를 잡고, 장기 사용자를 위한 신규 정리 기능 1개 + 영문 모드 i18n 마무리. 정식 patch 9종으로 컷:
 
+- **v1.4.9** — 팀 레이더 + 모바일 dock 26개 신규 i18n 키 (영문 모드 한글 누락 fix)
+- **v1.4.8** — `panel.js` 코드 리뷰 — *프로젝트 모달 themeForAgent ReferenceError (high)*, *Insights/프로젝트 row 클릭 시 pid mismatch 로 디테일 패널 silent 닫힘 (high)*, 보스 큐 inline onclick XSS 회피
 - **v1.4.7** — 메모 태그 매니저에 **오프라인 에이전트 메모 일괄 정리** 기능 + README 영문 섹션 v1.4.6 동기화
 - **v1.4.6** — *모바일 가로 스크롤 fix (high)* — 768px 이하에서 document horizontal scroll 발생하던 버그 + OSS hygiene (이슈/PR 템플릿, SECURITY.md, CODE_OF_CONDUCT.md, .gitattributes, ARCHITECTURE.md)
 - **v1.4.5** — 마무리 컷 — 메모 export 코드블록 보존, Playwright 라이브 audit (이슈 0건), README 정리
