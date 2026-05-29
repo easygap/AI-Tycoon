@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
+[![Node](https://img.shields.io/badge/node-%E2%89%A520-43853d.svg)](https://nodejs.org)
 [![Version](https://img.shields.io/badge/version-1.5.0-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
 
@@ -463,7 +463,7 @@ npm test           # smoke check: 38 assets/modules/API contract
 npm run icons      # install a new pixel-art PNG/ICO as app icon
 ```
 
-Tested on Node 18 / 20 / 22 (CI matrix). Modern browsers (Chrome, Edge, Safari, Firefox).
+Tested on Node 20 / 22 / 24 (CI matrix). Modern browsers (Chrome, Edge, Safari, Firefox).
 Process detection uses PowerShell on Windows and `ps` on macOS/Linux; Claude Code & Codex are file-based and work on all three.
 
 Optional environment variables:

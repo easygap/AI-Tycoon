@@ -13,7 +13,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [18, 20, 22]
+        # Node 18 은 EOL(2025-04) + node --check 가 ES 모듈 자동 감지를 못 해서 제외.
+        # 지원 LTS/Current 라인만 검증한다.
+        node: [20, 22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
