@@ -1,9 +1,22 @@
 {
   "name": "ai-tycoon",
-  "version": "1.4.7",
+  "version": "1.5.0",
   "description": "내 컴퓨터에서 돌아가는 AI 에이전트(Claude Code / Cursor / Codex / Copilot / Ollama / LM Studio / Jan / GPT4All)를 픽셀 아트 오피스로 시각화하는 실시간 대시보드.",
   "license": "MIT",
   "main": "server.js",
+  "bin": {
+    "ai-tycoon": "server.js"
+  },
+  "files": [
+    "server.js",
+    "index.html",
+    "style.css",
+    "js/",
+    "css/tailwind.generated.css",
+    "icons/",
+    "sw.js",
+    "manifest.webmanifest"
+  ],
   "homepage": "https://github.com/easygap/AI-Tycoon#readme",
   "repository": {
     "type": "git",
