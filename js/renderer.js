@@ -17,6 +17,12 @@ function winHash(x) { return ((x * 2654435761) >>> 0) / 4294967295; }
 
 // ── Main Render ──
 export function render() {
+    // 백버퍼가 논리 크기 × dpr 이므로, 매 프레임 dpr 배율을 베이스 transform 으로
+    // 깔아준다. 이렇게 하면 이후 모든 그리기 코드는 예전처럼 논리 좌표(canvasW/H)
+    // 기준으로 작성돼도 자동으로 고해상도로 렌더된다. setTransform 은 절대 지정이라
+    // 직전 프레임의 잔여 변환도 함께 리셋된다.
+    const dpr = S.dpr || 1;
+    S.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     S.ctx.clearRect(0, 0, S.canvasW, S.canvasH);
     S.ctx.save();
     S.ctx.translate(S.offsetX, S.offsetY);
@@ -643,9 +649,21 @@ function drawDesk(px, py, tx, ty) {
 }
 
 function findAgentAtDesk(tx, ty) {
+    // 아바타의 실제 자리는 출근 시 고정된 homeX/homeY 다. 현재 인덱스로 책상을
+    // 찾으면, 중간에 누가 퇴근해 인덱스가 밀렸을 때 모니터의 '작업 중' 하이라이트가
+    // 엉뚱한 책상에 켜진다. 그래서 고정 자리를 단일 기준으로 삼는다.
     for (let i = 0; i < S.liveAgents.length; i++) {
-        const d = S.DESK_SPOTS[i % S.DESK_SPOTS.length];
-        if (d.x === tx && d.y === ty) return S.liveAgents[i];
+        const agent = S.liveAgents[i];
+        const v = S.visualAgents[agent.pid];
+        let deskX, deskY;
+        if (v) {
+            deskX = Math.floor(v.homeX / TILE);
+            deskY = Math.floor(v.homeY / TILE);
+        } else {
+            const d = S.DESK_SPOTS[i % S.DESK_SPOTS.length];
+            deskX = d.x; deskY = d.y;
+        }
+        if (deskX === tx && deskY === ty) return agent;
     }
     return null;
 }
@@ -1558,8 +1576,10 @@ function drawZoomIndicator() {
     const ctx = S.ctx;
     if (Math.abs(S.zoomLevel - 1.0) < 0.05) return; // don't show at 100%
     ctx.save();
-    // Draw in screen space (not world space)
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // Draw in screen space (not world space) — 단, dpr 배율은 유지해야
+    // 고해상도에서 위치가 어긋나지 않고 글자도 선명하다.
+    const dpr = S.dpr || 1;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const text = `${Math.round(S.zoomLevel * 100)}%`;
     ctx.font = "bold 11px Pretendard, sans-serif";
     ctx.textAlign = "left";

@@ -136,12 +136,13 @@ async function main() {
         process.stdout.write(`✘  [api] /api/agents JSON parse failed: ${err.message}\n`);
         failed++;
     }
-    // CORS header on /api/agents
+    // CORS: 와일드카드(*) 가 제거됐는지 확인 — 임의 웹페이지의 cross-origin
+    // 접근을 막기 위한 보안 수정. 와일드카드가 다시 붙으면 회귀로 잡아낸다.
     try {
         const res = await request("/api/agents");
         const cors = res.headers["access-control-allow-origin"];
-        const ok = cors === "*";
-        process.stdout.write(`${ok ? "✔" : "✘"}  [api] /api/agents Access-Control-Allow-Origin = *\n`);
+        const ok = cors !== "*";
+        process.stdout.write(`${ok ? "✔" : "✘"}  [api] /api/agents 에 CORS 와일드카드(*) 없음\n`);
         if (!ok) failed++;
     } catch (err) {
         process.stdout.write(`✘  [api] CORS check failed: ${err.message}\n`);

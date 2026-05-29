@@ -25,12 +25,13 @@
 // Exposed as `window.aiTycoonStandup.export()` which downloads a .md file.
 // Also added to the command palette as "일일 리포트 Markdown".
 
-import { S } from "./state.js";
-import { AGENT_THEMES, STATUS_META, PLATFORM_META } from "./constants.js";
+import { S, resolveAgentTheme } from "./state.js";
+import { STATUS_META, PLATFORM_META } from "./constants.js";
 
 function themeFor(agent) {
+    // pid 고정 테마 사용 — 리포트의 직원 이름이 캔버스/사이드바와 일치하도록
     const idx = (S.liveAgents || []).indexOf(agent);
-    return AGENT_THEMES[(idx >= 0 ? idx : 0) % AGENT_THEMES.length];
+    return resolveAgentTheme(agent, idx);
 }
 
 function platformLabel(p) { return PLATFORM_META[p]?.label || p || "Unknown"; }
