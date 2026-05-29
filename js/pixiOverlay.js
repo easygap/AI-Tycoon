@@ -2,7 +2,7 @@
 //  AI TYCOON — PixiJS WebGL overlay (cute live-work effects)
 // ============================================================
 
-import { S, getWorkText } from "./state.js";
+import { S, getWorkText, resolveAgentTheme } from "./state.js";
 import {
     TILE, COLS, ROWS,
     OFFICE_MAP, POI,
@@ -1413,7 +1413,7 @@ function spawnWorkEventBurst(event, agent, v, key, now) {
         : event.type === "join" ? 0x2f80ed
         : event.type === "leave" ? 0x94a3b8
         : hexToNumber(event.statusColor || event.color || meta.color);
-    const themeColor = hexToNumber(event.color || AGENT_THEMES[S.liveAgents.indexOf(agent) % AGENT_THEMES.length]?.body || "#10b981");
+    const themeColor = hexToNumber(event.color || resolveAgentTheme(agent)?.body || "#10b981");
     const life = event.type === "review" ? 1100 : event.type === "task-done" ? 920 : 760;
     const sparkCount = event.type === "review" ? 7 : event.type === "task-done" ? 6 : 4;
     const sparkSeeds = Array.from({ length: sparkCount }, (_, i) => ({
@@ -1795,7 +1795,7 @@ function createAgentBundle(agent, idx) {
 function updateAgentBundle(bundle, agent, v, idx, activeCount, workCard, freshness, showTaskConstellation, showLifeFX) {
     const status = agent.isRunning ? agent.status : "offline";
     const meta = STATUS_META[status] || STATUS_META.idle;
-    const theme = AGENT_THEMES[idx % AGENT_THEMES.length];
+    const theme = resolveAgentTheme(agent);
     const statusColor = hexToNumber(meta.color);
     const themeColor = hexToNumber(theme.body);
     const calm = motionFactor(activeCount);
@@ -2324,7 +2324,7 @@ function drawAgentLabels() {
         const status = agent.status;
         const label = getLabel(labelIndex);
         const meta = STATUS_META[status] || STATUS_META.coding;
-        const theme = AGENT_THEMES[idx % AGENT_THEMES.length];
+        const theme = resolveAgentTheme(agent);
         const t = S.animFrame + idx * 30;
         const isFocus = samePid(S.directorFocusPid, agent.pid);
         const isSelected = samePid(S.selectedPid, agent.pid);
