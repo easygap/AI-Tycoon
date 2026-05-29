@@ -5,7 +5,20 @@ each iteration below corresponds to one commit / feature drop.
 
 ## [Unreleased]
 
-_(준비 중)_
+### Iteration 226 — 디테일 패널 + 카드 i18n 마무리 (영문 누락 strings 정리)
+- iter 225 의 후속 — panel.js 디테일 패널 카드 + agent card 안 hardcoded Korean 모두 정리
+- **detail-work-card** (현재 작업 / 복사 / 작업 원문 보기 / 최근 N / 업데이트됨) — 영문 fallback 자체가 없어 EN 모드 사용자가 한글 그대로 보던 영역. 5개 신규 i18n 키
+- **detail.detectionBasis / recentSignals / lastWord** — 기존 인라인 lang 분기 (lgSig 변수) 를 i18n 키로 정리
+- **detail-event-empty "최근 이벤트 수집 중"** — 기존 인라인 분기를 i18n 키로
+- **prev/next/pin/close 버튼 aria-label + title** — 기존 인라인 (`(window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? ... : ...`) 패턴을 깔끔한 i18n 키로 5개 통일
+- **카드 stuck chip** (`멈춤?`) title 한글 fallback fix → KO/EN i18n
+- **카드 메모리 추세 title/aria** (`30초 전 대비`, `메모리 증가/감소`) → KO/EN i18n
+- **카드 sub-task overflow** (`+5개 더`) → suffix i18n 키, EN 모드에선 `+5 more`
+- **카드 "완료" 라벨** (`12/18 완료`) → i18n 키, EN 모드에선 `12/18 done`
+- **agent-signal-line "최근 1분"** 의 "최근" prefix → i18n 키
+- **detail.statusUpdate** (`event.text` 폴백 "상태 갱신") → i18n 키
+- i18n 키 156+ → **184+**
+- SW 캐시 v43 → v44
 
 ## [1.4.9] — 2026-05-21
 
