@@ -59,7 +59,8 @@
 2. **WebSocket 서버** — 같은 포트, `/ws` 경로 (실제로는 upgrade 핸들러)
 3. **에이전트 탐지 폴러** — `POLL_INTERVAL` (기본 2초) 마다 동작:
    - `~/.claude/sessions/*.json` 스캔 → Claude Code 세션
-   - `ps aux` (Mac/Linux) / `Get-Process` (Windows) → 프로세스 매칭
+   - `ps` (macOS/Linux) / PowerShell `Get-Process` (Windows) → 프로세스 매칭
+     · 세션 PID 는 셸에 넣기 전 숫자만 통과시켜 명령 주입을 차단
    - `~/.codex/sessions/*.jsonl` → Codex CLI 세션 + 스레드
    - `~/.cursor/...` → Cursor 워크스페이스
    - `http://localhost:11434/api/tags` → Ollama (있으면)

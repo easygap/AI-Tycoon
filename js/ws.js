@@ -2,7 +2,7 @@
 //  AI TYCOON — WebSocket Connection & State Handling
 // ============================================================
 
-import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts } from "./state.js";
+import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts, resolveAgentTheme } from "./state.js";
 import {
     WS_URL, RECONNECT_BASE, RECONNECT_MAX,
     AGENT_THEMES, TILE, SUB_COLORS, SUB_SPEECH, STATUS_META,
@@ -203,7 +203,7 @@ function workSignature(agent) {
 
 function themeForAgent(agent) {
     const idx = S.liveAgents.findIndex(a => pidKey(a.pid) === pidKey(agent.pid));
-    return AGENT_THEMES[(idx >= 0 ? idx : 0) % AGENT_THEMES.length];
+    return resolveAgentTheme(agent, idx);
 }
 
 function addAgentEvent(agent, type, overrides = {}) {

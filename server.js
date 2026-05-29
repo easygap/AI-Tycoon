@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // ============================================================
 //  AI TYCOON — WebSocket Server (Refactored)
 //  Monitors real Claude Code sessions, tasks, and processes
@@ -29,13 +30,17 @@ const CODEX_SESSIONS_DIR = path.join(CODEX_DIR, "sessions");
 const CURSOR_STORAGE = path.join(HOME, "AppData", "Roaming", "Cursor", "User", "globalStorage", "storage.json");
 
 const PORT = parseInt(process.env.PORT, 10) || 3777;
+// 기본은 루프백(127.0.0.1)에만 바인딩 — 같은 네트워크의 다른 기기에서
+// 프롬프트/프로젝트명이 노출되는 걸 막는다. 외부 노출이 필요하면 HOST 를
+// 직접 지정(opt-in)하고 리버스 프록시 + 인증을 붙이는 걸 권장.
+const HOST = process.env.HOST || "127.0.0.1";
 const POLL_INTERVAL = parseInt(process.env.POLL_INTERVAL, 10) || 2000;
 const HEARTBEAT_INTERVAL = 10000; // 10s
 const QUIET = process.env.QUIET === "1" || process.env.LOG_LEVEL === "warn" || process.env.LOG_LEVEL === "error";
 
 // ── State ────────────────────────────────────────────────────
 const STARTED_AT = Date.now();
-const VERSION = "1.4.7";
+const VERSION = "1.5.0";
 let lastState = null;
 let clients = new Set();
 let watchDebounceTimer = null;
@@ -139,10 +144,12 @@ const httpServer = http.createServer((req, res) => {
                 status: a.currentTask.status,
             } : null,
         }));
+        // CORS 와일드카드(*) 는 의도적으로 제거했다 — 이게 있으면 사용자가 방문한
+        // 임의 웹페이지의 JS 가 localhost API 로 로컬 에이전트 현황을 긁어갈 수 있다.
+        // 같은 출처(대시보드 자신)와 CLI/스크립트(curl 등, CORS 무관)는 그대로 동작.
         res.writeHead(200, {
             "Content-Type": "application/json; charset=utf-8",
             "Cache-Control": "no-cache, no-store, must-revalidate",
-            "Access-Control-Allow-Origin": "*",
         });
         res.end(JSON.stringify({ ok: true, count: agents.length, agents }, null, 2));
         return;
@@ -235,7 +242,26 @@ const httpServer = http.createServer((req, res) => {
 });
 
 // ── WebSocket Server ─────────────────────────────────────────
-const wss = new WebSocketServer({ server: httpServer });
+// Origin 검증: 브라우저는 WS 연결 시 항상 Origin 헤더를 보낸다. 악성 사이트가
+// ws://localhost:3777 에 몰래 붙어 full_state(프롬프트 원문 포함)를 가로채는
+// Cross-Site WebSocket Hijacking 을 막기 위해 루프백 출처만 허용한다.
+// - Origin 헤더가 없는 비브라우저 클라이언트(CLI 통합 등)는 허용 (CSRF 벡터 아님)
+// - HOST 를 직접 지정해 외부 노출을 opt-in 한 경우엔 검증을 완화 (사용자 책임)
+function isAllowedWsOrigin(origin) {
+    if (!origin) return true;
+    if (process.env.HOST) return true;
+    try {
+        const host = new URL(origin).hostname;
+        return host === "localhost" || host === "127.0.0.1" || host === "::1";
+    } catch {
+        return false;
+    }
+}
+
+const wss = new WebSocketServer({
+    server: httpServer,
+    verifyClient: (info) => isAllowedWsOrigin(info.origin),
+});
 
 wss.on("connection", (ws) => {
     clients.add(ws);
@@ -446,24 +472,48 @@ async function readClaudeConfig() {
 function readProcesses(sessionPids) {
     if (!sessionPids || sessionPids.length === 0) return Promise.resolve([]);
 
-    const pidList = sessionPids.join(",");
-    const psCmd = `powershell -NoProfile -Command "$pids = @(${pidList}); $result = @(); foreach ($id in $pids) { try { $p = Get-Process -Id $id -ErrorAction Stop; $result += @{Id=$p.Id; WS=$p.WorkingSet64; Name=$p.ProcessName} } catch {} }; $result | ConvertTo-Json -Compress"`;
+    // PID 는 ~/.claude/sessions 파일명에서 온 값이라 셸에 넣기 전에 숫자만 통과시킨다.
+    // (검증 없이 셸 명령에 끼우면 악성 파일명으로 명령 주입이 가능한 표면이 된다.)
+    const numericPids = sessionPids.filter(p => /^[0-9]+$/.test(String(p)));
+    if (numericPids.length === 0) return Promise.resolve([]);
 
+    if (process.platform === "win32") {
+        const pidList = numericPids.join(",");
+        const psCmd = `powershell -NoProfile -Command "$pids = @(${pidList}); $result = @(); foreach ($id in $pids) { try { $p = Get-Process -Id $id -ErrorAction Stop; $result += @{Id=$p.Id; WS=$p.WorkingSet64; Name=$p.ProcessName} } catch {} }; $result | ConvertTo-Json -Compress"`;
+        return new Promise((resolve) => {
+            exec(psCmd, { timeout: 4000, shell: "cmd.exe" }, (err, stdout) => {
+                if (err || !stdout || !stdout.trim()) return resolve([]);
+                try {
+                    let parsed = JSON.parse(stdout.trim());
+                    if (!Array.isArray(parsed)) parsed = [parsed];
+                    const processes = parsed.map(p => ({
+                        pid: String(p.Id),
+                        memoryKB: Math.round((p.WS || 0) / 1024),
+                        processName: p.Name || "",
+                    })).filter(p => p.pid);
+                    resolve(processes);
+                } catch (e) {
+                    resolve([]);
+                }
+            });
+        });
+    }
+
+    // macOS / Linux: ps 로 RSS(KB) 조회. rss 는 KB 단위라 그대로 memoryKB 로 쓴다.
+    const psCmd = `ps -o pid=,rss=,comm= -p ${numericPids.join(",")}`;
     return new Promise((resolve) => {
-        exec(psCmd, { timeout: 4000, shell: "cmd.exe" }, (err, stdout) => {
-            if (err || !stdout || !stdout.trim()) return resolve([]);
-            try {
-                let parsed = JSON.parse(stdout.trim());
-                if (!Array.isArray(parsed)) parsed = [parsed];
-                const processes = parsed.map(p => ({
-                    pid: String(p.Id),
-                    memoryKB: Math.round((p.WS || 0) / 1024),
-                    processName: p.Name || "",
-                })).filter(p => p.pid);
-                resolve(processes);
-            } catch (e) {
-                resolve([]);
-            }
+        exec(psCmd, { timeout: 4000 }, (err, stdout) => {
+            if (!stdout || !stdout.trim()) return resolve([]);
+            const processes = stdout.trim().split("\n").map(line => {
+                const m = line.trim().match(/^(\d+)\s+(\d+)\s+(.*)$/);
+                if (!m) return null;
+                return {
+                    pid: m[1],
+                    memoryKB: parseInt(m[2], 10) || 0,
+                    processName: (m[3] || "").split("/").pop(),
+                };
+            }).filter(Boolean);
+            resolve(processes);
         });
     });
 }
@@ -590,67 +640,92 @@ async function readCursorWorkspaces() {
     }
 }
 
-/** Detect non-Claude AI platforms running on the system */
-function readExternalAIs() {
-    const processNames = [];
-    for (const platform of Object.values(AI_PLATFORMS)) {
-        processNames.push(...platform.processNames);
+/** 정규화된 프로세스 목록([{Id, WS(byte), Name, Title}])을 플랫폼별 에이전트로 집계 */
+function aggregateExternalAgents(parsed) {
+    const agents = [];
+    for (const [key, platform] of Object.entries(AI_PLATFORMS)) {
+        const procs = parsed.filter(p =>
+            platform.processNames.some(n => n.toLowerCase() === (p.Name || "").toLowerCase())
+        );
+        if (procs.length === 0) continue;
+
+        if (platform.aggregate === "main-window") {
+            // Cursor 처럼 멀티프로세스 앱: 메모리가 가장 큰 프로세스를 대표로
+            const main = procs.reduce((a, b) => (a.WS || 0) > (b.WS || 0) ? a : b);
+            const totalMem = procs.reduce((s, p) => s + (p.WS || 0), 0);
+            const title = procs.find(p => p.Title && p.Title.length > 0)?.Title || "";
+            agents.push({
+                pid: `ext-${key}-${main.Id}`,
+                platform: key,
+                platformName: platform.name,
+                icon: platform.icon,
+                processCount: procs.length,
+                memoryKB: Math.round(totalMem / 1024),
+                mainPid: main.Id,
+                windowTitle: title,
+            });
+        } else {
+            // 단일 프로세스 앱: 인스턴스마다 에이전트 하나
+            procs.forEach(p => {
+                agents.push({
+                    pid: `ext-${key}-${p.Id}`,
+                    platform: key,
+                    platformName: platform.name,
+                    icon: platform.icon,
+                    processCount: 1,
+                    memoryKB: Math.round((p.WS || 0) / 1024),
+                    mainPid: p.Id,
+                    windowTitle: p.Title || "",
+                });
+            });
+        }
     }
-    const nameFilter = processNames.map(n => `'${n}'`).join(",");
+    return agents;
+}
 
-    const psCmd = `powershell -NoProfile -Command "$names = @(${nameFilter}); $result = @(); foreach ($n in $names) { try { $procs = Get-Process -Name $n -ErrorAction Stop; foreach ($p in $procs) { $result += @{Id=$p.Id; WS=$p.WorkingSet64; Name=$p.ProcessName; Title=$p.MainWindowTitle} } } catch {} }; if ($result.Count -gt 0) { $result | ConvertTo-Json -Compress } else { '[]' }"`;
+/** Detect non-Claude AI platforms running on the system (Windows / macOS / Linux) */
+function readExternalAIs() {
+    if (process.platform === "win32") {
+        const processNames = [];
+        for (const platform of Object.values(AI_PLATFORMS)) {
+            processNames.push(...platform.processNames);
+        }
+        const nameFilter = processNames.map(n => `'${n}'`).join(",");
+        const psCmd = `powershell -NoProfile -Command "$names = @(${nameFilter}); $result = @(); foreach ($n in $names) { try { $procs = Get-Process -Name $n -ErrorAction Stop; foreach ($p in $procs) { $result += @{Id=$p.Id; WS=$p.WorkingSet64; Name=$p.ProcessName; Title=$p.MainWindowTitle} } } catch {} }; if ($result.Count -gt 0) { $result | ConvertTo-Json -Compress } else { '[]' }"`;
 
-    return new Promise((resolve) => {
-        exec(psCmd, { timeout: 4000, shell: "cmd.exe" }, (err, stdout) => {
-            if (err || !stdout || !stdout.trim()) return resolve([]);
-            try {
-                let parsed = JSON.parse(stdout.trim());
-                if (!Array.isArray(parsed)) parsed = [parsed];
-
-                const agents = [];
-
-                for (const [key, platform] of Object.entries(AI_PLATFORMS)) {
-                    const procs = parsed.filter(p =>
-                        platform.processNames.some(n => n.toLowerCase() === (p.Name || "").toLowerCase())
-                    );
-                    if (procs.length === 0) continue;
-
-                    if (platform.aggregate === "main-window") {
-                        // For multi-process apps like Cursor: pick the largest process
-                        const main = procs.reduce((a, b) => (a.WS || 0) > (b.WS || 0) ? a : b);
-                        const totalMem = procs.reduce((s, p) => s + (p.WS || 0), 0);
-                        const title = procs.find(p => p.Title && p.Title.length > 0)?.Title || "";
-                        agents.push({
-                            pid: `ext-${key}-${main.Id}`,
-                            platform: key,
-                            platformName: platform.name,
-                            icon: platform.icon,
-                            processCount: procs.length,
-                            memoryKB: Math.round(totalMem / 1024),
-                            mainPid: main.Id,
-                            windowTitle: title,
-                        });
-                    } else {
-                        // Single-process apps: one agent per instance
-                        procs.forEach(p => {
-                            agents.push({
-                                pid: `ext-${key}-${p.Id}`,
-                                platform: key,
-                                platformName: platform.name,
-                                icon: platform.icon,
-                                processCount: 1,
-                                memoryKB: Math.round((p.WS || 0) / 1024),
-                                mainPid: p.Id,
-                                windowTitle: p.Title || "",
-                            });
-                        });
-                    }
+        return new Promise((resolve) => {
+            exec(psCmd, { timeout: 4000, shell: "cmd.exe" }, (err, stdout) => {
+                if (err || !stdout || !stdout.trim()) return resolve([]);
+                try {
+                    let parsed = JSON.parse(stdout.trim());
+                    if (!Array.isArray(parsed)) parsed = [parsed];
+                    resolve(aggregateExternalAgents(parsed));
+                } catch (e) {
+                    resolve([]);
                 }
+            });
+        });
+    }
 
-                resolve(agents);
-            } catch (e) {
-                resolve([]);
-            }
+    // macOS / Linux: ps 로 실행 중인 프로세스를 훑어 이름으로 매칭한다.
+    // (윈도우 타이틀은 OS 표준 도구로 얻기 어려워 비워 둔다 — Ollama 처럼
+    //  프로세스명이 동일한 플랫폼은 정상 감지된다.)
+    const psCmd = `ps -axo pid=,rss=,comm=`;
+    return new Promise((resolve) => {
+        exec(psCmd, { timeout: 4000 }, (err, stdout) => {
+            if (!stdout || !stdout.trim()) return resolve([]);
+            const parsed = stdout.trim().split("\n").map(line => {
+                const m = line.trim().match(/^(\d+)\s+(\d+)\s+(.*)$/);
+                if (!m) return null;
+                // rss 는 KB → WS 는 byte 기준이라 1024 를 곱해 단위를 맞춘다.
+                return {
+                    Id: parseInt(m[1], 10),
+                    WS: (parseInt(m[2], 10) || 0) * 1024,
+                    Name: (m[3] || "").split("/").pop(),
+                    Title: "",
+                };
+            }).filter(Boolean);
+            resolve(aggregateExternalAgents(parsed));
         });
     });
 }
@@ -1235,15 +1310,32 @@ function findTasksForSession(allTasks, sessionId, cwd) {
     return [];
 }
 
+// 첫 실행 시 기본 브라우저로 대시보드를 자동으로 열어준다 (npx 한 줄 실행 UX).
+// 서버/헤드리스로 돌릴 땐 NO_OPEN=1 로 끌 수 있다.
+function maybeOpenBrowser(displayHost) {
+    if (process.env.NO_OPEN === "1" || process.env.CI) return;
+    const url = `http://${displayHost}:${PORT}`;
+    const cmd = process.platform === "win32"
+        ? `start "" "${url}"`
+        : process.platform === "darwin"
+            ? `open "${url}"`
+            : `xdg-open "${url}"`;
+    try {
+        exec(cmd, { shell: process.platform === "win32" ? "cmd.exe" : undefined }, () => { /* 실패해도 무시 */ });
+    } catch { /* 브라우저 자동 오픈 실패는 치명적이지 않음 */ }
+}
+
 // ── Start ────────────────────────────────────────────────────
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, HOST, () => {
+    // 브라우저 주소창에는 0.0.0.0 대신 localhost 를 보여주는 게 자연스럽다.
+    const displayHost = (HOST === "0.0.0.0" || HOST === "::") ? "localhost" : HOST;
     console.log("");
     console.log("  ╔══════════════════════════════════════╗");
     console.log("  ║   AI TYCOON — Pixel Agent Office     ║");
     console.log(`  ║   v${VERSION.padEnd(34)}║`);
     console.log("  ║                                      ║");
-    console.log(`  ║   http://localhost:${PORT}              ║`);
-    console.log("  ║   WebSocket: ws://localhost:" + PORT + "     ║");
+    console.log("  ║" + `   http://${displayHost}:${PORT}`.padEnd(38) + "║");
+    console.log("  ║" + `   WebSocket: ws://${displayHost}:${PORT}`.padEnd(38) + "║");
     console.log("  ║                                      ║");
     console.log("  ║   Monitoring Claude Code agents...   ║");
     console.log("  ╚══════════════════════════════════════╝");
@@ -1251,9 +1343,11 @@ httpServer.listen(PORT, () => {
     console.log(`  Claude Dir: ${CLAUDE_DIR}`);
     console.log(`  Sessions:   ${SESSIONS_DIR}`);
     console.log(`  Tasks:      ${TASKS_DIR}`);
+    console.log(`  Bind:       ${HOST}:${PORT}${HOST === "127.0.0.1" ? " (로컬 전용)" : " (외부 노출 — 인증/프록시 권장)"}`);
     console.log(`  Platform:   ${process.platform} · Node ${process.version}`);
     console.log("");
 
+    maybeOpenBrowser(displayHost);
     pollAndBroadcast();
     pollTimer = setInterval(pollAndBroadcast, POLL_INTERVAL);
     startHeartbeat();
