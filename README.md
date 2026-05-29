@@ -7,7 +7,7 @@
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A518-43853d.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-1.4.7-d97757.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.5.0-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
 
 <p align="center">
@@ -21,6 +21,17 @@
 
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
+
+### 🚀 v1.5.0 — 출시 준비 하드닝 (보안 · 크로스플랫폼 · 화질)
+기능을 더 쌓기보다, 정식 배포 전에 꼭 잡아야 할 기반 4가지를 정리한 릴리즈입니다.
+
+- **보안** — 서버를 기본적으로 `127.0.0.1` 에만 바인딩 (예전엔 의도와 달리 `0.0.0.0` 으로 떠서 같은 네트워크의 다른 기기가 내 프롬프트·프로젝트명을 들여다볼 수 있었음). WebSocket 에 **Origin 검증**을 추가해 악성 사이트가 `ws://localhost` 로 몰래 붙어 작업 내용을 가로채는 *Cross-Site WebSocket Hijacking* 을 막고, `/api/agents` 의 **CORS 와일드카드(`*`) 제거**. 외부 노출이 필요하면 `HOST` 환경변수로 직접 opt-in.
+- **크로스플랫폼** — 그동안 프로세스 감지가 PowerShell 전용이라 macOS/Linux 에선 8종 중 6종이 조용히 안 잡혔습니다. `ps`/`pgrep` 기반 경로를 추가해 **맥·리눅스에서도 Ollama 등 프로세스 기반 플랫폼이 감지**됩니다.
+- **화질** — Canvas 2D 렌더러가 `devicePixelRatio` 를 반영하지 않아 Retina/4K 에서 픽셀아트가 흐릿했습니다. 백버퍼를 DPR 배율로 키워 **고해상도 디스플레이에서도 선명**하게 (Pixi 오버레이와 선명도도 일치).
+- **정체성 일관성** — 에이전트 한 명이 퇴근하면 남은 직원들의 사이드바 이름·색이 캔버스 아바타와 어긋나던 버그 수정. 테마/자리를 배열 인덱스가 아니라 **pid 기준으로 고정**.
+- **배포** — `npx ai-tycoon` 한 줄로 설치 없이 실행 + 부팅 시 브라우저 자동 오픈. SW 캐시 v41 → **v42**.
+
+자세한 내역은 [`CHANGELOG.md`](./CHANGELOG.md) 의 v1.5.0 참고.
 
 ### 🛠️ v1.4.x 안정성 패치 라인 (v1.4.1 ~ v1.4.7)
 v1.4.0 직후 8번의 검증 라운드 (general-purpose agent 코드 리뷰 5회 + Playwright e2e 3회) 를 거치며
@@ -196,6 +207,8 @@ AI Tycoon은 현재 내 컴퓨터에서 돌아가는 AI 작업을 **게임처럼
 | Jan | 프로세스 감지 |
 | GPT4All | 프로세스 감지 |
 
+> **OS별 차이** — Claude Code · Codex 는 세션 파일 기반이라 Windows / macOS / Linux 모두 동일하게 감지됩니다. 프로세스 기반 감지는 Windows 는 PowerShell, macOS/Linux 는 `ps` 를 사용합니다. 다만 윈도우 타이틀(Cursor 등)은 OS 표준 도구로 얻기 어려워 비‑Windows 에선 일부 정보가 비어 있을 수 있습니다. AI 도구가 하나도 안 잡히는 환경이라면 `?demo=1` 데모 모드로 둘러볼 수 있습니다.
+
 새로운 AI 플랫폼은 `server.js`의 `AI_PLATFORMS` 객체에 항목을 추가하면 됩니다.
 
 ---
@@ -214,6 +227,14 @@ Tailwind 유틸리티 CSS는 `npm run build:css`로 `css/tailwind.generated.css`
 
 ## 실행 방법
 
+설치 없이 한 줄로 띄우는 게 가장 빠릅니다. (실행하면 기본 브라우저로 대시보드가 자동으로 열립니다.)
+
+```bash
+npx ai-tycoon
+```
+
+저장소를 클론해서 개발용으로 돌릴 때는:
+
 ```bash
 npm install
 npm start
@@ -225,13 +246,17 @@ npm start
 http://localhost:3777
 ```
 
-환경 변수로 포트와 폴링 주기, 로그 출력을 조절할 수 있습니다.
+환경 변수로 포트·폴링 주기·바인딩·로그를 조절할 수 있습니다.
 
 ```bash
 PORT=8080 POLL_INTERVAL=3000 npm start
+NO_OPEN=1 npm start                        # 브라우저 자동 오픈 끄기 (서버/헤드리스용)
+HOST=0.0.0.0 npm start                     # 외부 노출 (직접 opt-in — 인증/프록시 권장)
 QUIET=1 npm start                          # 폴링/WS 로그 억제
 LOG_LEVEL=warn npm start                   # 위와 동일
 ```
+
+> 🔒 기본값은 `127.0.0.1` (로컬 전용) 바인딩입니다. 같은 네트워크의 다른 기기에서 접근하려면 `HOST` 를 직접 지정해야 하며, 이 경우 프롬프트·프로젝트명이 노출될 수 있으니 리버스 프록시 + 인증을 함께 두는 걸 권장합니다.
 
 스타일을 수정한 뒤 Tailwind 유틸리티를 다시 생성하려면:
 
@@ -425,6 +450,12 @@ Instead of glancing at half a dozen terminals, you see your agents as characters
 ### Run
 
 ```bash
+npx ai-tycoon       # zero-install: runs the server & opens your browser
+```
+
+Or clone for development:
+
+```bash
 npm install
 npm start          # http://localhost:3777
 npm run lint       # node --check on every .js (36+ files)
@@ -433,12 +464,17 @@ npm run icons      # install a new pixel-art PNG/ICO as app icon
 ```
 
 Tested on Node 18 / 20 / 22 (CI matrix). Modern browsers (Chrome, Edge, Safari, Firefox).
+Process detection uses PowerShell on Windows and `ps` on macOS/Linux; Claude Code & Codex are file-based and work on all three.
 
 Optional environment variables:
 
 ```bash
 PORT=8080 POLL_INTERVAL=3000 npm start
+NO_OPEN=1 npm start              # don't auto-open the browser (servers/headless)
+HOST=0.0.0.0 npm start           # expose beyond localhost (opt-in; add auth/proxy)
 ```
+
+> 🔒 Binds to `127.0.0.1` (loopback only) by default. The WebSocket checks the `Origin` header and `/api/agents` sends no wildcard CORS, so a malicious site can't siphon your local agent activity.
 
 ### Project layout
 

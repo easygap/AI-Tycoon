@@ -7,6 +7,57 @@ each iteration below corresponds to one commit / feature drop.
 
 _(준비 중)_
 
+## [1.5.0] — 2026-05-29
+
+> 정식 배포 전에 꼭 짚어야 할 기반 4가지(보안·크로스플랫폼·화질·정체성)와 배포 편의를
+> 정리한 릴리즈. 기능 추가가 아니라 "이미 있는 걸 제대로 동작하게" 만드는 데 집중.
+>
+> 사용자 데이터 호환: 변경 없음. SW 캐시: v41 → v42.
+>
+> **보안 (출시 차단급 3건 해소)**
+> - **서버 기본 바인딩을 `0.0.0.0` → `127.0.0.1` 로 수정** — SECURITY.md 는 줄곧 "localhost 전용"
+>   이라 보증했지만 `listen(PORT)` 에 host 인자가 없어 실제로는 전체 인터페이스에 떠 있었다.
+>   같은 LAN 의 다른 기기가 `/api/agents` 로 프롬프트·프로젝트명을 조회할 수 있던 문제.
+>   외부 노출은 `HOST` 환경변수로 직접 opt-in.
+> - **WebSocket Origin 검증 추가** — 악성 사이트가 `ws://localhost` 에 붙어 `full_state`(프롬프트
+>   원문 포함)를 가로채는 Cross-Site WebSocket Hijacking 차단. 루프백 출처만 허용, Origin 없는
+>   비브라우저 클라이언트(CLI)는 허용.
+> - **`/api/agents` CORS 와일드카드(`*`) 제거** — 임의 웹페이지 JS 의 cross-origin fetch 차단.
+> - **PowerShell 세션 PID 숫자 검증** — 파일명에서 온 PID 를 셸에 넣기 전 `^[0-9]+$` 필터링.
+>
+> **크로스플랫폼**
+> - **macOS/Linux 프로세스 감지 추가** — 그동안 PowerShell 전용이라 비‑Windows 에선 8종 중 6종이
+>   조용히 안 잡혔다. `ps -o pid=,rss=,comm=` / `ps -axo ...` 기반 경로를 추가해 Ollama 등
+>   프로세스 기반 플랫폼이 맥·리눅스에서도 감지된다. (집계 로직은 공유 헬퍼로 분리)
+>
+> **화질**
+> - **Canvas 2D devicePixelRatio 대응** — Retina/4K 에서 픽셀아트가 흐릿하던 문제. 백버퍼를 DPR
+>   배율(상한 2)로 키우고 render 시 베이스 transform 적용. Pixi 오버레이와 선명도가 일치.
+>
+> **정체성 일관성**
+> - **pid 고정 테마/책상 매핑** — 에이전트 한 명이 퇴근하면 배열 인덱스가 밀려 남은 직원들의
+>   사이드바 이름·색·자리가 캔버스 아바타와 어긋나던 버그. `visualAgents[pid]` 를 단일
+>   진실원천으로 삼는 `resolveAgentTheme()` 로 7개 파일의 테마 계산을 통일.
+>
+> **배포**
+> - **`npx ai-tycoon` 한 줄 실행** — `bin` + shebang + `files` 화이트리스트. 부팅 시 브라우저
+>   자동 오픈(`NO_OPEN=1` 로 끔).
+
+### Iteration 223 — 출시 준비 하드닝 (보안 · 크로스플랫폼 · DPR · 정체성 · 배포)
+- **보안**: `httpServer.listen(PORT, HOST)` 로 기본 루프백 바인딩, `verifyClient` 로 WS Origin
+  화이트리스트(localhost/127.0.0.1/::1), `/api/agents` CORS `*` 제거, `readProcesses` PID 숫자 검증
+- **크로스플랫폼**: `readProcesses`/`readExternalAIs` 를 `process.platform` 으로 분기, 비‑Windows 는
+  `ps` 사용. `aggregateExternalAgents()` 로 플랫폼 무관 집계 로직 공유
+- **DPR**: `state.S.dpr` 추가, `resize()` 에서 백버퍼 = 논리크기 × min(dpr,2),
+  `render()`/`drawZoomIndicator()` 에 dpr 베이스 transform. 스냅샷은 자동으로 고해상도화
+- **정체성**: `state.resolveAgentTheme(agent, fallbackIdx)` 신설 → `getAgentTheme`/`themeForAgent`
+  및 main/panel/pixiOverlay/standupExport 의 인덱스 기반 계산 일괄 치환,
+  `findAgentAtDesk` 는 `homeX/homeY` 기준으로 책상 판정
+- **배포/정리**: `package.json` `bin`/`files`, `server.js` shebang + `maybeOpenBrowser`,
+  스모크 테스트 CORS 단언 반전(와일드카드 부재 검증), SW 캐시 v41 → v42, 죽은 `game.js.bak` 제거
+- 문서: README(v1.5.0 섹션 + npx + OS별 감지 + 보안 노트), SECURITY.md, ARCHITECTURE.md 동기화
+- 검증: 린트 36/36, 스모크 38/38, WS Origin 5/5(허용 3·차단 2), 127.0.0.1 바인딩·실 감지·DPR=2 렌더 확인
+
 ## [1.4.7] — 2026-05-21
 
 > v1.4.6 직후 장기 사용자용 신규 정리 기능 + 영문 README 동기화.
