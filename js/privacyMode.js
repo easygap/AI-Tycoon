@@ -14,6 +14,8 @@
 //
 // Hotkey: Shift+P toggles. Toggle state persists in localStorage.
 
+import { t } from "./i18n.js";
+
 const KEY = "ai-tycoon-privacy-mode";
 // Strict 모드: hover 해도 unblur 안 되는 강력 모드 (화면 녹화/스크린샷 안전).
 // 기본은 false(=일반 프라이버시 모드)이며 토스트 모드 토글 시에는 그대로 둠.
@@ -30,10 +32,11 @@ function ensureBadge() {
     badge.className = "privacy-badge";
     badge.setAttribute("role", "status");
     badge.setAttribute("aria-live", "polite");
+    // data-i18n 을 같이 달아둠 — 배지가 떠 있는 동안 언어를 바꿔도 applyToDom 이 갱신
     badge.innerHTML = `
         <iconify-icon icon="solar:eye-closed-bold" aria-hidden="true"></iconify-icon>
-        <span class="privacy-badge-text">프라이버시 모드</span>
-        <button type="button" class="privacy-badge-close" aria-label="프라이버시 모드 끄기">×</button>
+        <span class="privacy-badge-text" data-i18n="privacy.badge">${t("privacy.badge")}</span>
+        <button type="button" class="privacy-badge-close" data-i18n-attr="aria-label:privacy.badgeClose" aria-label="${t("privacy.badgeClose")}">×</button>
     `;
     badge.querySelector(".privacy-badge-close").addEventListener("click", () => setEnabled(false));
     document.body.appendChild(badge);
@@ -46,9 +49,13 @@ function applyClass() {
     if (enabled) {
         const badge = ensureBadge();
         requestAnimationFrame(() => badge.classList.add("is-shown"));
-        // strict 일 때 배지 텍스트 살짝 강조
+        // strict 일 때 배지 텍스트 살짝 강조 — data-i18n 키도 같이 바꿔 언어 전환에 대응
         const text = badge.querySelector(".privacy-badge-text");
-        if (text) text.textContent = strict ? "프라이버시 (Strict)" : "프라이버시 모드";
+        if (text) {
+            const key = strict ? "privacy.badgeStrict" : "privacy.badge";
+            text.textContent = t(key);
+            text.setAttribute("data-i18n", key);
+        }
     } else {
         const badge = document.getElementById("privacy-badge");
         if (badge) {

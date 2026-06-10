@@ -7,7 +7,7 @@
 [![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A520-43853d.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-1.5.0-d97757.svg)](./CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.5.1-d97757.svg)](./CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
 
 <p align="center">
@@ -21,6 +21,15 @@
 
 > **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
 > *A live pixel-art office dashboard for AI agents running on your machine.*
+
+### 🩹 v1.5.1 — 실사용 감사 후속 패치 (부팅 · i18n · 접근성)
+v1.5.0 을 첫 사용자 시나리오로 다시 훑으며 잡은 마무리 패치입니다.
+
+- **백그라운드 탭 부팅 fix** — 부팅이 첫 rAF 에 묶여 있어서, `npx ai-tycoon` 이 탭을 백그라운드로 열면 WS 연결도 못 한 채 "연결 중"에 멈췄습니다. setTimeout 폴백으로 어디서 열려도 즉시 연결.
+- **포트 충돌 안내** — 3777 이 이미 사용 중이면 스택트레이스 대신 "이미 떠 있는지 확인 / PORT 변경" 안내. (`ws` 의 `{server}` 모드에선 listen 에러가 wss 쪽으로 오는 함정 주의)
+- **영문 모드 한글 잔재 일소** — 우선순위 라벨 · 명령 팔레트 액션 34종 · 프라이버시 배지 등 신규 i18n 키 50쌍.
+- **모달 접근성** — Tab 포커스 트랩 + 닫을 때 트리거 버튼으로 복귀, 빈 상태 CTA aria-live.
+- **다크모드 디테일** — 셀렉터 안에 들어가 무시되던 `@keyframes` 수정, 토스트 보더 대비, 480px 모달 여백. SW 캐시 → **v46**.
 
 ### 🚀 v1.5.0 — 출시 준비 하드닝 (보안 · 크로스플랫폼 · 화질)
 기능을 더 쌓기보다, 정식 배포 전에 꼭 잡아야 할 기반 4가지를 정리한 릴리즈입니다.
