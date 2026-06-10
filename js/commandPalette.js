@@ -23,6 +23,7 @@ import { S } from "./state.js";
 import { AGENT_THEMES, STATUS_META, PLATFORM_META } from "./constants.js";
 import { isAgentPinned as _isAgentPinned } from "./agentPriority.js";
 import { extractTagsFromNotes } from "./panel.js";
+import { t } from "./i18n.js";
 
 function isPinned(agent) {
     return _isAgentPinned(agent, S.pinnedAgentKeys || []);
@@ -278,25 +279,27 @@ function buildActions(query) {
         } catch { /* ignore */ }
     };
 
+    // title 은 t() 로 매 호출마다 결정 — render() 가 buildActions 를 다시 부르므로
+    // 언어 전환 직후 팔레트를 열면 곧바로 해당 언어로 보임.
     const all = [
         // ── Display ──
-        { id: "theme-toggle", group: "display", title: "다크 / 라이트 토글", hint: "D", run: () => { try { document.body.classList.toggle("dark"); localStorage.setItem("ai-tycoon-dark", document.body.classList.contains("dark") ? "true" : "false"); } catch { /* ignore */ } } },
-        { id: "privacy", group: "display", title: "프라이버시 모드 토글", hint: "⇧P", run: () => { try { window.aiTycoonPrivacy?.toggle?.(); } catch { /* ignore */ } } },
-        { id: "privacy-strict", group: "display", title: "Strict 프라이버시 (호버 미리보기 차단)", hint: "⇧P⇧P", run: () => { try { window.aiTycoonPrivacy?.setStrict?.(!window.aiTycoonPrivacy?.isStrict?.()); } catch { /* ignore */ } } },
-        { id: "cinema", group: "display", title: "시네마 모드 (오버레이 숨김)", hint: "Z", run: () => { try { window.toggleCinemaMode?.(); } catch { /* ignore */ } } },
-        { id: "compact-cards", group: "display", title: "에이전트 카드 컴팩트 보기 토글", run: () => { try { window.toggleAgentsCompact?.(); } catch { /* ignore */ } } },
+        { id: "theme-toggle", group: "display", title: t("palette.actionThemeToggle"), hint: "D", run: () => { try { document.body.classList.toggle("dark"); localStorage.setItem("ai-tycoon-dark", document.body.classList.contains("dark") ? "true" : "false"); } catch { /* ignore */ } } },
+        { id: "privacy", group: "display", title: t("palette.actionPrivacy"), hint: "⇧P", run: () => { try { window.aiTycoonPrivacy?.toggle?.(); } catch { /* ignore */ } } },
+        { id: "privacy-strict", group: "display", title: t("palette.actionPrivacyStrict"), hint: "⇧P⇧P", run: () => { try { window.aiTycoonPrivacy?.setStrict?.(!window.aiTycoonPrivacy?.isStrict?.()); } catch { /* ignore */ } } },
+        { id: "cinema", group: "display", title: t("palette.actionCinema"), hint: "Z", run: () => { try { window.toggleCinemaMode?.(); } catch { /* ignore */ } } },
+        { id: "compact-cards", group: "display", title: t("palette.actionCompactCards"), run: () => { try { window.toggleAgentsCompact?.(); } catch { /* ignore */ } } },
         // ── Modals ──
-        { id: "insights", group: "modal", title: "인사이트 모달 열기", hint: "I", run: () => { try { window.openInsights?.(); } catch { /* ignore */ } } },
-        { id: "settings", group: "modal", title: "설정 열기", hint: ",", run: () => { try { document.getElementById("settings-toggle")?.click(); } catch { /* ignore */ } } },
-        { id: "help", group: "modal", title: "단축키 도움말", hint: "?", run: () => { try { document.getElementById("help-toggle")?.click(); } catch { /* ignore */ } } },
+        { id: "insights", group: "modal", title: t("palette.actionInsights"), hint: "I", run: () => { try { window.openInsights?.(); } catch { /* ignore */ } } },
+        { id: "settings", group: "modal", title: t("palette.actionSettings"), hint: ",", run: () => { try { document.getElementById("settings-toggle")?.click(); } catch { /* ignore */ } } },
+        { id: "help", group: "modal", title: t("palette.actionHelp"), hint: "?", run: () => { try { document.getElementById("help-toggle")?.click(); } catch { /* ignore */ } } },
         // ── Filters ──
-        { id: "filter-all", group: "filter", title: "필터: 전체", run: () => setFilter("all") },
-        { id: "filter-coding", group: "filter", title: "필터: 코딩 중", run: () => setFilter("coding") },
-        { id: "filter-idle", group: "filter", title: "필터: 대기", run: () => setFilter("idle") },
-        { id: "filter-offline", group: "filter", title: "필터: 오프라인", run: () => setFilter("offline") },
+        { id: "filter-all", group: "filter", title: t("palette.actionFilterAll"), run: () => setFilter("all") },
+        { id: "filter-coding", group: "filter", title: t("palette.actionFilterCoding"), run: () => setFilter("coding") },
+        { id: "filter-idle", group: "filter", title: t("palette.actionFilterIdle"), run: () => setFilter("idle") },
+        { id: "filter-offline", group: "filter", title: t("palette.actionFilterOffline"), run: () => setFilter("offline") },
         // 검색·필터·핀 빠른 초기화 — 화면이 너무 좁아졌을 때 한 번에 깨끗하게
-        { id: "reset-search", group: "filter", title: "검색 비우기", run: () => { try { window.clearAgentSearch?.(); } catch { /* ignore */ } } },
-        { id: "reset-filters", group: "filter", title: "필터 모두 초기화 (전체 보기)", run: () => {
+        { id: "reset-search", group: "filter", title: t("palette.actionResetSearch"), run: () => { try { window.clearAgentSearch?.(); } catch { /* ignore */ } } },
+        { id: "reset-filters", group: "filter", title: t("palette.actionResetFilters"), run: () => {
             try {
                 window.setFilter?.("all");
                 window.setPlatformFilter?.("all");
@@ -304,7 +307,7 @@ function buildActions(query) {
                 window.clearAgentSearch?.();
             } catch { /* ignore */ }
         } },
-        { id: "clear-pins", group: "filter", title: "모든 핀 해제", run: () => {
+        { id: "clear-pins", group: "filter", title: t("palette.actionClearPins"), run: () => {
             try {
                 S.pinnedAgentKeys = [];
                 localStorage.setItem("ai-tycoon-pinned-agents", "[]");
@@ -318,30 +321,30 @@ function buildActions(query) {
             } catch { /* ignore */ }
         } },
         // ── Sort ── 정렬 기준 5종 — Ctrl+K 에서도 마우스 없이 빠르게 전환
-        { id: "sort-status",   group: "filter", title: "정렬: 상태순",        run: () => { try { window.setSortOrder?.("status"); } catch { /* ignore */ } } },
-        { id: "sort-memory",   group: "filter", title: "정렬: 메모리순",      run: () => { try { window.setSortOrder?.("memory"); } catch { /* ignore */ } } },
-        { id: "sort-platform", group: "filter", title: "정렬: 플랫폼순",      run: () => { try { window.setSortOrder?.("platform"); } catch { /* ignore */ } } },
-        { id: "sort-project",  group: "filter", title: "정렬: 프로젝트순",    run: () => { try { window.setSortOrder?.("project"); } catch { /* ignore */ } } },
-        { id: "sort-recent",   group: "filter", title: "정렬: 최근 활동순",   run: () => { try { window.setSortOrder?.("recent"); } catch { /* ignore */ } } },
+        { id: "sort-status",   group: "filter", title: t("palette.actionSortStatus"),   run: () => { try { window.setSortOrder?.("status"); } catch { /* ignore */ } } },
+        { id: "sort-memory",   group: "filter", title: t("palette.actionSortMemory"),   run: () => { try { window.setSortOrder?.("memory"); } catch { /* ignore */ } } },
+        { id: "sort-platform", group: "filter", title: t("palette.actionSortPlatform"), run: () => { try { window.setSortOrder?.("platform"); } catch { /* ignore */ } } },
+        { id: "sort-project",  group: "filter", title: t("palette.actionSortProject"),  run: () => { try { window.setSortOrder?.("project"); } catch { /* ignore */ } } },
+        { id: "sort-recent",   group: "filter", title: t("palette.actionSortRecent"),   run: () => { try { window.setSortOrder?.("recent"); } catch { /* ignore */ } } },
         // ── Theme ──
-        { id: "theme-classic", group: "theme", title: "테마: 클래식", run: () => setTheme("classic") },
-        { id: "theme-cafe", group: "theme", title: "테마: 카페", run: () => setTheme("cafe") },
-        { id: "theme-forest", group: "theme", title: "테마: 숲속", run: () => setTheme("forest") },
-        { id: "theme-midnight", group: "theme", title: "테마: 심야", run: () => setTheme("midnight") },
-        { id: "theme-sakura", group: "theme", title: "테마: 사쿠라", run: () => setTheme("sakura") },
-        { id: "theme-ocean", group: "theme", title: "테마: 바다", run: () => setTheme("ocean") },
-        // ── Language ──
+        { id: "theme-classic", group: "theme", title: t("palette.actionThemeClassic"), run: () => setTheme("classic") },
+        { id: "theme-cafe", group: "theme", title: t("palette.actionThemeCafe"), run: () => setTheme("cafe") },
+        { id: "theme-forest", group: "theme", title: t("palette.actionThemeForest"), run: () => setTheme("forest") },
+        { id: "theme-midnight", group: "theme", title: t("palette.actionThemeMidnight"), run: () => setTheme("midnight") },
+        { id: "theme-sakura", group: "theme", title: t("palette.actionThemeSakura"), run: () => setTheme("sakura") },
+        { id: "theme-ocean", group: "theme", title: t("palette.actionThemeOcean"), run: () => setTheme("ocean") },
+        // ── Language ── 전환 대상 언어 그대로 표기하는 게 의도 — i18n 처리하지 않음
         { id: "lang-ko", group: "lang", title: "언어: 한국어", run: () => setLang("ko") },
         { id: "lang-en", group: "lang", title: "Language: English", run: () => setLang("en") },
         // ── Tools ──
-        { id: "demo-toggle", group: "tools", title: "데모 모드 전환", run: () => { try { window.aiTycoonDemo?.toggle?.(); } catch { /* ignore */ } } },
-        { id: "snapshot", group: "tools", title: "스냅샷 저장", hint: "P", run: () => { try { window.aiTycoonSnapshot?.download?.(); } catch { /* ignore */ } } },
-        { id: "backup", group: "tools", title: "설정 백업 (JSON)", run: () => { try { window.aiTycoonBackup?.download?.(); } catch { /* ignore */ } } },
-        { id: "standup", group: "tools", title: "일일 리포트 (Markdown)", run: () => { try { window.aiTycoonStandup?.download?.(); } catch { /* ignore */ } } },
-        { id: "notes-export", group: "tools", title: "에이전트 메모 내보내기 (Markdown)", run: () => { try { window.aiTycoonNotes?.download?.(); } catch { /* ignore */ } } },
-        { id: "mute", group: "tools", title: "사운드 음소거 토글", hint: "M", run: () => { try { window.aiTycoonSound?.toggle?.(); } catch { /* ignore */ } } },
-        { id: "reconnect", group: "tools", title: "WebSocket 즉시 재연결", run: () => { try { window.aiTycoonReconnect?.(); } catch { /* ignore */ } } },
-        { id: "clear-logs", group: "tools", title: "활동 로그 비우기", run: () => {
+        { id: "demo-toggle", group: "tools", title: t("palette.actionDemoToggle"), run: () => { try { window.aiTycoonDemo?.toggle?.(); } catch { /* ignore */ } } },
+        { id: "snapshot", group: "tools", title: t("palette.actionSnapshot"), hint: "P", run: () => { try { window.aiTycoonSnapshot?.download?.(); } catch { /* ignore */ } } },
+        { id: "backup", group: "tools", title: t("palette.actionBackup"), run: () => { try { window.aiTycoonBackup?.download?.(); } catch { /* ignore */ } } },
+        { id: "standup", group: "tools", title: t("palette.actionStandup"), run: () => { try { window.aiTycoonStandup?.download?.(); } catch { /* ignore */ } } },
+        { id: "notes-export", group: "tools", title: t("palette.actionNotesExport"), run: () => { try { window.aiTycoonNotes?.download?.(); } catch { /* ignore */ } } },
+        { id: "mute", group: "tools", title: t("palette.actionMute"), hint: "M", run: () => { try { window.aiTycoonSound?.toggle?.(); } catch { /* ignore */ } } },
+        { id: "reconnect", group: "tools", title: t("palette.actionReconnect"), run: () => { try { window.aiTycoonReconnect?.(); } catch { /* ignore */ } } },
+        { id: "clear-logs", group: "tools", title: t("palette.actionClearLogs"), run: () => {
             // 사이드 패널 하단 활동 타임라인 + 시스템 로그 + 캔버스 work-stream 모두 비움.
             // 실제 에이전트 상태는 그대로 — 표시만 깨끗하게.
             try {
@@ -426,7 +429,7 @@ function render() {
     }
 
     if (results.length === 0) {
-        list.innerHTML = `<li class="cp-empty">결과 없음 — 다른 검색어를 입력해 보세요.</li>`;
+        list.innerHTML = `<li class="cp-empty">${esc(t("palette.empty"))}</li>`;
         return;
     }
 
@@ -437,11 +440,11 @@ function render() {
             const a = r.agent;
             const meta = STATUS_META[a.isRunning ? a.status : "offline"] || STATUS_META.idle;
             const platform = (PLATFORM_META[a.platform] || PLATFORM_META.claude || {}).badge || "?";
-            const recentChip = r.recent ? `<span class="cp-recent-chip">최근</span>` : "";
-            const pinStar = r.pinned ? `<span class="cp-pin-star" title="고정됨" aria-label="고정됨">★</span>` : "";
+            const recentChip = r.recent ? `<span class="cp-recent-chip">${esc(t("palette.chipRecent"))}</span>` : "";
+            const pinStar = r.pinned ? `<span class="cp-pin-star" title="${esc(t("palette.pinnedAria"))}" aria-label="${esc(t("palette.pinnedAria"))}">★</span>` : "";
             const noteText = (typeof noteFor === "function") ? noteFor(a) : "";
             const noteChip = noteText
-                ? `<span class="cp-note-chip" title="${esc(noteText.slice(0, 140))}" aria-label="메모 있음">📝</span>`
+                ? `<span class="cp-note-chip" title="${esc(noteText.slice(0, 140))}" aria-label="${esc(t("palette.noteAria"))}">📝</span>`
                 : "";
             // 상태 색상 점 — 아바타 우하단에 배치해서 살아있는지 한눈에 인지
             const statusDot = `<span class="cp-status-dot" style="background:${meta.color}" title="${esc(meta.label)}" aria-hidden="true"></span>`;
