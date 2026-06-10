@@ -3772,14 +3772,16 @@ body.dark .header-demo-chip {
     0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
     50% { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18); }
 }
-@media (prefers-reduced-motion: reduce) { .header-stuck-chip { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .header-stuck-chip, body.dark .header-stuck-chip { animation: none; } }
 body.dark .header-stuck-chip {
     background: rgba(251, 191, 36, 0.18);
     color: #fbbf24;
     border-color: rgba(251, 191, 36, 0.52);
 }
 body.dark .header-stuck-chip:hover { background: rgba(251, 191, 36, 0.28); }
-body.dark @keyframes stuckPulse {
+/* @keyframes 는 셀렉터 안에 못 넣는다 — 다크용은 별도 이름으로 정의하고 animation-name 만 바꿔치기 */
+body.dark .header-stuck-chip { animation-name: stuckPulseDark; }
+@keyframes stuckPulseDark {
     0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
     50% { box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.24); }
 }
@@ -8227,6 +8229,10 @@ body.dark .tour-card-step { color: #fdba74; }
 
 body.dark .toast-card {
     background: linear-gradient(135deg, rgba(28,30,40,0.97), rgba(20,22,32,0.94));
+    /* 종류색(--toast-color)이 라이트 기준이라 system 같은 어두운 톤은 다크 배경에 묻힘.
+       다크 악센트 규칙(#d97757→#fdba74)과 같은 방향으로 흰색을 섞어 보더만 살짝 밝힘. */
+    border-color: color-mix(in srgb, var(--toast-color, #fdba74) 70%, #fff);
+    border-left-color: color-mix(in srgb, var(--toast-color, #fdba74) 80%, #fff);
 }
 body.dark .toast-title { color: #f4f4f5; }
 body.dark .toast-text { color: #c4b8aa; }
@@ -9029,6 +9035,12 @@ body.dark .shortcuts-keys kbd {
     .shortcuts-keys { min-width: 84px; }
     .insights-mvp-card { grid-template-columns: 36px 38px 1fr; }
     .insights-mvp-stats { grid-column: 1 / -1; justify-content: flex-end; }
+}
+
+@media (max-width: 480px) {
+    /* 오버레이 여백 24px가 좁은 화면에서 카드 폭을 너무 깎음 → 여백을 줄여 콘텐츠 확보 */
+    .modal-overlay { padding: 12px; }
+    .modal-card { max-height: calc(100dvh - 24px); }
 }
 
 /* ── Today's MVP card ── */
