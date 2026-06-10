@@ -214,7 +214,7 @@
                 <canvas id="office-canvas" class="block w-full h-full" tabindex="0" role="application" aria-roledescription="실시간 작업실" aria-label="AI Tycoon 실시간 작업실" aria-describedby="office-a11y-status"></canvas>
 
                 <!-- Empty-state CTA — shown when no agents are detected -->
-                <div id="empty-cta" class="empty-cta" hidden>
+                <div id="empty-cta" class="empty-cta" role="status" aria-live="polite" hidden>
                     <div class="empty-cta-glow"></div>
                     <div class="empty-cta-text">
                         <div class="empty-cta-kicker" data-i18n="empty.ctaKicker">아직 직원이 없네요</div>
@@ -971,7 +971,7 @@
             <div class="welcome-body">
                 <div class="welcome-kicker" data-i18n="welcome.kicker">처음 오셨군요</div>
                 <h2 id="welcome-title" class="welcome-title" data-i18n="welcome.title">AI Tycoon에 오신 걸 환영합니다</h2>
-                <p id="welcome-desc" class="welcome-desc" data-i18n="welcome.desc">내 컴퓨터에서 동작 중인 AI 에이전트들의 작업 상태를 픽셀 아트 오피스로 한눈에 봐보세요.</p>
+                <p id="welcome-desc" class="welcome-desc" data-i18n="welcome.desc">내 컴퓨터에서 동작 중인 AI 에이전트들의 작업 상태를 픽셀 아트 오피스로 한눈에 확인해 보세요.</p>
                 <ul class="welcome-list">
                     <li>
                         <iconify-icon icon="solar:user-plus-rounded-linear" aria-hidden="true"></iconify-icon>
@@ -1114,22 +1114,46 @@
     }
     document.addEventListener("DOMContentLoaded", () => setTimeout(syncSoundIcon, 100));
     // ── Generic modal open/close (insights + shortcuts) ──
+    // 키보드/스크린리더 사용자를 위해: 열릴 때 트리거를 기억해 두고 닫힐 때
+    // 그 자리로 포커스를 돌려준다. Tab 은 모달 안에서만 순환 (focus trap).
+    let modalReturnFocusEl = null;
+    function trapModalTab(e) {
+        if (e.key !== "Tab") return;
+        const focusables = [...e.currentTarget.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )].filter(el => !el.disabled && el.offsetParent !== null);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
     function openModalOverlay(overlay) {
         if (!overlay) return;
+        modalReturnFocusEl = document.activeElement instanceof HTMLElement ? document.activeElement : null;
         overlay.hidden = false;
         requestAnimationFrame(() => overlay.classList.add("is-visible"));
+        overlay.addEventListener("keydown", trapModalTab);
         const close = overlay.querySelector(".modal-close");
         close?.focus({ preventScroll: true });
     }
     function closeModalOverlay(overlay) {
         if (!overlay) return;
         overlay.classList.remove("is-visible");
+        overlay.removeEventListener("keydown", trapModalTab);
         setTimeout(() => { overlay.hidden = true; }, 240);
+        if (modalReturnFocusEl && document.contains(modalReturnFocusEl)) {
+            modalReturnFocusEl.focus({ preventScroll: true });
+        }
+        modalReturnFocusEl = null;
     }
     // ── What's new (recent release notes inline) ──
     // Hand-maintained: keep in sync with the top of CHANGELOG.md so users
     // can see recent improvements without leaving the app.
     const WHATSNEW_ENTRIES = [
+        { ko: "백그라운드 탭으로 열어도 바로 연결 (rAF 부팅 의존 제거)", en: "Boots & connects even in a background tab (no more rAF-gated startup)", icon: "solar:bolt-bold", tone: "stable" },
+        { ko: "포트가 이미 사용 중이면 크래시 대신 친절한 안내", en: "Friendly message instead of a crash when the port is taken", icon: "solar:shield-warning-bold", tone: "stable" },
+        { ko: "모달 Tab 포커스 순환 + 닫을 때 제자리 복귀", en: "Modal focus trap + focus restore on close", icon: "solar:keyboard-bold", tone: "design" },
         { ko: "Smoke 테스트가 /api/health · /api/agents JSON 계약까지 검증", en: "Smoke tests now validate /api/health & /api/agents JSON shape", icon: "solar:test-tube-bold", tone: "ok" },
         { ko: "명령 팔레트 검색바 힌트 + 투어 안내로 발견성 ↑", en: "Cmd palette discoverability via search-bar chip + tour", icon: "solar:command-square-bold", tone: "feature" },
         { ko: "메모리 추세 화살표 ▲ / ▼ (30초 비교)", en: "Memory trend arrows on agent cards (30 s window)", icon: "solar:arrow-up-linear", tone: "feature" },

@@ -7,6 +7,50 @@ each iteration below corresponds to one commit / feature drop.
 
 _(준비 중)_
 
+## [1.5.1] — 2026-06-10
+
+> v1.5.0 을 실사용 시나리오로 다시 훑으면서 — 코드 감사 3종(UX·서버 신뢰성·디자인) 돌려서 —
+> 첫 사용 동선에서 만나는 잔잔한 깨짐들을 정리한 패치. 기능 추가 없음.
+>
+> 사용자 데이터 호환: 변경 없음. SW 캐시: → v46.
+>
+> **신뢰성 (출시 차단급 2건)**
+> - **백그라운드 탭 부팅 멈춤 fix** — `resize()`/`connectWS()`/`loop()` 가 전부 첫
+>   `requestAnimationFrame` 뒤에 묶여 있었는데, 브라우저는 hidden 탭의 rAF 를 아예 멈춘다.
+>   `npx ai-tycoon` 이 브라우저를 백그라운드 탭으로 열면 WS 연결조차 안 된 채 "연결 중" 에
+>   영원히 멈추던 문제. setTimeout 폴백으로 부팅을 보장 (rAF/timeout 중 먼저 온 쪽이 실행).
+> - **포트 충돌 시 친절한 안내** — 이미 3777 이 사용 중이면 스택트레이스를 뱉으며 죽는 대신
+>   "이미 떠 있는지 확인 / PORT=3778 로 변경" 안내 후 exit 1. 함정: `ws` 를 `{ server }` 로
+>   붙이면 listen 에러가 httpServer 가 아니라 **wss 의 'error'** 로 전달된다 (재현 스크립트로
+>   확인) — 핸들러를 wss 에 걸어야 동작한다.
+>
+> **i18n — 영문 모드 한글 잔재 일소 (신규 키 50쌍)**
+> - **우선순위 라벨 9종** (`priority.*`) — "검토 필요/추적 중/대기" 등이 영문 모드에서도 한글로
+>   나오던 것. next-action 칩 · 레일 배지 · 모바일 독 · 디테일 모두 렌더 시점 `t()` 처리라
+>   언어 전환 즉시 갱신.
+> - **명령 팔레트 액션 제목 34종 + 빈 결과 메시지 + 칩 3종** (`palette.*`) — 이제 영어 제목으로
+>   팔레트 검색도 된다. (`lang-ko`/`lang-en` 항목은 전환 *대상* 언어로 표기하는 게 의도라 유지)
+> - **프라이버시 배지 3종** (`privacy.*`) — 배지가 떠 있는 동안 언어를 바꿔도 `data-i18n` 으로
+>   라이브 갱신.
+> - 환영 모달 어색한 카피 정리 — "한눈에 봐보세요" → "한눈에 확인해 보세요".
+>
+> **접근성 · 디자인**
+> - **모달 포커스 트랩 + 복귀** — Tab 이 모달 안에서만 순환하고, 닫으면 모달을 연 버튼으로
+>   포커스가 돌아간다 (Insights/설정/단축키 공통 오버레이).
+> - 빈 상태 CTA 에 `role="status"` + `aria-live="polite"` — 스크린리더에 등장 공지.
+> - **`body.dark @keyframes` 무효 CSS fix** — 셀렉터 안 keyframes 는 파서가 통째로 버린다.
+>   다크 전용 `stuckPulseDark` 로 분리하고 `animation-name` 만 치환 (reduced-motion 가드도
+>   다크 셀렉터까지 확장해 모션 줄이기 설정이 안 깨지게).
+> - 토스트 다크모드 보더 대비 보강 (`color-mix` 로 종류색 밝힘), 모달 480px 이하에서
+>   오버레이 여백 24→12px (작은 화면 콘텐츠 영역 확보).
+
+### Iteration 228 — v1.5.0 실사용 감사 후속 패치 (부팅 · i18n · 접근성 · 다크)
+- main.js 부팅을 rAF + setTimeout 이중화, server.js `wss.on("error")` EADDRINUSE/EACCES 분기
+- agentPriority/commandPalette/privacyMode 라벨 i18n 키화 (`priority.*` 9 · `palette.*` 38 · `privacy.*` 3)
+- index.html 모달 오버레이 공통 trapModalTab + modalReturnFocusEl, empty-cta aria-live
+- style.css stuckPulseDark 분리, body.dark .toast-card 보더 color-mix, 480px 모달 여백
+- 검증: smoke 38/38 · lint 36/36 · hidden 탭 부팅/포커스 트랩/CSSOM 파싱 실측
+
 ## [1.5.0] — 2026-05-29
 
 > 정식 배포 전에 꼭 짚어야 할 기반 4가지(보안·크로스플랫폼·화질·정체성)와 배포 편의를

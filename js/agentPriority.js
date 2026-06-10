@@ -2,6 +2,8 @@
 //  AI TYCOON — Shared Agent Next-Action Priority
 // ============================================================
 
+import { t } from "./i18n.js";
+
 const WORK_STATUSES = new Set(["coding", "thinking", "searching", "reviewing", "meeting"]);
 const STALE_SIGNAL_MS = 15 * 60 * 1000;
 const RECENT_ACTIVITY_MS = 10 * 60 * 1000;
@@ -53,28 +55,30 @@ export function agentNextAction(agent, context = {}, now = Date.now()) {
     const stale = agent?.isRunning && agentSignalAgeMs(agent, now) > STALE_SIGNAL_MS;
     const recent = agentActivityTimestamp(agent) > 0 && agentSignalAgeMs(agent, now) <= RECENT_ACTIVITY_MS;
 
+    // label 은 호출 시점에 t() 로 결정 — 렌더마다 다시 불리므로 언어 전환 즉시 반영됨.
+    // 로직 분기는 전부 key 기준이라 label 번역이 동작에 영향 주지 않음.
     if (agent?.needsReview || status === "reviewing") {
-        return { key: "review", rank: 0, tone: "attention", label: "검토 필요", icon: "solar:clipboard-check-linear" };
+        return { key: "review", rank: 0, tone: "attention", label: t("priority.review"), icon: "solar:clipboard-check-linear" };
     }
     if (focused || selected) {
-        return { key: "focus", rank: 1, tone: "focus", label: focused ? "추적 중" : "선택됨", icon: "solar:target-linear" };
+        return { key: "focus", rank: 1, tone: "focus", label: focused ? t("priority.tracking") : t("priority.selected"), icon: "solar:target-linear" };
     }
     if (stale) {
-        return { key: "stale", rank: 2, tone: "warn", label: "신호 확인", icon: "solar:radar-2-linear" };
+        return { key: "stale", rank: 2, tone: "warn", label: t("priority.stale"), icon: "solar:radar-2-linear" };
     }
     if (pinned) {
-        return { key: "pinned", rank: 3, tone: "pinned", label: "고정 관찰", icon: "solar:star-bold" };
+        return { key: "pinned", rank: 3, tone: "pinned", label: t("priority.pinned"), icon: "solar:star-bold" };
     }
     if (WORK_STATUSES.has(status)) {
-        return { key: "working", rank: 4, tone: "live", label: "진행 확인", icon: "solar:bolt-circle-linear" };
+        return { key: "working", rank: 4, tone: "live", label: t("priority.working"), icon: "solar:bolt-circle-linear" };
     }
     if (recent) {
-        return { key: "recent", rank: 5, tone: "neutral", label: "최근 활동", icon: "solar:history-2-linear" };
+        return { key: "recent", rank: 5, tone: "neutral", label: t("priority.recent"), icon: "solar:history-2-linear" };
     }
     if (status === "idle") {
-        return { key: "idle", rank: 6, tone: "idle", label: "대기", icon: "solar:pause-circle-linear" };
+        return { key: "idle", rank: 6, tone: "idle", label: t("priority.idle"), icon: "solar:pause-circle-linear" };
     }
-    return { key: "offline", rank: 7, tone: "offline", label: "오프라인", icon: "solar:power-linear" };
+    return { key: "offline", rank: 7, tone: "offline", label: t("priority.offline"), icon: "solar:power-linear" };
 }
 
 export function compareAgentPriority(a, b, context = {}, now = Date.now()) {
