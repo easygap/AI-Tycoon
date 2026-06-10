@@ -596,8 +596,20 @@ function init() {
         updatePanel();
     });
 
-    // Delay first resize to let layout settle
-    requestAnimationFrame(() => { resize(); connectWS(); loop(); });
+    // 첫 resize 는 레이아웃이 잡힌 다음 프레임에. 단, 브라우저는 백그라운드(hidden)
+    // 탭의 rAF 를 아예 멈추기 때문에 — npx 가 탭을 백그라운드로 열면 WS 연결조차
+    // 안 된 채 "연결 중" 에 영원히 멈춘다 — setTimeout 폴백으로 부팅을 보장한다.
+    // 둘 중 먼저 도착한 쪽이 실행하고 나머지는 무시.
+    let booted = false;
+    const boot = () => {
+        if (booted) return;
+        booted = true;
+        resize();
+        connectWS();
+        loop();
+    };
+    requestAnimationFrame(boot);
+    setTimeout(boot, 300);
 }
 
 function resize() {
