@@ -40,7 +40,7 @@ const QUIET = process.env.QUIET === "1" || process.env.LOG_LEVEL === "warn" || p
 
 // ── State ────────────────────────────────────────────────────
 const STARTED_AT = Date.now();
-const VERSION = "1.5.0";
+const VERSION = "1.5.1";
 let lastState = null;
 let clients = new Set();
 let watchDebounceTimer = null;
@@ -1326,6 +1326,25 @@ function maybeOpenBrowser(displayHost) {
 }
 
 // ── Start ────────────────────────────────────────────────────
+// listen 실패는 콜백이 아니라 'error' 이벤트로 온다. 핸들러가 없으면 Node 가
+// 스택트레이스를 뱉고 죽어서, npx 로 두 번 실행한 사용자가 영문도 모른 채
+// 크래시를 보게 된다 — 가장 흔한 EADDRINUSE 는 풀어서 안내한다.
+// 주의: ws 를 { server } 옵션으로 붙이면 listen 에러가 httpServer 가 아니라
+// wss 쪽 'error' 로 전달된다 (직접 재현으로 확인). 그래서 wss 에 건다.
+wss.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+        console.error("");
+        console.error(`  ✖ 포트 ${PORT} 가 이미 사용 중입니다.`);
+        console.error(`    AI Tycoon 이 이미 떠 있는지 확인해 보세요 → http://localhost:${PORT}`);
+        console.error(`    다른 포트로 띄우려면: PORT=3778 npx ai-tycoon  (PowerShell 은 $env:PORT=3778)`);
+        console.error("");
+    } else if (err.code === "EACCES") {
+        console.error(`  ✖ 포트 ${PORT} 에 바인딩할 권한이 없습니다. 1024 이상의 포트를 사용해 보세요.`);
+    } else {
+        console.error(`  ✖ 서버 시작 실패: ${err.message}`);
+    }
+    process.exit(1);
+});
 httpServer.listen(PORT, HOST, () => {
     // 브라우저 주소창에는 0.0.0.0 대신 localhost 를 보여주는 게 자연스럽다.
     const displayHost = (HOST === "0.0.0.0" || HOST === "::") ? "localhost" : HOST;
