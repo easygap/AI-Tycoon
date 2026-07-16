@@ -1,78 +1,58 @@
-# AI Tycoon — 스크린샷 갤러리
+# AI Tycoon 화면
 
-데모 모드 (`?demo=1`) 로 띄운 1440×900 캡처들. v1.4.5 기준.
+아래 이미지는 실제 앱을 `?demo=1`로 실행해 촬영했습니다. 화면에 표시된 직원과 작업은 문서용 합성 데이터입니다.
 
----
+## 실시간 작업실
 
-## 메인 대시보드
-
-라이트 / 다크 두 모드 모두에서 동일한 픽셀 아트 오피스 + 사이드바 + HUD 가 함께 보입니다.
+작업실과 운영 패널을 함께 보는 기본 화면입니다. 현재 인원, 작업 상태, 검토 대기 항목과 최근 활동을 한눈에 확인할 수 있습니다.
 
 <p align="center">
-  <img src="hero-light.png" alt="AI Tycoon 메인 화면 — 라이트 모드" width="900">
+  <img src="hero-light.png" alt="AI Tycoon 밝은 테마의 실시간 작업실" width="1100">
 </p>
 
 <p align="center">
-  <img src="hero-dark.png" alt="AI Tycoon 메인 화면 — 다크 모드" width="900">
+  <img src="hero-dark.png" alt="AI Tycoon 어두운 테마의 실시간 작업실" width="1100">
 </p>
 
----
+## 운영과 검토
 
-## 명령 팔레트 (`Ctrl+K` / `Cmd+K`)
-
-VS Code 스타일 빠른 검색. 에이전트 fuzzy 검색 + 모든 액션 + **메모에 박힌 `#태그` 별 필터 명령** 까지 한 곳에.
+우선 처리할 작업과 검토 대기열을 모은 화면입니다. 승인과 반려, 진행 작업 확인을 같은 패널에서 처리합니다.
 
 <p align="center">
-  <img src="cmdpalette.png" alt="명령 팔레트 — '필터' 검색 시 hashtag 별 필터 명령 자동 노출" width="900">
+  <img src="operations.png" alt="AI Tycoon 운영 패널과 검토 대기열" width="680">
 </p>
 
-`#frontend (1)`, `#backend (1)`, `#bug (1)`, `#리팩터링 (1)` — 메모에 실제로 박혀 있는 태그만 카운트와 함께 동적으로 추가됩니다.
+## 직원 상세
 
----
-
-## 인사이트 모달 (`I` 키)
-
-오늘 작업·플랫폼 분포·24시간 활동 히트맵·업적 진행률을 한 화면에. 시간대 히트맵은 현재 시각 셀에 ▼ 마커 + 부드러운 바운스 애니메이션으로 "지금" 위치를 표시합니다.
+선택한 직원의 플랫폼, 세션, 프로젝트 경로, 현재 작업과 태스크를 확인하는 화면입니다. 메모와 활동 기록도 이곳에서 관리합니다.
 
 <p align="center">
-  <img src="insights.png" alt="인사이트 모달 — 오늘 통계, 플랫폼별 사용량, 오늘의 MVP, 진행 중인 프로젝트" width="900">
+  <img src="detail.png" alt="AI Tycoon 직원 상세 화면" width="1100">
 </p>
 
----
+## 작업실 인사이트
 
-## 디테일 패널
-
-에이전트 카드 클릭 시 우측에 열리는 디테일 패널. 메모 textarea + hashtag 칩 + 메모리 그래프 + 작업 히스토리.
+오늘의 태스크, 플랫폼별 사용량, 가장 활발한 직원과 프로젝트를 요약합니다.
 
 <p align="center">
-  <img src="detail.png" alt="디테일 패널 — 에이전트 정보, 메모, 해시태그 칩, 메모리 추세" width="900">
+  <img src="insights.png" alt="AI Tycoon 작업실 인사이트 화면" width="1100">
 </p>
 
-좌측 패널의 카드들에도 작은 hashtag 칩이 박혀 있어 한눈에 어떤 카테고리의 작업인지 분류할 수 있습니다.
+## 모바일 운영
 
----
-
-## 모바일 (390×844)
-
-iPhone 14 Pro 비슷한 viewport. 사이드바는 토글 형태로 숨겨지고, 헤더 HUD + 팀 레이더 +
-캔버스 + 모바일 우선 작업 dock 이 세로로 쌓입니다. 가로 스크롤 없이 깔끔하게 맞아요.
+390px 화면에서 연 운영 패널입니다. 검토, 승인과 상태 확인을 작은 화면에서도 그대로 사용할 수 있습니다.
 
 <p align="center">
-  <img src="mobile.png" alt="AI Tycoon 모바일 화면 — 390px 폭, 세로 레이아웃" width="390">
+  <img src="mobile.png" alt="AI Tycoon 모바일 운영 화면" width="360">
 </p>
 
----
-
-## 캡처 방법
+## 직접 둘러보기
 
 ```bash
-# 서버 띄우고
+git clone https://github.com/easygap/AI-Tycoon.git
+cd AI-Tycoon
+npm install
 npm start
-
-# 브라우저에서 데모 모드로 접속
-# http://localhost:3777/?demo=1
 ```
 
-스크린샷은 1440×900 해상도에서 캡처. Playwright MCP 자동화 사용 (iter 211 / 214 / 215).
-
-i18n 토글 (`globe` 아이콘) 로 EN 모드 캡처도 가능.
+실행 후 `http://localhost:3777/?demo=1`로 접속하면 실제 에이전트가 없어도 같은 흐름을 살펴볼 수 있습니다.
