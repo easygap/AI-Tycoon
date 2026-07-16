@@ -67,10 +67,10 @@ export function connectWS() {
                     if (S.heartbeatDeltas.length > 10) S.heartbeatDeltas.shift();
                 }
             }
+            S.lastHeartbeat = now;
             const msg = JSON.parse(e.data);
             if (msg.type === "full_state") handleState(msg.data);
             else if (msg.type === "heartbeat") {
-                S.lastHeartbeat = now;
                 if (msg.diagnostics && S.serverState) {
                     S.serverState.diagnostics = msg.diagnostics;
                     updateLiveHud();
@@ -128,7 +128,7 @@ export function scheduleReconnect() {
     const badge = document.getElementById("conn-badge");
     const lang = window.aiTycoonI18n?.getLang?.() || "ko";
     if (txt) txt.textContent = lang === "en" ? `Reconnect (${S.reconnectAttempt})` : `재연결 (${S.reconnectAttempt})`;
-    if (dot) dot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse";
+    if (dot) dot.className = "connection-dot is-connecting";
     // After 3 failed retries, surface the actual server address and a hint
     if (S.reconnectAttempt >= 3 && badge) {
         badge.title = lang === "en"
@@ -155,19 +155,19 @@ export function setConn(ok) {
     const txt = document.getElementById("conn-text");
     const badge = document.getElementById("conn-badge");
     if (ok) {
-        dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-300";
+        dot.className = "connection-dot is-live";
         txt.textContent = t("conn.live");
-        badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 ring-1 ring-emerald-200/60 text-xs text-emerald-600 font-medium";
+        badge.className = "connection-control is-live";
         badge.title = `${WS_URL}`;
         badge.setAttribute("aria-label", t("conn.live"));
     } else {
-        dot.className = "w-1.5 h-1.5 rounded-full bg-zinc-400";
+        dot.className = "connection-dot is-offline";
         if (S.reconnectAttempt >= 3) {
             txt.textContent = t("conn.lost");
-            badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 ring-1 ring-rose-200/60 text-xs text-rose-600 font-medium";
+            badge.className = "connection-control is-lost";
         } else {
             txt.textContent = t("conn.connecting");
-            badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 ring-1 ring-zinc-200/60 text-xs text-zinc-500";
+            badge.className = "connection-control is-connecting";
         }
         badge.title = `${WS_URL}`;
         badge.setAttribute("aria-label", `${t("conn.lost")} — ${WS_URL}`);
@@ -340,6 +340,9 @@ function collectWorkEvents(prevAgentsByPid) {
 
 // ── Handle live data ──
 export function handleState(state) {
+    const isInitialState = !S.hasHydratedLiveState;
+    S.suppressInitialAlerts = isInitialState;
+    if (isInitialState) S.initialAlertGraceUntil = Date.now() + 10_000;
     S.serverState = state;
     S.lastStateAt = Date.now();
     // 새 데이터 들어왔다는 시각 신호 — 연결 점에 짧게 'flash' 클래스 부여
@@ -374,9 +377,9 @@ export function handleState(state) {
                 prevStatus: null,
                 behaviorTimer: 80 + Math.floor(Math.random() * 200),
                 chatPartner: null,
-                joinedAt: Date.now(), // timestamp for "just joined" UI pulse
+                joinedAt: isInitialState ? 0 : Date.now(),
             };
-            if (!prevPids.has(pidKey(agent.pid))) {
+            if (!isInitialState && !prevPids.has(pidKey(agent.pid))) {
                 const langJ = window.aiTycoonI18n?.getLang?.() || "ko";
                 addLog(langJ === "en"
                     ? `${theme.name} (${agent.projectName}) clocked in!`
@@ -456,7 +459,7 @@ export function handleState(state) {
                     prevStatus: null,
                     bobPhase: Math.random() * Math.PI * 2,
                 };
-                if (task.status === "in_progress") {
+                if (!isInitialState && task.status === "in_progress") {
                     const langS = window.aiTycoonI18n?.getLang?.() || "ko";
                     const subText = (task.subject || "").substring(0, 18);
                     addLog(langS === "en"
@@ -498,6 +501,8 @@ export function handleState(state) {
     });
 
     updatePanel();
+    S.hasHydratedLiveState = true;
+    S.suppressInitialAlerts = false;
     updateStats();
     recordStateSnapshot(S.liveAgents);
     if (typeof window !== "undefined") window.__aiTycoonAgents = S.liveAgents;

@@ -70,6 +70,8 @@ const PANEL_FOCUSABLE = [
     "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 const PIXI_DENSITY_MODES = ["auto", "minimal", "focus", "balanced", "rich"];
+const SIDE_PANEL_VIEWS = ["operate", "agents", "activity"];
+const SIDE_PANEL_VIEW_KEY = "ai-tycoon-side-panel-view";
 let lastCanvasA11yText = "";
 
 function syncSidePanelState() {
@@ -104,6 +106,54 @@ function syncSidePanelState() {
     if (overlayOpen && !panel.contains(document.activeElement)) {
         closeButton?.focus({ preventScroll: true });
     }
+}
+
+function setSidePanelView(view = "operate", options = {}) {
+    const nextView = SIDE_PANEL_VIEWS.includes(view) ? view : "operate";
+    const panel = document.getElementById("side-panel");
+    if (!panel) return;
+    const wasHidden = panel.classList.contains("panel-hidden");
+
+    panel.querySelectorAll(".side-panel-tab[data-panel-view]").forEach(tab => {
+        const active = tab.dataset.panelView === nextView;
+        tab.classList.toggle("is-active", active);
+        tab.setAttribute("aria-selected", active ? "true" : "false");
+        tab.tabIndex = active ? 0 : -1;
+    });
+    panel.querySelectorAll(".side-panel-view[data-panel-view]").forEach(section => {
+        const active = section.dataset.panelView === nextView;
+        section.classList.toggle("is-active", active);
+        section.hidden = !active;
+    });
+    panel.dataset.activeView = nextView;
+    try { localStorage.setItem(SIDE_PANEL_VIEW_KEY, nextView); } catch { /* storage is optional */ }
+
+    if (options.open && wasHidden) {
+        panel.dataset.userToggled = "true";
+        panel.classList.remove("panel-hidden");
+        syncSidePanelState();
+        requestAnimationFrame(resize);
+    }
+    if (options.focus) {
+        requestAnimationFrame(() => document.getElementById(`panel-view-${nextView}`)?.focus({ preventScroll: true }));
+    }
+}
+
+function handleSidePanelTabsKeydown(event) {
+    const tab = event.target.closest?.(".side-panel-tab[data-panel-view]");
+    if (!tab) return;
+    const tabs = [...document.querySelectorAll(".side-panel-tab[data-panel-view]")];
+    const current = tabs.indexOf(tab);
+    if (current < 0) return;
+    let next = null;
+    if (event.key === "ArrowRight") next = (current + 1) % tabs.length;
+    if (event.key === "ArrowLeft") next = (current - 1 + tabs.length) % tabs.length;
+    if (event.key === "Home") next = 0;
+    if (event.key === "End") next = tabs.length - 1;
+    if (next == null) return;
+    event.preventDefault();
+    setSidePanelView(tabs[next].dataset.panelView);
+    tabs[next].focus({ preventScroll: true });
 }
 
 function panelFocusableItems() {
@@ -247,6 +297,9 @@ function init() {
     S.ctx.imageSmoothingEnabled = false;
     initPixiOverlay();
     window.syncSidePanelState = syncSidePanelState;
+    window.setSidePanelView = setSidePanelView;
+    const storedPanelView = localStorage.getItem(SIDE_PANEL_VIEW_KEY) || "operate";
+    setSidePanelView(storedPanelView);
 
     window.addEventListener("resize", () => {
         if (S.resizeTimer) clearTimeout(S.resizeTimer);
@@ -274,6 +327,7 @@ function init() {
     document.addEventListener("keydown", handleGlobalShortcuts, true);
     document.addEventListener("keydown", onPixiDensityMenuKeydown);
     document.addEventListener("click", onPixiDensityDocumentClick);
+    document.getElementById("side-panel-tabs")?.addEventListener("keydown", handleSidePanelTabsKeydown);
 
     // Expose closeDetail state bridge for index.html
     window.__clearDetailPid = () => { S.detailPid = null; S.selectedPid = null; };
@@ -350,6 +404,7 @@ function init() {
         updateLiveHud();
     };
     window.focusAgentSearch = () => {
+        setSidePanelView("agents", { open: true });
         const panel = document.getElementById("side-panel");
         if (panel?.classList.contains("panel-hidden")) {
             panel.dataset.userToggled = "true";
@@ -514,6 +569,7 @@ function init() {
     window.focusActiveAgent = () => {
         const agent = getDirectorFocusAgent();
         if (!agent) return;
+        setSidePanelView("agents");
         S.selectedPid = agent.pid;
         S.detailPid = agent.pid;
         S.directorFocusPid = agent.pid;
@@ -526,6 +582,7 @@ function init() {
     window.focusAgentByPid = (pid) => {
         const agent = S.liveAgents.find(a => String(a.pid) === String(pid));
         if (!agent) return;
+        setSidePanelView("agents");
         S.directorMode = false;
         localStorage.setItem("ai-tycoon-director", "false");
         S.selectedPid = agent.pid;
@@ -594,6 +651,7 @@ function init() {
         // Re-render dynamic panels that build HTML strings
         if (typeof window.refreshInsights === "function") window.refreshInsights();
         updatePanel();
+        updateLiveHud();
     });
 
     // 첫 resize 는 레이아웃이 잡힌 다음 프레임에. 단, 브라우저는 백그라운드(hidden)
@@ -792,6 +850,7 @@ function selectCanvasAgent(agent, options = {}) {
     S.selectedPid = agent.pid;
     S.detailPid = agent.pid;
     S.directorFocusPid = agent.pid;
+    setSidePanelView("agents");
     if (moveCamera) focusAgent(agent.pid, true);
     const v = S.visualAgents[agent.pid];
     if (v && burst) {

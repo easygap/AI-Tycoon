@@ -1,547 +1,137 @@
-# AI Tycoon
-
 <p align="center">
-  <img src="icons/icon.png" alt="AI Tycoon — 픽셀아트 오피스 아이콘" width="128" height="128">
+  <img src="icons/brand-symbol.svg" alt="AI Tycoon 스튜디오 도어 심볼" width="78" height="78">
 </p>
 
-[![CI](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg)](https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Node](https://img.shields.io/badge/node-%E2%89%A520-43853d.svg)](https://nodejs.org)
-[![Version](https://img.shields.io/badge/version-1.5.1-d97757.svg)](./CHANGELOG.md)
-[![PWA](https://img.shields.io/badge/PWA-installable-d97757.svg)](./manifest.webmanifest)
+<h1 align="center">AI Tycoon</h1>
+
+<p align="center">
+  <strong>내 컴퓨터에서 일하는 AI 에이전트를 작은 픽셀 오피스에서 한눈에 봅니다.</strong><br>
+  Claude Code, Codex, Cursor 등 여러 작업의 상태와 다음 확인 항목을 실시간으로 모아 보여주는 로컬 대시보드입니다.
+</p>
+
+<p align="center">
+  <a href="https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml"><img src="https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-25272f.svg" alt="MIT License"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%E2%89%A520-45b98f.svg" alt="Node.js 20 이상"></a>
+</p>
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/hero-dark.png">
-    <img src="docs/hero-light.png" alt="AI Tycoon 라이브 대시보드 — 픽셀아트 오피스 안의 AI 에이전트들, 사이드바의 에이전트 카드와 해시태그 칩, 헤더 HUD" width="900">
+    <img src="docs/hero-light.png" alt="AI Tycoon 실시간 작업실과 운영 패널" width="1100">
   </picture>
   <br>
-  <sub><em>데모 모드로 띄운 라이브 화면 — 라이트 / 다크 모드 자동 전환 · <a href="docs/SCREENSHOTS.md">전체 스크린샷 갤러리 →</a></em></sub>
+  <sub>실제 앱을 데모 데이터로 실행해 캡처했습니다. 시스템 테마에 따라 밝은 화면과 어두운 화면이 바뀝니다.</sub>
 </p>
 
-> **로컬에서 돌아가는 AI 에이전트들의 작업을 픽셀 아트 오피스로 시각화하는 실시간 대시보드.**
-> *A live pixel-art office dashboard for AI agents running on your machine.*
+## 빠른 시작
 
-### 🩹 v1.5.1 — 실사용 감사 후속 패치 (부팅 · i18n · 접근성)
-v1.5.0 을 첫 사용자 시나리오로 다시 훑으며 잡은 마무리 패치입니다.
-
-- **백그라운드 탭 부팅 fix** — 부팅이 첫 rAF 에 묶여 있어서, `npx ai-tycoon` 이 탭을 백그라운드로 열면 WS 연결도 못 한 채 "연결 중"에 멈췄습니다. setTimeout 폴백으로 어디서 열려도 즉시 연결.
-- **포트 충돌 안내** — 3777 이 이미 사용 중이면 스택트레이스 대신 "이미 떠 있는지 확인 / PORT 변경" 안내. (`ws` 의 `{server}` 모드에선 listen 에러가 wss 쪽으로 오는 함정 주의)
-- **영문 모드 한글 잔재 일소** — 우선순위 라벨 · 명령 팔레트 액션 34종 · 프라이버시 배지 등 신규 i18n 키 50쌍.
-- **모달 접근성** — Tab 포커스 트랩 + 닫을 때 트리거 버튼으로 복귀, 빈 상태 CTA aria-live.
-- **다크모드 디테일** — 셀렉터 안에 들어가 무시되던 `@keyframes` 수정, 토스트 보더 대비, 480px 모달 여백. SW 캐시 → **v46**.
-
-### 🚀 v1.5.0 — 출시 준비 하드닝 (보안 · 크로스플랫폼 · 화질)
-기능을 더 쌓기보다, 정식 배포 전에 꼭 잡아야 할 기반 4가지를 정리한 릴리즈입니다.
-
-- **보안** — 서버를 기본적으로 `127.0.0.1` 에만 바인딩 (예전엔 의도와 달리 `0.0.0.0` 으로 떠서 같은 네트워크의 다른 기기가 내 프롬프트·프로젝트명을 들여다볼 수 있었음). WebSocket 에 **Origin 검증**을 추가해 악성 사이트가 `ws://localhost` 로 몰래 붙어 작업 내용을 가로채는 *Cross-Site WebSocket Hijacking* 을 막고, `/api/agents` 의 **CORS 와일드카드(`*`) 제거**. 외부 노출이 필요하면 `HOST` 환경변수로 직접 opt-in.
-- **크로스플랫폼** — 그동안 프로세스 감지가 PowerShell 전용이라 macOS/Linux 에선 8종 중 6종이 조용히 안 잡혔습니다. `ps` 기반 경로를 추가해 **맥·리눅스에서도 Ollama 등 프로세스 기반 플랫폼이 감지**됩니다.
-- **화질** — Canvas 2D 렌더러가 `devicePixelRatio` 를 반영하지 않아 Retina/4K 에서 픽셀아트가 흐릿했습니다. 백버퍼를 DPR 배율로 키워 **고해상도 디스플레이에서도 선명**하게 (Pixi 오버레이와 선명도도 일치).
-- **정체성 일관성** — 에이전트 한 명이 퇴근하면 남은 직원들의 사이드바 이름·색이 캔버스 아바타와 어긋나던 버그 수정. 테마/자리를 배열 인덱스가 아니라 **pid 기준으로 고정**.
-- **배포** — `npx ai-tycoon` 한 줄로 설치 없이 실행 + 부팅 시 브라우저 자동 오픈. SW 캐시 → **v45**.
-
-자세한 내역은 [`CHANGELOG.md`](./CHANGELOG.md) 의 v1.5.0 참고.
-
-### 🛠️ v1.4.x 안정성 패치 라인 (v1.4.1 ~ v1.4.9)
-v1.4.0 직후 9번의 검증 라운드 (general-purpose agent 코드 리뷰 6회 + Playwright e2e 3회) 를 거치며
-누적 **18개의 잠재 버그**를 잡고, 장기 사용자를 위한 신규 정리 기능 1개 + 영문 모드 i18n 마무리. 정식 patch 9종으로 컷:
-
-- **v1.4.9** — 팀 레이더 + 모바일 dock 26개 신규 i18n 키 (영문 모드 한글 누락 fix)
-- **v1.4.8** — `panel.js` 코드 리뷰 — *프로젝트 모달 themeForAgent ReferenceError (high)*, *Insights/프로젝트 row 클릭 시 pid mismatch 로 디테일 패널 silent 닫힘 (high)*, 보스 큐 inline onclick XSS 회피
-- **v1.4.7** — 메모 태그 매니저에 **오프라인 에이전트 메모 일괄 정리** 기능 + README 영문 섹션 v1.4.6 동기화
-- **v1.4.6** — *모바일 가로 스크롤 fix (high)* — 768px 이하에서 document horizontal scroll 발생하던 버그 + OSS hygiene (이슈/PR 템플릿, SECURITY.md, CODE_OF_CONDUCT.md, .gitattributes, ARCHITECTURE.md)
-- **v1.4.5** — 마무리 컷 — 메모 export 코드블록 보존, Playwright 라이브 audit (이슈 0건), README 정리
-- **v1.4.4** — 데이터 영속 모듈 패치 — *자리 비운 사이 토스트 부풀림 (high)*, 자정 status timer 누락, 백업 restore 원자성·버전 가드
-- **v1.4.3** — 렌더링 모듈 패치 — *canvas null projectName throw (high)*, sub-agent pid 비교 실패, 청소 로봇 fractional pauseTimer 영구 정지, 비 weather Graphics GPU 누수
-- **v1.4.2** — 코어 비-UI 패치 — WebSocket 재연결 race, 종료된 에이전트 detailPid 누수, server.js prev 상태 맵 무제한 성장, history.jsonl ISO timestamp NaN 비교
-- **v1.4.1** — UX·캐시 정합 패치 — 태그 매니저 캐시 invalidate 누락, orphan tag empty state 친절한 안내, CONTRIBUTING hashtag 시스템 문서화
-
-전체 finding 과 디테일은 [`CHANGELOG.md`](./CHANGELOG.md) 의 Iteration 200~219 참고.
-
-### 🆕 v1.4.0 새 소식 (요약)
-- **메모 hashtag 자동완성** — textarea 에서 `#` 입력 시 기존 태그 floating list (↑↓/Enter/Tab)
-- **설정 → 메모 태그 관리자** — 모든 메모를 스캔해 #태그 목록, 인라인 이름 변경·삭제 (단어 경계 안전 매칭)
-- **에이전트 카드 안에 hashtag 칩** — 카드별 최대 2개 + `+N` overflow, 클릭 시 즉시 필터
-- **명령 팔레트 hashtag 필터 명령** — `필터: #frontend (3)` 형식 동적 추가
-- **visibility-summary 의 #tag 칩** — 태그 컬러 그대로 적용, 일반 검색과 시각 구분
-- **hashtag 0건 empty state** — `'#frontend' 태그가 붙은 에이전트가 없습니다` + 사용법 힌트
-- **메모 입력 중 디테일 패널 re-render skip** — autocomplete/IME 깨짐 핫픽스
-- **단축키 모달 '메모' 그룹** — `Cmd+S` · `Cmd+Enter` · `#` 자동완성 명시
-- **`extractTagsFromNotes` 1초 TTL 캐시** — 100+ 메모 환경에서도 jank 없음
-- **`npm run icons` PNG·ICO 자동 분기** — 일회용 추출 스크립트 통합
-- SW 캐시 v23 → **v33**
-
-### 🆕 v1.3.0 새 소식 (요약)
-- **메모 hashtag** — 메모에 `#frontend` `#리팩터링` 같이 적으면 자동 수집 → 사이드바 상단에 태그별 stable 컬러 칩으로 노출. 클릭 한 번에 같은 태그의 에이전트들로 필터
-- **디테일 패널의 hashtag 칩** — 현재 에이전트가 가진 태그를 메모 아래에 작게 표시, 클릭 시 같은 태그 다른 에이전트로 점프
-- **사이드바 검색 최근 5개 칩** — 자주 쓰는 프로젝트명/메모 키워드를 클릭으로 재선택
-- **`j/k` 키 + 디테일 ‹ / › 버튼** — 사이드바 정렬·필터 그대로 따라 에이전트 순회 + 카드 자동 스크롤
-- **Insights 시간대 히트맵 ▼ 마커** — 현재 시각 셀에 오렌지 바운스 화살표
-- **새 픽셀아트 앱 아이콘** — PWA 설치본·favicon·SNS 공유 미리보기 전부 갱신 (`scripts/extract-png-from-ico.js`)
-- **사이드바 Enter 로 첫 결과 선택**, 디테일 PID 변경 시 스크롤 위로 자동
-- **메모 글자 수 임계 경고 색**, 메모 푸터 단축키 힌트 (⌘S / ⌘⏎), `N` 단축키로 메모 빠른 포커스
-- **`[hidden] { display: none !important; }` 글로벌 안전망** — 모드 칩·CTA 가 hidden 속성 무시하던 버그 일괄 해소
-- **conn-dot WS 상태 pulse**, `aiTycoonReconnect()` 노출 + 명령 팔레트 명령
-- SW 캐시 v11 → **v23**, smoke 38개·lint 37개 그대로 통과
-
-### 🆕 v1.2.0 새 소식 (요약)
-- **명령 팔레트 32+ 명령** — 검색/팔레트/단축키 모달 모두에 한글 IME 매끄럽게
-- **Strict 프라이버시 모드** (`Shift+P` 더블탭) — hover unblur 차단으로 화면 녹화 안전
-- **헤더 모드 칩 3종** (`⚠ 멈춤` / `DEMO` / `프라이버시`) — 활성 모드 즉시 인지 + 클릭으로 해제
-- **검색 매치 노란 하이라이트** (사이드바 + 팔레트), 메모도 검색 매칭
-- **카드 Shift+클릭 으로 핀 토글**, F1 도움말, Cmd/Ctrl+S 메모 즉시 저장
-- **워크 이벤트 → 카드 자동 스크롤**, 사이드바 '위로' 부유 버튼
-- **신선도 색상 코드** (1분/5분/30분), 메모리 추세 ▲/▼
-- **운영 브리핑 / 헬스 / 보고 대기열** 등 사이드 패널 거의 모든 영역 KO/EN 일관
-- `npm run lint` (35개 .js syntax 일괄 검사) + CI 통합
-
-### 🆕 v1.1.0 새 소식 (요약)
-- **명령 팔레트** (`Ctrl/Cmd+K`) — 22개 명령 + 에이전트 fuzzy 검색
-- **프라이버시 모드** (`Shift+P`) — 프롬프트·프로젝트명 즉시 블러 (화면 공유 안전)
-- **에이전트별 개인 메모** — 디테일 패널에 500자 메모, 카드에 황금 점 표시
-- **컴팩트 카드 뷰** — 10명 이상에서 한 화면에 더 많이
-- **신선도 색상 코드** — 1분/5분/30분 임계값으로 카드 활동성 직관 표시
-- **멈춘 에이전트 감지** — 5분 무신호 → 칩 + 토스트 + 탭 제목 ⚠ 배지
-- **오늘의 MVP 카드 · 자리 비운 사이 요약** — Insights 모달과 토스트로 자동 정리
-- **HUD 작업실 타이틀 인라인 편집** — 더블클릭으로 즉시 수정
-- **macOS ⌘ 키 자동 표시** · **단축키 모달 검색** · **위로 부유 버튼**
-- **일일 리포트 / 메모 일괄 export** (`.md`) — 스탠드업·아카이브 친화
-- **서버 graceful shutdown** — SIGTERM/SIGINT 시 WS 클라이언트에 작별 인사
-- 업적 21 → **24개**, smoke 테스트 32 → **38개**
-
-자세한 변경 내역은 [`CHANGELOG.md`](./CHANGELOG.md), 코드 아키텍처는 [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md), 스크린샷 갤러리는 [`docs/SCREENSHOTS.md`](./docs/SCREENSHOTS.md) 참고.
-
-Claude Code · Cursor · Codex 같은 AI 에이전트가 지금 어떤 작업을 하고 있는지 자동으로 감지하고, 픽셀 아트 오피스 안의 캐릭터로 보여줍니다.
-
-> 🌐 **English readers:** scroll to the bottom for a quick English overview, or hit the globe icon in the app header to switch the UI to English.
-
----
-
-## 소개
-
-여러 AI 세션을 동시에 띄워놓고 작업하다 보면 "지금 누가 일하고 있는지", "어떤 프로젝트를 보고 있는지", "멈춘 건 아닌지" 텍스트 로그만으로 바로 파악하기가 어렵습니다.
-
-AI Tycoon은 현재 내 컴퓨터에서 돌아가는 AI 작업을 **게임처럼 한눈에** 볼 수 있도록 만든 대시보드입니다. 캐릭터들이 자기 자리에 앉아 코딩하고, 막히면 검색하러 가고, 검토 차례가 되면 보스 자리(=사용자)로 모입니다.
-
----
-
-## 주요 기능
-
-### 🤖 실시간 감지 & 시각화
-- **자동 감지** — Claude Code · Cursor · Codex · Copilot · Ollama · LM Studio · Jan · GPT4All 등 8종 AI 플랫폼 (설정 없음)
-- **실시간 상태** — coding · thinking · searching · reviewing · idle · offline 6단계, 깜빡임 방지 hold 로직 포함
-- **보스 리뷰 큐** — 검토 차례가 된 에이전트가 줄 서서 사용자 앞에 옵니다
-- **역할 자동 배정** — 개발자 · 기획자 · QA · 디자이너 · 리뷰어
-
-### 🎨 풍부한 비주얼
-- **픽셀 아트 오피스** — 데스크 · 모니터 · 의자 · 휴게실 · 자판기 · 수족관 · 미팅룸 · 책장 · 식물
-- **시간대 조명** — 시계 시간에 맞춰 창밖 하늘이 새벽·낮·황혼·밤으로 자동 전환 (Pixi 앰비언트 틴트 + 윈도우 별/달/태양 궤도)
-- **빗방울 날씨** — 시간당 8% 확률로 비 효과
-- **백그라운드 NPC** — 청소 로봇, 종이비행기, 휴게실 고양이, 야간 보안 순찰, 배송 NPC
-- **오피스 테마 6종** — 클래식 / 카페 / 숲속 / 심야 / 사쿠라 / 바다 (light/dark 양쪽 팔레트)
-- **자동 시즌 장식** — 12월 크리스마스 트리+눈, 10-11월 잭오랜턴+거미줄, 3-4월 벚꽃
-- **인테리어 디테일** — 책상별 램프(저녁 글로우), 커피잔/포스트잇/식물/책 변형, 캘린더·CAFE 네온·모티브 포스터
-
-### 🎭 캐릭터
-- 20개 캐릭터 테마 — 헤어스타일·액세서리·피부톤·의상 자동 배정
-- 합성 데모 모드 — 실제 에이전트 없이도 6-8명 풀-페이크 직원으로 작업실 시연
-
-### 📊 인사이트 & 통계
-- **인사이트 모달** (`I` 키) — 활성/완료/진행/메모리, 플랫폼 분포, TOP 5 프로젝트, 상태 분포, 24시간 히트맵, 7일 추이, 최근 활동 피드(클릭→포커스), 업적
-- **일자별 통계 영속화** — localStorage 14일 보관, 시간대별 누적
-- **차트 hover 툴팁** — 5가지 지표(태스크/직원/출근/이벤트) 풍부한 정보
-
-### 🏆 게임화
-- **업적 21종** — 첫 연결, 10/50태스크, 멀티플랫폼, 야간 작업, 3/7일 연속, 5+ 동시, 콘도드 등
-- **컨페티 폭발** + 토스트 팝업 + 헤더 미해제 카운트 뱃지
-
-### 🌐 i18n & 접근성
-- **KO/EN 토글** — 헤더 🌐 버튼, 70+ 문자열 양국어
-- **접근성** — 키보드 내비게이션, `prefers-reduced-motion`, ARIA 라벨, 포커스 트랩
-
-### 🔊 알림 & 사운드
-- **데스크탑 알림** — Web Notifications API, 태스크 완료·검토 요청 (탭 백그라운드 시)
-- **효과음** — Web Audio API, 출근/퇴근/완료/리뷰 미니 멜로디, 0-100% 볼륨
-
-### ⚡ PWA
-- **앱으로 설치** — manifest + Service Worker로 데스크탑 앱처럼 띄우기
-- **오프라인 지원** — 셸 자산 28개 캐시
-- **URL 단축 라우팅** — `?action=insights` / `?action=settings`
-
-### 🎯 UX 폴리시
-- **명령 팔레트** (`Ctrl/Cmd+K`) — VS Code 스타일, 에이전트·22개 명령(필터·테마·언어·도구) fuzzy 검색
-- **프라이버시 모드** (`Shift+P`) — 프롬프트·프로젝트명·태스크를 즉시 블러, 화면 공유 안전
-- **에이전트별 개인 메모** — 디테일 패널에 500자 메모, sessionId/PID 키로 영속, 카드에 황금 닷 표시
-- **컴팩트 뷰 토글** — 정렬 옆 리스트 아이콘으로 카드 슬림화, 10+ 에이전트 운영에 유리
-- **상태별 요약 칩** — 사이드 패널 상단에 6/2/1/3 (코딩/생각/검토/대기) 한눈에, 클릭 시 필터
-- **프로젝트별 색상 닷** — 같은 프로젝트의 모든 에이전트가 같은 색상으로 묶임
-- **"NEW" 펄스** — 방금 출근한 에이전트에 60초간 초록 보더 + 칩 강조
-- **"오늘의 MVP" 카드** — Insights 모달에서 가장 활발한 에이전트 1명 자동 선정
-- **"자리 비운 사이" 요약** — 탭을 30초+ 떠나 있다 돌아오면 그동안 일어난 일 한 줄 요약 토스트
-- **메모리 추세 화살표** — 30초 전 대비 ▲/▼ 화살표로 증감 표시 (호버 시 정확한 MB)
-- **첫 실행 환영 카드** + 5-step 스포트라이트 투어 + 회전 "혹시 알고 계셨나요?" 팁
-- **단축키 모달** (`?` 키) — 18+ 글로벌 단축키 정리
-- **PNG 스냅샷** (`P`) — Canvas + Pixi 합성 다운로드
-- **시네마 모드** (`Z`) — 모든 오버레이 숨김 (클린 스크린샷용)
-- **사운드 토글** (`M`) — 한 키로 음소거 on/off
-- **에이전트 순회** (`J`/`K`) — vim 스타일 prev/next 포커스
-- **인사이트 모달** (`I`), **설정 모달** (`,`), **성능 HUD** (`Ctrl+Shift+P`)
-- **미니맵** — 줌 1.1x 이상 시 자동 노출, 클릭→패닝
-- **통합 설정 모달** — 다크/언어/밀도/테마/HUD/사운드/볼륨/알림/시즌/시간 강제/백업/복원/모두 초기화 + "새 소식" 인라인 changelog
-- **사운드 미리듣기** — 4종 효과음 즉시 시청
-- **작업실 이름** — 페이지 타이틀과 HUD에 사용자 정의 이름
-- **백업/복원** — 모든 prefs·통계·업적 JSON export/import
-- **CSV 통계 받기** — 일자별 14일 데이터 다운로드
-- **시간 스크럽 슬라이더** — 0~23:59 데모/스크린샷용 시각 강제
-- **자동 SW 업데이트 알림** — 새 버전 감지 시 토스트 + Refresh 액션
-- **서버 graceful shutdown** — SIGTERM/SIGINT 시 WS 클라이언트에 작별 인사 후 깔끔하게 종료
-
-### 📱 모바일
-- 핀치 줌, 한 손가락 패닝
-- 모바일 우선순위 도크 (가장 중요한 직원 압축 표시)
-- 사이드 패널 슬라이드 오버레이 (480px 이하)
-
----
-
-## 지원 대상
-
-현재는 아래 환경을 중심으로 감지하고 있습니다.
-
-| 플랫폼 | 감지 방식 |
-|--------|----------|
-| Claude Code | 세션 파일 + 히스토리 기반 (가장 상세) |
-| OpenAI Codex | 세션 인덱스 + 세션 파일 기반 |
-| Cursor | 윈도우 타이틀 + 워크스페이스 파일 기반 |
-| Ollama | 프로세스 감지 |
-| LM Studio | 프로세스 감지 |
-| GitHub Copilot | 프로세스 감지 |
-| Jan | 프로세스 감지 |
-| GPT4All | 프로세스 감지 |
-
-> **OS별 차이** — Claude Code · Codex 는 세션 파일 기반이라 Windows / macOS / Linux 모두 동일하게 감지됩니다. 프로세스 기반 감지는 Windows 는 PowerShell, macOS/Linux 는 `ps` 를 사용합니다. 다만 윈도우 타이틀(Cursor 등)은 OS 표준 도구로 얻기 어려워 비‑Windows 에선 일부 정보가 비어 있을 수 있습니다. AI 도구가 하나도 안 잡히는 환경이라면 `?demo=1` 데모 모드로 둘러볼 수 있습니다.
-
-새로운 AI 플랫폼은 `server.js`의 `AI_PLATFORMS` 객체에 항목을 추가하면 됩니다.
-
----
-
-## 기술 스택
-
-- **백엔드**: Node.js, WebSocket (`ws`)
-- **프론트엔드**: HTML / CSS / JavaScript (Canvas + PixiJS)
-- **스타일**: Tailwind CSS 로컬 빌드 + 커스텀 CSS
-- **CDN**: Pretendard, Iconify, PixiJS
-
-프론트는 별도 빌드 도구 없이 브라우저 네이티브 ES Module로 구성했습니다.
-Tailwind 유틸리티 CSS는 `npm run build:css`로 `css/tailwind.generated.css`에 생성해 둡니다.
-
----
-
-## 실행 방법
-
-설치 없이 한 줄로 띄우는 게 가장 빠릅니다. (실행하면 기본 브라우저로 대시보드가 자동으로 열립니다.)
+Node.js 20 이상이 필요합니다.
 
 ```bash
-npx ai-tycoon
-```
-
-저장소를 클론해서 개발용으로 돌릴 때는:
-
-```bash
+git clone https://github.com/easygap/AI-Tycoon.git
+cd AI-Tycoon
 npm install
 npm start
 ```
 
-기본 주소:
+기본 브라우저가 자동으로 열리며 주소는 `http://localhost:3777`입니다. 실제 에이전트 없이 먼저 둘러보려면 `http://localhost:3777/?demo=1`로 접속하세요.
 
-```
-http://localhost:3777
-```
+## 왜 만들었나
 
-환경 변수로 포트·폴링 주기·바인딩·로그를 조절할 수 있습니다.
+에이전트를 두세 개 넘게 띄우면 터미널을 오가며 누가 무엇을 하는지 다시 읽는 시간이 꽤 생깁니다. AI Tycoon은 그 흐름을 로그 목록 대신 작업실로 보여주려고 만들었습니다.
 
-```bash
-PORT=8080 POLL_INTERVAL=3000 npm start
-NO_OPEN=1 npm start                        # 브라우저 자동 오픈 끄기 (서버/헤드리스용)
-HOST=0.0.0.0 npm start                     # 외부 노출 (직접 opt-in — 인증/프록시 권장)
-QUIET=1 npm start                          # 폴링/WS 로그 억제
-LOG_LEVEL=warn npm start                   # 위와 동일
-```
+캐릭터의 자리와 움직임으로 현재 상태를 보고, 운영 패널에서 검토가 필요한 작업을 먼저 처리하고, 직원 상세 화면에서 세션과 작업 기록을 확인할 수 있습니다. 모든 화면은 브라우저에서 열리지만 서버와 데이터는 기본적으로 내 컴퓨터 안에서만 동작합니다.
 
-> 🔒 기본값은 `127.0.0.1` (로컬 전용) 바인딩입니다. 같은 네트워크의 다른 기기에서 접근하려면 `HOST` 를 직접 지정해야 하며, 이 경우 프롬프트·프로젝트명이 노출될 수 있으니 리버스 프록시 + 인증을 함께 두는 걸 권장합니다.
+## 화면 둘러보기
 
-스타일을 수정한 뒤 Tailwind 유틸리티를 다시 생성하려면:
+실행 중인 에이전트가 직원으로 들어옵니다. 코딩, 생각, 검색, 회의, 검토, 대기 상태에 따라 자리와 표현이 달라지고 같은 프로젝트는 색으로 묶입니다. Canvas와 PixiJS로 시간대 조명, 작업 흐름, 소품과 반응 효과를 더했습니다.
+
+### 운영 패널과 모바일
+
+운영 패널은 지금 결정해야 할 일, 진행 중인 작업, 최근 활동을 한곳에 모읍니다. 작은 화면에서는 같은 기능을 슬라이드 패널로 열어 검토와 승인을 처리할 수 있습니다.
+
+<p align="center">
+  <a href="docs/operations.png"><img src="docs/operations.png" alt="AI Tycoon 운영 패널과 검토 대기열" width="58%"></a>
+  <a href="docs/mobile.png"><img src="docs/mobile.png" alt="AI Tycoon 모바일 운영 화면" width="29%"></a>
+</p>
+
+### 직원 상세와 인사이트
+
+직원별 세션과 태스크를 확인하고 개인 메모를 남길 수 있습니다. 인사이트에서는 오늘 처리한 태스크, 플랫폼 분포, 가장 활발한 직원과 프로젝트를 요약합니다.
+
+<p align="center">
+  <a href="docs/detail.png"><img src="docs/detail.png" alt="AI Tycoon 직원 상세 화면" width="49%"></a>
+  <a href="docs/insights.png"><img src="docs/insights.png" alt="AI Tycoon 작업실 인사이트 화면" width="49%"></a>
+</p>
+
+이미지를 누르면 원본 크기로 볼 수 있습니다. [스크린샷 전체 보기](./docs/SCREENSHOTS.md)
+
+## 주요 기능
+
+| 영역 | 할 수 있는 일 |
+| --- | --- |
+| 실시간 감지 | 실행 중인 AI 도구와 세션을 찾아 상태, 프로젝트, 작업 정보를 갱신 |
+| 시각화 | 픽셀 오피스, 캐릭터, 시간대 조명, PixiJS 작업 효과로 흐름 표현 |
+| 운영 | 우선순위 브리핑, 검토 대기열, 진행 작업과 최근 활동 확인 |
+| 기록 | 직원별 상세 정보, 개인 메모, 해시태그, 일별 통계와 인사이트 |
+| 사용성 | 검색과 필터, 명령 팔레트, 한국어/영어, 밝은/어두운 테마, PWA 설치 |
+| 화면 공유 | 프로젝트명과 프롬프트를 가리는 프라이버시 모드 제공 |
+
+## 실행 설정
+
+자주 쓰는 환경 변수는 아래와 같습니다.
+
+| 변수 | 기본값 | 용도 |
+| --- | --- | --- |
+| `PORT` | `3777` | 서버 포트 변경 |
+| `POLL_INTERVAL` | `2000` | 상태 수집 주기(ms) |
+| `NO_OPEN` | `0` | `1`이면 브라우저를 자동으로 열지 않음 |
+| `HOST` | `127.0.0.1` | 외부 접근이 필요할 때만 바인딩 주소 변경 |
+| `QUIET` | `0` | `1`이면 폴링과 WebSocket 로그를 줄임 |
+| `LOG_LEVEL` | - | `warn` 또는 `error`로 로그를 줄임 |
+
+macOS와 Linux에서는 `PORT=8080 npm start`, PowerShell에서는 `$env:PORT=8080; npm start`처럼 지정할 수 있습니다.
+
+## 지원하는 도구
+
+| 도구 | 감지 범위 |
+| --- | --- |
+| Claude Code | 세션, 프로젝트, 프롬프트와 태스크를 가장 상세하게 감지 |
+| OpenAI Codex | 세션 인덱스와 세션 파일을 기반으로 작업 감지 |
+| Cursor | 프로세스와 워크스페이스 중심으로 감지 |
+| GitHub Copilot | 프로세스 실행 여부 감지 |
+| Ollama, LM Studio, Jan, GPT4All | 로컬 프로세스 실행 여부 감지 |
+
+Claude Code와 Codex의 세션 감지는 Windows, macOS, Linux에서 동작합니다. 프로세스 감지는 Windows에서 PowerShell, macOS와 Linux에서 `ps`를 사용하며 운영체제에 따라 일부 프로젝트 정보가 비어 있을 수 있습니다.
+
+## 알아둘 점
+
+- 서버는 기본적으로 `127.0.0.1`에만 열립니다. `HOST`를 바꿔 외부에 노출할 때는 별도 인증과 리버스 프록시를 함께 사용하세요.
+- 메모, 통계, 설정은 브라우저 `localStorage`에 평문으로 저장됩니다. 프라이버시 모드는 화면 표시를 가리는 기능이며 암호화 기능은 아닙니다.
+- PWA의 오프라인 모드는 정적 화면 자산을 보관합니다. 실제 에이전트 감지와 실시간 갱신에는 Node.js 서버가 필요합니다.
+- PixiJS와 Iconify는 CDN에서 불러옵니다. 완전히 폐쇄된 네트워크에서는 해당 시각 요소가 제한될 수 있습니다.
+- 앱 안에서 `?`를 누르면 전체 단축키를 볼 수 있습니다. 자주 쓰는 키는 `Ctrl/Cmd+K`(명령 팔레트), `I`(인사이트), `D`(테마), `P`(스냅샷)입니다.
+
+보안 관련 제보와 운영 기준은 [SECURITY.md](./SECURITY.md)를 확인해 주세요.
+
+## 개발
 
 ```bash
 npm run build
-```
-
-스모크 테스트로 모든 모듈/자산이 정상 로드되는지 확인:
-
-```bash
+npm run lint
 npm test
 ```
 
-REST API 엔드포인트 (모니터링·통합용):
+- [CHANGELOG.md](./CHANGELOG.md): 버전별 변경 내용
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): 감지부터 렌더링까지의 구조
+- [CONTRIBUTING.md](./CONTRIBUTING.md): 개발 환경과 기여 방법
+- [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md): 커뮤니티 운영 원칙
 
-```bash
-curl http://localhost:3777/api/health     # 버전·가동시간·에이전트 통계
-curl http://localhost:3777/api/agents     # 현재 활성 에이전트 JSON 스냅샷
-```
+버그 제보와 기능 제안은 [GitHub Issues](https://github.com/easygap/AI-Tycoon/issues)에서 받고 있습니다. 이 프로젝트는 [MIT License](./LICENSE)로 배포합니다.
 
-URL 쿼리로 임베드/공유 외관 강제:
+## English
 
-| 쿼리 | 의미 |
-|---|---|
-| `?clean=1` | 시네마 모드 (모든 오버레이 숨김) + 환영/투어 자동 dismiss |
-| `?demo=1` | 합성 직원 데모 자동 활성화 |
-| `?theme=midnight` | `classic / cafe / forest / midnight / sakura / ocean` |
-| `?lang=en` | `ko / en` |
-| `?dark=1` 또는 `?dark=0` | 다크모드 명시 강제 |
-| `?action=insights` | 인사이트 모달 자동 오픈 |
-| `?action=settings` | 설정 모달 자동 오픈 |
+AI Tycoon is a local, real-time dashboard that turns AI agents running on your computer into a small pixel office. It helps you see who is working, what needs review, and where to look next without switching between terminals.
 
-예: `/?clean=1&demo=1&theme=midnight&lang=en` — 회사 상태판용 시연
-
----
-
-## 프로젝트 구조
-
-```
-ai-tycoon/
-├── css/
-│   ├── tailwind.input.css      # Tailwind 입력 파일
-│   └── tailwind.generated.css  # 로컬 생성 유틸리티 CSS
-├── js/
-│   ├── constants.js   # 팔레트, 캐릭터 테마, 대사 템플릿, 오피스 맵
-│   ├── state.js       # 공유 상태, 유틸 함수, 보스 큐 헬퍼
-│   ├── ws.js          # WebSocket 연결/재연결, 상태 핸들러
-│   ├── renderer.js    # 캔버스 렌더링 (오피스, 가구, 에이전트, 파티클)
-│   ├── npcs.js        # 배경 NPC (청소 로봇, 종이비행기, 휴게실 고양이)
-│   ├── timeOfDay.js   # 시간대별 하늘/조명 팔레트 계산
-│   ├── panel.js       # 사이드 패널, 필터/정렬, 보스 리뷰 큐 UI
-│   ├── pixiOverlay.js # PixiJS 실시간 그래픽 오버레이 (앰비언트 틴트, 날씨, 작업 효과)
-│   └── main.js        # 진입점, 게임 루프, 입력 처리, 채팅 시스템
-├── server.js          # AI 세션 감지, 상태 수집, WebSocket 서버
-├── index.html         # 전체 레이아웃 + 환영 카드
-├── style.css          # 테마 및 UI 스타일
-├── tailwind.config.js # Tailwind 로컬 빌드 설정
-├── package.json
-└── README.md
-```
-
-- `server.js`: 세션 정보, 프로세스 상태, 작업 기록을 읽어서 각 AI 에이전트의 상태를 판단합니다.
-- `js/`: 렌더링, 상태 관리, 패널 UI, WebSocket 처리를 담당합니다.
-- `index.html`: 헤더, 캔버스, 사이드 패널, 보스 큐 컨테이너 레이아웃입니다.
-- `style.css`: 라이트/다크 테마, 필터 칩, 보스 큐, 반응형 스타일을 포함합니다.
-
----
-
-## 동작 방식
-
-서버에서 세션 정보, 프로세스 상태, 작업 기록 등을 읽어서 각 AI 에이전트의 상태를 판단합니다.
-
-예를 들어 아래 같은 상태로 구분합니다.
-
-| 상태 | 설명 |
-|------|------|
-| `coding` | 실제 작업 진행 중 |
-| `thinking` | 작업 대기 또는 고민 중 |
-| `searching` | 자료 탐색 중 |
-| `reviewing` | 리뷰/검토 중 |
-| `idle` | 실행 중이지만 쉬는 상태 |
-| `offline` | 종료된 상태 |
-
-이 상태를 WebSocket으로 브라우저에 전달하고, 클라이언트에서는 각 상태에 맞는 캐릭터 행동과 UI를 렌더링합니다.
-
-상태 전환이 너무 자주 깜빡이지 않도록 상위 전환은 즉시, 하위 전환은 일정 시간 유지 후 적용하는 hold 로직이 포함되어 있습니다.
-
----
-
-## 단축키 (`?` 키로 언제든 확인)
-
-| 키 | 동작 |
-|---|---|
-| `?` · `Ctrl+/` · `F1` | 단축키 도움말 |
-| `,` | 설정 모달 |
-| `I` | 인사이트 |
-| `P` | PNG 스냅샷 |
-| `Shift+P` | 프라이버시 모드 (블러) — 빠르게 두 번 누르면 Strict |
-| `D` | 다크 모드 |
-| `M` | 사운드 음소거 토글 |
-| `Z` | 시네마 모드 (오버레이 숨김) |
-| `F` | 가장 활발한 직원 포커스 |
-| `J` / `K` | 다음 / 이전 직원 |
-| `H` · `0` | 전체 보기로 리셋 |
-| `/` | 에이전트 검색바 포커스 |
-| `Ctrl+K` · `Cmd+K` | 명령 팔레트 (32+ 명령) |
-| `Shift+Click` | 에이전트 카드 핀 토글 |
-| `Cmd/Ctrl+S` · `Cmd/Ctrl+Enter` | 메모 즉시 저장 / 저장 + 패널 닫기 |
-| `N` | 선택된 에이전트의 메모로 빠르게 포커스 |
-| `Ctrl+Shift+P` | 성능 HUD |
-| `Esc` | 모달 / 검색 닫기 |
-| ↑↑↓↓←→←→BA | 히든 업적 🎮 |
-
----
-
-## 만들어본 이유
-
-이 프로젝트는 "AI가 실제로 일하고 있는 느낌"을 조금 더 직관적으로 보고 싶어서 시작했습니다.
-
-단순히 로그를 보는 방식보다, 작업 중 / 대기 중 / 리뷰 중 같은 흐름이 시각적으로 보이니까 여러 세션을 동시에 관리할 때 훨씬 편했습니다.
-
----
-
-## 🇺🇸 English
-
-**AI Tycoon** is a real-time pixel-art office dashboard that visualizes the AI agents (Claude Code, Cursor, Codex, Ollama, LM Studio, Copilot, Jan, GPT4All) currently running on your local machine.
-
-Instead of glancing at half a dozen terminals, you see your agents as characters in a tiny office: they sit at desks coding, walk to the whiteboard when planning, queue up at the "boss desk" (you) for reviews, and head to the breakroom when idle. The sky outside the windows tracks your real clock from dawn to dusk to night, and the whole scene gets warmer at sunset and cooler at night.
-
-### Highlights
-
-#### Realtime detection
-- **Zero-config detection** — auto-discovers 8 AI platforms (Claude Code, Cursor, Codex, Copilot, Ollama, LM Studio, Jan, GPT4All)
-- **6 live states** — coding / thinking / searching / reviewing / idle / offline
-- **Boss review queue** — agents needing review walk to your "boss desk" and queue
-- **Auto role assignment** — developer / planner / QA / designer / reviewer
-
-#### Visual richness
-- **Time-of-day lighting** — sky, sun/moon, stars and ambient tint follow the real clock; sunrise/sunset/midnight palettes
-- **Weather** — occasional rain (8%/hour)
-- **6 office themes** — Classic / Cafe / Forest / Midnight / Sakura / Ocean, light & dark each
-- **Seasonal decor** — Christmas tree + snow (Dec), jack-o-lantern + spider web (Oct/Nov), cherry blossoms (Mar/Apr)
-- **Background NPCs** — cleaning robot, paper airplane, breakroom cat, night security guard, delivery courier
-- **Desk personalities** — lamps that glow at night, coffee mugs / sticky notes / succulents / book stacks
-- **Wall art** — calendar, motivational poster, CAFE neon sign, world map
-
-#### Insights & history
-- **Insights modal** (`I`) — totals, platform breakdown, top 5 projects, status distribution, 24-hour heatmap, 7-day trend, clickable activity feed, achievements grid
-- **Daily stats** — localStorage, 14-day retention
-- **Rich hover tooltips** on every chart
-
-#### Gamification
-- **23 achievements** — first connect, 10/50 tasks, multi-platform, night owl, streaks, full house, Konami code, …
-- **Confetti** + toast popups + header unseen-count badge
-
-#### i18n & accessibility
-- **KO/EN toggle** — 130+ strings, persisted preference
-- Keyboard navigation (`j/k` cycle, `N` note, `Ctrl+K` palette, `?` help), `prefers-reduced-motion`, ARIA labels, focus traps
-- **Mobile responsive** — `≤768px` viewport with collapsible sidebar + horizontal-scroll focus rail (no document scroll)
-
-#### Audio & alerts
-- **Desktop notifications** — Web Notifications API for task done / review requests (when tab in background)
-- **Sound effects** — Web Audio tones for join/leave/done/review, 0-100% volume
-
-#### PWA
-- **Install as app** — manifest + service worker, 28 shell assets cached for offline
-- **URL shortcuts** — `?action=insights` / `?action=settings`
-
-#### Polish
-- **Command palette** (`Ctrl/Cmd+K`) — VS-Code-style fuzzy search across agents + 35+ commands (filter / theme / lang / tools / **dynamic `#tag` filters**)
-- **Privacy mode** (`Shift+P`, double-tap for Strict) — blur prompts, project names, tasks — safe for screen sharing
-- **Per-agent personal notes** with **hashtag autocomplete** — 500-char textarea, `#frontend` auto-suggested (↑↓/Enter/Tab), `Cmd+S` save / `Cmd+Enter` save+close
-- **Hashtag organization** — `#tag` in notes auto-collected into 8 touchpoints (sidebar bar, card chips, detail panel chips, command palette, settings manager, …)
-- **Compact view toggle** — slim cards for 10+ agents
-- **Status summary chips** — "6 coding · 2 thinking · 1 review · 3 idle" above the agent list, click to filter
-- **Per-project color dots** — agents on the same project share a stable HSL color
-- **"NEW" pulse** — freshly joined agents pulse green for 60 s
-- **"Today's MVP" card** — top agent of the day highlighted in Insights
-- **"While you were away"** — recap toast when you return after 30+ s
-- **Memory trend arrows ▲/▼** — quick visual cue vs 30 s ago
-- First-run welcome card + 5-step spotlight tour + rotating "Did you know?" tips
-- Keyboard shortcuts modal (`?`)
-- **PNG snapshot export** (`P`) — Canvas + Pixi composite download
-- **Performance HUD** (`Ctrl+Shift+P`) — FPS, heap, sprite count
-- **Mini-map** — appears when zoomed in, click to pan
-- **Settings modal** (`,`) — dark / lang / density / theme / sound / notify / season / time / backup / reset + inline "What's new" panel
-- **Backup & restore** — full JSON export/import of prefs, stats, achievements
-- **Graceful server shutdown** — SIGTERM/SIGINT broadcasts farewell to all WS clients
-- Pinch-zoom, single-finger pan, mobile priority dock
-
-### Run
-
-```bash
-npx ai-tycoon       # zero-install: runs the server & opens your browser
-```
-
-Or clone for development:
-
-```bash
-npm install
-npm start          # http://localhost:3777
-npm run lint       # node --check on every .js (36+ files)
-npm test           # smoke check: 38 assets/modules/API contract
-npm run icons      # install a new pixel-art PNG/ICO as app icon
-```
-
-Tested on Node 20 / 22 / 24 (CI matrix). Modern browsers (Chrome, Edge, Safari, Firefox).
-Process detection uses PowerShell on Windows and `ps` on macOS/Linux; Claude Code & Codex are file-based and work on all three.
-
-Optional environment variables:
-
-```bash
-PORT=8080 POLL_INTERVAL=3000 npm start
-NO_OPEN=1 npm start              # don't auto-open the browser (servers/headless)
-HOST=0.0.0.0 npm start           # expose beyond localhost (opt-in; add auth/proxy)
-```
-
-> 🔒 Binds to `127.0.0.1` (loopback only) by default. The WebSocket checks the `Origin` header and `/api/agents` sends no wildcard CORS, so a malicious site can't siphon your local agent activity.
-
-### Project layout
-
-```
-ai-tycoon/
-├── server.js          # Detects AI sessions, broadcasts state via WebSocket
-├── index.html         # Layout + welcome card + modals + splash
-├── manifest.webmanifest, sw.js, icons/  # PWA support
-├── css/, style.css    # Tailwind utilities + custom styles
-└── js/
-    ├── main.js        # Entry point, game loop, input
-    ├── state.js       # Shared mutable state + utility functions
-    ├── constants.js   # Palettes, themes, character themes, office map
-    ├── renderer.js    # Canvas 2D drawing (office, agents, NPCs)
-    ├── pixiOverlay.js # PixiJS effects layer (ambient tint, weather, auras)
-    ├── npcs.js        # Background characters (robot, cat, plane, courier, guard)
-    ├── seasons.js     # Christmas / Halloween / Spring decorations
-    ├── timeOfDay.js   # Sky palette + ambient lighting maths
-    ├── panel.js       # Side panel + insights modal
-    ├── ws.js          # WebSocket reconnect + state diffing
-    ├── agentPriority.js # Sorting & filtering of agents
-    ├── i18n.js        # KO/EN dictionary (70+ keys)
-    ├── stats.js       # Daily rollups persisted to localStorage
-    ├── achievements.js# 14 milestone tracking + popups + confetti
-    ├── sound.js       # Web Audio tones + volume slider
-    ├── notifications.js # Web Notifications API wrapper
-    ├── demoMode.js    # Synthetic agents for screenshots
-    ├── snapshot.js    # PNG export (Canvas + Pixi composite)
-    ├── perfHud.js     # FPS / heap / density debug overlay
-    ├── tips.js        # Rotating "did you know?" hint card
-    ├── miniMap.js     # Bottom-right office overview when zoomed in
-    └── backup.js      # JSON export / import of all state
-```
-
-### Notes
-
-- The frontend uses native ES modules — no bundler. Open the page and refresh after editing.
-- Tailwind utilities are pre-built into `css/tailwind.generated.css`; regenerate with `npm run build`.
-- The "boss desk" is *your* seat: agents needing review walk over and queue.
-- New AI platforms can be added by extending `AI_PLATFORMS` in `server.js`.
-
-### Docs
-
-- [`CHANGELOG.md`](./CHANGELOG.md) — feature drops by iteration (220+ iterations, 9 GitHub releases)
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — setup + how to add modals / shortcuts / achievements / platforms
-- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — data flow + module relationships + extension points
-- [`docs/SCREENSHOTS.md`](./docs/SCREENSHOTS.md) — visual gallery (hero, command palette, insights, detail panel, mobile)
-- [`SECURITY.md`](./SECURITY.md) — vulnerability reporting policy + response SLA
-- [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) — Contributor Covenant v2.1
-- [`LICENSE`](./LICENSE) — MIT
-
-### Reliability
-
-v1.4.0 → v1.4.6 went through **8 verification rounds** (general-purpose agent code reviews + Playwright e2e) and fixed **15 latent bugs** spanning WebSocket race conditions, rendering crashes, GPU leaks, mobile horizontal scroll, and the once-broken "While you were away" toast. See `CHANGELOG.md` iterations 200–219 for the full hunt log.
-
-### Easter eggs
-
-- ↑ ↑ ↓ ↓ ← → ← → B A — Konami unlocks a hidden achievement
-- Inspect the DevTools console — there's a hello message + helper APIs
+Clone the repository, run `npm install` and `npm start`, then open `http://localhost:3777`. Use `?demo=1` to explore with synthetic agents. The interface supports Korean and English from the globe button in the header.

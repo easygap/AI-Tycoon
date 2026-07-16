@@ -73,6 +73,7 @@ const MIME = {
     ".ico":  "image/x-icon",
     ".svg":  "image/svg+xml",
     ".png":  "image/png",
+    ".woff2": "font/woff2",
     ".webmanifest": "application/manifest+json",
     ".json": "application/json",
 };
@@ -81,6 +82,8 @@ const PUBLIC_FILES = new Set([
     "/index.html",
     "/style.css",
     "/css/tailwind.generated.css",
+    "/css/studio-2026.css",
+    "/assets/fonts/SUIT-Variable.woff2",
     "/manifest.webmanifest",
     "/sw.js",
 ]);
