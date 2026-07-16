@@ -6,14 +6,14 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "landscape-primary",
-  "background_color": "#f6f7f4",
-  "theme_color": "#d97757",
+  "background_color": "#F5F7F2",
+  "theme_color": "#5B8DEF",
   "lang": "ko",
   "categories": ["productivity", "developer", "utilities"],
   "icons": [
     {
       "src": "/icons/icon.png",
-      "sizes": "128x128",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
@@ -37,7 +37,7 @@
       "description": "View today's workspace insights",
       "url": "/?action=insights",
       "icons": [
-        { "src": "/icons/icon.png", "sizes": "128x128", "type": "image/png" },
+        { "src": "/icons/icon.png", "sizes": "512x512", "type": "image/png" },
         { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
       ]
     },
@@ -47,7 +47,7 @@
       "description": "Open settings",
       "url": "/?action=settings",
       "icons": [
-        { "src": "/icons/icon.png", "sizes": "128x128", "type": "image/png" },
+        { "src": "/icons/icon.png", "sizes": "512x512", "type": "image/png" },
         { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
       ]
     }

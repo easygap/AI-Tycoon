@@ -15,9 +15,9 @@ import {
 } from "./constants.js";
 import { timeOfDayLabel, getSkyPalette } from "./timeOfDay.js";
 import { recentDays, todayStats, yesterdayStats, hourActivityToday, hourActivityWindow } from "./stats.js";
-import { avgHeartbeatGap, connQuality } from "./ws.js";
 import { t as i18n } from "./i18n.js";
 import { listAchievements, progressCount } from "./achievements.js";
+import { buildContentDirector, resolveSessionTarget } from "./contentDirector.js";
 
 const PIN_STORAGE_KEY = "ai-tycoon-pinned-agents";
 const PIN_LEGACY_STORAGE_KEY = "ai-tycoon-pinned-pids";
@@ -359,6 +359,10 @@ function maybeFireStuckToast(agent) {
     const key = String(agent?.pid || "");
     if (!key) return;
     const stuck = isAgentStuck(agent);
+    if (stuck && (S.suppressInitialAlerts || Date.now() < numeric(S.initialAlertGraceUntil, 0))) {
+        _stuckNotified.add(key);
+        return;
+    }
     if (stuck && !_stuckNotified.has(key)) {
         _stuckNotified.add(key);
         try {
@@ -628,78 +632,6 @@ function renderSystemHealth(active, working, review) {
     panel.querySelector('[data-health-action="reload"]')?.addEventListener("click", () => window.location.reload());
 }
 
-function briefHeadline(active, working, review, pinned, stale) {
-    const lgB = (window.aiTycoonI18n?.getLang?.() || "ko");
-    const en = lgB === "en";
-    // 짧은 문구 모음 — 운영 브리핑이라 한 줄짜리 카드 헤드라인 + 부가 디테일
-    if (!S.connected) {
-        return {
-            tone: "offline",
-            icon: "solar:plug-circle-linear",
-            title: en ? "Connecting…" : "연결 대기",
-            detail: en
-                ? `Reconnect ${S.reconnectAttempt || 0}x`
-                : `재연결 ${S.reconnectAttempt || 0}회`,
-        };
-    }
-    if (review.length > 0) {
-        return {
-            tone: "attention",
-            icon: "solar:clipboard-check-linear",
-            title: en ? "Review first" : "검토 우선",
-            detail: en
-                ? `${review.length} waiting for review`
-                : `${review.length}명 확인 대기`,
-        };
-    }
-    if (stale.length > 0) {
-        return {
-            tone: "warn",
-            icon: "solar:radar-2-linear",
-            title: en ? "Signal check" : "신호 확인",
-            detail: en
-                ? `${stale.length} stale signals`
-                : `${stale.length}명 갱신 지연`,
-        };
-    }
-    if (pinned.length > 0) {
-        return {
-            tone: "pinned",
-            icon: "solar:star-bold",
-            title: en ? "Tracking pinned" : "고정 직원 추적",
-            detail: en
-                ? `${pinned.length} kept on top`
-                : `${pinned.length}명 상단 유지`,
-        };
-    }
-    if (working.length > 0) {
-        return {
-            tone: "live",
-            icon: "solar:bolt-circle-linear",
-            title: en ? "All flowing" : "작업 흐름 정상",
-            detail: en
-                ? `${working.length} in focus`
-                : `${working.length}명 집중 중`,
-        };
-    }
-    if (active.length > 0) {
-        return {
-            tone: "ready",
-            icon: "solar:users-group-rounded-linear",
-            title: en ? "Standing by" : "대기 직원 확인",
-            detail: en
-                ? `${active.length} active`
-                : `${active.length}명 활성`,
-        };
-    }
-    return {
-        tone: "empty",
-        icon: "solar:radar-2-linear",
-        title: en ? "Waiting for agents" : "직원 감지 대기",
-        detail: en ? "Listening for sessions" : "세션 대기 중",
-    };
-}
-
 function briefAgentName(agent) {
     if (!agent) return "대상 없음";
     return getAgentTheme(agent).name;
@@ -739,15 +671,28 @@ function renderOperatorBrief(active, working, review) {
     if (!panel) return;
 
     const activeSorted = [...active].sort(agentSortByLivePriority);
+    const workingSorted = [...working].sort(agentSortByLivePriority);
     const reviewSorted = [...review].sort(agentSortByLivePriority);
-    const pinned = activeSorted.filter(isAgentPinned);
     const stale = activeSorted.filter(agent => {
         const info = agentSignalInfo(agent);
         return info.age > 15 * 60 * 1000;
     });
-    const headline = briefHeadline(activeSorted, working, reviewSorted, pinned, stale);
     const lgOB = (window.aiTycoonI18n?.getLang?.() || "ko");
     const enOB = lgOB === "en";
+    const achievement = progressCount();
+    const sessionCompleted = (S.workEvents || []).filter(event => event.type === "task-done").length;
+    const director = buildContentDirector({
+        lang: lgOB,
+        connected: S.connected,
+        active: activeSorted.length,
+        working: workingSorted.length,
+        review: reviewSorted.length,
+        stale: stale.length,
+        completed: sessionCompleted,
+        target: resolveSessionTarget(activeSorted.length),
+        achievementUnlocked: achievement.unlocked,
+        achievementTotal: achievement.total,
+    });
     const actionLabels = enOB
         ? {
             review: "Pending review",
@@ -795,9 +740,10 @@ function renderOperatorBrief(active, working, review) {
                 rank: group.action.rank,
             };
         })
-        .slice(0, 3);
+        .filter(action => action.key !== director.primaryAction.key)
+        .slice(0, 2);
 
-    if (actions.length === 0) {
+    if (actions.length === 0 && activeSorted.length > 0) {
         actions.push({
             key: "all",
             tone: "neutral",
@@ -817,44 +763,140 @@ function renderOperatorBrief(active, working, review) {
     const seenKeys = new Set();
     actions.forEach(action => {
         const identity = `${action.key}:${action.pid ?? action.filter ?? action.search ?? ""}`;
-        if (seenKeys.has(identity) || dedupedActions.length >= 3) return;
+        if (seenKeys.has(identity) || dedupedActions.length >= 2) return;
         seenKeys.add(identity);
         dedupedActions.push(action);
     });
 
-    panel.dataset.tone = headline.tone;
-    const kicker = enOB ? "Operator brief" : "운영 브리핑";
+    const primaryAgent = director.primaryAction.key === "review"
+        ? reviewSorted[0]
+        : director.primaryAction.key === "stale"
+            ? stale[0]
+            : director.primaryAction.key === "working"
+                ? workingSorted[0]
+                : director.primaryAction.key === "idle"
+                    ? activeSorted.find(agent => getAgentNextAction(agent).key === "idle")
+                    : activeSorted[0];
+    const primaryDetail = primaryAgent
+        ? `${briefAgentName(primaryAgent)} · ${briefWork(primaryAgent)}`
+        : director.primaryAction.key === "insights"
+            ? `${director.mission.value}/${director.mission.target}`
+            : director.detail;
+    const signature = JSON.stringify({ director, actions: dedupedActions, primaryDetail, lang: lgOB });
+
+    renderHudDirective(director);
+    if (panel.dataset.contentSignature === signature) return;
+    panel.dataset.contentSignature = signature;
+    panel.dataset.tone = director.tone;
     panel.innerHTML = `
-        <div class="brief-head">
-            <span class="brief-icon">
-                <iconify-icon icon="${esc(headline.icon)}" aria-hidden="true"></iconify-icon>
+        <div class="content-director-head">
+            <span class="content-director-icon">
+                <iconify-icon icon="${esc(director.icon)}" aria-hidden="true"></iconify-icon>
             </span>
-            <div>
-                <span class="brief-kicker">${esc(kicker)}</span>
-                <strong>${esc(headline.title)}</strong>
+            <div class="content-director-heading">
+                <span class="content-director-kicker">${esc(director.kicker)}</span>
+                <strong>${esc(director.title)}</strong>
             </div>
-            <em>${esc(headline.detail)}</em>
+            <em class="content-director-phase">${esc(director.label)}</em>
         </div>
-        <div class="brief-actions">${dedupedActions.map(renderBriefAction).join("")}</div>
+        <p class="content-director-detail">${esc(director.detail)}</p>
+        <div class="content-mission">
+            <div class="content-mission-head">
+                <span>${esc(director.mission.label)}</span>
+                <strong class="tabular-nums">${director.mission.value}<i>/</i>${director.mission.target}</strong>
+            </div>
+            <div class="content-mission-track" role="progressbar" aria-label="${esc(director.mission.label)}" aria-valuemin="0" aria-valuemax="${director.mission.target}" aria-valuenow="${director.mission.value}">
+                <span style="width:${director.mission.percent}%"></span>
+            </div>
+            <div class="content-mission-foot">
+                <span>${esc(director.mission.remainingLabel)}</span>
+                <button type="button" data-content-action="insights">${esc(director.achievementLabel)}</button>
+            </div>
+        </div>
+        <div class="content-loop" aria-label="${esc(enOB ? "Operation cycle" : "운영 사이클")}">
+            ${director.loop.map(item => `
+                <span class="content-loop-step" data-state="${esc(item.state)}">
+                    <i aria-hidden="true"></i>
+                    <em>${esc(item.label)}</em>
+                    <strong class="tabular-nums">${item.value}</strong>
+                </span>
+            `).join("")}
+        </div>
+        <button type="button" class="content-primary-action" data-content-action="${esc(director.primaryAction.key)}" ${primaryAgent?.pid != null ? `data-pid="${esc(primaryAgent.pid)}"` : ""} data-tone="${esc(director.primaryAction.tone)}">
+            <span class="content-primary-icon"><iconify-icon icon="${esc(director.primaryAction.icon)}" aria-hidden="true"></iconify-icon></span>
+            <span class="content-primary-copy">
+                <strong>${esc(director.primaryAction.label)}</strong>
+                <em>${esc(primaryDetail)}</em>
+            </span>
+            <iconify-icon icon="solar:alt-arrow-right-linear" class="content-primary-arrow" aria-hidden="true"></iconify-icon>
+        </button>
+        ${dedupedActions.length ? `<div class="brief-actions content-secondary-actions">${dedupedActions.map(renderBriefAction).join("")}</div>` : ""}
     `;
 
+    panel.querySelectorAll("[data-content-action]").forEach(button => {
+        button.addEventListener("click", () => runContentAction(button.dataset.contentAction, button.dataset.pid));
+    });
     panel.querySelectorAll(".brief-action").forEach(button => {
         button.addEventListener("click", () => {
-            const filter = button.dataset.filter;
-            const search = button.dataset.search;
-            const actionFilter = button.dataset.actionFilter;
             const pid = button.dataset.pid;
-            if (filter) window.setFilter?.(filter);
-            if (actionFilter) window.setActionFilter?.(actionFilter);
-            if (search) window.setAgentSearch?.(search);
-            if (pid != null) {
-                window.focusAgentByPid?.(pid);
-                openMobilePanel("#detail-panel");
-            } else {
-                openMobilePanel("#agents-heading");
-            }
+            runContentAction(button.dataset.briefAction, pid);
         });
     });
+}
+
+function renderHudDirective(director) {
+    const button = document.getElementById("hud-directive");
+    if (!button) return;
+    const icon = document.getElementById("hud-directive-icon");
+    const label = document.getElementById("hud-directive-label");
+    const title = document.getElementById("hud-directive-title");
+    const progress = document.getElementById("hud-directive-progress");
+    button.dataset.tone = director.tone;
+    button.setAttribute("aria-label", `${director.kicker}: ${director.title}. ${director.mission.value}/${director.mission.target}`);
+    if (icon?.getAttribute("icon") !== director.icon) icon?.setAttribute("icon", director.icon);
+    if (label && label.textContent !== director.label) label.textContent = director.label;
+    if (title && title.textContent !== director.title) title.textContent = director.title;
+    const progressText = `${director.mission.value}/${director.mission.target}`;
+    if (progress && progress.textContent !== progressText) progress.textContent = progressText;
+}
+
+function runContentAction(action, pid) {
+    if (action === "insights") {
+        window.openInsights?.();
+        return;
+    }
+    if (action === "demo") {
+        if (window.aiTycoonDemo?.toggle) window.aiTycoonDemo.toggle();
+        else window.emptyCtaTryDemo?.();
+        return;
+    }
+    if (action === "health") {
+        window.setSidePanelView?.("operate", { open: true });
+        document.getElementById("system-health-panel")?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+        return;
+    }
+
+    const view = {
+        review: { filter: "coding", actionFilter: "review" },
+        stale: { filter: "all", actionFilter: "stale" },
+        working: { filter: "coding", actionFilter: "working" },
+        idle: { filter: "idle", actionFilter: "idle" },
+        pinned: { filter: "all", actionFilter: "pinned" },
+        recent: { filter: "all", actionFilter: "recent" },
+        focus: { filter: "all", actionFilter: "all" },
+        all: { filter: "all", actionFilter: "all" },
+    }[action] || { filter: "all", actionFilter: "all" };
+    S.activeFilter = view.filter;
+    S.activeActionFilter = view.actionFilter;
+    try {
+        localStorage.setItem("ai-tycoon-filter", view.filter);
+        localStorage.setItem("ai-tycoon-action-filter", view.actionFilter);
+    } catch { /* storage is optional */ }
+    window.setSidePanelView?.("agents", { open: true });
+    updatePanel();
+    updateLiveHud();
+    if (pid != null) window.focusAgentByPid?.(pid);
+    openMobilePanel(pid != null ? "#detail-panel" : "#agents-heading");
 }
 
 function agentSortByLivePriority(a, b) {
@@ -1025,6 +1067,12 @@ function inspectWorkEvent(pid, key) {
 }
 
 function openMobilePanel(focusSelector) {
+    const targetView = focusSelector?.includes("activity")
+        ? "activity"
+        : focusSelector?.includes("agent") || focusSelector?.includes("detail")
+            ? "agents"
+            : "operate";
+    window.setSidePanelView?.(targetView, { open: window.innerWidth <= 480 });
     if (window.innerWidth > 480) return;
     const panel = document.getElementById("side-panel");
     if (panel && panel.classList.contains("panel-hidden")) {
@@ -1283,7 +1331,7 @@ function renderMobilePriorityDock() {
         });
     });
     dock.querySelector('[data-mobile-action="search"]')?.addEventListener("click", () => window.focusAgentSearch?.());
-    dock.querySelector('[data-mobile-action="list"]')?.addEventListener("click", () => openMobilePanel("#panel-close"));
+    dock.querySelector('[data-mobile-action="list"]')?.addEventListener("click", () => openMobilePanel("#agents-heading"));
 }
 
 function copyAgentValue(agent, kind) {
@@ -1449,18 +1497,37 @@ function renderTeamRadar() {
     });
 }
 
-function updateConnQualityIndicator() {
+function updateConnFreshnessIndicator() {
     if (!S.connected) return;
     const badge = document.getElementById("conn-badge");
     const txt = document.getElementById("conn-text");
     if (!badge || !txt) return;
-    const ms = avgHeartbeatGap();
-    if (ms == null) return;
-    const quality = connQuality();
+    const age = Math.max(0, Date.now() - numeric(S.lastHeartbeat, Date.now()));
+    const quality = age < 10_000 ? "good" : age < 15_000 ? "fair" : "poor";
     const lang = (window.aiTycoonI18n?.getLang?.()) || "ko";
     const live = lang === "en" ? "Live" : "실시간";
-    txt.textContent = `${live} · ${Math.round(ms)}ms`;
+    const freshness = age < 10_000 ? (lang === "en" ? "updated" : "갱신됨") : formatTimeAgo(age);
+    txt.textContent = `${live} · ${freshness}`;
     badge.dataset.connQuality = quality;
+    badge.title = lang === "en" ? `Live data ${freshness}` : `실시간 데이터 ${freshness}`;
+    badge.setAttribute("aria-label", badge.title);
+}
+
+function updateSidePanelCounts(activeCount, reviewCount) {
+    const operateCount = document.getElementById("panel-operate-count");
+    const agentCount = document.getElementById("panel-agent-count");
+    const activityCount = document.getElementById("panel-activity-count");
+    if (operateCount) {
+        operateCount.hidden = reviewCount === 0;
+        operateCount.textContent = reviewCount > 99 ? "99+" : String(reviewCount);
+        operateCount.dataset.tone = reviewCount > 0 ? "attention" : "neutral";
+    }
+    if (agentCount) agentCount.textContent = activeCount > 99 ? "99+" : String(activeCount);
+    if (activityCount) {
+        const count = S.workEvents?.length || 0;
+        activityCount.hidden = count === 0;
+        activityCount.textContent = count > 99 ? "99+" : String(count);
+    }
 }
 
 // ── Live HUD ──
@@ -1469,7 +1536,7 @@ export function updateLiveHud() {
     if (!activeEl) return;
 
     // Connection quality dot on the badge
-    updateConnQualityIndicator();
+    updateConnFreshnessIndicator();
 
     const active = S.liveAgents.filter(a => a.isRunning);
     const working = S.liveAgents.filter(a =>
@@ -1480,6 +1547,7 @@ export function updateLiveHud() {
     document.getElementById("hud-active").textContent = active.length;
     document.getElementById("hud-working").textContent = working.length;
     document.getElementById("hud-review").textContent = review.length;
+    updateSidePanelCounts(active.length, review.length);
 
     const reviewMetric = document.getElementById("hud-review")?.closest("div");
     if (reviewMetric) reviewMetric.classList.toggle("needs-attention", review.length > 0);
@@ -1791,10 +1859,11 @@ export function updatePanel() {
         const noteText = getAgentNote(agent) || "";
         const hasNote = !!noteText;
         const stuck = isAgentStuck(agent);
+        const isSelected = agent.pid === S.selectedPid;
         // 처음 stuck으로 전환된 순간에만 토스트 한 번
         maybeFireStuckToast(agent);
         const card = document.createElement("div");
-        card.className = `agent-card${agent.pid === S.selectedPid ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}${hasNote ? " has-note" : ""}${stuck ? " is-stuck" : ""}`;
+        card.className = `agent-card${isSelected ? " selected" : ""}${!agent.isRunning ? " is-offline" : ""}${pinned ? " is-pinned" : ""}${justJoined ? " is-new" : ""}${hasNote ? " has-note" : ""}${stuck ? " is-stuck" : ""}`;
         // 워크 이벤트 클릭 시 해당 카드로 스크롤하기 위한 식별자
         card.dataset.cardPid = String(agent.pid);
         // 메모 있으면 카드에 native title 로 미리보기 — hover 시 OS 툴팁
@@ -1805,7 +1874,7 @@ export function updatePanel() {
             card.title = `📝 ${preview}`;
         }
         card.dataset.action = action.key;
-        card.setAttribute("role", "button");
+        card.setAttribute("role", "group");
         card.setAttribute("tabindex", "0");
         const selectAgent = () => {
             const wasSelected = S.selectedPid === agent.pid;
@@ -1867,7 +1936,7 @@ export function updatePanel() {
             ? allTasks
             : allTasks.filter(t => t.status !== "completed");
         let subHtml = "";
-        if (subTasks.length > 0) {
+        if (isSelected && subTasks.length > 0) {
             subHtml = `<div class="mt-2 flex flex-col gap-1">` +
                 subTasks.slice(0, 5).map((t, ti) => {
                     const sc = SUB_COLORS[ti % SUB_COLORS.length];
