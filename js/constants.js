@@ -5,7 +5,7 @@
 export const TILE = 32;
 export const COLS = 24;
 export const ROWS = 18;
-export const WS_URL = `ws://${location.hostname || "localhost"}:${location.port || 3777}`;
+export const WS_URL = `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host || "localhost:3777"}`;
 export const RECONNECT_BASE = 3000;
 export const RECONNECT_MAX = 30000;
 export const MAX_PARTICLES = 200;
@@ -13,47 +13,47 @@ export const MAX_HEARTS = 50;
 
 // ── Palette (switches between light and dark) ──
 export const PAL_LIGHT = {
-    floor1: "#E9EEE5", floor2: "#DEE5DA",
-    wall: "#91ADF1", wallTop: "#7898E2", wallAccent: "#526DB1",
-    desk: "#D99A65", deskTop: "#F0BC84", deskEdge: "#A96A50",
+    floor1: "#D5D4E0", floor2: "#CECdda",
+    wall: "#625C79", wallTop: "#A09BB3", wallAccent: "#49445E",
+    desk: "#9D7164", deskTop: "#D6AD87", deskEdge: "#694F50",
     monitor: "#25272F", monFrame: "#3D414A",
-    monActive: "#CFF7E8", monDim: "#D8DDD4",
-    chair: "#FF7D6E", chairSeat: "#FFA69C",
-    plant1: "#3EAE7E", plant2: "#69C99B", pot: "#F2D05E",
-    coffee: "#5D392C", coffeeMach: "#E7E9E2", coffeeSteam: "rgba(255,255,255,0.55)",
-    server: "#BBC6D8", serverFace: "#D7DFEA", serverLed: "#45D6A4",
-    whiteboard: "#FCFDF9", wbFrame: "#526DB1",
-    rug: "#C9BDF6", rugEdge: "#9D8BF2",
-    meetTable: "#D99A65", meetTableTop: "#F0BC84",
+    monActive: "#B5D7FF", monDim: "#9BACC3",
+    chair: "#4C5F85", chairSeat: "#7A92BA",
+    plant1: "#3EAE7E", plant2: "#69C99B", pot: "#FFC545",
+    coffee: "#5D392C", coffeeMach: "#E8EDF7", coffeeSteam: "rgba(255,255,255,0.55)",
+    server: "#BBC6D8", serverFace: "#D7DFEA", serverLed: "#5FADFF",
+    whiteboard: "#F7FAFF", wbFrame: "#526DB1",
+    rug: "#BA727C", rugEdge: "#9A535E",
+    meetTable: "#9D7164", meetTableTop: "#D6AD87",
     shadow: "rgba(37,39,47,0.1)",
     bubbleBg: "rgba(252,253,249,0.98)", bubbleBorder: "rgba(37,39,47,0.18)",
-    windowFrame: "#526DB1", windowGlass: "rgba(128,185,238,0.34)",
-    flower1: "#FF705F", flower2: "#F2D05E", flower3: "#9D8BF2",
+    windowFrame: "#263966", windowGlass: "rgba(128,185,198,0.34)",
+    flower1: "#FF705F", flower2: "#FFC545", flower3: "#9D8BF2",
     catBody: "#F2D6B8", catEar: "#FF9A8E",
     labelBg: "rgba(252,253,249,0.94)", labelText: "#3E414A", labelTextOff: "#858B93",
     bubbleText: "#25272F", bubbleChatBg: "rgba(255,231,226,0.98)", bubbleChatText: "#9F3E34",
     emptyText: "rgba(37,39,47,0.3)", emptySub: "rgba(37,39,47,0.18)",
 };
 export const PAL_DARK = {
-    floor1: "#20262A", floor2: "#272E32",
-    wall: "#263963", wallTop: "#304B83", wallAccent: "#4768AA",
-    desk: "#76513E", deskTop: "#9B694C", deskEdge: "#52372F",
+    floor1: "#48485E", floor2: "#4D4D63",
+    wall: "#363449", wallTop: "#66627E", wallAccent: "#242338",
+    desk: "#785B59", deskTop: "#AB826D", deskEdge: "#4C3D45",
     monitor: "#101318", monFrame: "#282D35",
-    monActive: "#21483B", monDim: "#181C21",
-    chair: "#743E3B", chairSeat: "#94504B",
+    monActive: "#264B7D", monDim: "#181C21",
+    chair: "#3E5073", chairSeat: "#647EA6",
     plant1: "#245B45", plant2: "#2F785A", pot: "#75672F",
     coffee: "#573223", coffeeMach: "#343941", coffeeSteam: "rgba(255,255,255,0.16)",
-    server: "#242A34", serverFace: "#303946", serverLed: "#45D6A4",
+    server: "#242A34", serverFace: "#303946", serverLed: "#5FADFF",
     whiteboard: "#30343B", wbFrame: "#4768AA",
-    rug: "#3F365F", rugEdge: "#5F5293",
-    meetTable: "#76513E", meetTableTop: "#9B694C",
+    rug: "#854E63", rugEdge: "#A56377",
+    meetTable: "#785B59", meetTableTop: "#AB826D",
     shadow: "rgba(0,0,0,0.3)",
     bubbleBg: "rgba(41,45,52,0.97)", bubbleBorder: "rgba(255,255,255,0.12)",
     windowFrame: "#4768AA", windowGlass: "rgba(72,105,170,0.42)",
     flower1: "#A44C42", flower2: "#A38E3D", flower3: "#6559A0",
     catBody: "#59473B", catEar: "#7B4A47",
     labelBg: "rgba(41,45,52,0.92)", labelText: "#D4D8DE", labelTextOff: "#8D949D",
-    bubbleText: "#F4F5EF", bubbleChatBg: "rgba(74,44,43,0.96)", bubbleChatText: "#FFB1A7",
+    bubbleText: "#F7FAFF", bubbleChatBg: "rgba(74,44,43,0.96)", bubbleChatText: "#FFB1A7",
     emptyText: "rgba(255,255,255,0.22)", emptySub: "rgba(255,255,255,0.12)",
 };
 export let PAL = { ...PAL_LIGHT };
@@ -189,12 +189,12 @@ const FEMALE_NAMES = ["민지","수아","하은","유나","예린","소율","채
 
 export const AGENT_THEMES = [
     // Female characters (varied hair, skin, accessories)
-    { body: "#FFB3C6", bodyDark: "#E88CA0", hair: "#1A1A2E", skin: "#F5D5C8", name: "민지",  gender: "F", hairStyle: "long",  accessory: "ribbon", hairColor: "#1A1A2E" },
-    { body: "#86EFAC", bodyDark: "#5CC880", hair: "#2D2018", skin: "#F5D5C8", name: "수아",  gender: "F", hairStyle: "bob",   accessory: null,     hairColor: "#2D2018" },
-    { body: "#C4B5FD", bodyDark: "#9B8AE0", hair: "#1A1A2E", skin: "#F0D0B8", name: "하은",  gender: "F", hairStyle: "pony",  accessory: "glasses", hairColor: "#1A1A2E" },
-    { body: "#67E8F9", bodyDark: "#40C8E0", hair: "#3D2820", skin: "#EEDDC0", name: "유나",  gender: "F", hairStyle: "long",  accessory: null,     hairColor: "#3D2820" },
-    { body: "#F0ABFC", bodyDark: "#C878E0", hair: "#1A1A2E", skin: "#F5D5C8", name: "예린",  gender: "F", hairStyle: "twin",  accessory: "ribbon", hairColor: "#1A1A2E" },
-    { body: "#FB923C", bodyDark: "#D07020", hair: "#1F1F30", skin: "#EEDDC0", name: "소율",  gender: "F", hairStyle: "bob",   accessory: null,     hairColor: "#1F1F30" },
+    { body: "#F16C60", bodyDark: "#B74244", hair: "#1A1A2E", skin: "#F5D5C8", name: "민지",  gender: "F", hairStyle: "long",  accessory: "ribbon", hairColor: "#1A1A2E" },
+    { body: "#5792E8", bodyDark: "#315F9F", hair: "#2D2018", skin: "#F5D5C8", name: "수아",  gender: "F", hairStyle: "bob",   accessory: null,     hairColor: "#2D2018" },
+    { body: "#9E94D8", bodyDark: "#6B5EAB", hair: "#1A1A2E", skin: "#F0D0B8", name: "하은",  gender: "F", hairStyle: "pony",  accessory: "glasses", hairColor: "#1A1A2E" },
+    { body: "#DAE4F7", bodyDark: "#97AAC7", hair: "#3D2820", skin: "#EEDDC0", name: "유나",  gender: "F", hairStyle: "long",  accessory: null,     hairColor: "#3D2820" },
+    { body: "#EFAB57", bodyDark: "#BC7338", hair: "#1A1A2E", skin: "#F5D5C8", name: "예린",  gender: "F", hairStyle: "twin",  accessory: "ribbon", hairColor: "#1A1A2E" },
+    { body: "#F4774C", bodyDark: "#AE4B35", hair: "#1F1F30", skin: "#EEDDC0", name: "소율",  gender: "F", hairStyle: "bob",   accessory: null,     hairColor: "#1F1F30" },
     { body: "#E879F9", bodyDark: "#B850D0", hair: "#2D2018", skin: "#F0D0B8", name: "채원",  gender: "F", hairStyle: "pony",  accessory: "earring", hairColor: "#2D2018" },
     { body: "#FACC15", bodyDark: "#C8A010", hair: "#1F1F30", skin: "#F5D5C8", name: "지윤",  gender: "F", hairStyle: "long",  accessory: "glasses", hairColor: "#1F1F30" },
     { body: "#FB7185", bodyDark: "#D05068", hair: "#252538", skin: "#F0D0B8", name: "서연",  gender: "F", hairStyle: "twin",  accessory: null,     hairColor: "#252538" },
@@ -204,11 +204,11 @@ export const AGENT_THEMES = [
     { body: "#FCD34D", bodyDark: "#D4A820", hair: "#252538", skin: "#EEDDC0", name: "지호",  gender: "M", hairStyle: "crew",  accessory: "glasses", hairColor: "#252538" },
     { body: "#FDA4AF", bodyDark: "#E07888", hair: "#1A1A2E", skin: "#F5D5C8", name: "도윤",  gender: "M", hairStyle: "part",  accessory: null,     hairColor: "#1A1A2E" },
     { body: "#FCA5A5", bodyDark: "#E07878", hair: "#3D2820", skin: "#F0D0B8", name: "시우",  gender: "M", hairStyle: "short", accessory: null,     hairColor: "#3D2820" },
-    { body: "#A3E635", bodyDark: "#78B820", hair: "#2D2D3F", skin: "#F0D0B8", name: "준혁",  gender: "M", hairStyle: "crew",  accessory: null,     hairColor: "#2D2D3F" },
+    { body: "#CFD6E6", bodyDark: "#8F9BB4", hair: "#2D2D3F", skin: "#F0D0B8", name: "준혁",  gender: "M", hairStyle: "crew",  accessory: null,     hairColor: "#2D2D3F" },
     { body: "#38BDF8", bodyDark: "#2090C8", hair: "#252538", skin: "#F5D5C8", name: "태민",  gender: "M", hairStyle: "part",  accessory: "cap",    hairColor: "#252538" },
-    { body: "#4ADE80", bodyDark: "#30A858", hair: "#1A1A2E", skin: "#EEDDC0", name: "현우",  gender: "M", hairStyle: "short", accessory: null,     hairColor: "#1A1A2E" },
+    { body: "#6393D6", bodyDark: "#3B64A5", hair: "#1A1A2E", skin: "#EEDDC0", name: "현우",  gender: "M", hairStyle: "short", accessory: null,     hairColor: "#1A1A2E" },
     { body: "#F87171", bodyDark: "#D05050", hair: "#252538", skin: "#F0D0B8", name: "민서",  gender: "M", hairStyle: "crew",  accessory: "glasses", hairColor: "#252538" },
-    { body: "#34D399", bodyDark: "#20A870", hair: "#2D2018", skin: "#EEDDC0", name: "은호",  gender: "M", hairStyle: "part",  accessory: null,     hairColor: "#2D2018" },
+    { body: "#729ED1", bodyDark: "#3E6AA1", hair: "#2D2018", skin: "#EEDDC0", name: "은호",  gender: "M", hairStyle: "part",  accessory: null,     hairColor: "#2D2018" },
     { body: "#A78BFA", bodyDark: "#8060D0", hair: "#1F1F30", skin: "#F5D5C8", name: "재윤",  gender: "M", hairStyle: "short", accessory: "cap",    hairColor: "#1F1F30" },
 ];
 
@@ -322,14 +322,14 @@ export const REPORT_SPEECH = [
 ];
 
 export const STATUS_META = {
-    coding:    { label: "코딩 중",   icon: "solar:code-square-linear",       color: "#059669" },
+    coding:    { label: "일하는 중",   icon: "solar:code-square-linear",       color: "#059669" },
     thinking:  { label: "생각 중",   icon: "solar:lightbulb-linear",         color: "#d97706" },
     searching: { label: "검색 중",   icon: "solar:magnifier-linear",         color: "#2563eb" },
-    coffee:    { label: "커피 타임", icon: "solar:cup-hot-linear",           color: "#7c3aed" },
-    meeting:   { label: "미팅",      icon: "solar:chat-round-dots-linear",   color: "#0d9488" },
-    reviewing: { label: "리뷰 중",   icon: "solar:document-text-linear",     color: "#e11d48" },
-    idle:      { label: "대기",      icon: "solar:sleeping-square-linear",   color: "#71717a" },
-    offline:   { label: "오프라인",  icon: "solar:power-linear",             color: "#a1a1aa" },
+    coffee:    { label: "쉬는 중", icon: "solar:cup-hot-linear",           color: "#7c3aed" },
+    meeting:   { label: "회의 중",      icon: "solar:chat-round-dots-linear",   color: "#0d9488" },
+    reviewing: { label: "확인 중",   icon: "solar:document-text-linear",     color: "#e11d48" },
+    idle:      { label: "쉬는 중",      icon: "solar:sleeping-square-linear",   color: "#71717a" },
+    offline:   { label: "퇴근",  icon: "solar:power-linear",             color: "#a1a1aa" },
 };
 
 // ── Solo speech (context-aware, picked by status + location) ──

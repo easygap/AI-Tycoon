@@ -1,9 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
-  <title id="title">AI Tycoon studio door symbol</title>
-  <path fill="#25272F" d="M7 57V26C7 13.85 16.85 4 29 4h24v53H7Z"/>
-  <path fill="#F5F7F2" d="M16 57V27c0-7.73 6.27-14 14-14h14v44H16Z"/>
-  <circle cx="29.5" cy="29" r="5.5" fill="#45D6A4"/>
-  <rect x="20" y="36" width="28" height="8" rx="3" fill="#FF705F"/>
-  <path fill="#FF705F" d="M31 42h8v15h-8z"/>
-  <rect x="47" y="9" width="11" height="14" rx="3" fill="#F2D05E" stroke="#25272F" stroke-width="2"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title" shape-rendering="crispEdges"><title id="title">AI Tycoon 작은 회사</title><path fill="#42394f" d="M10 16h4v-4h36v4h4v42H10z"/>
+  <path fill="#bf3b55" d="M14 16h36v38H14z"/>
+  <path fill="#e97d90" d="M14 16h36v4H14zM14 20h4v34h-4z"/>
+  <path fill="#eaf0f8" d="M22 24h8v8h-8zM36 24h8v8h-8zM22 38h8v8h-8z"/>
+  <path fill="#9aabc6" d="M22 30h8v2h-8zM36 30h8v2h-8zM22 44h8v2h-8z"/>
+  <path fill="#42394f" d="M36 40h8v18h-8zM6 58h52v4H6z"/>
+  <path fill="#f4c268" d="M39 45h2v2h-2zM42 6h8v6h-8z"/></svg>

@@ -21,7 +21,7 @@ const TIPS = [
     },
     {
         icon: "solar:chart-2-linear",
-        ko: { title: "인사이트 살펴보기", body: "`I` 키로 오늘의 작업·플랫폼·시간대별 활동을 한번에 봐요." },
+        ko: { title: "작업 통계 보기", body: "`I` 키를 누르면 오늘 끝낸 작업과 시간대별 활동을 한눈에 볼 수 있어요." },
         en: { title: "Open insights", body: "Press `I` to see today's tasks, platforms and hourly activity." },
     },
     {

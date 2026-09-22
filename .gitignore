@@ -17,6 +17,8 @@ Thumbs.db
 
 # Test / preview output
 .playwright-mcp/
+.playwright-cli/
+output/
 playwright-report/
 test-results/
 

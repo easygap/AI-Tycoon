@@ -1,58 +1,48 @@
-# AI Tycoon 화면
+# 화면 모아 보기
 
-아래 이미지는 실제 앱을 `?demo=1`로 실행해 촬영했습니다. 화면에 표시된 직원과 작업은 문서용 합성 데이터입니다.
+2026년 9월 22일, 실제 앱을 체험 모드로 실행해 찍었습니다. 직원 이름과 작업 내용은 예시 데이터입니다. PC 화면은 1440×960, 모바일 화면은 390×844 크기입니다.
 
-## 실시간 작업실
+## 작은 회사
 
-작업실과 운영 패널을 함께 보는 기본 화면입니다. 현재 인원, 작업 상태, 검토 대기 항목과 최근 활동을 한눈에 확인할 수 있습니다.
+직원들의 행동을 보면서 확인할 일이 있는지 살펴봅니다. 오른쪽 패널에서 해당 작업을 열 수 있습니다.
 
-<p align="center">
-  <img src="hero-light.png" alt="AI Tycoon 밝은 테마의 실시간 작업실" width="1100">
-</p>
+![밝은 테마](hero-light.png)
+![어두운 테마](hero-dark.png)
 
-<p align="center">
-  <img src="hero-dark.png" alt="AI Tycoon 어두운 테마의 실시간 작업실" width="1100">
-</p>
+## 모바일
 
-## 운영과 검토
-
-우선 처리할 작업과 검토 대기열을 모은 화면입니다. 승인과 반려, 진행 작업 확인을 같은 패널에서 처리합니다.
+회사·직원·기록을 하단 메뉴로 오갑니다. 목록에서 자세히 읽고 싶을 때는 직원 카드를 누르세요.
 
 <p align="center">
-  <img src="operations.png" alt="AI Tycoon 운영 패널과 검토 대기열" width="680">
+<img src="mobile.png" width="32%" alt="회사">
+<img src="mobile-team.png" width="32%" alt="직원 목록">
+<img src="mobile-activity.png" width="32%" alt="최근 활동">
 </p>
 
 ## 직원 상세
 
-선택한 직원의 플랫폼, 세션, 프로젝트 경로, 현재 작업과 태스크를 확인하는 화면입니다. 메모와 활동 기록도 이곳에서 관리합니다.
+현재 작업과 메모를 먼저 보여줍니다. PID·세션·메모리 정보는 ‘세션·연결 정보’를 펼쳐 확인할 수 있습니다.
 
-<p align="center">
-  <img src="detail.png" alt="AI Tycoon 직원 상세 화면" width="1100">
-</p>
+![직원 상세](detail.png)
 
-## 작업실 인사이트
+## 작업 통계
 
-오늘의 태스크, 플랫폼별 사용량, 가장 활발한 직원과 프로젝트를 요약합니다.
+오늘의 활동과 도구별 작업, 프로젝트별 진행 상태를 모아 봅니다. 체험 모드의 통계는 실제 작업과 분리됩니다.
 
-<p align="center">
-  <img src="insights.png" alt="AI Tycoon 작업실 인사이트 화면" width="1100">
-</p>
+![작업 통계](insights.png)
 
-## 모바일 운영
+## 빠른 검색
 
-390px 화면에서 연 운영 패널입니다. 검토, 승인과 상태 확인을 작은 화면에서도 그대로 사용할 수 있습니다.
+`Ctrl+K` 또는 `Cmd+K`로 직원을 찾거나 자주 쓰는 기능을 실행할 수 있습니다.
 
-<p align="center">
-  <img src="mobile.png" alt="AI Tycoon 모바일 운영 화면" width="360">
-</p>
+![빠른 검색](cmdpalette.png)
+
+## 캐릭터와 자세
+
+앱에서 사용하는 픽셀 캐릭터를 정수 배율로 확대한 모습입니다. 별도 일러스트가 아니라 실제 화면과 직원 목록에 사용하는 같은 그림입니다.
+
+![캐릭터와 작업 자세](characters.png)
 
 ## 직접 둘러보기
 
-```bash
-git clone https://github.com/easygap/AI-Tycoon.git
-cd AI-Tycoon
-npm install
-npm start
-```
-
-실행 후 `http://localhost:3777/?demo=1`로 접속하면 실제 에이전트가 없어도 같은 흐름을 살펴볼 수 있습니다.
+[실행 방법](../README.md#바로-실행하기)에 따라 앱을 켠 뒤 `http://localhost:3777/?demo=1`에 접속하세요. 음악은 화면 아래 라디오의 재생 버튼으로 켤 수 있습니다.

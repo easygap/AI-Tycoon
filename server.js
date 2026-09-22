@@ -40,7 +40,7 @@ const QUIET = process.env.QUIET === "1" || process.env.LOG_LEVEL === "warn" || p
 
 // ── State ────────────────────────────────────────────────────
 const STARTED_AT = Date.now();
-const VERSION = "1.5.1";
+const VERSION = "1.6.0";
 let lastState = null;
 let clients = new Set();
 let watchDebounceTimer = null;
@@ -84,6 +84,11 @@ const PUBLIC_FILES = new Set([
     "/css/tailwind.generated.css",
     "/css/studio-2026.css",
     "/assets/fonts/SUIT-Variable.woff2",
+    "/assets/fonts/Galmuri11.woff2",
+    "/assets/fonts/WantedSansVariable.woff2",
+    "/assets/vendor/iconify-icon.min.js",
+    "/assets/vendor/solar-icons.js",
+    "/assets/vendor/pixi.min.js",
     "/manifest.webmanifest",
     "/sw.js",
 ]);

@@ -25,6 +25,7 @@
 //   }
 
 const KEY = "ai-tycoon-daily-stats-v1";
+const storageKey = () => window.aiTycoonDemo?.isEnabled?.() ? `${KEY}-demo` : KEY;
 const MAX_DAYS = 14; // keep 2 weeks; show last 7 in UI
 
 function todayKey(date) {
@@ -34,7 +35,7 @@ function todayKey(date) {
 
 function loadBlob() {
     try {
-        const raw = localStorage.getItem(KEY);
+        const raw = localStorage.getItem(storageKey());
         if (!raw) return { v: 1, days: {} };
         const parsed = JSON.parse(raw);
         if (parsed?.v === 1 && typeof parsed.days === "object") return parsed;
@@ -52,7 +53,7 @@ function saveBlob(blob) {
             const drop = keys.slice(0, keys.length - MAX_DAYS);
             drop.forEach(k => delete blob.days[k]);
         }
-        localStorage.setItem(KEY, JSON.stringify(blob));
+        localStorage.setItem(storageKey(), JSON.stringify(blob));
     } catch (err) {
         console.warn("[ai-tycoon] stats save failed:", err);
     }
@@ -81,14 +82,21 @@ function ensureToday(blob) {
 }
 
 // ── Internal state to track deltas across calls ──
-const memo = {
+const makeMemo = () => ({
     seenPids: new Set(),     // pids ever seen today
     lastStatusTick: new Map(), // pid → { status, since }
     lastSavedDayKey: null,
-};
+});
+const memos = new Map();
+function currentMemo() {
+    const key = storageKey();
+    if (!memos.has(key)) memos.set(key, makeMemo());
+    return memos.get(key);
+}
 
 /** Called frequently (every server state push). */
 export function recordStateSnapshot(agents) {
+    const memo = currentMemo();
     const blob = loadBlob();
     const day = ensureToday(blob);
 
@@ -232,7 +240,8 @@ export function hourActivityWindow(days = 7) {
 
 /** Clear all persisted stats. */
 export function resetStats() {
-    localStorage.removeItem(KEY);
+    localStorage.removeItem(storageKey());
+    const memo = currentMemo();
     memo.seenPids.clear();
     memo.lastStatusTick.clear();
     memo.lastSavedDayKey = null;

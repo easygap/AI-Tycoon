@@ -1,130 +1,179 @@
-// ============================================================
-//  AI TYCOON — Subtle Web Audio sound effects (optional)
-// ============================================================
-//
-// Plays small synthesized tones for agent join, task done, etc.
-// Off by default — user opts in via the speaker toggle in the header.
+// Original electric-piano score and contextual cues, synthesized locally.
+import { cueFor, scoreFor, sceneFor } from "./soundScore.js";
 
-const KEY = "ai-tycoon-sound";
-const VOL_KEY = "ai-tycoon-sound-volume";
-let ctx = null;
-let enabled = (typeof localStorage !== "undefined" && localStorage.getItem(KEY)) === "true";
-let userInteracted = false;
-const listeners = new Set();
-const volumeListeners = new Set();
-
-let volume = 0.6;
-try {
-    const v = typeof localStorage !== "undefined" && localStorage.getItem(VOL_KEY);
-    if (v != null) {
-        const n = parseFloat(v);
-        if (Number.isFinite(n)) volume = Math.max(0, Math.min(1, n));
-    }
-} catch { /* ignore */ }
-
-export function getSoundVolume() { return volume; }
-export function setSoundVolume(v) {
-    volume = Math.max(0, Math.min(1, Number(v) || 0));
-    try { localStorage.setItem(VOL_KEY, String(volume)); } catch { /* ignore */ }
-    volumeListeners.forEach(fn => { try { fn(volume); } catch { /* ignore */ } });
-}
-export function onSoundVolumeChange(fn) { volumeListeners.add(fn); return () => volumeListeners.delete(fn); }
-
-export function isSoundEnabled() { return enabled; }
-
-export function setSoundEnabled(v) {
-    enabled = !!v;
-    try { localStorage.setItem(KEY, enabled ? "true" : "false"); } catch { /* ignore */ }
-    listeners.forEach(fn => { try { fn(enabled); } catch { /* ignore */ } });
-    if (enabled) {
-        // Play a soft confirmation chord so user knows it's on
-        playChord([523.25, 659.25], 0.18, "sine", 0.1);
-    }
-}
-
-export function toggleSound() { setSoundEnabled(!enabled); }
-
-export function onSoundChange(fn) { listeners.add(fn); return () => listeners.delete(fn); }
+function read(key, fallback) { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } }
+function save(key, value) { try { localStorage.setItem(key, String(value)); } catch { /* private mode */ } }
+const clamp = v => Math.max(0, Math.min(1, Number(v) || 0));
+let enabled = read("ai-tycoon-sound", "false") === "true";
+let volume = clamp(read("ai-tycoon-sound-volume", "0.45"));
+let musicEnabled = read("ai-tycoon-music", "false") === "true";
+let musicVolume = clamp(read("ai-tycoon-music-volume", "0.35"));
+let mood = read("ai-tycoon-music-mood", "auto");
+if (!["auto", "day", "night"].includes(mood)) mood = "auto";
+let muted = false, interacted = false;
+let ctx, master, effects, music, echo, echoGain, timer;
+let step = 0, nextNote = 0, lastCueAt = -Infinity, lastPriority = 0;
+let scene = { hour: 12, active: 0, working: 0, review: 0 };
+const voices = new Set();
+const listeners = new Set(), volumeListeners = new Set(), musicListeners = new Set();
+const lastKind = new Map();
+let pendingCue = null, cueTimer = null;
+const emit = list => list.forEach(fn => { try { fn(); } catch { /* listener isolation */ } });
+const visible = () => typeof document === "undefined" || !document.hidden;
 
 function ensureCtx() {
-    if (!enabled) return null;
-    if (!userInteracted) return null;
+    if (!interacted || !visible()) return null;
     if (!ctx) {
         try {
             const AC = window.AudioContext || window.webkitAudioContext;
             if (!AC) return null;
             ctx = new AC();
+            master = ctx.createGain();
+            const limiter = ctx.createDynamicsCompressor();
+            limiter.threshold.value = -12; limiter.knee.value = 12; limiter.ratio.value = 6;
+            master.connect(limiter).connect(ctx.destination);
+            effects = ctx.createGain(); effects.connect(master);
+            music = ctx.createGain(); music.connect(master);
+            echo = ctx.createDelay(1); echo.delayTime.value = 0.28;
+            echoGain = ctx.createGain(); echoGain.gain.value = 0.18;
+            music.connect(echo); echo.connect(echoGain); echoGain.connect(master);
+            syncLevels(true);
         } catch { return null; }
     }
     if (ctx.state === "suspended") ctx.resume().catch(() => {});
     return ctx;
 }
-
-// Track first user interaction to bypass autoplay restrictions
-if (typeof window !== "undefined") {
-    const markInteract = () => {
-        userInteracted = true;
-        window.removeEventListener("click", markInteract);
-        window.removeEventListener("keydown", markInteract);
-        window.removeEventListener("touchstart", markInteract);
-    };
-    window.addEventListener("click", markInteract, { passive: true });
-    window.addEventListener("keydown", markInteract, { passive: true });
-    window.addEventListener("touchstart", markInteract, { passive: true });
+function ramp(param, value, seconds = 0.12) {
+    const now = ctx.currentTime;
+    param.cancelScheduledValues(now); param.setValueAtTime(param.value, now);
+    param.linearRampToValueAtTime(value, now + seconds);
+}
+function syncLevels(immediate = false) {
+    if (!ctx) return;
+    const seconds = immediate ? 0 : 0.14;
+    ramp(master.gain, muted ? 0 : 0.72, seconds);
+    ramp(effects.gain, enabled ? volume : 0, seconds);
+    ramp(music.gain, musicEnabled ? musicVolume * 0.48 : 0, seconds);
 }
 
-function playTone(freq, duration = 0.15, type = "sine", gain = 0.08, attack = 0.01, release = 0.08) {
-    const audio = ensureCtx();
-    if (!audio) return;
-    try {
-        const osc = audio.createOscillator();
-        const g = audio.createGain();
-        osc.type = type;
-        osc.frequency.value = freq;
-        const now = audio.currentTime;
-        const peak = gain * volume;
-        g.gain.setValueAtTime(0, now);
-        g.gain.linearRampToValueAtTime(peak, now + attack);
-        g.gain.linearRampToValueAtTime(0.0001, now + duration);
-        osc.connect(g).connect(audio.destination);
-        osc.start(now);
-        osc.stop(now + duration + release);
-    } catch (err) {
-        void err;
+// Bounded polyphony; every voice disconnects its graph on completion.
+function note(midi, when, duration, level, type, bus, pan = 0) {
+    if (!ctx || voices.size >= 48) return;
+    const osc = ctx.createOscillator(), gain = ctx.createGain(), panner = ctx.createStereoPanner();
+    osc.type = type; osc.frequency.value = 440 * 2 ** ((midi - 69) / 12); panner.pan.value = pan;
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(level, when + 0.018);
+    gain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+    osc.connect(gain).connect(panner).connect(bus);
+    voices.add(osc);
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); panner.disconnect(); voices.delete(osc); };
+    osc.start(when); osc.stop(when + duration + 0.03);
+}
+function schedule() {
+    if (!musicEnabled || muted || !visible() || !ctx || ctx.state !== "running") return;
+    const score = scoreFor(sceneFor(scene, mood)), halfBeat = 30 / score.bpm;
+    if (nextNote < ctx.currentTime) nextNote = ctx.currentTime + 0.04;
+    while (nextNote < ctx.currentTime + 0.3) {
+        const chord = score.chords[Math.floor(step / 16) % score.chords.length], beat = step % 16;
+        if (beat === 0 || beat === 8) {
+            chord.forEach((m, i) => {
+                note(m, nextNote + i * 0.028, halfBeat * 7, 0.075, "sine", music, (i - 1.5) * 0.18);
+                note(m + 12, nextNote + i * 0.028, halfBeat * 2.5, 0.012, "sine", music, (i - 1.5) * 0.18);
+            });
+            note(chord[0] - 24, nextNote, halfBeat * 5, 0.13, "sine", music);
+        }
+        if (score.melody.includes(beat)) {
+            const tone = chord[(Math.floor(step / 2) + Math.floor(step / 16)) % chord.length];
+            note(tone + 12, nextNote, halfBeat * 2.2, 0.055, "sine", music, 0.28);
+        }
+        // Busy scenes add a wooden pulse; review passages leave more space.
+        if (scene.working > 2 && !scene.review && beat % 4 === 2) note(42, nextNote, 0.075, 0.045, "triangle", music, -0.25);
+        nextNote += halfBeat; step++;
     }
 }
-
-function playChord(freqs, duration = 0.2, type = "sine", gain = 0.06) {
-    freqs.forEach((f, i) => {
-        setTimeout(() => playTone(f, duration, type, gain), i * 50);
-    });
+function startScheduler() {
+    if (timer || !musicEnabled || !ensureCtx()) return;
+    nextNote = ctx.currentTime + 0.06; schedule(); timer = setInterval(schedule, 180);
+}
+function stopScheduler() { if (timer) clearInterval(timer); timer = null; nextNote = 0; }
+function unlock(event) {
+    if (event && event.isTrusted === false) return;
+    interacted = true;
+    if (enabled || musicEnabled) { ensureCtx(); startScheduler(); }
 }
 
-// ── Public sound events ──
-export function sfxJoin() {
-    playChord([523.25, 659.25, 783.99], 0.16, "sine", 0.07);
+export function getSoundVolume() { return volume; }
+export function setSoundVolume(v) { volume = clamp(v); save("ai-tycoon-sound-volume", volume); syncLevels(); emit(volumeListeners); }
+export function isSoundEnabled() { return enabled; }
+export function setSoundEnabled(v) {
+    enabled = !!v; save("ai-tycoon-sound", enabled);
+    if (enabled) ensureCtx(); syncLevels(); emit(listeners);
 }
-export function sfxLeave() {
-    playChord([783.99, 587.33], 0.18, "sine", 0.06);
+export function toggleSound() { setSoundEnabled(!enabled); if (enabled) playCue("click", true); }
+export function onSoundChange(fn) { const cb = () => fn(enabled); listeners.add(cb); return () => listeners.delete(cb); }
+export function onSoundVolumeChange(fn) { const cb = () => fn(volume); volumeListeners.add(cb); return () => volumeListeners.delete(cb); }
+export function getMusicState() {
+    return { enabled: musicEnabled, volume: musicVolume, mood, muted, scene: sceneFor(scene, mood), playing: !!(musicEnabled && !muted && ctx?.state === "running" && visible()), available: !!(window.AudioContext || window.webkitAudioContext) };
 }
-export function sfxTaskDone() {
-    playChord([659.25, 783.99, 987.77], 0.22, "triangle", 0.07);
+export function setMusicEnabled(v) {
+    musicEnabled = !!v; save("ai-tycoon-music", musicEnabled);
+    if (musicEnabled) { ensureCtx(); startScheduler(); } else stopScheduler();
+    syncLevels(); emit(musicListeners);
 }
-export function sfxReview() {
-    playTone(880, 0.12, "triangle", 0.06);
-    setTimeout(() => playTone(659.25, 0.16, "triangle", 0.05), 100);
+export function setMusicVolume(v) { musicVolume = clamp(v); save("ai-tycoon-music-volume", musicVolume); syncLevels(); emit(musicListeners); }
+export function setMusicMood(v) { if (!["auto", "day", "night"].includes(v)) return; mood = v; save("ai-tycoon-music-mood", v); emit(musicListeners); }
+export function setSoundScene(v) { scene = { ...scene, ...v }; emit(musicListeners); }
+export function onMusicChange(fn) { musicListeners.add(fn); return () => musicListeners.delete(fn); }
+export function toggleMasterMute() { muted = !muted; syncLevels(); if (!muted) startScheduler(); emit(musicListeners); return muted; }
+
+function playCue(kind, preview = false) {
+    if (!enabled || muted || !visible()) return false;
+    const cue = cueFor(kind); if (!cue) return false;
+    const now = Date.now();
+    if (!preview && (now - (lastKind.get(kind) ?? -Infinity) < cue.cooldown || (now - lastCueAt < 750 && cue.priority <= lastPriority))) return false;
+    const audio = ensureCtx(); if (!audio) return false;
+    lastKind.set(kind, now); lastCueAt = now; lastPriority = cue.priority;
+    cue.notes.forEach(([midi, offset, length, gain], i) => note(midi, audio.currentTime + offset, length, gain, cue.wave, effects, (i % 2 ? 1 : -1) * 0.12));
+    if (musicEnabled && cue.priority >= 2) {
+        ramp(music.gain, musicVolume * 0.14, 0.06);
+        music.gain.linearRampToValueAtTime(musicVolume * 0.14, audio.currentTime + 0.65);
+        music.gain.linearRampToValueAtTime(musicVolume * 0.48, audio.currentTime + 1.35);
+    }
+    return true;
 }
-export function sfxClick() {
-    playTone(1200, 0.04, "square", 0.025);
+export function queueWorkCue(event) {
+    if (!visible() || !enabled || muted) return;
+    const cue = cueFor(event.type); if (!cue) return;
+    // A packet may contain dozens of events: play only its most useful cue.
+    if (!pendingCue || cue.priority > cueFor(pendingCue).priority) pendingCue = event.type;
+    if (!cueTimer) cueTimer = setTimeout(() => { const kind = pendingCue; pendingCue = null; cueTimer = null; playCue(kind); }, 90);
 }
+export const sfxJoin = () => playCue("join", true);
+export const sfxLeave = () => playCue("leave", true);
+export const sfxTaskDone = () => playCue("task-done", true);
+export const sfxReview = () => playCue("review", true);
+export const sfxClick = () => playCue("click");
+export const sfxResolve = result => playCue(result === "yes" ? "approve" : "return", true);
 
 if (typeof window !== "undefined") {
+    // Capture runs before inline handlers, so the first button press can play.
+    window.addEventListener("pointerdown", unlock, { capture: true, passive: true });
+    window.addEventListener("keydown", unlock, { capture: true });
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+            stopScheduler(); if (cueTimer) clearTimeout(cueTimer); cueTimer = null; pendingCue = null;
+            for (const osc of voices) { try { osc.stop(); } catch { /* ended */ } }
+            ctx?.suspend().catch(() => {});
+        } else if (interacted && (enabled || musicEnabled)) { ensureCtx(); startScheduler(); }
+        emit(musicListeners);
+    });
+    window.addEventListener("pagehide", () => { stopScheduler(); ctx?.suspend().catch(() => {}); });
+    window.addEventListener("pageshow", () => { if (interacted && musicEnabled) startScheduler(); });
     window.aiTycoonSound = {
-        isEnabled: isSoundEnabled,
-        toggle: toggleSound,
-        setEnabled: setSoundEnabled,
-        getVolume: getSoundVolume,
-        setVolume: setSoundVolume,
+        isEnabled: isSoundEnabled, toggle: toggleSound, setEnabled: setSoundEnabled,
+        getVolume: getSoundVolume, setVolume: setSoundVolume, toggleMasterMute,
         sfxJoin, sfxLeave, sfxTaskDone, sfxReview, sfxClick,
+        getMusicState, setMusicEnabled, setMusicVolume, setMusicMood,
+        debug: () => ({ context: ctx?.state || "locked", voices: voices.size, scheduler: !!timer, step, ...getMusicState() }),
     };
 }

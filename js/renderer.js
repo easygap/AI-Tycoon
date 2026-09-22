@@ -3,6 +3,7 @@
 // ============================================================
 
 import { S } from "./state.js";
+import { drawCharacter } from "./characters.js";
 import {
     TILE, COLS, ROWS, PAL,
     OFFICE_MAP, AGENT_THEMES, PLATFORM_META, STATUS_META, POI,
@@ -27,11 +28,13 @@ export function render() {
     S.ctx.save();
     S.ctx.translate(S.offsetX, S.offsetY);
     S.ctx.scale(S.scale, S.scale);
+    drawBuildingFrame();
     drawOffice();
+    drawRoomDetails();
     drawFurniture();
     drawDecorations();
-    drawSeasonal(S.ctx, S.animFrame);
-    drawNPCs(S.ctx, S.animFrame);
+    drawSeasonal(S.ctx, (S.reducedMotion ? 0 : S.animFrame));
+    drawNPCs(S.ctx, (S.reducedMotion ? 0 : S.animFrame));
     drawAgents();
     drawSubAgents();
     drawParticles();
@@ -39,6 +42,81 @@ export function render() {
     drawEmptyState();
     S.ctx.restore();
     drawZoomIndicator();
+}
+
+// Cutaway plinth and cast shadow make the office a small physical place.
+function drawBuildingFrame() {
+    const ctx = S.ctx, w = COLS * TILE, h = ROWS * TILE;
+    const dark = document.body.classList.contains("dark");
+    ctx.save();
+    ctx.shadowColor = dark ? "rgba(15,12,29,.4)" : "rgba(53,44,72,.24)";
+    ctx.shadowBlur = 28; ctx.shadowOffsetY = 22;
+    ctx.fillStyle = dark ? "#252337" : "#777083";
+    ctx.fillRect(-9, -9, w + 18, h + 28);
+    ctx.shadowColor = "transparent";
+    ctx.fillStyle = dark ? "#66617C" : "#E9E6EF";
+    ctx.fillRect(-7, -7, w + 14, h + 14);
+    ctx.fillStyle = dark ? "#44405A" : "#ADA5B6";
+    ctx.fillRect(-7, h + 7, w + 14, 12);
+    // Corner fastenings, a recessed front door and its warm welcome light.
+    ctx.fillStyle = dark ? "#91879D" : "#716779";
+    for (const x of [-4, w + 1]) for (const y of [-4, h + 1]) ctx.fillRect(x, y, 3, 3);
+    ctx.fillStyle = "#DC8A76"; ctx.fillRect(w * .46, h + 9, w * .08, 3);
+    ctx.fillStyle = dark ? "#C5BACD" : "#5E546D";
+    ctx.font = '600 8px "Wanted Sans Variable", sans-serif'; ctx.textAlign = "left";
+    ctx.fillText("AI TYCOON", 13, h + 15);
+    ctx.restore();
+}
+
+// Small, consistent material details give the room weight without screen-wide effects.
+function drawRoomDetails() {
+    const ctx = S.ctx, dark = document.body.classList.contains('dark');
+    ctx.save();
+    // Wall skirting and contact shadows.
+    ctx.fillStyle = dark ? '#22203250' : '#4B415E24';
+    ctx.fillRect(TILE, TILE, 11 * TILE, 5);
+    ctx.fillRect(14 * TILE, TILE, 9 * TILE, 5);
+    ctx.fillRect(TILE, TILE, 4, 16 * TILE);
+    ctx.fillRect(13 * TILE - 4, TILE, 4, 15 * TILE);
+    ctx.fillStyle = dark ? '#A79AB145' : '#FFFAFD90';
+    ctx.fillRect(TILE, TILE, 11 * TILE, 1);
+    ctx.fillRect(14 * TILE, TILE, 9 * TILE, 1);
+    // Low dividers leave the entrance open to the player.
+    const entrance = 11 * TILE;
+    ctx.fillStyle = PAL.floor1; ctx.fillRect(entrance, 17 * TILE, 3 * TILE, TILE);
+    ctx.fillStyle = PAL.rugEdge; ctx.fillRect(entrance + 5, 17 * TILE + 8, 3 * TILE - 10, 21);
+    ctx.fillStyle = PAL.rug; ctx.fillRect(entrance + 7, 17 * TILE + 10, 3 * TILE - 14, 17);
+    ctx.fillStyle = '#FFFFFF2E';
+    for (let i = 0; i < 6; i++) ctx.fillRect(entrance + 12 + i * 13, 17 * TILE + 12, 1, 13);
+    // Directional daylight lies on the floor, under furniture and characters.
+    if (!dark && getSkyPalette().starDensity < .25) {
+        ctx.fillStyle = 'rgba(255,245,221,.13)';
+        for (const col of [8, 10, 17, 19, 21]) {
+            ctx.beginPath(); ctx.moveTo(col * TILE + 4, TILE);
+            ctx.lineTo(col * TILE + 27, TILE); ctx.lineTo(col * TILE + 48, TILE + 67);
+            ctx.lineTo(col * TILE + 20, TILE + 67); ctx.closePath(); ctx.fill();
+        }
+    }
+    // Desk shadows, floor sockets and paired cable runs.
+    for (let row = 3; row <= 12; row += 3) for (const col of [2, 6]) {
+        const x = col * TILE, y = row * TILE;
+        ctx.fillStyle = dark ? '#16162655' : '#4A42572A';
+        ctx.fillRect(x + 5, y + 14, 2 * TILE - 2, 2 * TILE - 8);
+        ctx.fillStyle = dark ? '#777389' : '#AAA5BA';
+        ctx.fillRect(x + 58, y + 27, 1, 14); ctx.fillRect(x + 58, y + 40, 8, 1);
+        ctx.fillStyle = '#666174'; ctx.fillRect(x + 64, y + 38, 4, 5);
+        ctx.fillStyle = '#E4DEEC'; ctx.fillRect(x + 65, y + 39, 2, 1);
+    }
+    // A patterned reading rug gives the lounge a separate identity.
+    ctx.fillStyle = dark ? '#615477' : '#ADA0BF';
+    ctx.fillRect(14 * TILE + 8, 3 * TILE - 6, 3 * TILE - 16, 2 * TILE + 24);
+    ctx.fillStyle = dark ? '#776385' : '#C7B8CF';
+    ctx.fillRect(14 * TILE + 11, 3 * TILE - 3, 3 * TILE - 22, 2 * TILE + 18);
+    for (let x = 14 * TILE + 14; x < 17 * TILE - 12; x += 8) {
+        ctx.fillStyle = dark ? '#99859E' : '#E9D6DE';
+        ctx.fillRect(x, 3 * TILE, 3, 2); ctx.fillRect(x, 5 * TILE + 10, 3, 2);
+    }
+    ctx.restore();
 }
 
 function drawOffice() {
@@ -122,7 +200,7 @@ function drawFurniture() {
 // ── Decorations ──
 function drawDecorations() {
     const ctx = S.ctx;
-    const ct = S.animFrame;
+    const ct = (S.reducedMotion ? 0 : S.animFrame);
 
     // ── Windows: time-of-day sky, sun/moon path follows real clock ──
     const sky = getSkyPalette();
@@ -182,16 +260,16 @@ function drawDecorations() {
     ctx.fillRect(calX, calY, 18, 18);
     ctx.fillStyle = "#d97757";
     ctx.fillRect(calX, calY, 18, 5);
-    ctx.font = "bold 4px Pretendard, sans-serif";
+    ctx.font = "bold 4px Wanted Sans Variable, sans-serif";
     ctx.textAlign = "center";
     ctx.fillStyle = "#fff";
     const today = new Date();
     const monthNames = ["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
     ctx.fillText(monthNames[today.getMonth()], calX + 9, calY + 3.8);
     ctx.fillStyle = "#3a2010";
-    ctx.font = "bold 7px Pretendard, sans-serif";
+    ctx.font = "bold 7px Wanted Sans Variable, sans-serif";
     ctx.fillText(String(today.getDate()), calX + 9, calY + 14);
-    ctx.font = "3px Pretendard, sans-serif";
+    ctx.font = "3px Wanted Sans Variable, sans-serif";
     ctx.fillStyle = "#7a5a48";
     ctx.fillText("MON TUE WED", calX + 9, calY + 17.5);
 
@@ -216,7 +294,7 @@ function drawDecorations() {
     const cafeGlow = 0.35 + indoorLightBoost() * 0.5;
     ctx.fillStyle = `rgba(255,107,74,${cafeGlow * 0.4})`;
     ctx.fillRect(cafeX - 2, cafeY - 1, 38, 9);
-    ctx.font = "bold 6px Pretendard, sans-serif";
+    ctx.font = "bold 6px Wanted Sans Variable, sans-serif";
     ctx.textAlign = "center";
     ctx.fillStyle = `rgba(255,180,140,${cafeGlow})`;
     ctx.fillText("CAFE ☕", cafeX + 17, cafeY + 5);
@@ -288,13 +366,13 @@ function drawDecorations() {
     ctx.fillRect(11 * TILE, 16 * TILE + 4, 3 * TILE, TILE - 8);
     ctx.fillStyle = "#C8B090";
     ctx.fillRect(11 * TILE + 3, 16 * TILE + 7, 3 * TILE - 6, TILE - 14);
-    ctx.font = "4px Pretendard, sans-serif";
+    ctx.font = "4px Wanted Sans Variable, sans-serif";
     ctx.textAlign = "center";
     ctx.fillStyle = "rgba(160,120,80,0.4)";
     ctx.fillText("WELCOME", 12.5 * TILE, 16 * TILE + 18);
 
     // ── "휴게실" sign above breakroom entrance ──
-    ctx.font = "3.5px Pretendard, sans-serif";
+    ctx.font = "3.5px Wanted Sans Variable, sans-serif";
     ctx.textAlign = "center";
     ctx.fillStyle = PAL.emptyText;
     ctx.fillText("☕ 휴게실", 18 * TILE, 0.6 * TILE);
@@ -344,10 +422,10 @@ function drawBossDesk(ct) {
     ctx.fillStyle = "#D4A868";
     roundRect(ctx, bx - 10, by - 18, 20, 5, 1.5);
     ctx.fill();
-    ctx.font = "bold 3px 'Pretendard', sans-serif";
+    ctx.font = "bold 3px 'Wanted Sans Variable', sans-serif";
     ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "center";
-    ctx.fillText("👑 BOSS", bx, by - 14.5);
+    ctx.fillText("사장님", bx, by - 14.5);
 
     // Coffee cup on desk
     ctx.fillStyle = PAL.coffee;
@@ -510,7 +588,7 @@ function drawWindow(px, py, ct, tx, sky, isAnchor) {
 
 function drawTinyFlower(x, y, color, seed) {
     const ctx = S.ctx;
-    const sway = Math.sin(seed * 0.001 + S.animFrame * 0.03) * 0.5;
+    const sway = Math.sin(seed * 0.001 + (S.reducedMotion ? 0 : S.animFrame) * 0.03) * 0.5;
     // Stem
     ctx.fillStyle = "#5AB87A";
     ctx.fillRect(x + sway, y + 2, 1, 4);
@@ -545,7 +623,7 @@ function drawDesk(px, py, tx, ty) {
 
         const agentHere = findAgentAtDesk(tx, ty);
         if (agentHere?.isRunning) {
-            const pulse = 0.7 + Math.sin(S.animFrame * 0.04 + tx * 2) * 0.15;
+            const pulse = 0.7 + Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.04 + tx * 2) * 0.15;
             // Use the platform's brand colour for the active screen so each
             // platform feels visually identifiable at a glance.
             const platMeta = PLATFORM_META[agentHere.platform] || null;
@@ -559,11 +637,11 @@ function drawDesk(px, py, tx, ty) {
             // Code lines in a darker shade of the same tint
             ctx.fillStyle = hexToRgba(tint, 0.85);
             for (let i = 0; i < 4; i++) {
-                const w = 3 + ((tx * 5 + i * 3 + Math.floor(S.animFrame / 12)) % 9);
+                const w = 3 + ((tx * 5 + i * 3 + Math.floor((S.reducedMotion ? 0 : S.animFrame) / 12)) % 9);
                 ctx.fillRect(px + 10, py + 4 + i * 2.5, w, 1);
             }
             // Cursor blink — single pixel on the last line
-            if (Math.floor(S.animFrame / 14) % 2 === 0) {
+            if (Math.floor((S.reducedMotion ? 0 : S.animFrame) / 14) % 2 === 0) {
                 ctx.fillStyle = hexToRgba(tint, 1);
                 ctx.fillRect(px + 21, py + 12, 1, 1);
             }
@@ -679,7 +757,7 @@ function drawServer(px, py) {
     const activeCount = S.liveAgents.filter(a => a.isRunning).length;
     for (let i = 0; i < 3; i++) {
         const isLit = i < activeCount;
-        const blink = Math.sin(S.animFrame * 0.08 + i * 2.5 + px * 0.1) > 0;
+        const blink = Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.08 + i * 2.5 + px * 0.1) > 0;
         ctx.fillStyle = isLit ? (blink ? PAL.serverLed : "#1a8a5a") : "#B0D8C0";
         ctx.fillRect(px + 9 + i * 4, py + 7, 2, 2);
     }
@@ -707,7 +785,7 @@ function drawCoffee(px, py, tx) {
     ctx.fillRect(px + 13, py + 17, 4, 2);
 
     // Steam
-    const sy = Math.sin(S.animFrame * 0.06) * 2;
+    const sy = Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.06) * 2;
     ctx.fillStyle = PAL.coffeeSteam;
     ctx.fillRect(px + 13, py + 12 + sy, 1.5, 3);
     ctx.fillRect(px + 16, py + 11 + sy, 1.5, 3.5);
@@ -719,7 +797,7 @@ function drawPlant(px, py) {
     ctx.fillRect(px + 11, py + 19, 10, 8);
     ctx.fillRect(px + 9, py + 17, 14, 3);
 
-    const sw = Math.sin(S.animFrame * 0.025 + px * 0.3) * 1.5;
+    const sw = Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.025 + px * 0.3) * 1.5;
     ctx.fillStyle = PAL.plant1;
     ctx.fillRect(px + 13 + sw, py + 5, 6, 13);
     ctx.fillStyle = PAL.plant2;
@@ -739,7 +817,7 @@ function drawWhiteboard(px, py) {
     // 빈 projectName 인 에이전트 (cwd 못 잡힌 경우) 가 있어서 fallback `""` 안 깔면 substring 에서 throw.
     const activeProjects = S.liveAgents.filter(a => a.isRunning).map(a => a.projectName || "");
     const colors = ["rgba(5,150,105,0.4)", "rgba(37,99,235,0.35)", "rgba(217,119,6,0.35)", "rgba(220,50,100,0.3)"];
-    ctx.font = "2.5px Pretendard, sans-serif";
+    ctx.font = "2.5px Wanted Sans Variable, sans-serif";
     ctx.textAlign = "left";
     for (let i = 0; i < Math.min(activeProjects.length, 4); i++) {
         ctx.fillStyle = colors[i % colors.length];
@@ -862,7 +940,7 @@ function drawVending(px, py) {
     ctx.fillStyle = "#901828";
     ctx.fillRect(px + 15, py + 18, 6, 5);
     // Light indicator
-    const on = Math.sin(S.animFrame * 0.05) > 0;
+    const on = Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.05) > 0;
     ctx.fillStyle = on ? "#50FF80" : "#206030";
     ctx.fillRect(px + TILE - 9, py + 5, 2, 2);
 }
@@ -877,24 +955,24 @@ function drawAquarium(px, py) {
     ctx.fillRect(px + 4, py + 6, TILE - 8, TILE - 10);
     // Water surface shimmer
     ctx.fillStyle = "rgba(255,255,255,0.15)";
-    const shimX = Math.sin(S.animFrame * 0.04 + px) * 2;
+    const shimX = Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.04 + px) * 2;
     ctx.fillRect(px + 6 + shimX, py + 6, 8, 1);
     // Fish 1 (orange)
-    const f1x = px + 8 + Math.sin(S.animFrame * 0.03 + 1) * 6;
-    const f1y = py + 12 + Math.sin(S.animFrame * 0.05) * 2;
+    const f1x = px + 8 + Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.03 + 1) * 6;
+    const f1y = py + 12 + Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.05) * 2;
     ctx.fillStyle = "#F0A040";
     ctx.fillRect(f1x, f1y, 4, 2);
     ctx.fillRect(f1x - 1, f1y + 1, 1, 1); // tail
     ctx.fillStyle = "#1a1a2e";
     ctx.fillRect(f1x + 3, f1y, 0.7, 0.7); // eye
     // Fish 2 (blue)
-    const f2x = px + 16 + Math.sin(S.animFrame * 0.025 + 3) * 5;
-    const f2y = py + 16 + Math.sin(S.animFrame * 0.04 + 2) * 2;
+    const f2x = px + 16 + Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.025 + 3) * 5;
+    const f2y = py + 16 + Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.04 + 2) * 2;
     ctx.fillStyle = "#60A0E0";
     ctx.fillRect(f2x, f2y, 3, 2);
     ctx.fillRect(f2x + 3, f2y + 0.5, 1, 1); // tail
     // Bubbles
-    const bubY = py + 20 - (S.animFrame * 0.3 + px) % 14;
+    const bubY = py + 20 - ((S.reducedMotion ? 0 : S.animFrame) * 0.3 + px) % 14;
     ctx.fillStyle = "rgba(255,255,255,0.3)";
     ctx.beginPath(); ctx.arc(px + 12, bubY, 1, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(px + 18, bubY + 4, 0.7, 0, Math.PI * 2); ctx.fill();
@@ -902,7 +980,7 @@ function drawAquarium(px, py) {
     ctx.fillStyle = "#A89870";
     ctx.fillRect(px + 4, py + TILE - 8, TILE - 8, 2);
     // Seaweed
-    const sw = Math.sin(S.animFrame * 0.03 + px * 0.2) * 1;
+    const sw = Math.sin((S.reducedMotion ? 0 : S.animFrame) * 0.03 + px * 0.2) * 1;
     ctx.fillStyle = "#40A060";
     ctx.fillRect(px + 8 + sw, py + TILE - 14, 1.5, 6);
     ctx.fillRect(px + 20 + sw, py + TILE - 12, 1.5, 4);
@@ -922,7 +1000,7 @@ function drawAgent(agent, v) {
     const ctx = S.ctx;
     ctx.save();
     const x = Math.round(v.x), y = Math.round(v.y);
-    const t = v.animTick;
+    const t = S.reducedMotion ? 0 : v.animTick;
     const th = v.theme;
     const bob = v.moving ? Math.sin(t * 0.3) * 1.5 : 0;
     const sel = agent.pid === S.selectedPid;
@@ -931,223 +1009,47 @@ function drawAgent(agent, v) {
 
     // Shadow (soft)
     ctx.fillStyle = PAL.shadow;
-    ctx.beginPath(); ctx.ellipse(x, y + 7, 6, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x, y + 7, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
 
-    drawAgentAura(agent, v, x, y, t, status);
 
     // Selection ring — warm pink
     if (sel) {
-        ctx.strokeStyle = "rgba(249,168,212,0.6)";
+        ctx.strokeStyle = "rgba(185,45,73,0.8)";
         ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.ellipse(x, y + 7, 10, 4.5, 0, 0, Math.PI * 2); ctx.stroke();
     }
 
     if (offline) ctx.globalAlpha = 0.4;
 
-    const by = y + bob;
+    const by = y + Math.round(bob);
 
-    // Body (rounded feel)
-    ctx.fillStyle = th.body;
-    ctx.fillRect(x - 4, by - 4, 8, 8);
-    // Body highlight
-    ctx.fillStyle = "rgba(255,255,255,0.2)";
-    ctx.fillRect(x - 3, by - 3, 3, 2);
-
-    // Legs
-    const la = v.moving ? Math.sin(t * 0.4) * 2.5 : 0;
-    ctx.fillStyle = "#3a3a4a";
-    ctx.fillRect(x - 3, by + 4, 3, 4 + la);
-    ctx.fillRect(x + 1, by + 4, 3, 4 - la);
-
-    // Arms
-    ctx.fillStyle = th.bodyDark;
-    if (status === "coding" && !v.moving) {
-        const tp = Math.sin(t * 0.5) * 1;
-        ctx.fillRect(x - 6, by - 1 + tp, 2, 4);
-        ctx.fillRect(x + 4, by - 1 - tp, 2, 4);
-    } else if (status === "thinking" && !v.moving) {
-        ctx.fillRect(x - 6, by - 2, 2, 5);
-        ctx.fillRect(x + 4, by - 5, 2, 4);
-    } else if (status === "coffee" && !v.moving) {
-        ctx.fillRect(x - 6, by - 1, 2, 4);
-        ctx.fillRect(x + 4, by - 1, 2, 4);
-        // Cup
-        ctx.fillStyle = "#FFFFFF";
-        ctx.fillRect(x + 5, by - 1, 3, 3);
-        ctx.fillStyle = PAL.coffee;
-        ctx.fillRect(x + 6, by, 1, 1);
-    } else {
-        const aa = v.moving ? Math.sin(t * 0.4) * 1.5 : 0;
-        ctx.fillRect(x - 6, by - 1 + aa, 2, 4);
-        ctx.fillRect(x + 4, by - 1 - aa, 2, 4);
-    }
-
-    // Status-specific props
-    if (status === "reviewing" && !v.moving) {
-        // Clipboard in hand
-        ctx.fillStyle = "#F5F0E8";
-        ctx.fillRect(x - 8, by - 2, 3, 4);
-        ctx.fillStyle = "#D4C4A8";
-        ctx.fillRect(x - 8, by - 3, 3, 1);
-        // Text lines
-        ctx.fillStyle = "rgba(0,0,0,0.2)";
-        ctx.fillRect(x - 7, by - 0.5, 1.5, 0.5);
-        ctx.fillRect(x - 7, by + 0.5, 1, 0.5);
-    }
-    if (status === "searching" && !v.moving) {
-        ctx.strokeStyle = "rgba(37,99,235,0.5)";
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.arc(x + 7, by - 4, 2, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.fillStyle = "rgba(37,99,235,0.3)";
-        ctx.fillRect(x + 8.5, by - 2, 1, 2.5);
-    }
-
-    if (agent.needsReview && !offline) {
-        ctx.fillStyle = "rgba(245,158,11,0.92)";
-        roundRect(ctx, x + 7, by - 18, 8, 8, 2);
-        ctx.fill();
-        ctx.fillStyle = "#fff7ed";
-        ctx.fillRect(x + 10.5, by - 16, 1, 4);
-        ctx.fillRect(x + 10.5, by - 11, 1, 1);
-    }
-
-    // Head (Korean skin tone)
-    ctx.fillStyle = th.skin;
-    ctx.fillRect(x - 3, by - 11, 7, 7);
-
-    // Hair — gender-aware styles
-    ctx.fillStyle = th.hairColor || th.hair;
-    if (th.gender === "F") {
-        if (th.hairStyle === "long") {
-            // Top cap
-            ctx.fillRect(x - 4, by - 12, 9, 4);
-            // Long flowing sides
-            ctx.fillRect(x - 5, by - 10, 2, 8);
-            ctx.fillRect(x + 4, by - 10, 2, 8);
-            // Back hair
-            ctx.fillRect(x - 4, by - 8, 1, 6);
-            ctx.fillRect(x + 4, by - 8, 1, 6);
-        } else if (th.hairStyle === "bob") {
-            ctx.fillRect(x - 4, by - 12, 9, 4);
-            ctx.fillRect(x - 5, by - 10, 2, 5);
-            ctx.fillRect(x + 4, by - 10, 2, 5);
-        } else if (th.hairStyle === "pony") {
-            ctx.fillRect(x - 4, by - 12, 9, 4);
-            ctx.fillRect(x - 4, by - 10, 1, 3);
-            ctx.fillRect(x + 4, by - 10, 1, 3);
-            // Ponytail on back
-            ctx.fillRect(x + 5, by - 9, 2, 5);
-        } else if (th.hairStyle === "twin") {
-            ctx.fillRect(x - 4, by - 12, 9, 4);
-            // Twin tails
-            ctx.fillRect(x - 6, by - 10, 2, 6);
-            ctx.fillRect(x + 5, by - 10, 2, 6);
-        }
-    } else {
-        // Male hair styles
-        if (th.hairStyle === "crew") {
-            ctx.fillRect(x - 3, by - 12, 7, 3);
-            ctx.fillRect(x - 4, by - 11, 1, 2);
-            ctx.fillRect(x + 4, by - 11, 1, 2);
-        } else if (th.hairStyle === "part") {
-            ctx.fillRect(x - 4, by - 12, 9, 4);
-            ctx.fillRect(x - 4, by - 10, 1, 2);
-            ctx.fillRect(x + 4, by - 10, 1, 2);
-            // Part line
-            ctx.fillStyle = th.skin;
-            ctx.fillRect(x + 1, by - 12, 1, 2);
-            ctx.fillStyle = th.hairColor || th.hair;
-        } else {
-            // Default short
-            ctx.fillRect(x - 4, by - 12, 9, 3);
-            ctx.fillRect(x - 4, by - 10, 1, 2);
-            ctx.fillRect(x + 4, by - 10, 1, 2);
-        }
-    }
-
-    // Accessories
-    if (th.accessory === "glasses") {
-        ctx.strokeStyle = "rgba(100,100,120,0.6)";
-        ctx.lineWidth = 0.5;
-        ctx.strokeRect(x - 3, by - 9.5, 2.5, 2);
-        ctx.strokeRect(x + 0.5, by - 9.5, 2.5, 2);
-        // Bridge
-        ctx.fillStyle = "rgba(100,100,120,0.4)";
-        ctx.fillRect(x - 0.5, by - 9, 1, 0.5);
-    } else if (th.accessory === "ribbon") {
-        ctx.fillStyle = "#F9A8D4";
-        ctx.fillRect(x + 3, by - 13, 3, 2);
-        ctx.fillRect(x + 4, by - 14, 1, 1);
-    } else if (th.accessory === "cap") {
-        ctx.fillStyle = th.body;
-        ctx.fillRect(x - 5, by - 13, 11, 2);
-        ctx.fillRect(x - 3, by - 14, 7, 2);
-        // Brim
-        ctx.fillStyle = th.bodyDark;
-        ctx.fillRect(x - 6, by - 11, 4, 1);
-    } else if (th.accessory === "earring") {
-        ctx.fillStyle = "#FDE68A";
-        ctx.fillRect(x - 5, by - 7, 1, 2);
-    }
-
-    // Blush (cute!)
-    ctx.fillStyle = "rgba(249,168,212,0.35)";
-    ctx.fillRect(x - 3, by - 6, 2, 1);
-    ctx.fillRect(x + 2, by - 6, 2, 1);
-
-    // Eyes
-    const blink = t % 130 > 125;
-    if (status === "idle" && !v.moving && !blink) {
-        // Half-closed drowsy eyes
-        ctx.fillStyle = th.hair;
-        ctx.fillRect(x - 2, by - 8.5, 2, 1.5);
-        ctx.fillRect(x + 1, by - 8.5, 2, 1.5);
-    } else if (blink) {
-        ctx.fillStyle = th.hair;
-        ctx.fillRect(x - 2, by - 8, 2, 1);
-        ctx.fillRect(x + 1, by - 8, 2, 1);
-    } else {
-        // White of eye
-        ctx.fillStyle = "#fafafa";
-        ctx.fillRect(x - 2, by - 9, 2, 2);
-        ctx.fillRect(x + 1, by - 9, 2, 2);
-        // Pupil
-        ctx.fillStyle = th.hair;
-        const lx = v.direction === 1 ? -1 : v.direction === 2 ? 1 : 0;
-        ctx.fillRect(x - 2 + lx, by - 8, 1, 1);
-        ctx.fillRect(x + 2 + lx, by - 8, 1, 1);
-    }
-
-    // Smile (when not offline)
-    if (!offline && status !== "thinking") {
-        ctx.fillStyle = "rgba(180,80,80,0.4)";
-        ctx.fillRect(x - 1, by - 5, 3, 1);
-    }
-
+    drawCharacter(ctx, agent, v, x, by, t);
     ctx.globalAlpha = 1;
+    if (agent.needsReview && !offline) {
+        ctx.fillStyle = "#F05236"; ctx.fillRect(x + 10, by - 30, 9, 9);
+        ctx.fillStyle = "#FFFFFF"; ctx.fillRect(x + 14, by - 28, 1, 3); ctx.fillRect(x + 14, by - 24, 1, 1);
+    }
 
     // Thinking dots (warm yellow)
     if (status === "thinking" && !v.moving) {
         const dp = Math.floor(t / 18) % 4;
         for (let i = 0; i < 3; i++) {
             ctx.fillStyle = i < dp ? "rgba(217,119,6,0.7)" : "rgba(217,119,6,0.15)";
-            ctx.fillRect(x + 7 + i * 3, by - 13 - Math.sin(t * 0.08 + i) * 1.5, 1.5, 1.5);
+            ctx.fillRect(x + 7 + i * 3, by - 28 - Math.sin(t * 0.08 + i) * 1.5, 1.5, 1.5);
         }
     }
 
     // Chat indicator (when chatting with another agent)
     if (v.chatPartner && v.speechTimer > 0) {
         ctx.fillStyle = "rgba(249,168,212,0.6)";
-        const heartY = by - 25 - Math.sin(t * 0.1) * 2;
+        const heartY = by - 37 - Math.sin(t * 0.1) * 2;
         ctx.font = "4px sans-serif";
         ctx.textAlign = "center";
         ctx.fillText("♥", x + 8, heartY);
     }
 
     // Memory bar
-    if (agent.memoryMB > 0) {
+    if (sel && agent.memoryMB > 0) {
         const bw = 16;
         const pct = Math.min(1, agent.memoryMB / 1500);
         ctx.fillStyle = "rgba(0,0,0,0.06)";
@@ -1164,7 +1066,7 @@ function drawAgent(agent, v) {
         (status === "coding" || status === "thinking") &&
         !(v.speechTimer > 0 && v.speechText);
     if (showDots) {
-        const tdy = by - 18;
+        const tdy = by - 32;
         const isThinking = status === "thinking";
         const dots = 3;
         const pmetaTint = PLATFORM_META[agent.platform];
@@ -1188,85 +1090,23 @@ function drawAgent(agent, v) {
     }
 
     // Speech bubble (higher position, bigger, distinct from sub-agent bubbles)
-    if (v.speechTimer > 0 && v.speechText) {
-        drawBubble(x, by - 26, v.speechText, v.speechTimer, v.chatPartner != null);
+    if (!document.body.classList.contains("privacy-mode") && v.speechTimer > 0 && v.speechText && (sel || (v.chatPartner && agent.pid === S.directorFocusPid))) {
+        drawBubble(x, by - 40, v.speechText, v.speechTimer, v.chatPartner != null);
     }
 
-    // Name label (Korean name + project + platform badge) — clamped width
-    const MAX_LABEL_W = 52; // max label width in canvas pixels
+    // Names stay readable; full project and work text belong in the detail panel.
+    ctx.font = "bold 5px 'Wanted Sans Variable', sans-serif";
     const nameLabel = th.name;
-    const rawProj = agent.projectName || `PID:${agent.pid}`;
-    const pmeta = PLATFORM_META[agent.platform] || PLATFORM_META.claude;
-    const projText = `${pmeta.badge} ${rawProj}`;
-
-    ctx.font = "bold 5px 'Pretendard', sans-serif";
-    const nw = Math.min(ctx.measureText(nameLabel).width, MAX_LABEL_W);
-    ctx.font = "3.5px 'Pretendard', sans-serif";
-    const pw = Math.min(ctx.measureText(projText).width, MAX_LABEL_W);
-    const lw = Math.max(nw, pw) + 8;
-    const lh = 13;
-
+    const lw = Math.min(52, ctx.measureText(nameLabel).width) + 10;
     ctx.fillStyle = PAL.labelBg;
-    roundRect(ctx, x - lw / 2, y + 12, lw, lh, 3);
+    roundRect(ctx, x - lw / 2, y + 12, lw, 10, 2);
     ctx.fill();
-    ctx.strokeStyle = th.body + "40";
-    ctx.lineWidth = 0.5;
-    roundRect(ctx, x - lw / 2, y + 12, lw, lh, 3);
-    ctx.stroke();
-
-    // Name (clamped)
-    ctx.font = "bold 5px 'Pretendard', sans-serif";
-    ctx.fillStyle = offline ? PAL.labelTextOff : th.bodyDark;
-    ctx.textAlign = "center";
-    ctx.fillText(nameLabel, x, y + 19, MAX_LABEL_W);
-    // Project + platform badge (clamped)
-    ctx.font = "3.5px 'Pretendard', sans-serif";
     ctx.fillStyle = offline ? PAL.labelTextOff : PAL.labelText;
     ctx.textAlign = "center";
-    ctx.fillText(projText, x, y + 23.5, MAX_LABEL_W);
+    ctx.fillText(nameLabel, x, y + 19, 52);
     ctx.restore();
 }
 
-function drawAgentAura(agent, v, x, y, t, status) {
-    if (!agent.isRunning || status === "idle" || status === "coffee") return;
-
-    const ctx = S.ctx;
-    const meta = STATUS_META[status] || STATUS_META.coding;
-    const pulse = 0.5 + Math.sin(t * 0.08) * 0.5;
-    const radius = 12 + pulse * 3;
-
-    ctx.save();
-    ctx.strokeStyle = hexToRgba(meta.color, 0.16 + pulse * 0.12);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(x, y + 6, radius, 5 + pulse * 1.5, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    if (["coding", "reviewing", "searching", "thinking"].includes(status)) {
-        for (let i = 0; i < 3; i++) {
-            const a = t * 0.045 + i * 2.1;
-            const px = x + Math.cos(a) * (11 + i);
-            const py = y - 7 + Math.sin(a) * 6;
-            ctx.fillStyle = hexToRgba(meta.color, 0.35 + pulse * 0.25);
-            roundRect(ctx, px - 1.2, py - 1.2, 2.4, 2.4, 0.8);
-            ctx.fill();
-        }
-    }
-
-    if (agent.currentWork?.prompt) {
-        const bx = x - 16;
-        const by = y - 22;
-        ctx.fillStyle = "rgba(15,23,42,0.58)";
-        roundRect(ctx, bx, by, 12, 9, 2);
-        ctx.fill();
-        ctx.fillStyle = hexToRgba(meta.color, 0.9);
-        ctx.fillRect(bx + 2, by + 2, 4 + (t % 18) * 0.18, 1);
-        ctx.fillRect(bx + 2, by + 5, 7 - (t % 12) * 0.16, 1);
-    }
-    ctx.restore();
-}
-
-// ── Sub-Agent Rendering (compact dots lined up beside parent) ──
 function drawSubAgents() {
     const ctx = S.ctx;
     // Group by parent
@@ -1390,7 +1230,7 @@ function drawSubAgents() {
                 const rows = Math.ceil(subs.length / maxPerRow);
                 const labelY = startY + rows * 12 + 1;
                 const text = `${doneCount}/${subs.length} 완료`;
-                ctx.font = "3px Pretendard, sans-serif";
+                ctx.font = "3px Wanted Sans Variable, sans-serif";
                 ctx.textAlign = "center";
                 ctx.fillStyle = "rgba(0,0,0,0.2)";
                 ctx.fillText(text, labelX, labelY);
@@ -1404,7 +1244,7 @@ function drawBubble(x, y, text, timer, isChat) {
     const a = Math.min(1, timer / 20);
     ctx.save();
     ctx.globalAlpha = a;
-    ctx.font = "bold 5px 'Pretendard', sans-serif";
+    ctx.font = "bold 5px 'Wanted Sans Variable', sans-serif";
     const tw = ctx.measureText(text).width;
     const bw = tw + 12, bh = 13;
     const bx = x - bw / 2, by2 = y - bh - 3;
@@ -1520,18 +1360,18 @@ function drawEmptyState() {
     ctx.fillText("🪑", cx, cy - 18);
 
     // Main text
-    ctx.font = "bold 7px Pretendard, sans-serif";
+    ctx.font = "bold 7px Wanted Sans Variable, sans-serif";
     ctx.fillStyle = PAL.emptyText;
     ctx.fillText(mainText, cx, cy - 4);
 
     // Sub text
-    ctx.font = "4.5px Pretendard, sans-serif";
+    ctx.font = "4.5px Wanted Sans Variable, sans-serif";
     ctx.fillStyle = PAL.emptySub;
     ctx.fillText(subText, cx, cy + 4);
 
     // Platform hint row — show supported tools
     if (S.connected) {
-        ctx.font = "bold 3.4px Pretendard, sans-serif";
+        ctx.font = "bold 3.4px Wanted Sans Variable, sans-serif";
         ctx.fillStyle = PAL.emptySub;
         ctx.fillText(t("empty.tryRunning"), cx, cy + 14);
         const platforms = [
@@ -1556,14 +1396,14 @@ function drawEmptyState() {
             ctx.arc(bx - 7.5, by, 1.4, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = p.c;
-            ctx.font = "bold 3.4px Pretendard, sans-serif";
+            ctx.font = "bold 3.4px Wanted Sans Variable, sans-serif";
             ctx.fillText(p.t, bx + 1, by + 1.3);
         });
     } else {
         ctx.fillStyle = "rgba(220,38,38,0.6)";
-        ctx.font = "bold 4px Pretendard, sans-serif";
+        ctx.font = "bold 4px Wanted Sans Variable, sans-serif";
         ctx.fillText(t("empty.serverWaiting"), cx, cy + 16);
-        ctx.font = "3.5px Pretendard, sans-serif";
+        ctx.font = "3.5px Wanted Sans Variable, sans-serif";
         ctx.fillStyle = PAL.emptySub;
         ctx.fillText(t("empty.checkServer"), cx, cy + 24);
     }
@@ -1581,7 +1421,7 @@ function drawZoomIndicator() {
     const dpr = S.dpr || 1;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const text = `${Math.round(S.zoomLevel * 100)}%`;
-    ctx.font = "bold 11px Pretendard, sans-serif";
+    ctx.font = "bold 11px Wanted Sans Variable, sans-serif";
     ctx.textAlign = "left";
     const tw = ctx.measureText(text).width;
     ctx.fillStyle = "rgba(0,0,0,0.4)";
@@ -1589,7 +1429,7 @@ function drawZoomIndicator() {
     ctx.fillStyle = "#fff";
     ctx.fillText(text, 16, S.canvasH - 14);
     // Reset button hint
-    ctx.font = "9px Pretendard, sans-serif";
+    ctx.font = "9px Wanted Sans Variable, sans-serif";
     ctx.fillStyle = "rgba(255,255,255,0.5)";
     ctx.fillText("더블클릭: 리셋", 16, S.canvasH - 3);
     ctx.restore();

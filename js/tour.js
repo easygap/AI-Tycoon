@@ -12,13 +12,13 @@ const KEY = "ai-tycoon-tour-done";
 const STEPS = [
     {
         target: "#settings-toggle",
-        ko: { title: "설정", body: "테마, 언어, 효과음, 알림, 시간대 강제 등 모든 설정을 한 곳에서." },
+        ko: { title: "설정", body: "테마와 효과음, 알림을 바꿀 수 있어요. 창밖 시간을 직접 고를 수도 있습니다." },
         en: { title: "Settings", body: "Theme, language, sound, alerts, time-of-day — all in one place." },
         placement: "bottom",
     },
     {
         target: "#insights-toggle",
-        ko: { title: "인사이트", body: "오늘의 작업·플랫폼 분포·7일 추이·24시간 히트맵을 모아 봐요. (단축키 I)" },
+        ko: { title: "작업 통계", body: "오늘의 작업·플랫폼 분포·7일 추이·24시간 히트맵을 모아 봐요. (단축키 I)" },
         en: { title: "Insights", body: "Today's tasks, platform mix, 7-day trend, hourly heatmap — open with I." },
         placement: "bottom",
     },
@@ -30,7 +30,7 @@ const STEPS = [
     },
     {
         target: "#shortcuts-toggle",
-        ko: { title: "단축키", body: "물음표(?)로 단축키 치트시트가 열려요. 키보드만으로 80%는 가능합니다." },
+        ko: { title: "단축키", body: "물음표(?)를 누르면 사용할 수 있는 단축키가 나와요." },
         en: { title: "Shortcuts", body: "Press ? for the full cheatsheet. You can do 80% of things with the keyboard." },
         placement: "bottom",
     },
@@ -74,7 +74,7 @@ function reposition() {
 function placeStep(step) {
     if (!step) return;
     const target = document.querySelector(step.target);
-    if (!target) { advance(); return; }
+    if (!target || !target.getClientRects().length) { advance(); return; }
     const rect = target.getBoundingClientRect();
     const pad = 6;
 

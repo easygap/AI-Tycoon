@@ -12,7 +12,7 @@
 //
 //   ## 한눈에
 //   - 활성 에이전트: N
-//   - 완료 태스크: M
+//   - 완료 작업: M
 //   - 진행 중: K
 //
 //   ## 에이전트별 작업
@@ -74,7 +74,7 @@ export function buildMarkdown(lang = "ko") {
         lines.push("");
         lines.push("## 한눈에");
         lines.push(`- 활성 에이전트: ${totalRunning}`);
-        lines.push(`- 완료 태스크: ${totalCompleted}`);
+        lines.push(`- 완료 작업: ${totalCompleted}`);
         lines.push(`- 진행 중: ${totalOngoing}`);
     }
     lines.push("");

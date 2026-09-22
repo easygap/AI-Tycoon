@@ -22,49 +22,49 @@ const ACHIEVEMENTS = [
     {
         id: "first-task",
         icon: "solar:checklist-bold",
-        ko: { title: "첫 완료", desc: "오늘 첫 태스크를 완료했어요" },
+        ko: { title: "첫 작업 완료", desc: "오늘 첫 작업을 끝냈어요" },
         en: { title: "First Task", desc: "Completed your first task today" },
         check: ({ today }) => (today?.completedMax || 0) >= 1,
     },
     {
         id: "ten-tasks",
         icon: "solar:medal-ribbons-star-bold",
-        ko: { title: "10개의 동력", desc: "하루 10개의 태스크를 완료했어요" },
+        ko: { title: "10개 완료", desc: "오늘 작업 10개를 끝냈어요" },
         en: { title: "Ten Done", desc: "10 tasks completed in a day" },
         check: ({ today }) => (today?.completedMax || 0) >= 10,
     },
     {
         id: "fifty-tasks",
         icon: "solar:cup-star-bold",
-        ko: { title: "50개의 폭풍", desc: "하루 50개의 태스크를 완료했어요" },
+        ko: { title: "50개 완료", desc: "오늘 작업 50개를 끝냈어요" },
         en: { title: "Task Storm", desc: "50 tasks completed in a day" },
         check: ({ today }) => (today?.completedMax || 0) >= 50,
     },
     {
         id: "multi-platform",
         icon: "solar:layers-minimalistic-bold",
-        ko: { title: "팀워크의 화신", desc: "동시에 3개 이상의 AI 플랫폼이 활성됐어요" },
+        ko: { title: "함께 일해요", desc: "서로 다른 AI 도구 3개 이상이 함께 일했어요" },
         en: { title: "Multi-Tasker", desc: "3+ AI platforms active simultaneously" },
         check: ({ activePlatforms }) => activePlatforms >= 3,
     },
     {
         id: "five-platforms",
         icon: "solar:medal-star-bold",
-        ko: { title: "AI 마스터", desc: "다섯 가지 이상의 AI 플랫폼을 경험했어요" },
+        ko: { title: "다섯 가지 도구", desc: "서로 다른 AI 도구를 5개 이상 연결했어요" },
         en: { title: "AI Master", desc: "Experienced 5+ different AI platforms" },
         check: ({ allTimePlatforms }) => allTimePlatforms >= 5,
     },
     {
         id: "night-owl",
         icon: "solar:moon-stars-bold",
-        ko: { title: "밤의 코더", desc: "심야(22시 이후)에 작업했어요" },
+        ko: { title: "밤의 코더", desc: "늦은 밤(22시 이후)에 작업했어요" },
         en: { title: "Night Owl", desc: "Worked past 22:00" },
         check: ({ hour, anyActive }) => anyActive && (hour >= 22 || hour < 2),
     },
     {
         id: "early-bird",
         icon: "solar:sunrise-bold",
-        ko: { title: "이른 새", desc: "이른 아침(5-7시)에 작업했어요" },
+        ko: { title: "아침형 직원", desc: "이른 아침(5~7시)에 작업했어요" },
         en: { title: "Early Bird", desc: "Worked between 5–7 AM" },
         check: ({ hour, anyActive }) => anyActive && hour >= 5 && hour < 7,
     },
@@ -92,49 +92,49 @@ const ACHIEVEMENTS = [
     {
         id: "insightful",
         icon: "solar:chart-bold",
-        ko: { title: "인사이트 탐험가", desc: "인사이트 모달을 5번 열어봤어요" },
+        ko: { title: "통계도 꼼꼼히", desc: "작업 통계 화면을 5번 열어봤어요" },
         en: { title: "Insight Explorer", desc: "Opened insights 5 times" },
         check: ({ insightsOpened }) => insightsOpened >= 5,
     },
     {
         id: "darkside",
         icon: "solar:moon-bold",
-        ko: { title: "다크 사이드", desc: "다크 모드로 전환했어요" },
+        ko: { title: "불을 낮추고", desc: "다크 모드로 바꿨어요" },
         en: { title: "Dark Side", desc: "Switched to dark mode" },
         check: ({ darkToggled }) => darkToggled === true,
     },
     {
         id: "bilingual",
         icon: "solar:global-bold",
-        ko: { title: "이중언어", desc: "언어를 전환해봤어요" },
+        ko: { title: "다른 언어로", desc: "화면에 표시되는 언어를 바꿨어요" },
         en: { title: "Bilingual", desc: "Switched language" },
         check: ({ langToggled }) => langToggled === true,
     },
     {
         id: "century",
         icon: "solar:cup-paper-bold",
-        ko: { title: "100태스크 클럽", desc: "하루에 100개의 태스크를 완료했어요" },
+        ko: { title: "100개 달성", desc: "오늘 작업 100개를 끝냈어요" },
         en: { title: "Century", desc: "100 tasks done in a day" },
         check: ({ today }) => (today?.completedMax || 0) >= 100,
     },
     {
         id: "marathon-week",
         icon: "solar:running-2-bold",
-        ko: { title: "주간 마라톤", desc: "7일 누적 200개 이상 태스크를 완료" },
+        ko: { title: "꾸준히 차곡차곡", desc: "일주일 동안 작업 200개를 끝냈어요" },
         en: { title: "Marathon week", desc: "200+ tasks completed across 7 days" },
         check: ({ weekTotal }) => weekTotal >= 200,
     },
     {
         id: "snapshot-taker",
         icon: "solar:camera-bold",
-        ko: { title: "관찰자", desc: "작업실 스냅샷을 5번 저장했어요" },
+        ko: { title: "작업실 사진첩", desc: "작업실 사진을 5번 저장했어요" },
         en: { title: "Observer", desc: "Saved the office snapshot 5 times" },
         check: ({ snapshots }) => snapshots >= 5,
     },
     {
         id: "customizer",
         icon: "solar:palette-round-bold",
-        ko: { title: "취향가", desc: "테마·시즌·언어를 모두 바꿔봤어요" },
+        ko: { title: "내 취향대로", desc: "테마와 계절 장식, 언어를 모두 바꿔봤어요" },
         en: { title: "Tinkerer", desc: "Changed theme + season + language" },
         check: ({ themeChanged, seasonChanged, langToggled }) =>
             themeChanged && seasonChanged && langToggled,
@@ -142,7 +142,7 @@ const ACHIEVEMENTS = [
     {
         id: "project-curious",
         icon: "solar:folder-with-files-bold",
-        ko: { title: "프로젝트 탐험가", desc: "프로젝트 드릴다운을 3번 열어봤어요" },
+        ko: { title: "프로젝트 살펴보기", desc: "프로젝트 상세 화면을 3번 열어봤어요" },
         en: { title: "Project explorer", desc: "Opened 3 project drill-downs" },
         check: ({ projectOpens }) => projectOpens >= 3,
     },
@@ -155,15 +155,15 @@ const ACHIEVEMENTS = [
     },
     {
         id: "cmdk-wizard",
-        icon: "solar:command-square-bold",
-        ko: { title: "단축 마법사", desc: "명령 팔레트(Ctrl+K)를 5번 열어봤어요" },
+        icon: "solar:command-bold",
+        ko: { title: "빠르게 찾아요", desc: "빠른 검색(Ctrl+K)을 5번 열어봤어요" },
         en: { title: "Palette Wizard", desc: "Opened the command palette (Ctrl+K) 5 times" },
         check: ({ paletteOpens }) => paletteOpens >= 5,
     },
     {
         id: "note-keeper",
         icon: "solar:notebook-bookmark-bold",
-        ko: { title: "메모장이", desc: "에이전트 메모를 3개 이상 저장했어요" },
+        ko: { title: "메모하는 습관", desc: "직원 3명 이상에게 메모를 남겼어요" },
         en: { title: "Note Keeper", desc: "Saved notes on 3+ agents" },
         check: ({ notesCount }) => notesCount >= 3,
     },
@@ -196,6 +196,7 @@ let state = loadUnlocked();
 
 /** Increment a named counter. Used for insightsOpened etc. */
 export function bumpCounter(name, by = 1) {
+    if (window.aiTycoonDemo?.isEnabled?.()) return;
     state.counters[name] = (state.counters[name] || 0) + by;
     saveUnlocked(state);
     checkAll();
@@ -203,6 +204,7 @@ export function bumpCounter(name, by = 1) {
 
 /** Mark a one-time flag (e.g., dark mode toggled). */
 export function setFlag(name, value = true) {
+    if (window.aiTycoonDemo?.isEnabled?.()) return;
     state.counters[name] = value;
     saveUnlocked(state);
     checkAll();
@@ -277,6 +279,7 @@ export function onUnlock(fn) { listeners.add(fn); return () => listeners.delete(
 
 /** Run all checks; emit unlock events for newly-true ones. */
 export function checkAll() {
+    if (window.aiTycoonDemo?.isEnabled?.()) return;
     const ctx = gatherContext();
     ACHIEVEMENTS.forEach(a => {
         if (state.unlocked[a.id]) return;
@@ -341,7 +344,8 @@ function showBadgePopup(achievement) {
         </div>
         <button class="badge-popup-close" aria-label="${i18n("panel.close")}">×</button>
     `;
-    container.appendChild(popup);
+    // Keep the scene readable even when several milestones unlock together.
+    container.replaceChildren(popup);
     popup.querySelector(".badge-popup-close").addEventListener("click", () => popup.remove());
     requestAnimationFrame(() => popup.classList.add("is-shown"));
     spawnConfetti(popup);
