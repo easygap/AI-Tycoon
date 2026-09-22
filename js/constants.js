@@ -2,6 +2,7 @@
 //  AI TYCOON — Constants & Pure Data
 // ============================================================
 
+import { DEFAULT_OUTFITS, withOutfit } from './wardrobe.js';
 export { TILE, COLS, ROWS, OFFICE_MAP, generateDeskSpots, POI, BOSS_ACTIVE_SPOT, BOSS_WAIT_SPOTS } from './officeLayout.js';
 export const WS_URL = `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host || "localhost:3777"}`;
 export const RECONNECT_BASE = 3000;
@@ -208,7 +209,7 @@ export const AGENT_THEMES = [
     { body: "#F87171", bodyDark: "#D05050", hair: "#252538", skin: "#F0D0B8", name: "민서",  gender: "M", hairStyle: "crew",  accessory: "glasses", hairColor: "#252538" },
     { body: "#729ED1", bodyDark: "#3E6AA1", hair: "#2D2018", skin: "#EEDDC0", name: "은호",  gender: "M", hairStyle: "part",  accessory: null,     hairColor: "#2D2018" },
     { body: "#A78BFA", bodyDark: "#8060D0", hair: "#1F1F30", skin: "#F5D5C8", name: "재윤",  gender: "M", hairStyle: "short", accessory: "cap",    hairColor: "#1F1F30" },
-];
+].map((theme, index) => withOutfit({ ...theme, defaultOutfit: DEFAULT_OUTFITS[index] }, DEFAULT_OUTFITS[index]));
 
 // ── Platform visual identity ──
 export const PLATFORM_META = {

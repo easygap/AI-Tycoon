@@ -47,6 +47,10 @@ export function setToastsEnabled(v) {
 export function showToast(kind, title, body, opts = {}) {
     if (!enabled) return;
     if (typeof document === "undefined") return;
+    // Staff already show these changes. Do not cover an outfit or note editor
+    // with routine events; review requests remain visible and actionable.
+    if (window.innerWidth <= 720 && document.body.dataset.mobileView === 'agents'
+        && ['join', 'leave', 'task-done'].includes(kind)) return;
     const now = Date.now();
     const cooldownKey = `${kind}:${title}`;
     const last = lastByKind.get(cooldownKey) || 0;
@@ -66,15 +70,16 @@ export function showToast(kind, title, body, opts = {}) {
 
     const card = document.createElement("div");
     card.className = "toast-card";
+    card.dataset.kind = kind;
     if (opts.pid) card.classList.add("is-clickable");
     card.style.setProperty("--toast-color", meta.color);
     card.innerHTML = `
         <span class="toast-icon" style="background:${meta.bg}"><iconify-icon icon="${meta.icon}" aria-hidden="true"></iconify-icon></span>
-        <div class="toast-body">
+        <${opts.pid ? 'button type="button"' : 'div'} class="toast-body${opts.pid ? ' toast-open' : ''}">
             <div class="toast-title">${escapeHtml(title || "")}</div>
             ${body ? `<div class="toast-text">${escapeHtml(body)}</div>` : ""}
-        </div>
-        <button type="button" class="toast-close" aria-label="Dismiss">×</button>
+        </${opts.pid ? 'button' : 'div'}>
+        <button type="button" class="toast-close" aria-label="${window.aiTycoonI18n?.getLang?.() === 'en' ? 'Dismiss notification' : '알림 닫기'}">×</button>
     `;
     card.querySelector(".toast-close").addEventListener("click", (e) => {
         e.stopPropagation();
@@ -84,15 +89,11 @@ export function showToast(kind, title, body, opts = {}) {
         if (i >= 0) stack.splice(i, 1);
     });
     if (opts.pid) {
-        card.addEventListener("click", () => {
+        card.querySelector('.toast-open').addEventListener("click", () => {
             try {
                 const pid = String(opts.pid);
-                if (window.S) {
-                    window.S.selectedPid = pid;
-                    window.S.detailPid = pid;
-                    window.S.directorFocusPid = pid;
-                    window.S.directorMode = true;
-                }
+                window.setMobileView?.('agents');
+                window.focusAgentByPid?.(pid);
                 // Dismiss the toast after action
                 card.classList.remove("is-shown");
                 setTimeout(() => card.remove(), 200);
