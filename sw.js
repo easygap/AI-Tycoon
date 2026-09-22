@@ -2,7 +2,7 @@
 // Caches the static shell so the dashboard still opens offline,
 // then falls back to network for everything else.
 
-const VERSION = "ai-tycoon-shell-v61";
+const VERSION = "ai-tycoon-shell-v64";
 const SHELL_ASSETS = [
     "/",
     "/index.html",
@@ -29,6 +29,8 @@ const SHELL_ASSETS = [
     "/js/officeLayout.js",
     "/js/officeScene.js",
     "/js/characters.js",
+    "/js/wardrobe.js",
+    "/js/wardrobeUI.js",
     "/js/panel.js",
     "/js/pixiOverlay.js",
     "/js/agentPriority.js",

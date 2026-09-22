@@ -3,7 +3,8 @@
 // ============================================================
 
 import { S, esc, getWorkText, formatTimeAgo, resolveAgentTheme } from "./state.js";
-import { characterFrame } from "./characters.js";
+import { characterFrame, CHARACTER_WIDTH, CHARACTER_HEIGHT } from "./characters.js";
+import { mountWardrobe } from './wardrobeUI.js';
 import {
     agentNextAction,
     agentPinKey as getAgentPinKey,
@@ -1983,7 +1984,7 @@ export function updatePanel() {
         card.innerHTML = `
             <div class="agent-card-inner">
                 <header class="employee-card-heading">
-                    <canvas class="agent-portrait" width="26" height="34" aria-hidden="true"></canvas>
+                    <span class="employee-portrait-mount"><canvas class="agent-portrait" width="${CHARACTER_WIDTH}" height="${CHARACTER_HEIGHT}" aria-hidden="true"></canvas></span>
                     <div class="employee-card-title">
                         <div class="employee-title-row"><strong class="agent-card-name">${hl(esc(theme.name))}</strong><span class="employee-status" data-review="${agent.needsReview ? 'true' : 'false'}">${agent.needsReview ? (lgCard === 'en' ? 'Needs review' : '확인 필요') : esc(meta.label)}</span></div>
                         <span class="employee-project" data-privacy>${hl(esc(agent.projectName))}</span>
@@ -2184,6 +2185,9 @@ export function updateBossQueueUI() {
 export function updateDetailPanel() {
     const container = document.getElementById("detail-panel");
     if (!container) return;
+    const currentLanguage = window.aiTycoonI18n?.getLang?.() || 'ko';
+    const languageChanged = container.dataset.renderedLanguage !== currentLanguage;
+    const keepWardrobeOpen = container.querySelector('.wardrobe')?.open === true;
 
     if (!S.detailPid) {
         container.classList.add("hidden");
@@ -2215,18 +2219,18 @@ export function updateDetailPanel() {
         const active = document.activeElement;
         const isEditingNote = active && active.id === "detail-note-input";
         const acOpen = container.querySelector("#detail-note-autocomplete:not([hidden])");
-        if (isEditingNote || acOpen || container.contains(active) || container.querySelector('details[open]')) {
+        if (isEditingNote || acOpen || (!languageChanged && (container.contains(active) || container.querySelector('details[open]')))) {
             return; // skip — 사용자 흐름 보존이 우선
         }
     }
 
     container.classList.remove("hidden");
+    container.dataset.renderedLanguage = currentLanguage;
     const v = S.visualAgents[agent.pid];
     const theme = v ? v.theme : AGENT_THEMES[0];
     const meta = (STATUS_META[agent.isRunning ? agent.status : "offline"] || STATUS_META.idle);
     const hist = S.memoryHistory[agent.pid] || [];
     const pinned = isAgentPinned(agent);
-    const action = getAgentNextAction(agent);
 
     // Memory graph (mini sparkline) — 데이터 포인트 hover 시 정확한 MB + 시각 표시
     let memGraph = "";
@@ -2252,7 +2256,7 @@ export function updateDetailPanel() {
         }).join("");
         memGraph = `
             <svg width="${w}" height="${h}" class="mt-1">
-                <polyline points="${points}" fill="none" stroke="${theme.body}" stroke-width="1.5" stroke-linejoin="round"/>
+                <polyline points="${points}" fill="none" stroke="var(--studio-blue)" stroke-width="1.5" stroke-linejoin="round"/>
                 ${dots}
                 <text x="${w}" y="10" text-anchor="end" fill="currentColor" font-size="9" class="text-zinc-400">${hist[hist.length-1]?.mb || 0}MB</text>
                 <text x="0" y="${h}" fill="currentColor" font-size="8" class="text-zinc-400">${esc(ageLabelMG)}</text>
@@ -2329,13 +2333,11 @@ export function updateDetailPanel() {
     if (tasks.length > 0) {
         taskHtml = tasks.slice(0, 10).map(t => {
             const icon = t.status === "in_progress" ? "⚡" : t.status === "completed" ? "✓" : "◦";
-            const color = t.status === "in_progress" ? theme.body : t.status === "completed" ? "#a1a1aa" : "#d4d4d8";
-            const opacity = t.status === "completed" ? "opacity-50" : "";
-            return `<div class="flex items-start gap-2 ${opacity}">
-                <span style="color:${color}" class="shrink-0 text-[11px] mt-0.5">${icon}</span>
+            return `<div class="detail-task-row" data-state="${esc(t.status)}">
+                <span class="detail-task-symbol">${icon}</span>
                 <div class="min-w-0">
-                    <div class="text-[11px] font-medium truncate" style="color:${color === "#a1a1aa" ? "" : color}">${esc(t.subject || "작업 " + t.id)}</div>
-                    ${t.activeForm ? `<div class="text-[10px] text-zinc-400 truncate">${esc(t.activeForm)}</div>` : ""}
+                    <div class="detail-task-name">${esc(t.subject || "작업 " + t.id)}</div>
+                    ${t.activeForm && t.activeForm !== t.subject ? `<div class="detail-task-secondary">${esc(t.activeForm)}</div>` : ""}
                 </div>
             </div>`;
         }).join("");
@@ -2384,17 +2386,8 @@ export function updateDetailPanel() {
         : "";
 
     container.innerHTML = `
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2">
-                <div class="w-3 h-3 rounded-full" style="background:${theme.body}"></div>
-                <span class="text-[14px] font-bold" style="color:${theme.bodyDark}">${theme.name}</span>
-                ${pinned ? `<span class="detail-pin-chip"><iconify-icon icon="solar:star-bold" aria-hidden="true"></iconify-icon>고정</span>` : ""}
-                <span class="next-action-chip detail-action-chip" data-tone="${esc(action.tone)}">
-                    <iconify-icon icon="${esc(action.icon)}" aria-hidden="true"></iconify-icon>
-                    <span>${esc(action.label)}</span>
-                </span>
-                <span class="status-badge badge-${agent.isRunning ? agent.status : 'offline'} text-[10px]">${meta.label}</span>
-            </div>
+        <div class="detail-toolbar">
+            <button type="button" onclick="closeDetail()" class="detail-back">${lgM === 'en' ? '← Staff' : '← 직원 목록'}</button>
             <div class="detail-head-actions">
                 <button type="button"
                     class="detail-nav-btn"
@@ -2417,13 +2410,12 @@ export function updateDetailPanel() {
                     aria-label="${esc(`${theme.name} ${pinned ? i18n("detail.unpinAria") : i18n("detail.pinAria")}`)}">
                     <iconify-icon icon="${pinned ? "solar:star-bold" : "solar:star-linear"}" aria-hidden="true"></iconify-icon>
                 </button>
-                <button onclick="closeDetail()" class="detail-close-btn" aria-label="${esc(i18n("detail.closeAria"))}" title="Esc">
-                    <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
-                </button>
             </div>
         </div>
+        <div data-wardrobe-host></div>
+        <div class="detail-current-state"><span class="employee-status" data-review="${!!agent.needsReview}">${esc(meta.label)}</span>${pinned ? `<span>${lgM === 'en' ? 'Pinned' : '고정한 직원'}</span>` : ''}</div>
         <div class="flex items-center gap-1.5 mb-1">
-            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).label}</span>
+            <span class="detail-tool-label">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).label}</span>
             <button type="button"
                 class="detail-project-chip"
                 data-detail-project
@@ -2513,6 +2505,8 @@ export function updateDetailPanel() {
         })()}
     `;
 
+    mountWardrobe(container.querySelector('[data-wardrobe-host]'), agent, theme, () => { updatePanel(); updateLiveHud(); });
+    if (languageChanged && keepWardrobeOpen) container.querySelector('.wardrobe').open = true;
     container.querySelectorAll(".detail-event[data-pid]").forEach(item => {
         item.addEventListener("click", () => inspectWorkEvent(item.dataset.pid, item.dataset.eventKey));
     });
@@ -2816,7 +2810,7 @@ export function onMouseMove(e) {
         const subCount = (hov.tasks || []).filter(t => t.status !== "completed").length;
         const subValue = lgT === "en" ? `${subCount} ${labels.active}` : `${subCount}${labels.active}`;
         tt.innerHTML = `
-            <b style="color:${theme.bodyDark}">${esc(theme.name)} · ${esc(hov.projectName)}</b>
+            <b style="color:var(--ink)">${esc(theme.name)} · ${esc(hov.projectName)}</b>
             <div class="tt-row"><span class="tt-label">PID</span><span class="tt-value">${hov.pid}</span></div>
             <div class="tt-row"><span class="tt-label">${esc(labels.status)}</span><span class="tt-value" style="color:${meta.color}">${meta.label}</span></div>
             <div class="tt-row"><span class="tt-label">${esc(labels.mem)}</span><span class="tt-value ${memClass}">${hov.memoryMB}MB</span></div>
@@ -2849,6 +2843,7 @@ export function positionTooltip(tt, ex, ey) {
 //  Insights modal — aggregate snapshot from current state
 // ============================================================
 function platformColor(platform) {
+    if (platform === 'ollama') return document.body.classList.contains('dark') ? '#CBD5E1' : '#52647D';
     return PLATFORM_META[platform]?.color || "#94a3b8";
 }
 function platformLabel(platform) {
@@ -3219,7 +3214,7 @@ export function refreshInsights() {
                 <span class="insights-mvp-crown" aria-hidden="true">
                     <iconify-icon icon="solar:cup-star-bold"></iconify-icon>
                 </span>
-                <span class="insights-mvp-avatar" style="background:${theme.body};color:#fff">${esc(initial)}</span>
+                <span class="insights-mvp-avatar">${esc(initial)}</span>
                 <div class="insights-mvp-info">
                     <div class="insights-mvp-name">${esc(theme.name)}</div>
                     <div class="insights-mvp-project">${esc(project)}</div>
@@ -3627,7 +3622,7 @@ export function refreshProject(projectName) {
                 const work = getWorkText(a) || (a.currentTask?.subject || "");
                 return `
                     <button type="button" class="project-agent-row" data-pid="${esc(String(a.pid))}">
-                        <span class="project-agent-avatar" style="background:${theme.body}">${esc(theme.name.charAt(0))}</span>
+                        <span class="project-agent-avatar">${esc(theme.name.charAt(0))}</span>
                         <div class="project-agent-info">
                             <div class="project-agent-name">${esc(theme.name)}</div>
                             <div class="project-agent-meta">

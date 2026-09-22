@@ -5,6 +5,7 @@
 import { generateDeskSpots, MAX_PARTICLES, MAX_HEARTS, AGENT_THEMES } from "./constants.js";
 import { recordEvent } from "./stats.js";
 import { queueWorkCue } from "./sound.js";
+import { outfitForAgent } from './wardrobe.js';
 
 function readStoredStringArray(key) {
     try {
@@ -98,7 +99,7 @@ export function resolveAgentTheme(agent, fallbackIndex) {
     if (idx < 0) idx = 0;
     // Alternate silhouettes across the first rows, then use the whole cast.
     const order = [0, 10, 2, 15, 4, 17, 6, 11, 8, 19, 1, 12, 3, 13, 5, 14, 7, 16, 9, 18];
-    return AGENT_THEMES[order[idx % order.length]] || AGENT_THEMES[0];
+    return outfitForAgent(AGENT_THEMES[order[idx % order.length]] || AGENT_THEMES[0], agent);
 }
 
 export function esc(str) {

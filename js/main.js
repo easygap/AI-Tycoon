@@ -651,6 +651,16 @@ function init() {
         updateLiveHud();
         updateCanvasAccessibility(true);
     };
+    window.showAgentOnMap = pid => {
+        const agent = S.liveAgents.find(a => String(a.pid) === String(pid));
+        if (!agent) return;
+        S.selectedPid = agent.pid; S.directorMode = false; S.directorFocusPid = null;
+        S.mapArea = 'all'; S.mapAreaNeedsFrame = false; S.zoomLevel = Math.max(2.6, S.zoomLevel);
+        localStorage.setItem('ai-tycoon-director', 'false');
+        if (window.innerWidth <= 720) window.setMobileView('office');
+        resize(); focusAgent(agent.pid, true); updateLiveHud();
+        S.canvas.focus({ preventScroll: true });
+    };
     window.toggleDirectorMode = () => {
         S.directorMode = !S.directorMode;
         localStorage.setItem("ai-tycoon-director", String(S.directorMode));
@@ -710,6 +720,7 @@ function init() {
         // Re-render dynamic panels that build HTML strings
         if (typeof window.refreshInsights === "function") window.refreshInsights();
         updatePanel();
+        updateDetailPanel();
         updateLiveHud();
     });
 

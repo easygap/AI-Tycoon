@@ -62,7 +62,7 @@ export function initAtmosphere() {
     if (cast) [0, 10, 2, 15, 17].forEach(index => {
         const portrait = document.createElement("img");
         portrait.src = characterFrame(AGENT_THEMES[index], { direction: 0, status: "idle" }).toDataURL();
-        portrait.alt = ""; portrait.width = 52; portrait.height = 68;
+        portrait.alt = ""; portrait.width = 64; portrait.height = 80;
         cast.appendChild(portrait);
     });
     // Preserve the visible button's intent before the gesture unlocks saved audio.

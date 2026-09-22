@@ -47,9 +47,9 @@ function foundation(c, b, dark) {
 
 function floor(c, b, dark) {
     const x = b.x * TILE, y = b.y * TILE, w = b.w * TILE, h = b.h * TILE;
-    let base = dark ? '#414859' : '#E7EAF0';
+    let base = dark ? '#414859' : '#EFF4FA';
     if (getActiveTheme() !== 'classic') base = PAL.floor1;
-    if (b.floor === 'H') base = dark ? '#26334F' : '#A9BBD4';
+    if (b.floor === 'H') base = dark ? '#26334F' : '#B3CEE3';
     if (b.floor === 'T') base = dark ? '#745C60' : '#C79280';
     if (b.floor === 'G' || b.floor === 'E') base = dark ? '#56627C' : '#B4BED2';
     rect(c, x, y, w, h, base);
@@ -115,11 +115,11 @@ function discussionPit(c, dark, en) {
     const x = 12 * TILE, y = 9.2 * TILE;
     ellipse(c, x + 3, y + 9, 85, 73, '#26334D24');
     ellipse(c, x, y, 85, 73, dark ? '#252E44' : '#687792');
-    ellipse(c, x, y - 3, 81, 70, dark ? '#856776' : '#E6CBD2');
-    ellipse(c, x, y - 2, 68, 58, dark ? '#5B4357' : '#B97089');
-    ellipse(c, x, y + 1, 55, 46, dark ? '#44384D' : '#CA95A6');
+    ellipse(c, x, y - 3, 81, 70, dark ? '#856776' : '#D4BCC9');
+    ellipse(c, x, y - 2, 68, 58, dark ? '#5B4357' : '#765369');
+    ellipse(c, x, y + 1, 55, 46, dark ? '#44384D' : '#A17B91');
     // Curved seating with a generous open south entrance.
-    c.strokeStyle = dark ? '#BC718C' : '#913E60'; c.lineWidth = 14;
+    c.strokeStyle = dark ? '#BC718C' : '#351E28'; c.lineWidth = 14;
     c.beginPath(); c.ellipse(x, y - 4, 65, 54, 0, Math.PI * .83, Math.PI * 2.17); c.stroke();
     c.strokeStyle = dark ? '#D99CAC' : '#E9B5C3'; c.lineWidth = 2;
     c.beginPath(); c.ellipse(x, y - 7, 64, 53, 0, Math.PI * .83, Math.PI * 2.17); c.stroke();
@@ -127,7 +127,7 @@ function discussionPit(c, dark, en) {
     rect(c, x - 27, y + 53, 54, 6, dark ? '#917D95' : '#BBA9C2');
     ellipse(c, x, y + 3, 33, 19, '#2F273C40');
     ellipse(c, x, y - 6, 33, 20, '#865D69');
-    ellipse(c, x, y - 10, 33, 19, dark ? '#BC8D84' : '#F0C4A7');
+    ellipse(c, x, y - 10, 33, 19, dark ? '#A6B5CD' : '#D7EFFF');
     // A shared plan and two cups make this a working place.
     rect(c, x - 16, y - 20, 24, 14, '#E9EDF5'); rect(c, x - 13, y - 17, 13, 2, '#789BD0');
     rect(c, x - 13, y - 12, 6, 3, '#BA496C'); rect(c, x - 4, y - 12, 7, 3, '#83A1C2');
@@ -174,12 +174,12 @@ function terrace(c, dark, en) {
     rect(c, x + 82, y + 24, 106, 37, '#714C59'); rect(c, x + 79, y + 21, 110, 13, dark ? '#BA8E7D' : '#F1CBB0');
     for (let k = 86; k < 187; k += 9) rect(c, x + k, y + 39, 2, 19, '#A6746D');
     for (let k = 0; k < 10; k++) {
-        const color = k % 2 ? (dark ? '#B899A9' : '#F4E6E8') : (dark ? '#8E415D' : '#B43D60');
+        const color = k % 2 ? (dark ? '#B899A9' : '#FAFCFF') : (dark ? '#A84F3C' : '#FF5C34');
         poly(c, [[x + 73 + k * 12, y - 3], [x + 85 + k * 12, y - 3], [x + 90 + k * 12, y + 17], [x + 78 + k * 12, y + 17]], color);
         rect(c, x + 78 + k * 12, y + 17, 12, 5 + k % 2 * 2, color);
     }
     rect(c, x + 77, y - 5, 3, 28, '#624D61'); rect(c, x + 190, y - 5, 3, 28, '#624D61');
-    sign(c, en ? 'Coffee break' : '잠깐 쉬어요', x + 5, y + 7, 76, '#805366');
+    sign(c, en ? 'Coffee break' : '잠깐 쉬어요', x + 5, y + 7, 76, '#654051');
     // Espresso machine, grinder, cups and a pastry tray.
     rect(c, 21 * TILE + 3, 10 * TILE - 16, 25, 23, '#D7DEE8'); rect(c, 21 * TILE + 6, 10 * TILE - 11, 19, 10, '#4B586F');
     rect(c, 21 * TILE + 8, 10 * TILE + 1, 15, 4, '#414D65');
@@ -218,7 +218,7 @@ function studio(c, dark, en, desks) {
         rect(c, tx * TILE - 3, TILE - 14, 2, 49, '#BDCBDE');
         poly(c, [[tx * TILE, TILE - 13], [tx * TILE + 27, TILE - 37], [tx * TILE + 54, TILE - 13]], null, dark ? '#7E8FA8' : '#99ACC7', 4);
     }
-    sign(c, en ? 'The studio' : '작은 제작소', 7.4 * TILE, TILE - 17, 99, '#B63358');
+    sign(c, en ? 'The studio' : '작은 제작소', 7.4 * TILE, TILE - 17, 99, '#351E28');
     // Wide task board; paper notes are physical, not an extra UI overlay.
     rect(c, 8 * TILE - 9, TILE + 15, 70, 27, '#5E6984'); rect(c, 8 * TILE - 6, TILE + 18, 64, 20, dark ? '#96A2B2' : '#F4F5F8');
     for (let i = 0; i < 6; i++) rect(c, 8 * TILE + i % 3 * 19, TILE + 20 + (i / 3 | 0) * 9, 13, 6, ['#DC95A7', '#8BAED2', '#DDBF8B'][i % 3]);
@@ -261,7 +261,7 @@ function studio(c, dark, en, desks) {
     rect(c, 10 * TILE + 4, 15 * TILE + 2, 4 * TILE - 8, 2, '#F3CFD380');
     text(c, 'AI TYCOON', 12 * TILE, 15 * TILE + 14, 8, '#FFF7F6', 'center');
     for (let i = 0; i < 4; i++) rect(c, 9 * TILE - i * 2, (16.8 + i * .22) * TILE, 5 * TILE + i * 4, 4, dark ? '#8090A8' : '#DCE3ED');
-    rect(c, 9.4 * TILE, 16.05 * TILE, 4.2 * TILE, 17, dark ? '#B45979' : '#BC385C');
+    rect(c, 9.4 * TILE, 16.05 * TILE, 4.2 * TILE, 17, dark ? '#AA543C' : '#A9351C');
     text(c, en ? 'HELLO!' : '어서 와요', 11.5 * TILE, 16.05 * TILE + 12, 9, '#FFFFFF', 'center');
 }
 
