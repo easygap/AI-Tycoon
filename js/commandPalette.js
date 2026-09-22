@@ -35,7 +35,7 @@ const LIST_ID = "command-palette-list";
 const KIND_AGENT = "agent";
 const KIND_ACTION = "action";
 
-// 최근 포커스한 에이전트 sessionId/pid 큐 (LRU, 최대 5개)
+// 최근 직원 보기한 에이전트 sessionId/pid 큐 (LRU, 최대 5개)
 // 빈 검색 상태에서 상단에 노출해 자주 보는 에이전트를 빠르게 다시 찾을 수 있게 함
 const RECENT_KEY = "ai-tycoon-cmdk-recent";
 const RECENT_MAX = 5;
@@ -460,7 +460,7 @@ function render() {
         // action — 그룹별로 좌측 strip 색상이 다르게 (display/modal/filter/theme/lang/tools)
         const group = r.group || "tools";
         return `<li class="cp-row cp-row-action${i === 0 ? " is-active" : ""}" role="option" data-index="${i}" data-group="${esc(group)}">
-            <span class="cp-avatar cp-avatar-action"><iconify-icon icon="solar:command-square-bold"></iconify-icon></span>
+            <span class="cp-avatar cp-avatar-action"><iconify-icon icon="solar:command-bold"></iconify-icon></span>
             <div class="cp-info">
                 <div class="cp-title">${highlight(esc(r.title), hlQ)}</div>
                 <div class="cp-sub">${esc(group)}</div>

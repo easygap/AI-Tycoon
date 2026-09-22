@@ -1,32 +1,25 @@
-<p align="center">
-  <img src="icons/brand-symbol.svg" alt="AI Tycoon 스튜디오 도어 심볼" width="78" height="78">
-</p>
-
+<p align="center"><img src="icons/brand-symbol.svg" width="64" height="64" alt="AI Tycoon 작은 회사"></p>
 <h1 align="center">AI Tycoon</h1>
+<p align="center"><strong>내 AI들은 지금 무슨 일을 하고 있을까?</strong><br>터미널 뒤에서 일하는 AI들을 작은 픽셀 회사에서 만나보세요.</p>
 
 <p align="center">
-  <strong>내 컴퓨터에서 일하는 AI 에이전트를 작은 픽셀 오피스에서 한눈에 봅니다.</strong><br>
-  Claude Code, Codex, Cursor 등 여러 작업의 상태와 다음 확인 항목을 실시간으로 모아 보여주는 로컬 대시보드입니다.
+  <a href="https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml"><img src="https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg" alt="자동 검사"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-42394f" alt="MIT 라이선스"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-20%2B-b92d49" alt="Node.js 20 이상"></a>
 </p>
 
-<p align="center">
-  <a href="https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml"><img src="https://github.com/easygap/AI-Tycoon/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-25272f.svg" alt="MIT License"></a>
-  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%E2%89%A520-45b98f.svg" alt="Node.js 20 이상"></a>
-</p>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/hero-dark.png">
+  <img src="docs/hero-light.png" alt="AI 직원들이 일하는 회사. 오른쪽에서 확인이 필요한 작업을 찾을 수 있습니다.">
+</picture>
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/hero-dark.png">
-    <img src="docs/hero-light.png" alt="AI Tycoon 실시간 작업실과 운영 패널" width="1100">
-  </picture>
-  <br>
-  <sub>실제 앱을 데모 데이터로 실행해 캡처했습니다. 시스템 테마에 따라 밝은 화면과 어두운 화면이 바뀝니다.</sub>
-</p>
+Claude Code, Codex, Cursor처럼 여러 AI 도구를 함께 쓰다 보면 누가 뭘 하는지 확인하느라 창을 자주 오가게 됩니다. AI Tycoon은 그 상태를 한 화면에 모아 보여줍니다. 일을 시작하면 직원이 출근하고, 검색하거나 코드를 작성할 때는 행동이 달라집니다.
 
-## 빠른 시작
+**경영 게임처럼 생긴 로컬 작업 대시보드입니다.** 지금 진행 중인 일을 구경하고, 확인할 작업을 찾고, 직원별 메모를 남길 수 있어요.
 
-Node.js 20 이상이 필요합니다.
+## 바로 실행하기
+
+[Node.js](https://nodejs.org) 20 이상을 설치한 뒤 실행하세요.
 
 ```bash
 git clone https://github.com/easygap/AI-Tycoon.git
@@ -35,103 +28,77 @@ npm install
 npm start
 ```
 
-기본 브라우저가 자동으로 열리며 주소는 `http://localhost:3777`입니다. 실제 에이전트 없이 먼저 둘러보려면 `http://localhost:3777/?demo=1`로 접속하세요.
+브라우저가 자동으로 열립니다. 주소는 **http://localhost:3777**입니다.
 
-## 왜 만들었나
+아직 AI 도구를 켜지 않았다면 **http://localhost:3777/?demo=1**에서 예시 직원들과 먼저 둘러보세요. 체험 중이라는 표시가 나오며, 예시 데이터는 실제 작업 기록과 따로 저장됩니다.
 
-에이전트를 두세 개 넘게 띄우면 터미널을 오가며 누가 무엇을 하는지 다시 읽는 시간이 꽤 생깁니다. AI Tycoon은 그 흐름을 로그 목록 대신 작업실로 보여주려고 만들었습니다.
+## 캐릭터만 봐도 알 수 있게
 
-캐릭터의 자리와 움직임으로 현재 상태를 보고, 운영 패널에서 검토가 필요한 작업을 먼저 처리하고, 직원 상세 화면에서 세션과 작업 기록을 확인할 수 있습니다. 모든 화면은 브라우저에서 열리지만 서버와 데이터는 기본적으로 내 컴퓨터 안에서만 동작합니다.
+직원들은 키보드를 두드리고, 돋보기로 살펴보고, 확인할 자료를 들고 이동합니다. 머리 모양과 옷, 소품이 서로 달라 직원 목록에서도 같은 얼굴을 찾을 수 있어요. 창밖 풍경은 컴퓨터의 시간에 따라 달라집니다.
 
-## 화면 둘러보기
+![직원들의 픽셀 캐릭터와 작업 자세](docs/characters.png)
 
-실행 중인 에이전트가 직원으로 들어옵니다. 코딩, 생각, 검색, 회의, 검토, 대기 상태에 따라 자리와 표현이 달라지고 같은 프로젝트는 색으로 묶입니다. Canvas와 PixiJS로 시간대 조명, 작업 흐름, 소품과 반응 효과를 더했습니다.
+## 휴대폰에서는 세 개의 메뉴로
 
-### 운영 패널과 모바일
-
-운영 패널은 지금 결정해야 할 일, 진행 중인 작업, 최근 활동을 한곳에 모읍니다. 작은 화면에서는 같은 기능을 슬라이드 패널로 열어 검토와 승인을 처리할 수 있습니다.
+**회사**에서 장면을 보고, **직원**에서 지금 하는 일을 읽고, **기록**에서 최근 활동을 확인합니다. 긴 프로젝트명과 작업명은 줄을 바꿔 표시합니다. 자주 쓰지 않는 필터와 정렬은 접어 두었습니다.
 
 <p align="center">
-  <a href="docs/operations.png"><img src="docs/operations.png" alt="AI Tycoon 운영 패널과 검토 대기열" width="58%"></a>
-  <a href="docs/mobile.png"><img src="docs/mobile.png" alt="AI Tycoon 모바일 운영 화면" width="29%"></a>
+  <img src="docs/mobile.png" width="32%" alt="모바일 회사 화면">
+  <img src="docs/mobile-team.png" width="32%" alt="얼굴과 작업명을 보여주는 직원 목록">
+  <img src="docs/mobile-activity.png" width="32%" alt="최근 활동 기록">
 </p>
 
-### 직원 상세와 인사이트
+## 음악은 듣고 싶을 때만
 
-직원별 세션과 태스크를 확인하고 개인 메모를 남길 수 있습니다. 인사이트에서는 오늘 처리한 태스크, 플랫폼 분포, 가장 활발한 직원과 프로젝트를 요약합니다.
+화면 아래 라디오를 켜면 직접 만든 배경음악이 재생됩니다. 낮과 밤, 확인할 일이 있는 상황에 맞춰 음악이 달라져요. 출근·작업 완료·확인 요청에는 서로 다른 짧은 효과음이 나옵니다.
 
-<p align="center">
-  <a href="docs/detail.png"><img src="docs/detail.png" alt="AI Tycoon 직원 상세 화면" width="49%"></a>
-  <a href="docs/insights.png"><img src="docs/insights.png" alt="AI Tycoon 작업실 인사이트 화면" width="49%"></a>
-</p>
+음악과 알림음은 각각 켤 수 있고, 볼륨도 따로 조절합니다. 다른 탭으로 이동하면 음악이 멈춥니다. `M` 키를 누르면 모든 소리가 꺼집니다.
 
-이미지를 누르면 원본 크기로 볼 수 있습니다. [스크린샷 전체 보기](./docs/SCREENSHOTS.md)
+![어두운 테마의 회사와 작업실 라디오](docs/hero-dark.png)
 
-## 주요 기능
+## 자세히 볼 때는 직원 화면에서
 
-| 영역 | 할 수 있는 일 |
+직원 카드를 열면 현재 작업, 세션 정보, 최근 활동과 메모를 볼 수 있습니다. 검색창에서는 직원 이름뿐 아니라 프로젝트·작업·메모도 찾을 수 있어요.
+
+![직원 상세와 작업 기록](docs/detail.png)
+
+‘확인했어요’와 ‘보류’는 **작업실 안에서만 남기는 표시**입니다. 실제 AI 도구의 승인 요청은 해당 터미널이나 앱에서 처리해야 합니다.
+
+## 어떤 도구를 볼 수 있나요?
+
+도구마다 공개하는 정보가 달라 표시 범위도 다릅니다.
+
+| 도구 | 확인할 수 있는 정보 |
 | --- | --- |
-| 실시간 감지 | 실행 중인 AI 도구와 세션을 찾아 상태, 프로젝트, 작업 정보를 갱신 |
-| 시각화 | 픽셀 오피스, 캐릭터, 시간대 조명, PixiJS 작업 효과로 흐름 표현 |
-| 운영 | 우선순위 브리핑, 검토 대기열, 진행 작업과 최근 활동 확인 |
-| 기록 | 직원별 상세 정보, 개인 메모, 해시태그, 일별 통계와 인사이트 |
-| 사용성 | 검색과 필터, 명령 팔레트, 한국어/영어, 밝은/어두운 테마, PWA 설치 |
-| 화면 공유 | 프로젝트명과 프롬프트를 가리는 프라이버시 모드 제공 |
+| Claude Code | 세션, 프로젝트, 프롬프트와 작업 목록 |
+| OpenAI Codex | 세션 파일과 인덱스를 바탕으로 한 작업 정보 |
+| Cursor | 실행 여부와 작업 폴더 중심의 정보 |
+| GitHub Copilot | 프로세스 실행 여부 |
+| Ollama · LM Studio · Jan · GPT4All | 로컬 프로세스 실행 여부 |
 
-## 실행 설정
+Windows에서는 PowerShell, macOS와 Linux에서는 `ps`로 프로세스를 확인합니다. 도구 버전과 운영체제에 따라 읽을 수 있는 정보가 다르며, 일부 상태는 세션 기록과 활동 시각을 바탕으로 추정합니다.
 
-자주 쓰는 환경 변수는 아래와 같습니다.
+## 알아두면 좋은 것
 
-| 변수 | 기본값 | 용도 |
+- 기본 접속 주소는 내 컴퓨터에서만 열리는 `127.0.0.1`입니다. 별도 계정이나 API 키는 필요하지 않습니다.
+- 프로젝트명과 작업 내용은 로컬 세션에서 읽습니다. 메모·통계·설정은 현재 브라우저에 저장되므로 다른 브라우저에는 자동으로 옮겨지지 않습니다.
+- 화면을 공유할 때는 `Shift+P`로 프라이버시 모드를 켤 수 있습니다. 표시를 가리는 기능이며 저장된 데이터를 암호화하지는 않습니다.
+- 글꼴·아이콘·화면 효과 라이브러리를 앱에 포함했습니다. 외부 CDN 없이 실행할 수 있습니다. 오프라인에서도 저장된 화면과 체험 모드는 열리지만, 실제 작업 감지에는 실행 중인 Node.js 서버가 필요합니다.
+- 다른 기기에서 접속하려면 서버 접근 설정이 따로 필요합니다. 기본 설정만으로 외부에 공개되지는 않습니다.
+- 설정에서 테마·화면 효과·알림을 바꿀 수 있습니다. 운영체제의 ‘동작 줄이기’ 설정도 반영합니다.
+
+| 환경 변수 | 기본값 | 설명 |
 | --- | --- | --- |
-| `PORT` | `3777` | 서버 포트 변경 |
-| `POLL_INTERVAL` | `2000` | 상태 수집 주기(ms) |
-| `NO_OPEN` | `0` | `1`이면 브라우저를 자동으로 열지 않음 |
-| `HOST` | `127.0.0.1` | 외부 접근이 필요할 때만 바인딩 주소 변경 |
-| `QUIET` | `0` | `1`이면 폴링과 WebSocket 로그를 줄임 |
-| `LOG_LEVEL` | - | `warn` 또는 `error`로 로그를 줄임 |
+| `PORT` | `3777` | 접속 포트 |
+| `HOST` | `127.0.0.1` | 서버가 열릴 주소. 외부 공개 시 인증과 접근 제어를 별도로 설정하세요. |
+| `POLL_INTERVAL` | `2000` | 작업 정보를 읽는 간격(ms) |
+| `NO_OPEN` | `0` | `1`이면 브라우저를 자동으로 열지 않습니다. |
+| `QUIET` | `0` | `1`이면 서버 로그를 줄입니다. |
 
-macOS와 Linux에서는 `PORT=8080 npm start`, PowerShell에서는 `$env:PORT=8080; npm start`처럼 지정할 수 있습니다.
+## 더 알아보기
 
-## 지원하는 도구
+[화면 모아 보기](docs/SCREENSHOTS.md) · [디자인 참고 자료](docs/DESIGN.md) · [변경 내역](CHANGELOG.md) · [구조와 개발 방법](docs/ARCHITECTURE.md) · [오픈소스 출처](assets/vendor/THIRD_PARTY.md)
 
-| 도구 | 감지 범위 |
-| --- | --- |
-| Claude Code | 세션, 프로젝트, 프롬프트와 태스크를 가장 상세하게 감지 |
-| OpenAI Codex | 세션 인덱스와 세션 파일을 기반으로 작업 감지 |
-| Cursor | 프로세스와 워크스페이스 중심으로 감지 |
-| GitHub Copilot | 프로세스 실행 여부 감지 |
-| Ollama, LM Studio, Jan, GPT4All | 로컬 프로세스 실행 여부 감지 |
+문제가 있거나 추가했으면 하는 기능이 있다면 [GitHub Issues](https://github.com/easygap/AI-Tycoon/issues)에 남겨 주세요. 기여 방법은 [CONTRIBUTING.md](CONTRIBUTING.md), 보안 관련 내용은 [SECURITY.md](SECURITY.md)에서 확인할 수 있습니다.
 
-Claude Code와 Codex의 세션 감지는 Windows, macOS, Linux에서 동작합니다. 프로세스 감지는 Windows에서 PowerShell, macOS와 Linux에서 `ps`를 사용하며 운영체제에 따라 일부 프로젝트 정보가 비어 있을 수 있습니다.
-
-## 알아둘 점
-
-- 서버는 기본적으로 `127.0.0.1`에만 열립니다. `HOST`를 바꿔 외부에 노출할 때는 별도 인증과 리버스 프록시를 함께 사용하세요.
-- 메모, 통계, 설정은 브라우저 `localStorage`에 평문으로 저장됩니다. 프라이버시 모드는 화면 표시를 가리는 기능이며 암호화 기능은 아닙니다.
-- PWA의 오프라인 모드는 정적 화면 자산을 보관합니다. 실제 에이전트 감지와 실시간 갱신에는 Node.js 서버가 필요합니다.
-- PixiJS와 Iconify는 CDN에서 불러옵니다. 완전히 폐쇄된 네트워크에서는 해당 시각 요소가 제한될 수 있습니다.
-- 앱 안에서 `?`를 누르면 전체 단축키를 볼 수 있습니다. 자주 쓰는 키는 `Ctrl/Cmd+K`(명령 팔레트), `I`(인사이트), `D`(테마), `P`(스냅샷)입니다.
-
-보안 관련 제보와 운영 기준은 [SECURITY.md](./SECURITY.md)를 확인해 주세요.
-
-## 개발
-
-```bash
-npm run build
-npm run lint
-npm test
-```
-
-- [CHANGELOG.md](./CHANGELOG.md): 버전별 변경 내용
-- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md): 감지부터 렌더링까지의 구조
-- [CONTRIBUTING.md](./CONTRIBUTING.md): 개발 환경과 기여 방법
-- [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md): 커뮤니티 운영 원칙
-
-버그 제보와 기능 제안은 [GitHub Issues](https://github.com/easygap/AI-Tycoon/issues)에서 받고 있습니다. 이 프로젝트는 [MIT License](./LICENSE)로 배포합니다.
-
-## English
-
-AI Tycoon is a local, real-time dashboard that turns AI agents running on your computer into a small pixel office. It helps you see who is working, what needs review, and where to look next without switching between terminals.
-
-Clone the repository, run `npm install` and `npm start`, then open `http://localhost:3777`. Use `?demo=1` to explore with synthetic agents. The interface supports Korean and English from the globe button in the header.
+스크린샷은 2026년 9월 22일, 실제 앱에 예시 데이터를 넣어 촬영했습니다. 프로젝트 코드는 [MIT 라이선스](LICENSE)로 배포합니다.

@@ -18,10 +18,13 @@ const SHELL = [
     { url: "/sw.js", contains: "ai-tycoon-shell", label: "service worker" },
     { url: "/icons/icon.svg", contains: "<svg", label: "icon (svg)" },
     { url: "/icons/icon-maskable.svg", contains: "<svg", label: "icon (maskable)" },
-    { url: "/icons/brand-symbol.svg", contains: "studio door symbol", label: "brand symbol" },
+    { url: "/icons/brand-symbol.svg", contains: "viewBox=\"0 0 64 64\"", label: "brand symbol" },
     { url: "/style.css", contains: ".welcome-overlay", label: "style.css welcome rule" },
     { url: "/css/studio-2026.css", contains: "--studio-coral", label: "Studio 2026 design system" },
     { url: "/assets/fonts/SUIT-Variable.woff2", label: "SUIT variable font" },
+    { url: "/assets/fonts/WantedSansVariable.woff2", label: "Wanted Korean UI font" },
+    { url: "/assets/fonts/Galmuri11.woff2", label: "Galmuri pixel font" },
+    { url: "/js/characters.js", contains: "characterFrame", label: "pixel character artwork" },
     { url: "/js/main.js", contains: "import", label: "main.js" },
     { url: "/js/state.js", contains: "export const S", label: "state.js" },
     { url: "/js/renderer.js", contains: "export function render", label: "renderer.js" },
@@ -34,6 +37,11 @@ const SHELL = [
     { url: "/js/stats.js", contains: "recordStateSnapshot", label: "stats.js" },
     { url: "/js/achievements.js", contains: "ACHIEVEMENTS", label: "achievements.js" },
     { url: "/js/sound.js", contains: "sfxJoin", label: "sound.js" },
+    { url: "/js/soundScore.js", contains: "sceneFor", label: "original sound score" },
+    { url: "/js/atmosphere.js", contains: "initAtmosphere", label: "office atmosphere" },
+    { url: "/assets/vendor/pixi.min.js", contains: "PixiJS", label: "local PixiJS" },
+    { url: "/assets/vendor/iconify-icon.min.js", contains: "Iconify", label: "local Iconify" },
+    { url: "/assets/vendor/solar-icons.js", contains: "addCollection", label: "local icon collection" },
     { url: "/js/notifications.js", contains: "notifyPermission", label: "notifications.js" },
     { url: "/js/snapshot.js", contains: "buildSnapshotDataURL", label: "snapshot.js" },
     { url: "/js/perfHud.js", contains: "togglePerfHud", label: "perfHud.js" },
@@ -82,7 +90,7 @@ async function main() {
 
     const server = spawn("node", ["server.js"], {
         cwd: path.resolve(__dirname, ".."),
-        env: { ...process.env, PORT: String(PORT) },
+        env: { ...process.env, PORT: String(PORT), NO_OPEN: "1", QUIET: "1" },
         stdio: ["ignore", "pipe", "pipe"],
     });
     let serverErr = "";

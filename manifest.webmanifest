@@ -1,15 +1,19 @@
 {
   "name": "AI Tycoon",
   "short_name": "AI Tycoon",
-  "description": "Live pixel-art office dashboard for AI agents running on your machine",
+  "description": "내 컴퓨터에서 일하는 AI들을 작은 픽셀 회사에서 만나보세요.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "landscape-primary",
-  "background_color": "#F5F7F2",
-  "theme_color": "#5B8DEF",
+  "orientation": "any",
+  "background_color": "#f0f1f4",
+  "theme_color": "#ffffff",
   "lang": "ko",
-  "categories": ["productivity", "developer", "utilities"],
+  "categories": [
+    "productivity",
+    "developer",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "/icons/icon.png",
@@ -32,23 +36,39 @@
   ],
   "shortcuts": [
     {
-      "name": "Insights",
-      "short_name": "Insights",
-      "description": "View today's workspace insights",
+      "name": "작업 통계",
+      "short_name": "작업 통계",
+      "description": "오늘의 작업 기록을 봅니다",
       "url": "/?action=insights",
       "icons": [
-        { "src": "/icons/icon.png", "sizes": "512x512", "type": "image/png" },
-        { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+        {
+          "src": "/icons/icon.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        },
+        {
+          "src": "/icons/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
       ]
     },
     {
-      "name": "Settings",
-      "short_name": "Settings",
-      "description": "Open settings",
+      "name": "설정",
+      "short_name": "설정",
+      "description": "화면과 알림을 설정합니다",
       "url": "/?action=settings",
       "icons": [
-        { "src": "/icons/icon.png", "sizes": "512x512", "type": "image/png" },
-        { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+        {
+          "src": "/icons/icon.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        },
+        {
+          "src": "/icons/icon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
       ]
     }
   ]

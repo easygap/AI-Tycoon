@@ -35,6 +35,8 @@ import "./awaySummary.js";
 import "./commandPalette.js";
 import "./privacyMode.js";
 import "./standupExport.js";
+import { initAtmosphere, updateAtmosphere } from "./atmosphere.js";
+import { sfxResolve } from "./sound.js";
 
 // ── Console branding (devtools welcome) ──
 if (typeof console !== "undefined") {
@@ -82,7 +84,13 @@ function syncSidePanelState() {
     if (!panel) return;
 
     const hidden = panel.classList.contains("panel-hidden");
-    const overlayOpen = !hidden && window.innerWidth <= 480;
+    if (hidden) document.body.dataset.mobileView = "office";
+    const mobilePage = ["agents", "activity"].includes(document.body.dataset.mobileView);
+    const overlayOpen = !hidden && window.innerWidth <= 720 && !mobilePage;
+    document.querySelectorAll('[data-mobile-nav]').forEach(button => {
+        if (button.dataset.mobileNav === (document.body.dataset.mobileView || "office")) button.setAttribute('aria-current', 'page');
+        else button.removeAttribute('aria-current');
+    });
     panel.toggleAttribute("inert", hidden);
     panel.inert = hidden;
     panel.setAttribute("aria-hidden", hidden ? "true" : "false");
@@ -99,13 +107,14 @@ function syncSidePanelState() {
         toggle.setAttribute("aria-expanded", hidden ? "false" : "true");
     }
 
-    if (hidden && panel.contains(document.activeElement) && toggle) {
-        toggle.focus({ preventScroll: true });
+    if (hidden && panel.contains(document.activeElement)) {
+        (window.innerWidth <= 720 ? document.querySelector('[data-mobile-nav="office"]') : toggle)?.focus({ preventScroll: true });
     }
 
-    if (overlayOpen && !panel.contains(document.activeElement)) {
+    if (overlayOpen && panel.dataset.overlayOpen !== "true" && !document.querySelector('.modal-overlay.is-visible,.welcome-overlay.is-visible')) {
         closeButton?.focus({ preventScroll: true });
     }
+    panel.dataset.overlayOpen = String(overlayOpen);
 }
 
 function setSidePanelView(view = "operate", options = {}) {
@@ -126,6 +135,9 @@ function setSidePanelView(view = "operate", options = {}) {
         section.hidden = !active;
     });
     panel.dataset.activeView = nextView;
+    if (window.innerWidth <= 720 && options.open) {
+        document.body.dataset.mobileView = nextView === "operate" ? "office" : nextView;
+    }
     try { localStorage.setItem(SIDE_PANEL_VIEW_KEY, nextView); } catch { /* storage is optional */ }
 
     if (options.open && wasHidden) {
@@ -137,6 +149,7 @@ function setSidePanelView(view = "operate", options = {}) {
     if (options.focus) {
         requestAnimationFrame(() => document.getElementById(`panel-view-${nextView}`)?.focus({ preventScroll: true }));
     }
+    syncSidePanelState();
 }
 
 function handleSidePanelTabsKeydown(event) {
@@ -164,9 +177,10 @@ function panelFocusableItems() {
 }
 
 function trapSidePanelFocus(event) {
-    if (event.key !== "Tab" || window.innerWidth > 480) return;
+    if (event.key !== "Tab" || window.innerWidth > 720) return;
+    if (document.querySelector('.modal-overlay.is-visible,.welcome-overlay.is-visible')) return;
     const panel = document.getElementById("side-panel");
-    if (!panel || panel.classList.contains("panel-hidden")) return;
+    if (!panel || panel.getAttribute('aria-modal') !== 'true') return;
 
     const items = panelFocusableItems();
     if (items.length === 0) return;
@@ -292,12 +306,25 @@ function onPixiDensityMenuKeydown(event) {
 
 // ── Init ──
 function init() {
+    initAtmosphere();
+    window.matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", event => {
+        S.reducedMotion = event.matches;
+        if (event.matches) { S.particles = []; S.heartParticles = []; }
+    });
     S.canvas = document.getElementById("office-canvas");
     S.ctx = S.canvas.getContext("2d");
     S.ctx.imageSmoothingEnabled = false;
     initPixiOverlay();
     window.syncSidePanelState = syncSidePanelState;
     window.setSidePanelView = setSidePanelView;
+    window.setMobileView = view => {
+        if (view === "office") window.closeSidePanel?.();
+        else setSidePanelView(view, { open: true, focus: true });
+    };
+    window.zoomOffice = delta => {
+        S.zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, S.zoomLevel + delta));
+        resize();
+    };
     const storedPanelView = localStorage.getItem(SIDE_PANEL_VIEW_KEY) || "operate";
     setSidePanelView(storedPanelView);
 
@@ -330,7 +357,12 @@ function init() {
     document.getElementById("side-panel-tabs")?.addEventListener("keydown", handleSidePanelTabsKeydown);
 
     // Expose closeDetail state bridge for index.html
-    window.__clearDetailPid = () => { S.detailPid = null; S.selectedPid = null; };
+    window.__clearDetailPid = () => {
+        const pid = S.detailPid;
+        S.detailPid = null; S.selectedPid = null;
+        updatePanel(); updateDetailPanel();
+        [...document.querySelectorAll('[data-card-pid]')].find(card => card.dataset.cardPid === String(pid))?.focus({ preventScroll: true });
+    };
     if (["localhost", "127.0.0.1", "::1"].includes(location.hostname)) {
         window.__aiTycoonDebug = {
             addWorkEvent,
@@ -343,6 +375,7 @@ function init() {
     window.bossReviewAction = (pid, result) => {
         const entry = bossQueueEntry(pid);
         if (!entry) return;
+        sfxResolve(result);
 
         if (entry.phase === "waitingAtBossArea" || entry.phase === "queuedForBoss" || entry.phase === "walkingToBoss") {
             // Out-of-order — demote current active (any phase) back to waiting
@@ -422,7 +455,7 @@ function init() {
     };
 
     // ─── 검색 히스토리 (최근 5개) ──────────────────────────────────────
-    // 검색어를 commit 하는 시점(Enter 또는 blur)에 저장 → 빈 입력 + 포커스 시 칩으로 노출.
+    // 검색어를 commit 하는 시점(Enter 또는 blur)에 저장 → 빈 입력 + 직원 보기 시 칩으로 노출.
     // 의도: 자주 쓰는 프로젝트명/메모 키워드를 한 번 친 후 재타이핑 부담 해소.
     const SEARCH_HISTORY_KEY = "ai-tycoon-search-history";
     const SEARCH_HISTORY_MAX = 5;
@@ -459,7 +492,7 @@ function init() {
         const list = readSearchHistory();
         const focused = document.activeElement === input;
         const empty = !input.value;
-        // 포커스 + 빈 입력 + 히스토리 있을 때만 노출
+        // 직원 보기 + 빈 입력 + 히스토리 있을 때만 노출
         if (!focused || !empty || list.length === 0) {
             wrap.hidden = true;
             wrap.innerHTML = "";
@@ -496,7 +529,7 @@ function init() {
             input.focus({ preventScroll: true });
         });
     }
-    // 포커스/블러/입력 시 재렌더
+    // 직원 보기/블러/입력 시 재렌더
     document.addEventListener("DOMContentLoaded", () => {
         const input = document.getElementById("agent-search");
         if (!input) return;
@@ -529,7 +562,7 @@ function init() {
         try {
             const lang = window.aiTycoonI18n?.getLang?.() || "ko";
             window.aiTycoonToasts?.show?.("info",
-                next ? (lang === "en" ? "Compact view" : "컴팩트 보기 ON")
+                next ? (lang === "en" ? "Compact view" : "간단히 보기 ON")
                      : (lang === "en" ? "Default view" : "기본 보기"),
                 next ? (lang === "en" ? "Slim agent cards" : "에이전트 카드를 좁게 표시") : "");
         } catch { /* ignore */ }
@@ -631,7 +664,7 @@ function init() {
 
     // Small screens should open on the live office first; the panel remains one tap away.
     const panel = document.getElementById("side-panel");
-    if (panel && window.innerWidth <= 480) panel.classList.add("panel-hidden");
+    if (panel && window.innerWidth <= 720) panel.classList.add("panel-hidden");
     syncSidePanelState();
     updateCanvasAccessibility(true);
 
@@ -673,11 +706,11 @@ function init() {
 function resize() {
     const main = document.getElementById("main-content");
     const side = document.getElementById("side-panel");
-    // On mobile (<480px) the panel is an overlay, don't subtract its width
-    const isMobileOverlay = window.innerWidth <= 480;
+    // On narrow screens (up to 720px) the panel is an overlay, don't subtract its width
+    const isMobileOverlay = window.innerWidth <= 720;
     if (isMobileOverlay && side.dataset.userToggled !== "true") {
         side.classList.add("panel-hidden");
-    } else if (!isMobileOverlay && side.classList.contains("panel-hidden")) {
+    } else if (!isMobileOverlay) {
         side.classList.remove("panel-hidden");
         delete side.dataset.userToggled;
     }
@@ -695,8 +728,9 @@ function resize() {
     S.ctx.imageSmoothingEnabled = false;
     resizePixiOverlay();
 
-    const sx = S.canvasW / (COLS * TILE);
-    const sy = S.canvasH / (ROWS * TILE);
+    const frame = cameraFrame();
+    const sx = Math.max(120, S.canvasW - frame.x * 2) / (COLS * TILE);
+    const sy = Math.max(120, S.canvasH - frame.top - frame.bottom) / (ROWS * TILE);
     const baseScale = Math.min(sx, sy);
     S.scale = baseScale * S.zoomLevel;
     recalcOffsets();
@@ -712,9 +746,14 @@ function getBaseOffsetX() {
 }
 
 function getBaseOffsetY() {
-    const extraY = S.canvasH - ROWS * TILE * S.scale;
-    const verticalBias = extraY > 160 ? 0.35 : 0.5;
-    return Math.max(0, extraY * verticalBias);
+    const frame = cameraFrame();
+    return frame.top + (S.canvasH - frame.top - frame.bottom - ROWS * TILE * S.scale) / 2;
+}
+
+function cameraFrame() {
+    if (document.body.classList.contains("cinema-mode")) return { x: 24, top: 24, bottom: 24 };
+    if (window.innerHeight <= 650) return { x: 20, top: 90, bottom: 100 };
+    return S.canvasW < 600 ? { x: 20, top: 146, bottom: 176 } : { x: 68, top: 140, bottom: 172 };
 }
 
 // ── Game Loop ──
@@ -722,6 +761,7 @@ function loop() {
     S.animFrame++;
     if (S.animFrame % 30 === 0) updatePalette(); // check dark mode every ~0.5s
     if (S.animFrame % 120 === 0) updateLiveHud();
+    if (S.animFrame % 60 === 0) updateAtmosphere();
     if (S.animFrame % 120 === 0) updateCanvasAccessibility(false);
     // Heartbeat stale detection: if no message in 15s, mark disconnected
     if (S.connected && Date.now() - S.lastHeartbeat > 15000) {
@@ -769,8 +809,8 @@ function updateCanvasAccessibility(announce = false, message = "") {
     const review = S.liveAgents.filter(agent => agent.needsReview || agent.status === "reviewing");
     const selected = S.liveAgents.find(agent => pidEquals(agent.pid, S.selectedPid || S.directorFocusPid));
     const summary = active.length > 0
-        ? `AI Tycoon 실시간 작업실. 활성 ${active.length}명, 작업 ${working.length}명, 검토 ${review.length}명. 현재 ${describeAgent(selected || getDirectorFocusAgent())}.`
-        : `AI Tycoon 실시간 작업실. ${S.connected ? "탐지기는 연결됐고 에이전트 활동을 기다리는 중입니다." : "서버 연결 대기 중입니다."}`;
+        ? `AI Tycoon 내 AI 회사. 활성 ${active.length}명, 작업 ${working.length}명, 검토 ${review.length}명. 현재 ${describeAgent(selected || getDirectorFocusAgent())}.`
+        : `AI Tycoon 내 AI 회사. ${S.connected ? "탐지기는 연결됐고 에이전트 활동을 기다리는 중입니다." : "서버 연결 대기 중입니다."}`;
 
     S.canvas.setAttribute("aria-label", summary);
     const status = document.getElementById("office-a11y-status");
@@ -817,7 +857,7 @@ function focusAgent(pid, instant = false) {
 
     const targetPanX = S.canvasW * 0.5 - v.x * S.scale - getBaseOffsetX();
     const targetPanY = S.canvasH * 0.46 - v.y * S.scale - getBaseOffsetY();
-    if (instant) {
+    if (instant || S.reducedMotion) {
         S.panX = targetPanX;
         S.panY = targetPanY;
     } else {
@@ -1270,6 +1310,10 @@ function triggerAgentChat() {
 }
 
 function walkTo(v, tx, ty) {
+    if (S.reducedMotion) {
+        v.x = tx; v.y = ty; v.moving = false; v.walkPath = []; v.walkIndex = 0;
+        return;
+    }
     v.walkPath = [{ x: tx, y: v.y }, { x: tx, y: ty }];
     v.walkIndex = 0;
     v.moving = true;
@@ -1320,10 +1364,16 @@ function onCanvasClick(e) {
     const my = (e.clientY - rect.top - S.offsetY) / S.scale;
 
     let clicked = null;
+    let nearest = Infinity;
+    const touch = e.pointerType === "touch" || window.matchMedia?.('(pointer: coarse)').matches;
+    const hitX = touch ? Math.max(15, 22 / S.scale) : 15;
+    const hitY = touch ? Math.max(21, 22 / S.scale) : 21;
     S.liveAgents.forEach(a => {
         const v = S.visualAgents[a.pid];
         if (!v) return;
-        if (Math.abs(mx - v.x) < 10 && Math.abs(my - v.y) < 14) clicked = a;
+        const dx = mx - v.x, dy = my - (v.y - 7);
+        const distance = dx * dx + dy * dy;
+        if (Math.abs(dx) < hitX && Math.abs(dy) < hitY && distance < nearest) { clicked = a; nearest = distance; }
     });
 
     if (clicked) {
@@ -1514,7 +1564,7 @@ function onTouchMove(e) {
 function onTouchEnd(e) {
     // If single finger didn't move much and was quick → treat as tap (click)
     if (!touchState.moved && !touchState.pinching && Date.now() - touchState.startTime < 300) {
-        onCanvasClick({ clientX: touchState.startX, clientY: touchState.startY });
+        onCanvasClick({ clientX: touchState.startX, clientY: touchState.startY, pointerType: "touch" });
     }
     touchState.panning = false;
     touchState.pinching = false;

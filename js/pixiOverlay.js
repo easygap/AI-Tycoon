@@ -46,7 +46,6 @@ const BURST_TYPES = new Set(["review", "task-done", "work", "join", "leave"]);
 const WORK_CARD_EVENT_TYPES = new Set(["review", "task-start", "task-done", "work"]);
 const MAX_ACTIVE_BURSTS = 8;
 const MAX_BURSTS_PER_AGENT = 2;
-const BURST_COOLDOWN_MS = 3400;
 const MAX_FLOW_LINKS = 2;
 const MAX_PROJECT_AURAS = 2;
 const MAX_WORK_CARDS = 2;
@@ -87,13 +86,13 @@ const DENSITY_PROFILES = {
     },
     balanced: {
         interiorDetails: 10,
-        agentLifeEffects: 1,
-        projectAuras: 1,
-        actionSpotlights: 1,
-        flowLinks: 1,
+        agentLifeEffects: 0,
+        projectAuras: 0,
+        actionSpotlights: 0,
+        flowLinks: 0,
         workCards: 1,
-        taskConstellations: 1,
-        freshnessRings: 1,
+        taskConstellations: 0,
+        freshnessRings: 0,
         sceneProps: 4,
         focusOnly: false,
         motion: 0.42,
@@ -101,8 +100,8 @@ const DENSITY_PROFILES = {
     focus: {
         interiorDetails: 4,
         agentLifeEffects: 0,
-        projectAuras: 1,
-        actionSpotlights: 1,
+        projectAuras: 0,
+        actionSpotlights: 0,
         flowLinks: 0,
         workCards: 1,
         taskConstellations: 0,
@@ -341,7 +340,7 @@ function drawWeather() {
         weatherFX.addChild(_weatherGfx);
     }
     if (typeof _weatherGfx.clear === "function") _weatherGfx.clear();
-    if (_weatherState.kind !== "rain") return;
+    if (_weatherState.kind !== "rain" || prefersReducedMotion()) return;
     const w = app?.screen?.width || S.canvasW || 0;
     const h = app?.screen?.height || S.canvasH || 0;
     if (w <= 0 || h <= 0) return;
@@ -392,7 +391,7 @@ function densityProfile(activeCount = activeAgentCount()) {
 }
 
 function motionFactor(activeCount = activeAgentCount()) {
-    if (prefersReducedMotion()) return DENSITY_PROFILES.minimal.motion;
+    if (prefersReducedMotion()) return 0;
     return densityProfile(activeCount).motion ?? 0.42;
 }
 
@@ -1353,12 +1352,12 @@ function syncWorkEventBursts() {
     });
 
     S.workEvents.slice(0, 16).forEach(event => {
-        const key = String(event.key || `${event.type}|${event.pid}|${event.text || ""}`);
+        const key = `${event.key || `${event.type}|${event.pid}|${event.text || ""}`}@${event.ts}`;
         if (now - (event.ts || now) > 6000) {
             consumedWorkEvents.set(key, now);
             return;
         }
-        if (consumedWorkEvents.has(key) && now - consumedWorkEvents.get(key) < BURST_COOLDOWN_MS) return;
+        if (consumedWorkEvents.has(key)) return;
         if (!shouldShowBurst(event)) return;
         const agent = S.liveAgents.find(a => String(a.pid) === String(event.pid));
         const v = S.visualAgents[event.pid];
@@ -1378,6 +1377,7 @@ function syncWorkEventBursts() {
 }
 
 function shouldShowBurst(event) {
+    if (prefersReducedMotion() || S.pixiDensity === "minimal") return false;
     if (event?.pid == null || !BURST_TYPES.has(event.type)) return false;
     const profile = densityProfile();
     const agent = S.liveAgents.find(item => samePid(item.pid, event.pid));
@@ -1751,7 +1751,7 @@ function createAgentBundle(agent, idx) {
     const workCardText = new PIXI.Text({
         text: "",
         style: {
-            fontFamily: "Pretendard, system-ui, sans-serif",
+            fontFamily: "Wanted Sans Variable, system-ui, sans-serif",
             fontSize: 4.8,
             fontWeight: "800",
             fill: 0x1f2937,
@@ -1761,7 +1761,7 @@ function createAgentBundle(agent, idx) {
     const badgeText = new PIXI.Text({
         text: "",
         style: {
-            fontFamily: "Pretendard, system-ui, sans-serif",
+            fontFamily: "Wanted Sans Variable, system-ui, sans-serif",
             fontSize: 5,
             fontWeight: "800",
             fill: 0xffffff,
@@ -1802,13 +1802,14 @@ function updateAgentBundle(bundle, agent, v, idx, activeCount, workCard, freshne
     const t = S.animFrame * calm + bundle.phase * 20;
     const bob = Math.sin(t * 0.026) * 0.75 * calm;
     const detail = activeCount > 16 ? 0.72 : activeCount > 9 ? 0.86 : 1;
-    const emphasis = getAgentEmphasis(agent);
+    const rich = effectivePixiDensity(activeCount) === "rich";
+    const emphasis = rich ? getAgentEmphasis(agent) : 0;
 
     bundle.root.position.set(v.x, v.y + bob);
     bundle.root.alpha = agent.isRunning ? 0.88 + emphasis * 0.06 : 0.36;
 
     clearGraphic(bundle.glow);
-    if (agent.isRunning && status !== "idle") {
+    if (rich && agent.isRunning && status !== "idle") {
         const pulse = 0.5 + Math.sin(t * 0.04) * 0.5;
         fillCircle(bundle.glow, 0, -4, 14 + pulse * 1.8 + emphasis * 2.2, statusColor, (0.022 + pulse * 0.01 + emphasis * 0.012) * calm);
         if (emphasis > 0) {
@@ -1830,14 +1831,14 @@ function updateAgentBundle(bundle, agent, v, idx, activeCount, workCard, freshne
     }
 
     const hasLifeEffect = drawAgentLifeFX(bundle.lifeFX, agent, t, statusColor, themeColor, detail, activeCount, status, showLifeFX);
-    if (showLifeFX || emphasis > 0 || workCard) {
+    if (rich && (showLifeFX || emphasis > 0 || workCard)) {
         drawStatusMotif(bundle.motif, status, t, statusColor, themeColor, detail);
     } else {
         clearGraphic(bundle.motif);
     }
 
     clearGraphic(bundle.badge);
-    if (agent.currentWork?.prompt || agent.needsReview || samePid(S.directorFocusPid, agent.pid) || samePid(S.selectedPid, agent.pid)) {
+    if (rich && !document.body.classList.contains("privacy-mode") && samePid(S.selectedPid, agent.pid) && !workCard) {
         const badgeColor = agent.needsReview ? 0xffa337 : statusColor;
         const badgeWidth = emphasis >= 3 ? 50 : 46;
         fillRoundRect(bundle.badge, -badgeWidth / 2, -38, badgeWidth, 13, 4, badgeColor, 0.86);
@@ -2094,7 +2095,7 @@ function taskStatusColor(status, statusColor, themeColor) {
 
 function drawWorkCard(bundle, agent, v, statusColor, themeColor, t, activeCount, card) {
     const root = bundle.workCard;
-    if (!card || !agent.isRunning) {
+    if (!card || !agent.isRunning || effectivePixiDensity(activeCount) !== "rich" || document.body.classList.contains("privacy-mode")) {
         root.visible = false;
         return;
     }
@@ -2303,6 +2304,10 @@ function drawEmphasis(g, agent, t, statusColor, themeColor, emphasis) {
 
 function drawAgentLabels() {
     labelFX.children.forEach(c => c.__used = false);
+    if (effectivePixiDensity() !== "rich") {
+        labelFX.children.forEach(c => c.visible = false);
+        return;
+    }
     const labelAgents = S.liveAgents
         .map((agent, idx) => ({ agent, idx, v: S.visualAgents[agent.pid] }))
         .filter(({ agent, v }) => {
@@ -2380,7 +2385,7 @@ function getLabel(i) {
         const text = new PIXI.Text({
             text: "",
             style: {
-                fontFamily: "Pretendard, system-ui, sans-serif",
+                fontFamily: "Wanted Sans Variable, system-ui, sans-serif",
                 fontSize: 4.5,
                 fontWeight: "800",
                 fill: 0x344054,

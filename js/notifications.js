@@ -39,6 +39,7 @@ export function onNotifyChange(fn) { listeners.add(fn); return () => listeners.d
 
 /** Fire a notification. Skipped if tab is focused (avoid double signal). */
 export function notify(kind, title, body, opts = {}) {
+    if (window.aiTycoonDemo?.isEnabled?.()) return;
     if (!enabled) return;
     if (typeof Notification === "undefined") return;
     if (Notification.permission !== "granted") return;

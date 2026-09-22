@@ -3,6 +3,7 @@
 // ============================================================
 
 import { S, esc, getWorkText, formatTimeAgo, resolveAgentTheme } from "./state.js";
+import { characterFrame } from "./characters.js";
 import {
     agentNextAction,
     agentPinKey as getAgentPinKey,
@@ -23,9 +24,9 @@ const PIN_STORAGE_KEY = "ai-tycoon-pinned-agents";
 const PIN_LEGACY_STORAGE_KEY = "ai-tycoon-pinned-pids";
 const ACTION_FILTERS = [
     { key: "all", label: "전체", icon: "solar:list-check-linear" },
-    { key: "review", label: "검토", icon: "solar:clipboard-check-linear" },
-    { key: "stale", label: "신호", icon: "solar:radar-2-linear" },
-    { key: "working", label: "진행", icon: "solar:bolt-circle-linear" },
+    { key: "review", label: "확인 필요", icon: "solar:clipboard-check-linear" },
+    { key: "stale", label: "업데이트 없음", icon: "solar:radar-2-linear" },
+    { key: "working", label: "일하는 중", icon: "solar:bolt-circle-linear" },
     { key: "pinned", label: "고정", icon: "solar:star-bold" },
     { key: "recent", label: "최근", icon: "solar:history-2-linear" },
     { key: "idle", label: "대기", icon: "solar:pause-circle-linear" },
@@ -33,6 +34,11 @@ const ACTION_FILTERS = [
 
 // ── Filter helpers ──
 export function updateFilterChips() {
+    const filterLabel = document.getElementById("agent-filter-label");
+    if (filterLabel) {
+        const count = Number(S.activeFilter !== "all") + Number(S.activePlatformFilter !== "all");
+        filterLabel.textContent = count ? `필터·정렬 · ${count}개 적용 중` : "필터·정렬";
+    }
     // Status filter chips
     document.querySelectorAll("#filter-bar .filter-chip").forEach(el => {
         const active = el.dataset.filter === S.activeFilter;
@@ -233,6 +239,7 @@ function updateSearchControls(filteredAgents) {
     }
     if (clear) clear.hidden = !normalizedQuery;
     if (!summary) return;
+    summary.hidden = !normalizedQuery && S.activeFilter === "all" && S.activePlatformFilter === "all" && S.activeActionFilter === "all";
 
     const visible = filteredAgents.length;
     const total = S.liveAgents.length;
@@ -304,7 +311,7 @@ function pixiDensityMeta(mode) {
         minimal: { label: "저자극", icon: "solar:eye-closed-linear" },
         rich: { label: "풍부", icon: "solar:layers-minimalistic-linear" },
         balanced: { label: "균형", icon: "solar:tuning-square-linear" },
-        focus: { label: "집중", icon: "solar:focus-linear" },
+        focus: { label: "집중", icon: "solar:target-linear" },
         reduced: { label: "감소", icon: "solar:eye-closed-linear" },
     }[mode] || { label: "자동", icon: "solar:layers-minimalistic-linear" };
 }
@@ -434,7 +441,7 @@ function renderDetectorHealth(active, working) {
         ? `${active.length} on duty · ${working.length} focused`
         : `${active.length}명 근무 중 · ${working.length}명 집중 처리 중`;
     if (!S.connected) {
-        hint = en ? "Reconnecting to the server signal…" : "서버 신호를 다시 붙이는 중입니다";
+        hint = en ? "Reconnecting to the server signal…" : "서버에 다시 연결하고 있어요";
     } else if (delayed) {
         hint = en ? "Keeping the last good values" : "마지막 정상 탐지 값을 유지하고 있습니다";
     } else if (S.liveAgents.length === 0 && !diagnostics.claudeDirExists && externalCount === 0) {
@@ -538,7 +545,7 @@ function healthSnapshot(active, working, review) {
         hint = en ? "Launch any AI session and it'll show up here." : "AI 세션을 실행하면 자동으로 작업실에 나타납니다.";
     } else if (review.length > 0) {
         state = "attention";
-        title = en ? "Review needed" : "검토 필요";
+        title = en ? "Review needed" : "확인 필요";
         hint = en
             ? `${review.length} agent${review.length > 1 ? "s" : ""} waiting for review.`
             : `${review.length}명의 직원이 확인을 기다립니다.`;
@@ -640,7 +647,7 @@ function briefAgentName(agent) {
 function briefWork(agent) {
     if (!agent) return "";
     const status = agent.isRunning ? agent.status : "offline";
-    return getWorkText(agent) || firstLine(agent.currentWork?.prompt || agent.currentTask?.subject || STATUS_META[status]?.label || "", 32);
+    return getWorkText(agent, 100) || STATUS_META[status]?.label || "";
 }
 
 function renderBriefAction(action) {
@@ -704,13 +711,13 @@ function renderOperatorBrief(active, working, review) {
             idle: "Standing by",
         }
         : {
-            review: "검토 대기",
-            focus: "포커스",
-            stale: "신호 지연",
+            review: "확인할 일",
+            focus: "직원 보기",
+            stale: "업데이트 없음",
             pinned: "고정 직원",
-            working: "진행 작업",
+            working: "일하는 직원",
             recent: "최근 활동",
-            idle: "대기 직원",
+            idle: "쉬는 직원",
         };
     const actionGroups = new Map();
     activeSorted.forEach(agent => {
@@ -872,6 +879,8 @@ function runContentAction(action, pid) {
     }
     if (action === "health") {
         window.setSidePanelView?.("operate", { open: true });
+        const details = document.querySelector('.connection-details');
+        if (details) details.open = true;
         document.getElementById("system-health-panel")?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
         return;
     }
@@ -1036,7 +1045,7 @@ function workEventMeta(event) {
     const lgW = (window.aiTycoonI18n?.getLang?.() || "ko");
     const labels = lgW === "en"
         ? { join: "Joined", leave: "Left", work: "New work", review: "Review", start: "Task start", done: "Done" }
-        : { join: "출근", leave: "퇴근", work: "새 작업", review: "검토 요청", start: "태스크 시작", done: "완료" };
+        : { join: "출근", leave: "퇴근", work: "새 작업", review: "검토 요청", start: "작업 시작", done: "완료" };
     const byType = {
         join: { label: event.label || labels.join, icon: "solar:login-2-linear" },
         leave: { label: event.label || labels.leave, icon: "solar:logout-2-linear" },
@@ -1100,7 +1109,7 @@ function renderWorkEvent(event, idx, now) {
     const statusColor = event.statusColor || statusMeta.color;
     const key = String(event.key || `${event.type}|${event.pid}|${event.text || ""}`);
     const isInspected = S.inspectedEventKey === key;
-    const ariaLabel = `${event.agentName || theme.name} ${meta.label}: ${event.text || agent?.currentTask?.subject || "상태 갱신"}`;
+    const ariaLabel = `${event.agentName || theme.name} ${meta.label}: ${event.text || agent?.currentTask?.subject || "상태 업데이트"}`;
 
     return `
         <article class="stream-item stream-${esc(event.type || "status")}${event.type === "review" ? " needs-review" : ""}${isFresh ? " is-fresh" : ""}${isInspected ? " is-inspected" : ""}"
@@ -1122,7 +1131,7 @@ function renderWorkEvent(event, idx, now) {
                     <em>${esc(meta.label)}</em>
                     <small>${esc(age)}</small>
                 </div>
-                <div class="stream-work">${esc(event.text || agent?.currentTask?.subject || "상태 갱신")}</div>
+                <div class="stream-work">${esc(event.text || agent?.currentTask?.subject || "상태 업데이트")}</div>
                 <div class="stream-progress"><span style="width:${pct}%"></span></div>
             </div>
         </article>
@@ -1210,7 +1219,7 @@ function renderAgentFocusRail() {
         const isCurrent = pidKey(agent.pid) === pidKey(S.selectedPid) || pidKey(agent.pid) === pidKey(S.directorFocusPid);
         const pinned = isAgentPinned(agent);
         const action = getAgentNextAction(agent);
-        const ariaLabel = `${theme.name}, ${agent.projectName || platform.label}, ${meta.label}, ${work}${pinned ? ", 고정됨" : ""}, 카메라 포커스`;
+        const ariaLabel = `${theme.name}, ${agent.projectName || platform.label}, ${meta.label}, ${work}${pinned ? ", 고정됨" : ""}, 카메라 직원 보기`;
 
         return `
             <button type="button"
@@ -1506,7 +1515,7 @@ function updateConnFreshnessIndicator() {
     const quality = age < 10_000 ? "good" : age < 15_000 ? "fair" : "poor";
     const lang = (window.aiTycoonI18n?.getLang?.()) || "ko";
     const live = lang === "en" ? "Live" : "실시간";
-    const freshness = age < 10_000 ? (lang === "en" ? "updated" : "갱신됨") : formatTimeAgo(age);
+    const freshness = age < 10_000 ? (lang === "en" ? "updated" : "연결됨") : formatTimeAgo(age);
     txt.textContent = `${live} · ${freshness}`;
     badge.dataset.connQuality = quality;
     badge.title = lang === "en" ? `Live data ${freshness}` : `실시간 데이터 ${freshness}`;
@@ -1560,7 +1569,7 @@ export function updateLiveHud() {
     if (panelToggle) {
         panelToggle.classList.toggle("has-review", review.length > 0);
         panelToggle.dataset.reviewCount = review.length > 0 ? String(review.length) : "";
-        panelToggle.setAttribute("aria-label", review.length > 0 ? `사이드 패널 토글, 검토 ${review.length}건` : "사이드 패널 토글");
+        panelToggle.setAttribute("aria-label", review.length > 0 ? `직원 목록 열기, 검토 ${review.length}건` : "직원 목록 열기");
     }
 
     const directorFocus = S.liveAgents.find(a => pidKey(a.pid) === pidKey(S.directorFocusPid));
@@ -1573,9 +1582,9 @@ export function updateLiveHud() {
         const theme = getAgentTheme(focus);
         const status = focus.isRunning ? focus.status : "offline";
         const meta = STATUS_META[status] || STATUS_META.idle;
-        const work = getWorkText(focus) || firstLine(focus.currentWork?.prompt, 56) || meta.label;
+        const work = getWorkText(focus, 100) || firstLine(focus.currentWork?.prompt, 100) || meta.label;
         const lgF = (window.aiTycoonI18n?.getLang?.() || "ko");
-        const trackingLabel = lgF === "en" ? "Tracking" : "추적 중";
+        const trackingLabel = lgF === "en" ? "Tracking" : "따라가는 중";
         focusName.textContent = `${theme.name} · ${focus.projectName || focus.platformName || "Agent"}`;
         focusWork.textContent = `${S.directorMode ? trackingLabel : meta.label} · ${work}`;
         focusProgress.style.width = `${taskProgress(focus)}%`;
@@ -1640,8 +1649,8 @@ export function updateLiveHud() {
     renderActivityTimeline(now);
 
     const streamEvents = S.workEvents
-        .filter(event => now - event.ts < 120000)
-        .slice(0, 3);
+        .filter(event => now - event.ts < 18000 && ["review", "task-done", "join"].includes(event.type))
+        .slice(0, 1);
 
     stream.classList.toggle("is-empty", streamEvents.length === 0);
     if (streamEvents.length === 0) {
@@ -1649,8 +1658,12 @@ export function updateLiveHud() {
         return;
     }
 
-    stream.innerHTML = streamEvents.map((event, idx) => renderWorkEvent(event, idx, now)).join("");
-    bindWorkEventActions(stream);
+    const streamKey = streamEvents.map(event => event.key).join("|");
+    if (stream.dataset.eventKey !== streamKey || !stream.firstElementChild) {
+        stream.dataset.eventKey = streamKey;
+        stream.innerHTML = streamEvents.map((event, idx) => renderWorkEvent(event, idx, now)).join("");
+        bindWorkEventActions(stream);
+    }
 }
 
 // ── Side Panel ──
@@ -1728,7 +1741,17 @@ function renderAgentsStatusSummary() {
 }
 
 export function updatePanel() {
+    const focused = document.activeElement;
+    const focusedCard = focused?.closest?.('[data-card-pid]');
+    const focusedPid = focusedCard?.dataset.cardPid;
+    const focusedPin = focused?.hasAttribute?.('data-pin-action');
+    const focusedTag = focused?.dataset?.cardTag;
+    const focusedFilter = focused?.dataset?.actionFilter;
     updateFilterChips();
+    if (focusedFilter) {
+        [...document.querySelectorAll('#action-filter [data-action-filter]')]
+            .find(button => button.dataset.actionFilter === focusedFilter)?.focus({ preventScroll: true });
+    }
     refreshEmptyCta();
 
     const list = document.getElementById("agents-list");
@@ -1825,7 +1848,7 @@ export function updatePanel() {
                     : `#${tagName} 이(가) 적힌 에이전트가 지금은 켜져 있지 않아요. 다시 실행되면 태그도 돌아옵니다.`)
                 : (isEn
                     ? `Open an agent's detail panel and add #${tagName} to its note to start filtering.`
-                    : `에이전트 디테일 패널을 열어서 메모에 #${tagName} 을(를) 적으면 필터 대상이 됩니다.`))
+                    : `에이전트 직원 상세 화면을 열어서 메모에 #${tagName} 을(를) 적으면 필터 대상이 됩니다.`))
             : hasSearch
                 ? (isEn ? "Double-check the name, project, or work text." : "직원 이름, 프로젝트, 작업 문구를 다시 확인해 주세요.")
                 : hasActionFilter
@@ -1867,7 +1890,7 @@ export function updatePanel() {
         // 워크 이벤트 클릭 시 해당 카드로 스크롤하기 위한 식별자
         card.dataset.cardPid = String(agent.pid);
         // 메모 있으면 카드에 native title 로 미리보기 — hover 시 OS 툴팁
-        // (디테일 패널 안 열고도 첫 문장 확인 가능)
+        // (직원 상세 화면 안 열고도 첫 문장 확인 가능)
         if (hasNote) {
             const preview = noteText.replace(/\s+/g, " ").trim().slice(0, 140);
             card.dataset.notePreview = preview;
@@ -1882,6 +1905,7 @@ export function updatePanel() {
             S.detailPid = wasSelected ? null : agent.pid;
             updatePanel();
             updateDetailPanel();
+            if (S.detailPid) document.getElementById('detail-panel')?.focus({ preventScroll: true });
         };
         // 카드 클릭 — 기본은 select, Shift+클릭이면 핀 토글 (작은 핀 버튼 안 찾고 빠르게)
         card.onclick = (event) => {
@@ -1893,6 +1917,7 @@ export function updatePanel() {
             selectAgent();
         };
         card.onkeydown = (event) => {
+            if (event.target !== card) return;
             // Shift+Enter/Space 도 동일하게 핀 토글
             if ((event.key === "Enter" || event.key === " ") && event.shiftKey) {
                 event.preventDefault();
@@ -1909,13 +1934,13 @@ export function updatePanel() {
         const idleText = lgCard === "en" ? "Idle" : "대기 중";
         const taskCountText = (n) => lgCard === "en"
             ? `${n} task${n > 1 ? "s" : ""}`
-            : `${n}개 태스크`;
+            : `${n}개 작업`;
         let task;
         if (agent.currentWork && agent.currentWork.prompt) {
             const cleaned = agent.currentWork.prompt.replace(/\[Pasted text[^\]]*\]/g, "").trim();
             const firstLine = cleaned.split("\n")[0].trim();
             task = firstLine.length > 3
-                ? firstLine.substring(0, 50)
+                ? firstLine
                 : (agent.currentTask ? agent.currentTask.subject : idleText);
         } else if (agent.currentTask) {
             task = agent.currentTask.subject;
@@ -1942,72 +1967,31 @@ export function updatePanel() {
                     const sc = SUB_COLORS[ti % SUB_COLORS.length];
                     const sIcon = t.status === "in_progress" ? "⚡" : t.status === "completed" ? "✓" : "◦";
                     const sOpacity = t.status === "completed" ? "opacity-50" : "";
-                    const sLabel = (t.activeForm || t.subject || `Task ${t.id}`).substring(0, 28);
+                    const sLabel = esc(t.activeForm || t.subject || `작업 ${t.id}`);
                     return `<div class="flex items-center gap-1.5 ${sOpacity}">
                         <div class="w-3 h-3 rounded-full shrink-0 flex items-center justify-center text-[8px]" style="background:${sc}30;color:${sc};">${sIcon}</div>
-                        <span class="text-[11px] text-zinc-500 truncate" style="word-break:keep-all;">${sLabel}</span>
+                        <span class="text-[11px] text-zinc-500 truncate" data-privacy style="word-break:keep-all;">${sLabel}</span>
                     </div>`;
                 }).join("") +
                 (subTasks.length > 5 ? `<div class="text-[10px] text-zinc-400">+${subTasks.length - 5}${(window.aiTycoonI18n?.getLang?.() || "ko") === "en" ? " " : ""}${esc(i18n("card.subTaskMoreSuffix"))}</div>` : "") +
             `</div>`;
         }
 
-        // 검색어가 있으면 카드의 이름/프로젝트/태스크 텍스트에 매칭 부분 하이라이트
+        // 검색어가 있으면 카드의 이름/프로젝트/작업 텍스트에 매칭 부분 하이라이트
         const searchQ = normalizeSearch(S.agentSearchQuery);
         const hl = (safe) => highlightTokens(safe, searchQ);
         card.innerHTML = `
             <div class="agent-card-inner">
-                <div class="flex items-center gap-2.5 mb-2">
-                    <div class="w-7 h-7 rounded-xl flex items-center justify-center shrink-0" style="background:${theme.body}30;">
-                        <iconify-icon icon="${meta.icon}" style="color:${theme.body};" class="text-sm"></iconify-icon>
+                <header class="employee-card-heading">
+                    <canvas class="agent-portrait" width="26" height="34" aria-hidden="true"></canvas>
+                    <div class="employee-card-title">
+                        <div class="employee-title-row"><strong class="agent-card-name">${hl(esc(theme.name))}</strong><span class="employee-status" data-review="${agent.needsReview ? 'true' : 'false'}">${agent.needsReview ? (lgCard === 'en' ? 'Needs review' : '확인 필요') : esc(meta.label)}</span></div>
+                        <span class="employee-project" data-privacy>${hl(esc(agent.projectName))}</span>
+                        <span class="employee-tool">${esc((PLATFORM_META[agent.platform] || PLATFORM_META.claude).label)}</span>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-[13px] font-bold text-zinc-800 truncate flex items-center gap-1.5">
-                            <span class="agent-card-name">${hl(esc(theme.name))}</span>
-                            <span class="agent-card-sep" aria-hidden="true">·</span>
-                            <span class="agent-project-dot" style="background:${projectColor(agent.projectName)}" title="${esc(agent.projectName || "")}" aria-hidden="true"></span>
-                            <span class="agent-card-project truncate">${hl(esc(agent.projectName))}</span>
-                        </div>
-                        <div class="text-[11px] text-zinc-400 tabular-nums font-medium flex items-center gap-1">
-                            <span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badgeBg};color:${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).color}">${(PLATFORM_META[agent.platform] || PLATFORM_META.claude).badge}</span>
-                            ${agent.role && ROLE_META[agent.role] ? `<span class="inline-flex items-center px-1 rounded text-[9px] font-bold" style="background:${ROLE_META[agent.role].color}20;color:${ROLE_META[agent.role].color}">${ROLE_META[agent.role].badge}</span>` : ""}
-                            ${stuck ? `<span class="agent-stuck-chip" title="${esc(i18n("card.stuckTitle"))}"><iconify-icon icon="solar:hourglass-line-linear" aria-hidden="true"></iconify-icon>${esc(i18n("card.stuckChip"))}</span>` : ""}
-                            <span>${agent.memoryMB}MB${agent.processCount > 1 ? ` · ${agent.processCount}p` : ""}${(() => {
-                                const t = memoryTrend(agent);
-                                if (t.dir === "flat") return "";
-                                const arrow = t.dir === "up" ? "▲" : "▼";
-                                const color = t.dir === "up" ? "#ef4444" : "#10b981";
-                                const sign = t.dir === "up" ? "+" : "";
-                                const trendWord = t.dir === "up" ? i18n("card.memoryUp") : i18n("card.memoryDown");
-                                return ` <span class="mem-trend" style="color:${color}" title="${esc(i18n("card.memoryTrendUp"))} ${sign}${t.deltaMB}MB" aria-label="${esc(trendWord)} ${sign}${t.deltaMB}MB">${arrow}</span>`;
-                            })()}</span>
-                        </div>
-                        <div class="agent-signal-line" title="${esc(signal.sourceLabel)}" data-freshness="${
-                            signal.age < 60_000 ? "fresh"
-                            : signal.age < 5 * 60_000 ? "recent"
-                            : signal.age < 30 * 60_000 ? "warm"
-                            : "stale"
-                        }">
-                            <iconify-icon icon="solar:radar-2-linear" aria-hidden="true"></iconify-icon>
-                            <span>${esc(i18n("card.recentAge"))} ${esc(signal.ageLabel)}</span>
-                            <em>${esc(signal.sourceLabel)}</em>
-                        </div>
-                    </div>
-                    <button type="button"
-                        class="agent-pin-btn${pinned ? " is-pinned" : ""}"
-                        data-pin-action="toggle"
-                        aria-pressed="${pinned ? "true" : "false"}"
-                        aria-label="${esc(`${theme.name} ${pinned ? "고정 해제" : "고정"}`)}"
-                        title="${pinned ? "고정 해제" : "고정"}">
-                        <iconify-icon icon="${pinned ? "solar:star-bold" : "solar:star-linear"}" aria-hidden="true"></iconify-icon>
-                    </button>
-                    <span class="next-action-chip" data-tone="${esc(action.tone)}" title="${esc(action.label)}">
-                        <iconify-icon icon="${esc(action.icon)}" aria-hidden="true"></iconify-icon>
-                        <span>${esc(action.label)}</span>
-                    </span>
-                    <span class="status-badge badge-${status}">${meta.label}</span>
-                </div>
-                <div class="text-[12px] text-zinc-500 truncate mb-1" style="word-break:keep-all;" title="${esc(task)}">${hl(esc(task))}</div>
+                    <button type="button" class="agent-pin-btn${pinned ? ' is-pinned' : ''}" data-pin-action="toggle" aria-pressed="${pinned}" aria-label="${esc(theme.name)} ${pinned ? '고정 해제' : '고정'}" title="${pinned ? '고정 해제' : '고정'}"><iconify-icon icon="${pinned ? 'solar:star-bold' : 'solar:star-linear'}" aria-hidden="true"></iconify-icon></button>
+                </header>
+                <p class="employee-task" data-privacy>${hl(esc(task))}</p>
                 ${age ? `<div class="text-[10px] text-zinc-400 mb-1">최근 ${age}</div>` : ""}
                 ${(() => {
                     // 메모에 박힌 hashtag 를 카드에 노출 (최대 2개, 그 외 +N).
@@ -2060,16 +2044,25 @@ export function updatePanel() {
             pinButton.addEventListener("keydown", event => event.stopPropagation());
             pinButton.addEventListener("keyup", event => event.stopPropagation());
         }
+        const portrait = card.querySelector('.agent-portrait');
+        if (portrait) portrait.getContext('2d').drawImage(characterFrame(theme, { status: agent.status }), 0, 0);
         list.appendChild(card);
     });
+    if (focusedPid) {
+        const replacement = [...list.querySelectorAll('[data-card-pid]')].find(card => card.dataset.cardPid === focusedPid);
+        const target = focusedPin ? replacement?.querySelector('[data-pin-action]')
+            : focusedTag ? [...(replacement?.querySelectorAll('[data-card-tag]') || [])].find(button => button.dataset.cardTag === focusedTag)
+            : replacement;
+        (target || document.getElementById('agent-search'))?.focus({ preventScroll: true });
+    }
 }
 
 function timeOfDayIcon(hour) {
     if (hour < 5) return "solar:moon-stars-linear";
-    if (hour < 7) return "solar:cloudy-sun-linear";
+    if (hour < 7) return "solar:cloud-sun-linear";
     if (hour < 11) return "solar:sun-2-linear";
     if (hour < 15) return "solar:sun-linear";
-    if (hour < 17.5) return "solar:cloudy-sun-linear";
+    if (hour < 17.5) return "solar:cloud-sun-linear";
     if (hour < 19.5) return "solar:sunset-linear";
     if (hour < 22) return "solar:moon-linear";
     return "solar:moon-stars-linear";
@@ -2125,8 +2118,8 @@ export function updateBossQueueUI() {
         resolved:  en ? "✅ handled"   : "✅ 처리됨",
         waiting:   en ? "⏳ waiting"   : "⏳ 대기 중",
     };
-    const approveLabel = en ? "Approve" : "승인";
-    const denyLabel    = en ? "Deny"    : "반려";
+    const approveLabel = en ? "Mark reviewed" : "확인했어요";
+    const denyLabel    = en ? "Set aside" : "보류";
 
     const items = queue.map(entry => {
         const agent = S.liveAgents.find(a => a.pid === entry.pid);
@@ -2171,6 +2164,7 @@ export function updateBossQueueUI() {
             <h3 class="text-[12px] font-bold text-zinc-600 tracking-wide uppercase">${en ? "Review queue" : "보고 대기열"}</h3>
             <span class="text-[10px] text-zinc-400 tabular-nums ml-auto">${queue.length}${en ? " items" : "건"}</span>
         </div>
+        <p class="review-scope-note">${en ? "These marks stay in this office. Handle tool approvals in the original terminal." : "작업실 안의 확인 표시입니다. 실제 승인 요청은 원래 도구에서 처리해 주세요."}</p>
         <div class="flex flex-col gap-2">${items}</div>
     `;
     // 위에서 raw onclick 대신 data-* 로 attach. 이벤트 위임으로 한 번에 처리.
@@ -2214,14 +2208,14 @@ export function updateDetailPanel() {
         container.scrollTop = 0;
         container._lastRenderedPid = agent.pid;
     } else {
-        // 같은 에이전트 재렌더 — 사용자가 메모 textarea 에 포커스 중이거나 hashtag
+        // 같은 에이전트 재렌더 — 사용자가 메모 textarea 에 직원 보기 중이거나 hashtag
         // autocomplete 가 열려 있으면 re-render skip. WS tick 마다 innerHTML 갈아엎으면
         // textarea blur + autocomplete 닫힘 + 입력 흐름 깨짐.
-        // 디테일 패널의 다른 영역 (메모리 그래프, 상태 등) 은 다음 tick 에 자연스럽게 갱신됨.
+        // 직원 상세 화면의 다른 영역 (메모리 그래프, 상태 등) 은 다음 tick 에 자연스럽게 연결됨.
         const active = document.activeElement;
         const isEditingNote = active && active.id === "detail-note-input";
         const acOpen = container.querySelector("#detail-note-autocomplete:not([hidden])");
-        if (isEditingNote || acOpen) {
+        if (isEditingNote || acOpen || container.contains(active) || container.querySelector('details[open]')) {
             return; // skip — 사용자 흐름 보존이 우선
         }
     }
@@ -2279,7 +2273,7 @@ export function updateDetailPanel() {
                             <iconify-icon icon="solar:copy-linear" aria-hidden="true"></iconify-icon><span>${esc(i18n("detail.copy"))}</span>
                         </button>
                     </div>
-                    <div class="detail-work-preview">${esc(firstLine.substring(0, 130))}</div>
+                    <div class="detail-work-preview">${esc(firstLine)}</div>
                     <details class="detail-work-full">
                         <summary>${esc(i18n("detail.viewFullWork"))}</summary>
                         <pre>${esc(cleaned)}</pre>
@@ -2340,7 +2334,7 @@ export function updateDetailPanel() {
             return `<div class="flex items-start gap-2 ${opacity}">
                 <span style="color:${color}" class="shrink-0 text-[11px] mt-0.5">${icon}</span>
                 <div class="min-w-0">
-                    <div class="text-[11px] font-medium truncate" style="color:${color === "#a1a1aa" ? "" : color}">${esc((t.subject || "Task " + t.id).substring(0, 35))}</div>
+                    <div class="text-[11px] font-medium truncate" style="color:${color === "#a1a1aa" ? "" : color}">${esc(t.subject || "작업 " + t.id)}</div>
                     ${t.activeForm ? `<div class="text-[10px] text-zinc-400 truncate">${esc(t.activeForm)}</div>` : ""}
                 </div>
             </div>`;
@@ -2350,7 +2344,7 @@ export function updateDetailPanel() {
         if (tasks.length > 10) taskHtml += `<div class="text-[10px] text-zinc-400">${moreLabel}</div>`;
     } else {
         const lgE = (window.aiTycoonI18n?.getLang?.() || "ko");
-        taskHtml = `<div class="text-[11px] text-zinc-400">${lgE === "en" ? "No tasks registered" : "등록된 태스크 없음"}</div>`;
+        taskHtml = `<div class="text-[11px] text-zinc-400">${lgE === "en" ? "No tasks registered" : "등록된 작업 없음"}</div>`;
     }
 
     const lgM = (window.aiTycoonI18n?.getLang?.() || "ko");
@@ -2441,24 +2435,23 @@ export function updateDetailPanel() {
             </button>
         </div>
         <div class="text-[10px] text-zinc-400 truncate mb-3">${esc(agent.cwd || agent.platformName || "")}</div>
-        ${detailMetaHtml}
+        ${currentWorkHtml}
 
         ${(() => {
             const lg = (window.aiTycoonI18n?.getLang?.() || "ko");
             const memTitle  = lg === "en" ? "Memory usage" : "메모리 사용량";
             const collecting = lg === "en" ? "Collecting data…" : "데이터 수집 중…";
-            const tasksTitle = lg === "en" ? "Tasks" : "태스크";
+            const tasksTitle = lg === "en" ? "Tasks" : "작업";
             return `
+        ${tasks.length > 0 ? `<div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mt-3 mb-2">${esc(tasksTitle)} (${agent.completedTasks}/${agent.totalTasks})</div>
+        <div class="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">${taskHtml}</div>` : ""}
+        <details class="detail-technical"><summary>${lg === "en" ? "Session and connection" : "세션·연결 정보"}</summary>${detailMetaHtml}
         <div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mb-1">${esc(memTitle)}</div>
         <div class="text-[10px] text-zinc-400 mb-1">PID ${esc(String(agent.pid))} · ${agent.memoryMB}MB</div>
         ${memGraph || `<div class="text-[10px] text-zinc-400">${esc(collecting)}</div>`}
 
-        ${currentWorkHtml}
 
-        ${signalHtml}
-
-        ${tasks.length > 0 ? `<div class="text-[11px] font-bold text-zinc-500 uppercase tracking-wide mt-3 mb-2">${esc(tasksTitle)} (${agent.completedTasks}/${agent.totalTasks})</div>
-        <div class="flex flex-col gap-1.5 max-h-[200px] overflow-y-auto">${taskHtml}</div>` : ""}`;
+        ${signalHtml}</details>`;
         })()}
 
         ${(() => {
@@ -2466,8 +2459,8 @@ export function updateDetailPanel() {
             const noteTitle = langN === "en" ? "Personal note" : "개인 메모";
             const placeholder = langN === "en"
                 ? "Anything to remember about this agent… (e.g. auth refactor in progress)"
-                : "이 에이전트에 대한 메모… (예: 인증 리팩터링 중)";
-            const ariaLabel = langN === "en" ? "Agent personal note" : "에이전트 개인 메모";
+                : "기억해 둘 내용을 적어 주세요. #태그도 쓸 수 있어요.";
+            const ariaLabel = langN === "en" ? "Agent personal note" : "직원 개인 메모";
             const noteVal = getAgentNote(agent) || "";
             const hintPrefix = langN === "en" ? "Local only" : "로컬에만 저장";
             const clearLabel = langN === "en" ? "Clear" : "지우기";
@@ -2542,7 +2535,7 @@ export function updateDetailPanel() {
         });
     });
 
-    // 디테일 패널의 hashtag 칩 — 클릭 시 사이드바 검색에 #tag 박아 동일 태그 에이전트들 목록화
+    // 직원 상세 화면의 hashtag 칩 — 클릭 시 사이드바 검색에 #tag 박아 동일 태그 에이전트들 목록화
     container.querySelectorAll("[data-detail-tag]").forEach(btn => {
         btn.addEventListener("click", (event) => {
             event.preventDefault();
@@ -2708,7 +2701,7 @@ export function updateDetailPanel() {
             // 클릭 핸들러 가 먼저 잡을 시간 — 다음 tick 까지 대기
             setTimeout(hideAutocomplete, 120);
         });
-        // Cmd/Ctrl+S 로 즉시 저장. Cmd/Ctrl+Enter 면 저장 + 디테일 패널 닫기 (메모 다 적었을 때 한 번에).
+        // Cmd/Ctrl+S 로 즉시 저장. Cmd/Ctrl+Enter 면 저장 + 직원 상세 화면 닫기 (메모 다 적었을 때 한 번에).
         // 브라우저 기본 '페이지 저장' 동작은 textarea 안에서만 막음.
         noteInput.addEventListener("keydown", (e) => {
             const mod = e.ctrlKey || e.metaKey;
@@ -2736,7 +2729,7 @@ export function updateDetailPanel() {
                 setAgentNote(agent, noteInput.value);
                 if (noteClear) noteClear.toggleAttribute("hidden", !noteInput.value);
                 flashSaved();
-                // 디테일 패널 닫기
+                // 직원 상세 화면 닫기
                 try { window.closeDetail?.(); } catch { /* ignore */ }
             }
         });
@@ -2812,7 +2805,7 @@ export function onMouseMove(e) {
         const lgT = (window.aiTycoonI18n?.getLang?.() || "ko");
         const labels = lgT === "en"
             ? { idle: "Idle", status: "Status", mem: "Memory", task: "Task", sub: "Sub", cwd: "Path", done: "Done", active: "active" }
-            : { idle: "대기 중", status: "상태", mem: "메모리", task: "태스크", sub: "서브", cwd: "경로", done: "완료", active: "개 활성" };
+            : { idle: "대기 중", status: "상태", mem: "메모리", task: "작업", sub: "서브", cwd: "경로", done: "완료", active: "개 활성" };
         const taskText = getWorkText(hov) || (hov.currentTask ? hov.currentTask.subject : labels.idle);
         const memClass = hov.memoryMB > 1000 ? "mem-high" : hov.memoryMB > 500 ? "mem-mid" : "mem-low";
         const subCount = (hov.tasks || []).filter(t => t.status !== "completed").length;
@@ -3077,11 +3070,11 @@ export function refreshInsights() {
             tone = "intense";
         }
         moodEl.dataset.tone = tone;
-        moodEl.innerHTML = `<span class="insights-mood-emoji">${emoji}</span><span>${esc(label)}</span><span class="insights-mood-num tabular-nums">${tc} ${lang === "en" ? "tasks" : "태스크"}</span>`;
-        // 활성 직원이 있을 때 mood-line 클릭 가능 — 가장 활발한 친구로 포커스 + 모달 닫기
+        moodEl.innerHTML = `<span class="insights-mood-emoji">${emoji}</span><span>${esc(label)}</span><span class="insights-mood-num tabular-nums">${tc} ${lang === "en" ? "tasks" : "작업"}</span>`;
+        // 활성 직원이 있을 때 mood-line 클릭 가능 — 가장 활발한 친구로 직원 보기 + 모달 닫기
         moodEl.style.cursor = activeCount > 0 ? "pointer" : "";
         moodEl.title = activeCount > 0
-            ? (lang === "en" ? "Click to focus the most active agent" : "클릭하면 가장 활발한 직원으로 포커스")
+            ? (lang === "en" ? "Click to focus the most active agent" : "클릭하면 가장 활발한 직원으로 직원 보기")
             : "";
         moodEl.onclick = activeCount > 0 ? () => {
             try {
@@ -3102,7 +3095,7 @@ export function refreshInsights() {
 
     if (el("insights-agents")) el("insights-agents").textContent = activeCount;
     if (el("insights-completed")) {
-        // 완료 태스크 옆에 어제와 비교한 ±N 칩. 처음 사용 등으로 어제 데이터 없으면 숨김.
+        // 완료 작업 옆에 어제와 비교한 ±N 칩. 처음 사용 등으로 어제 데이터 없으면 숨김.
         const completedEl = el("insights-completed");
         const yest = yesterdayStats();
         const yc = yest?.completedMax || 0;
@@ -3119,7 +3112,7 @@ export function refreshInsights() {
             completedEl.innerHTML = `${totalCompleted}<span id="insights-completed-delta" class="insights-delta" data-tone="${tone}" title="${esc(yLabel)}: ${sign}${delta}">${sign}${delta}</span>`;
         }
     }
-    // 라벨 옆 작은 '7d N개' 칩 — 이번 주(최근 7일) 누적 완료 태스크
+    // 라벨 옆 작은 '7d N개' 칩 — 이번 주(최근 7일) 누적 완료 작업
     const weekChip = el("insights-week-chip");
     if (weekChip) {
         try {
@@ -3368,7 +3361,7 @@ export function refreshInsights() {
             const maxCompleted = Math.max(1, ...days.map(d => d.completedMax || 0));
             const maxAgents = Math.max(1, ...days.map(d => d.agentsMax || 0));
             const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
-            const taskWord = lang === "en" ? "tasks" : "태스크";
+            const taskWord = lang === "en" ? "tasks" : "작업";
             const peopleWord = lang === "en" ? "peak" : "명";
             const bars = days.map(d => {
                 const c = d.completedMax || 0;
@@ -3620,7 +3613,7 @@ export function refreshProject(projectName) {
             agentListEl.innerHTML = `<div class="insights-empty">${esc(i18n("project.empty"))}</div>`;
         } else {
             const lang = (window.aiTycoonI18n?.getLang?.() || "ko");
-            const taskWord = lang === "en" ? "tasks" : "태스크";
+            const taskWord = lang === "en" ? "tasks" : "작업";
             const memWord = "MB";
             agentListEl.innerHTML = matching.map(a => {
                 const theme = getAgentTheme(a);

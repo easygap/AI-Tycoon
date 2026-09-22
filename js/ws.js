@@ -3,6 +3,7 @@
 // ============================================================
 
 import { S, addLog, addWorkEvent, getWorkText, spawnParticles, spawnHearts, resolveAgentTheme } from "./state.js";
+import { updateAtmosphere } from "./atmosphere.js";
 import {
     WS_URL, RECONNECT_BASE, RECONNECT_MAX,
     AGENT_THEMES, TILE, SUB_COLORS, SUB_SPEECH, STATUS_META,
@@ -11,7 +12,6 @@ import {
 import { updatePanel, updateStats, updateDetailPanel, updateLiveHud } from "./panel.js";
 import { recordStateSnapshot } from "./stats.js";
 import { t } from "./i18n.js";
-import { sfxJoin, sfxLeave, sfxTaskDone, sfxReview } from "./sound.js";
 import { checkAll as checkAchievements } from "./achievements.js";
 import { notify } from "./notifications.js";
 import { showToast } from "./toasts.js";
@@ -71,7 +71,7 @@ export function connectWS() {
             const msg = JSON.parse(e.data);
             if (msg.type === "full_state") handleState(msg.data);
             else if (msg.type === "heartbeat") {
-                if (msg.diagnostics && S.serverState) {
+                if (msg.diagnostics && S.serverState && !window.aiTycoonDemo?.isEnabled()) {
                     S.serverState.diagnostics = msg.diagnostics;
                     updateLiveHud();
                 }
@@ -253,7 +253,7 @@ function collectWorkEvents(prevAgentsByPid) {
         const langWE = (window.aiTycoonI18n?.getLang?.() || "ko");
         const labelsWE = langWE === "en"
             ? { review: "Review", reviewFallback: "Needs review", newWork: "New work", taskStart: "Task start", done: "Done" }
-            : { review: "검토 요청", reviewFallback: "확인이 필요해요", newWork: "새 작업", taskStart: "태스크 시작", done: "완료" };
+            : { review: "검토 요청", reviewFallback: "확인이 필요해요", newWork: "새 작업", taskStart: "작업 시작", done: "완료" };
 
         if (!prev.needsReview && agent.needsReview) {
             const theme = themeForAgent(agent);
@@ -263,7 +263,6 @@ function collectWorkEvents(prevAgentsByPid) {
                 text: reviewText,
                 key: `review|${agent.pid}|${workSignature(agent)}`,
             });
-            try { sfxReview(); } catch { /* ignore */ }
             try {
                 const notifyLabel = langWE === "en" ? `Review needed: ${reviewText}` : `검토 요청: ${reviewText}`;
                 notify("review", `${theme.name} · ${agent.projectName}`, notifyLabel, { tag: `review-${agent.pid}` });
@@ -315,14 +314,13 @@ function collectWorkEvents(prevAgentsByPid) {
                     text: taskText,
                     key: `task-done|${agent.pid}|${task.id}`,
                 });
-                try { sfxTaskDone(); } catch { /* ignore */ }
                 try {
                     const notifyTitle = langWE === "en" ? `${theme.name} done!` : `${theme.name} 완료!`;
                     notify("task-done", notifyTitle, taskText, { tag: `done-${task.id}` });
                 } catch { /* ignore */ }
                 try {
                     const lang = window.aiTycoonI18n?.getLang?.() || "ko";
-                    const title = lang === "en" ? `${theme.name} finished a task` : `${theme.name} 태스크 완료`;
+                    const title = lang === "en" ? `${theme.name} finished a task` : `${theme.name} 작업 완료`;
                     showToast("task-done", title, taskText, { pid: agent.pid });
                 } catch { /* ignore */ }
                 // Visual celebration at the agent's desk: a small hearts burst
@@ -339,7 +337,16 @@ function collectWorkEvents(prevAgentsByPid) {
 }
 
 // ── Handle live data ──
+let lastLiveState = null;
+export function restoreLiveState() {
+    if (lastLiveState) handleState(lastLiveState);
+    else { updatePanel(); updateLiveHud(); }
+}
 export function handleState(state) {
+    const demoPacket = state?.diagnostics?.isDemo === true;
+    if (!demoPacket) lastLiveState = state;
+    // Live sockets stay healthy during a demo, but never overwrite its scene.
+    if (demoPacket !== (window.aiTycoonDemo?.isEnabled() === true)) return;
     const isInitialState = !S.hasHydratedLiveState;
     S.suppressInitialAlerts = isInitialState;
     if (isInitialState) S.initialAlertGraceUntil = Date.now() + 10_000;
@@ -365,7 +372,7 @@ export function handleState(state) {
     S.liveAgents.forEach((agent, idx) => {
         if (!S.visualAgents[agent.pid]) {
             const desk = S.DESK_SPOTS[idx] || { x: 2 + (idx % 4) * 3, y: 3 + Math.floor(idx / 4) * 3 };
-            const theme = AGENT_THEMES[idx % AGENT_THEMES.length];
+            const theme = resolveAgentTheme(agent, idx);
             const dx = desk.x * TILE + TILE / 2;
             const dy = desk.y * TILE + TILE / 2;
             S.visualAgents[agent.pid] = {
@@ -392,7 +399,6 @@ export function handleState(state) {
                 });
                 spawnParticles(dx, dy, theme.body, 12);
                 spawnHearts(dx, dy - 16, 3);
-                try { sfxJoin(); } catch { /* ignore */ }
                 try {
                     const lang = window.aiTycoonI18n?.getLang?.() || "ko";
                     const title = lang === "en"
@@ -422,7 +428,6 @@ export function handleState(state) {
                     text: langL === "en" ? "Left the office" : "작업실에서 나갔어요",
                     key: `leave|${pid}`,
                 });
-                try { sfxLeave(); } catch { /* ignore */ }
                 try {
                     const lang = window.aiTycoonI18n?.getLang?.() || "ko";
                     const title = lang === "en" ? `${theme.name} left` : `${theme.name} 퇴근`;
@@ -501,6 +506,7 @@ export function handleState(state) {
     });
 
     updatePanel();
+    updateAtmosphere();
     S.hasHydratedLiveState = true;
     S.suppressInitialAlerts = false;
     updateStats();

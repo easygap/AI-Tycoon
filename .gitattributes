@@ -23,3 +23,7 @@
 *.json text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+
+# GitHub에서 포함한 라이브러리와 생성된 CSS를 구분한다.
+assets/vendor/*.js linguist-vendored
+css/tailwind.generated.css linguist-generated

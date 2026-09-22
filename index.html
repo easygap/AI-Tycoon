@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Tycoon</title>
-    <link rel="icon" type="image/svg+xml" href="icons/icon.svg?v=2">
-    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon.png?v=2">
-    <link rel="shortcut icon" href="icons/icon.ico?v=2" type="image/x-icon">
-    <link rel="apple-touch-icon" href="icons/icon.png?v=2">
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg?v=3">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon.png?v=3">
+    <link rel="shortcut icon" href="icons/icon.ico?v=3" type="image/x-icon">
+    <link rel="apple-touch-icon" href="icons/icon.png?v=3">
     <link rel="manifest" href="manifest.webmanifest">
-    <meta name="theme-color" content="#5B8DEF">
-    <meta name="description" content="Live pixel-art office dashboard for AI agents running on your machine">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="터미널 뒤에서 일하는 AI들을 작은 작업실에서 만나보세요. Claude Code, Codex, Cursor의 작업 상태를 실시간으로 보여주는 로컬 대시보드.">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
 
@@ -26,9 +26,10 @@
     <meta name="twitter:image" content="icons/icon.png">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="AI Tycoon">
-    <link rel="preload" href="assets/fonts/SUIT-Variable.woff2" as="font" type="font/woff2" crossorigin>
-    <script src="https://code.iconify.design/iconify-icon/2.3.0/iconify-icon.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pixi.js@8.18.1/dist/pixi.min.js"></script>
+    <link rel="preload" href="assets/fonts/WantedSansVariable.woff2" as="font" type="font/woff2" crossorigin>
+    <script src="assets/vendor/iconify-icon.min.js"></script>
+    <script src="assets/vendor/solar-icons.js"></script>
+    <script src="assets/vendor/pixi.min.js"></script>
     <link rel="stylesheet" href="css/tailwind.generated.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/studio-2026.css">
@@ -51,7 +52,7 @@
         <header class="app-header">
             <div class="brand-lockup" aria-label="AI Tycoon">
                 <img class="brand-symbol" src="icons/brand-symbol.svg" width="36" height="36" alt="">
-                <span class="brand-wordmark">AI Tycoon</span>
+                <span class="brand-wordmark">AI Tycoon<small>내 AI 회사</small></span>
             </div>
 
             <div class="header-live-cluster">
@@ -95,7 +96,7 @@
             <div class="header-spacer"></div>
 
             <div class="header-stats" aria-label="작업실 요약">
-                <div class="header-stat" title="완료/전체 태스크">
+                <div class="header-stat" title="완료/전체 작업">
                     <iconify-icon icon="solar:checklist-minimalistic-linear" aria-hidden="true"></iconify-icon>
                     <span class="tabular-nums"><span id="stat-completed">0</span>/<span id="stat-tasks">0</span></span>
                 </div>
@@ -103,7 +104,7 @@
                     <iconify-icon icon="solar:cpu-bolt-linear" aria-hidden="true"></iconify-icon>
                     <span><span id="stat-ram" class="tabular-nums">0</span>MB</span>
                 </div>
-                <div class="header-stat" title="활성 에이전트 수">
+                <div class="header-stat" title="출근한 직원 수">
                     <iconify-icon icon="solar:users-group-rounded-linear" aria-hidden="true"></iconify-icon>
                     <span id="stat-agents" class="tabular-nums">0</span>
                 </div>
@@ -111,7 +112,7 @@
 
             <div class="header-toolset" role="toolbar" aria-label="작업실 도구">
                 <div class="visual-density-control">
-                <button id="pixi-density-toggle" onclick="togglePixiDensityMenu(event)" class="toolbar-icon pixi-density-toggle h-8 min-w-8 px-2 rounded-lg flex items-center justify-center gap-1.5 shrink-0" title="Pixi 표시 밀도" aria-label="Pixi 표시 밀도" aria-haspopup="menu" aria-expanded="false" aria-controls="pixi-density-menu">
+                <button id="pixi-density-toggle" onclick="togglePixiDensityMenu(event)" class="toolbar-icon pixi-density-toggle h-8 min-w-8 px-2 rounded-lg flex items-center justify-center gap-1.5 shrink-0" title="화면 효과" aria-label="화면 효과" aria-haspopup="menu" aria-expanded="false" aria-controls="pixi-density-menu">
                     <iconify-icon id="pixi-density-icon" icon="solar:layers-minimalistic-linear" class="text-zinc-500 text-sm"></iconify-icon>
                     <span id="pixi-density-label" class="density-label hidden sm:inline">자동</span>
                 </button>
@@ -127,7 +128,7 @@
                         <iconify-icon class="density-option-check" icon="solar:check-circle-bold" aria-hidden="true"></iconify-icon>
                     </button>
                     <button type="button" class="visual-density-option" data-density-option="focus" role="menuitemradio" aria-checked="false" onclick="setPixiDensityFromMenu('focus')" aria-label="시각 효과 집중">
-                        <iconify-icon icon="solar:focus-linear" aria-hidden="true"></iconify-icon>
+                        <iconify-icon icon="solar:target-linear" aria-hidden="true"></iconify-icon>
                         <span>집중</span>
                         <iconify-icon class="density-option-check" icon="solar:check-circle-bold" aria-hidden="true"></iconify-icon>
                     </button>
@@ -143,10 +144,10 @@
                     </button>
                 </div>
                 </div>
-                <button id="insights-toggle" onclick="openInsights()" class="toolbar-icon toolbar-icon-featured" data-i18n-attr="title:header.insights,aria-label:header.insights" data-hotkey="I" title="작업실 인사이트" aria-label="작업실 인사이트 열기">
+                <button id="insights-toggle" onclick="openInsights()" class="toolbar-icon toolbar-icon-featured" data-i18n-attr="title:header.insights,aria-label:header.insights" data-hotkey="I" title="작업 통계" aria-label="작업 통계 열기">
                     <iconify-icon icon="solar:chart-2-linear"></iconify-icon>
                 </button>
-                <button id="snapshot-toggle" onclick="takeOfficeSnapshot()" class="toolbar-icon header-secondary-tool" data-i18n-attr="title:header.snapshot,aria-label:header.snapshot" data-hotkey="P" title="작업실 스냅샷 저장" aria-label="작업실 스냅샷 저장">
+                <button id="snapshot-toggle" onclick="takeOfficeSnapshot()" class="toolbar-icon header-secondary-tool" data-i18n-attr="title:header.snapshot,aria-label:header.snapshot" data-hotkey="P" title="작업실 화면 저장" aria-label="작업실 화면 저장">
                     <iconify-icon icon="solar:camera-linear"></iconify-icon>
                 </button>
                 <button id="shortcuts-toggle" onclick="openShortcuts()" class="toolbar-icon header-secondary-tool" data-i18n-attr="title:header.shortcuts,aria-label:header.shortcuts" data-hotkey="?" title="키보드 단축키" aria-label="키보드 단축키 열기">
@@ -169,7 +170,7 @@
                     <iconify-icon icon="solar:download-linear" aria-hidden="true"></iconify-icon>
                     <span data-i18n="header.installLabel">설치</span>
                 </button>
-                <button id="panel-toggle" onclick="toggleSidePanel()" class="toolbar-icon panel-toggle-tool" title="패널 토글" aria-label="사이드 패널 토글" aria-controls="side-panel" aria-expanded="true">
+                <button id="panel-toggle" onclick="toggleSidePanel()" class="toolbar-icon panel-toggle-tool" title="패널 토글" aria-label="직원 목록 열기" aria-controls="side-panel" aria-expanded="true">
                     <iconify-icon icon="solar:sidebar-minimalistic-linear"></iconify-icon>
                 </button>
             </div>
@@ -180,7 +181,7 @@
 
             <!-- Canvas -->
             <div class="stage-shell flex-1 relative">
-                <canvas id="office-canvas" class="block w-full h-full" tabindex="0" role="application" aria-roledescription="실시간 작업실" aria-label="AI Tycoon 실시간 작업실" aria-describedby="office-a11y-status"></canvas>
+                <canvas id="office-canvas" class="block w-full h-full" tabindex="0" role="application" aria-roledescription="내 AI 회사" aria-label="AI Tycoon 내 AI 회사" aria-describedby="office-a11y-status"></canvas>
 
                 <!-- Empty-state CTA — shown when no agents are detected -->
                 <div id="empty-cta" class="empty-cta" role="status" aria-live="polite" hidden>
@@ -188,14 +189,14 @@
                     <div class="empty-cta-text">
                         <div class="empty-cta-kicker" data-i18n="empty.ctaKicker">아직 직원이 없네요</div>
                         <div class="empty-cta-title" data-i18n="empty.ctaTitle">데모 모드로 미리 보기</div>
-                        <div class="empty-cta-desc" data-i18n="empty.ctaDesc">실제 AI 세션이 없어도 합성 직원으로 작업실을 둘러볼 수 있어요.</div>
+                        <div class="empty-cta-desc" data-i18n="empty.ctaDesc">AI를 연결하기 전에 예시 직원들이 일하는 모습을 구경해 보세요.</div>
                     </div>
                     <button type="button" class="empty-cta-btn" onclick="emptyCtaTryDemo()">
                         <iconify-icon icon="solar:play-circle-bold" aria-hidden="true"></iconify-icon>
                         <span data-i18n="empty.ctaButton">데모 시작</span>
                     </button>
                 </div>
-                <div id="office-a11y-status" class="sr-only" role="status" aria-live="polite">에이전트 상태 수집 중</div>
+                <div id="office-a11y-status" class="sr-only" role="status" aria-live="polite">직원을 찾고 있어요</div>
                 <div id="pixi-layer" class="pixi-layer" aria-hidden="true"></div>
                 <div id="live-hud" class="live-hud" aria-live="off">
                     <section class="hud-panel hud-summary">
@@ -203,7 +204,8 @@
                             <span id="hud-live-dot" class="live-dot"></span>
                             <span id="hud-conn-text" data-i18n="hud.waiting">연결 중</span>
                         </div>
-                        <div class="hud-title" id="hud-title" data-i18n="hud.realtimeOffice" title="더블클릭으로 작업실 이름 편집" tabindex="0" role="button" aria-label="작업실 이름 편집 (더블클릭 또는 Enter)">실시간 작업실</div>
+                        <div class="hud-title" id="hud-title" data-i18n="hud.realtimeOffice" title="더블클릭으로 작업실 이름 편집" tabindex="0" role="button" aria-label="작업실 이름 편집 (더블클릭 또는 Enter)">내 AI 회사</div>
+                        <p id="scene-caption" class="scene-caption">직원을 눌러 지금 하는 일을 확인해 보세요.</p>
                         <div class="hud-metrics">
                             <div>
                                 <span id="hud-active">0</span>
@@ -218,13 +220,13 @@
                                 <label data-i18n="hud.metricReview">검토</label>
                             </div>
                         </div>
-                        <button id="hud-directive" type="button" class="hud-directive" onclick="setSidePanelView('operate', { open: true })" data-tone="ready" aria-label="오늘의 운영 목표 보기">
+                        <button id="hud-directive" type="button" class="hud-directive" onclick="setSidePanelView('operate', { open: true })" data-tone="ready" aria-label="회사 소식 목표 보기">
                             <span class="hud-directive-icon" aria-hidden="true">
                                 <iconify-icon id="hud-directive-icon" icon="solar:flag-2-linear"></iconify-icon>
                             </span>
                             <span class="hud-directive-copy">
-                                <span id="hud-directive-label">오늘의 운영</span>
-                                <strong id="hud-directive-title">운영 목표를 준비하는 중</strong>
+                                <span id="hud-directive-label">회사 소식</span>
+                                <strong id="hud-directive-title">직원을 찾고 있어요</strong>
                             </span>
                             <span id="hud-directive-progress" class="hud-directive-progress tabular-nums">0/5</span>
                             <iconify-icon icon="solar:alt-arrow-right-linear" class="hud-directive-arrow" aria-hidden="true"></iconify-icon>
@@ -233,20 +235,20 @@
                     </section>
 
                     <section class="hud-panel hud-focus">
-                        <div class="hud-kicker" data-i18n="hud.focus">포커스</div>
+                        <div class="hud-kicker" data-i18n="hud.focus">직원 보기</div>
                         <div id="hud-focus-name" class="focus-name" data-i18n="hud.standby">대기 중</div>
-                        <div id="hud-focus-work" class="focus-work" data-i18n="hud.collectingStatus">에이전트 상태 수집 중</div>
+                        <div id="hud-focus-work" class="focus-work" data-i18n="hud.collectingStatus">직원을 찾고 있어요</div>
                         <div class="focus-progress" aria-hidden="true">
                             <span id="hud-focus-progress"></span>
                         </div>
                         <div class="hud-actions">
                             <button id="director-toggle" type="button" onclick="toggleDirectorMode()" class="hud-action" aria-pressed="false" data-i18n-attr="title:hud.directorTitle" title="가장 중요한 직원 자동 추적">
                                 <iconify-icon icon="solar:target-linear"></iconify-icon>
-                                <span data-i18n="hud.director">디렉터</span>
+                                <span data-i18n="hud.director">자동 따라가기</span>
                             </button>
                             <button type="button" onclick="focusActiveAgent()" class="hud-action" data-i18n-attr="title:hud.focusTitle" title="가장 활발한 직원 보기">
-                                <iconify-icon icon="solar:focus-linear"></iconify-icon>
-                                <span data-i18n="hud.focus">포커스</span>
+                                <iconify-icon icon="solar:target-linear"></iconify-icon>
+                                <span data-i18n="hud.focus">직원 보기</span>
                             </button>
                             <button type="button" onclick="resetCameraView()" class="hud-action icon-only" data-i18n-attr="aria-label:hud.fullView,title:hud.fullView" aria-label="전체 보기" title="전체 보기">
                                 <iconify-icon icon="solar:home-angle-linear"></iconify-icon>
@@ -257,22 +259,49 @@
                     <section id="team-radar" class="hud-panel team-radar" aria-labelledby="team-radar-title"></section>
                 </div>
                 <div id="work-stream" class="work-stream" role="status" aria-live="polite" aria-atomic="false"></div>
-                <nav id="agent-focus-rail" class="agent-focus-rail" aria-label="실시간 직원 포커스"></nav>
+                <nav id="agent-focus-rail" class="agent-focus-rail" aria-label="실시간 직원 직원 보기"></nav>
                 <section id="mobile-priority-dock" class="mobile-priority-dock" aria-label="모바일 우선 작업"></section>
+                <div class="scene-tools"><button type="button" id="scene-zoom-in" title="확대" aria-label="회사 확대"><span aria-hidden="true">+</span></button><button type="button" id="scene-zoom-out" title="축소" aria-label="회사 축소"><span aria-hidden="true">−</span></button>
+                    <button type="button" id="scene-reset" title="작업실 전체 보기" aria-label="작업실 전체 보기"><iconify-icon icon="solar:full-screen-linear" aria-hidden="true"></iconify-icon></button>
+                    <button type="button" id="scene-cinema" title="장면만 보기 (Z)" aria-label="장면만 보기" aria-pressed="false"><iconify-icon icon="solar:clapperboard-play-linear" aria-hidden="true"></iconify-icon></button>
+                </div>
+                <section id="office-radio" class="office-radio" aria-label="작업실 라디오">
+                    <button id="radio-play" class="radio-play" type="button" aria-label="배경음악 재생" aria-pressed="false">
+                        <span class="radio-record" aria-hidden="true"><span></span></span>
+                        <span class="radio-play-glyph" aria-hidden="true">▶</span>
+                    </button>
+                    <div class="radio-copy"><span class="radio-label">작업실 라디오</span><strong id="radio-track">조용한 작업실</strong><span id="radio-status">재생 버튼으로 음악을 켜보세요</span></div>
+                    <details id="radio-settings" class="radio-settings">
+                        <summary aria-label="라디오 설정" title="라디오 설정"><iconify-icon icon="solar:tuning-2-linear" aria-hidden="true"></iconify-icon></summary>
+                        <div class="radio-popover">
+                            <label for="radio-mood" id="radio-mood-label">분위기</label>
+                            <select id="radio-mood"><option value="auto">장면에 맞춰서</option><option value="day">햇살 드는 오후</option><option value="night">불 꺼진 도시</option></select>
+                            <label for="radio-volume"><span id="radio-volume-label">음악 볼륨</span><output id="radio-volume-value" for="radio-volume">35%</output></label>
+                            <input id="radio-volume" type="range" min="0" max="100" step="1" value="35">
+                            <label class="radio-fx-label" for="radio-fx"><span id="radio-fx-label">작업 알림 효과음</span><input id="radio-fx" type="checkbox"></label>
+                            <p id="radio-help">다른 탭을 보면 음악도 잠깐 쉽니다.</p>
+                        </div>
+                    </details>
+                </section>
             </div>
 
             <!-- ── Side Panel ── -->
-            <button id="panel-backdrop" type="button" class="panel-backdrop md:hidden" onclick="closeSidePanel()" aria-label="사이드 패널 닫기" hidden></button>
-            <aside id="side-panel" class="side-panel w-[340px] shrink-0 border-l border-amber-200/40 bg-white/50 backdrop-blur-xl flex flex-col overflow-hidden" aria-label="에이전트 사이드 패널">
-                <button id="panel-close" type="button" onclick="closeSidePanel()" class="panel-close md:hidden" data-i18n-attr="aria-label:panel.close" aria-label="사이드 패널 닫기">
+            <nav class="mobile-nav" aria-label="메인 메뉴">
+                <button type="button" data-mobile-nav="office" onclick="setMobileView('office')" aria-current="page"><iconify-icon icon="solar:home-angle-linear" aria-hidden="true"></iconify-icon><span>회사</span></button>
+                <button type="button" data-mobile-nav="agents" onclick="setMobileView('agents')"><iconify-icon icon="solar:users-group-rounded-linear" aria-hidden="true"></iconify-icon><span>직원</span><b id="mobile-team-count">0</b></button>
+                <button type="button" data-mobile-nav="activity" onclick="setMobileView('activity')"><iconify-icon icon="solar:history-2-linear" aria-hidden="true"></iconify-icon><span>기록</span></button>
+            </nav>
+            <button id="panel-backdrop" type="button" class="panel-backdrop md:hidden" onclick="closeSidePanel()" aria-label="회사 화면으로 돌아가기" hidden></button>
+            <aside id="side-panel" class="side-panel w-[340px] shrink-0 border-l border-amber-200/40 bg-white/50 backdrop-blur-xl flex flex-col overflow-hidden" aria-label="회사 정보">
+                <button id="panel-close" type="button" onclick="closeSidePanel()" class="panel-close md:hidden" data-i18n-attr="aria-label:panel.close" aria-label="회사 화면으로 돌아가기">
                     <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                     <span data-i18n="panel.close">닫기</span>
                 </button>
 
-                <nav id="side-panel-tabs" class="side-panel-tabs" role="tablist" aria-label="사이드 패널 보기" data-i18n-attr="aria-label:panel.views">
+                <nav id="side-panel-tabs" class="side-panel-tabs" role="tablist" aria-label="회사 메뉴" data-i18n-attr="aria-label:panel.views">
                     <button type="button" class="side-panel-tab is-active" role="tab" aria-selected="true" aria-controls="panel-view-operate" data-panel-view="operate" onclick="setSidePanelView('operate')">
                         <iconify-icon icon="solar:flag-2-linear" aria-hidden="true"></iconify-icon>
-                        <span data-i18n="panel.tabOperate">운영</span>
+                        <span data-i18n="panel.tabOperate">회사</span>
                         <b id="panel-operate-count" class="tabular-nums" hidden></b>
                     </button>
                     <button type="button" class="side-panel-tab" role="tab" aria-selected="false" aria-controls="panel-view-agents" data-panel-view="agents" onclick="setSidePanelView('agents')">
@@ -288,9 +317,9 @@
                 </nav>
 
                 <div id="panel-view-operate" class="side-panel-view is-active" role="tabpanel" data-panel-view="operate" tabindex="0">
-                    <section id="operator-brief-panel" class="operator-brief-panel shrink-0 border-b border-amber-200/40 p-3" aria-label="오늘의 운영" aria-live="polite"></section>
+                    <section id="operator-brief-panel" class="operator-brief-panel shrink-0 border-b border-amber-200/40 p-3" aria-label="회사 소식" aria-live="polite"></section>
                     <div id="boss-queue-panel" class="hidden shrink-0 border-b border-amber-200/40 p-3 overflow-y-auto max-h-[40%]"></div>
-                    <section id="system-health-panel" class="system-health-panel shrink-0 p-3" aria-label="시스템 진단" aria-live="polite"></section>
+                    <details class="connection-details"><summary>연결 상태</summary><section id="system-health-panel" class="system-health-panel shrink-0 p-3" aria-label="시스템 진단" aria-live="polite"></section></details>
                 </div>
 
                 <div id="panel-view-agents" class="side-panel-view" role="tabpanel" data-panel-view="agents" tabindex="0" hidden>
@@ -303,7 +332,7 @@
                         </div>
                         <div class="agent-search-shell mb-2">
                             <iconify-icon icon="solar:magnifer-linear" aria-hidden="true"></iconify-icon>
-                            <input id="agent-search" class="agent-search-input" type="search" placeholder="직원·프로젝트·작업·메모 검색" data-i18n-placeholder="panel.searchPlaceholder" aria-label="에이전트 검색" autocomplete="off" oninput="if(!this._imeComposing)setAgentSearch(this.value)" oncompositionstart="this._imeComposing=true" oncompositionend="this._imeComposing=false;setAgentSearch(this.value)" onkeydown="handleAgentSearchKey(event)">
+                            <input id="agent-search" class="agent-search-input" type="search" placeholder="직원·프로젝트·작업·메모 검색" data-i18n-placeholder="panel.searchPlaceholder" aria-label="직원 검색" autocomplete="off" oninput="if(!this._imeComposing)setAgentSearch(this.value)" oncompositionstart="this._imeComposing=true" oncompositionend="this._imeComposing=false;setAgentSearch(this.value)" onkeydown="handleAgentSearchKey(event)">
                             <button id="agent-search-clear" type="button" class="agent-search-clear" onclick="clearAgentSearch()" aria-label="검색어 지우기" hidden>
                                 <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
                             </button>
@@ -314,13 +343,17 @@
                         <div id="agent-search-history" class="agent-search-history mb-2" hidden></div>
                         <div id="agent-tags-bar" class="agent-tags-bar mb-2" hidden aria-label="메모 태그 필터"></div>
                         <div id="agent-visibility-summary" class="agent-visibility-summary mb-2" aria-live="polite"></div>
-                        <div id="action-filter" class="action-filter-bar mb-2" aria-label="다음 행동 필터"></div>
+                        <div id="action-filter" class="action-filter-bar mb-2" aria-label="직원 목록 필터"></div>
+                        <details class="agent-filter-details" id="agent-filter-details">
+                        <summary><iconify-icon icon="solar:filter-linear" aria-hidden="true"></iconify-icon><span id="agent-filter-label">필터·정렬</span></summary>
+                        <label>직원 상태</label>
                         <div id="filter-bar" class="flex flex-wrap gap-1 mb-2">
                             <button class="filter-chip active" data-filter="all" onclick="setFilter('all')" data-i18n="panel.filterAll">전체</button>
                             <button class="filter-chip" data-filter="coding" onclick="setFilter('coding')" data-i18n="panel.filterCoding">코딩 중</button>
                             <button class="filter-chip" data-filter="idle" onclick="setFilter('idle')" data-i18n="panel.filterIdle">대기</button>
                             <button class="filter-chip" data-filter="offline" onclick="setFilter('offline')" data-i18n="panel.filterOffline">오프라인</button>
                         </div>
+                        <label>AI 도구</label>
                         <div id="platform-filter" class="flex flex-wrap gap-1 mb-2"></div>
                         <div class="flex items-center gap-1 mb-3">
                             <select id="sort-select" onchange="setSortOrder(this.value)" class="text-[10px] bg-transparent border border-amber-200/40 rounded-md px-1.5 py-0.5 text-zinc-500 outline-none" aria-label="정렬 기준">
@@ -330,11 +363,12 @@
                                 <option value="project">프로젝트순</option>
                                 <option value="recent">최근 활동순</option>
                             </select>
-                            <button id="agents-compact-toggle" type="button" class="agents-compact-toggle" onclick="toggleAgentsCompact()" aria-pressed="false" title="컴팩트 보기" aria-label="컴팩트 보기 토글">
+                            <button id="agents-compact-toggle" type="button" class="agents-compact-toggle" onclick="toggleAgentsCompact()" aria-pressed="false" title="간단히 보기" aria-label="간단히 보기 토글">
                                 <iconify-icon icon="solar:list-linear" aria-hidden="true"></iconify-icon>
                             </button>
                         </div>
-                        <div id="agents-status-summary" class="agents-status-summary" aria-label="상태별 에이전트 수" hidden></div>
+                        </details>
+                        <div id="agents-status-summary" class="agents-status-summary" aria-label="상태별 직원 수" hidden></div>
                         <div id="agents-list" class="flex flex-col gap-2"></div>
                     </div>
                 </div>
@@ -362,7 +396,7 @@
         <div class="modal-card insights-card">
             <header class="modal-header">
                 <div>
-                    <div class="modal-kicker" data-i18n="insights.kicker">실시간 인사이트</div>
+                    <div class="modal-kicker" data-i18n="insights.kicker">작업 통계</div>
                     <h2 id="insights-title" class="modal-title" data-i18n="insights.title">오늘의 작업실</h2>
                 </div>
                 <button type="button" class="modal-close" onclick="closeInsights()" data-i18n-attr="aria-label:panel.close" aria-label="닫기">
@@ -376,7 +410,7 @@
                         <iconify-icon icon="solar:users-group-rounded-bold" aria-hidden="true"></iconify-icon>
                         <div>
                             <div class="insights-stat-value" id="insights-agents">0</div>
-                            <div class="insights-stat-label" data-i18n="insights.activeAgents">활성 에이전트</div>
+                            <div class="insights-stat-label" data-i18n="insights.activeAgents">출근한 직원</div>
                         </div>
                     </div>
                     <div class="insights-stat">
@@ -384,7 +418,7 @@
                         <div>
                             <div class="insights-stat-value" id="insights-completed">0<span id="insights-completed-delta" class="insights-delta" hidden></span></div>
                             <div class="insights-stat-label">
-                                <span data-i18n="insights.completed">완료 태스크</span>
+                                <span data-i18n="insights.completed">완료 작업</span>
                                 <span class="insights-week-chip" id="insights-week-chip" hidden></span>
                             </div>
                         </div>
@@ -498,7 +532,7 @@
                         <iconify-icon icon="solar:checklist-bold" aria-hidden="true"></iconify-icon>
                         <div>
                             <div class="insights-stat-value" id="project-completed">0</div>
-                            <div class="insights-stat-label" data-i18n="insights.completed">완료 태스크</div>
+                            <div class="insights-stat-label" data-i18n="insights.completed">완료 작업</div>
                         </div>
                     </div>
                     <div class="insights-stat">
@@ -536,7 +570,7 @@
                 <section class="insights-section">
                     <h3 class="insights-section-title">
                         <iconify-icon icon="solar:checklist-minimalistic-linear" aria-hidden="true"></iconify-icon>
-                        <span data-i18n="project.tasks">최근 태스크</span>
+                        <span data-i18n="project.tasks">최근 작업</span>
                     </h3>
                     <div id="project-tasks" class="project-tasks"></div>
                 </section>
@@ -550,7 +584,7 @@
             <header class="modal-header">
                 <div>
                     <div class="modal-kicker" data-i18n="settings.kicker">설정</div>
-                    <h2 id="settings-title" class="modal-title" data-i18n="settings.title">취향대로 작업실 꾸미기</h2>
+                    <h2 id="settings-title" class="modal-title" data-i18n="settings.title">설정</h2>
                 </div>
                 <button type="button" class="modal-close" onclick="closeSettings()" data-i18n-attr="aria-label:panel.close" aria-label="닫기">
                     <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
@@ -582,7 +616,7 @@
                     <div class="settings-row">
                         <div class="settings-row-label">
                             <iconify-icon icon="solar:layers-minimalistic-linear" aria-hidden="true"></iconify-icon>
-                            <span data-i18n="settings.visualDensity">시각 밀도</span>
+                            <span data-i18n="settings.visualDensity">화면 효과</span>
                         </div>
                         <select id="settings-density" class="settings-select" onchange="settingsPickDensity(this.value)">
                             <option value="auto" data-i18n="density.auto">자동</option>
@@ -602,7 +636,7 @@
                     <div class="settings-row">
                         <div class="settings-row-label">
                             <iconify-icon icon="solar:widget-3-linear" aria-hidden="true"></iconify-icon>
-                            <span data-i18n="settings.liveHud">실시간 HUD</span>
+                            <span data-i18n="settings.liveHud">회사 상태 표시</span>
                         </div>
                         <label class="settings-switch">
                             <input id="settings-hud" type="checkbox" checked onchange="settingsToggleHud(this.checked)">
@@ -612,7 +646,7 @@
                     <div class="settings-row">
                         <div class="settings-row-label">
                             <iconify-icon icon="solar:stream-linear" aria-hidden="true"></iconify-icon>
-                            <span data-i18n="settings.workStream">작업 스트림</span>
+                            <span data-i18n="settings.workStream">최근 알림</span>
                         </div>
                         <label class="settings-switch">
                             <input id="settings-workstream" type="checkbox" checked onchange="settingsToggleWorkStream(this.checked)">
@@ -622,7 +656,7 @@
                     <div class="settings-row settings-row-vertical">
                         <div class="settings-row-label">
                             <iconify-icon icon="solar:palette-linear" aria-hidden="true"></iconify-icon>
-                            <span data-i18n="settings.officeTheme">오피스 테마</span>
+                            <span data-i18n="settings.officeTheme">방 꾸미기</span>
                         </div>
                         <div class="theme-picker" role="radiogroup" aria-label="Office theme">
                             <button type="button" class="theme-swatch" data-theme="classic" onclick="settingsPickTheme('classic')" aria-checked="false" role="radio">
@@ -639,7 +673,7 @@
                             </button>
                             <button type="button" class="theme-swatch" data-theme="midnight" onclick="settingsPickTheme('midnight')" aria-checked="false" role="radio">
                                 <span class="theme-swatch-preview theme-preview-midnight"></span>
-                                <span class="theme-swatch-label" data-i18n="settings.themeMidnight">심야</span>
+                                <span class="theme-swatch-label" data-i18n="settings.themeMidnight">늦은 밤</span>
                             </button>
                             <button type="button" class="theme-swatch" data-theme="sakura" onclick="settingsPickTheme('sakura')" aria-checked="false" role="radio">
                                 <span class="theme-swatch-preview theme-preview-sakura"></span>
@@ -712,7 +746,7 @@
                             <span></span>
                         </label>
                     </div>
-                    <p class="settings-help" data-i18n="settings.notifyHelp">태스크 완료 / 검토 요청이 생기면 탭이 백그라운드일 때 OS 알림으로 알려드려요.</p>
+                    <p class="settings-help" data-i18n="settings.notifyHelp">작업 완료 / 검토 요청이 생기면 탭이 백그라운드일 때 OS 알림으로 알려드려요.</p>
                 </section>
 
                 <section class="settings-section">
@@ -720,14 +754,14 @@
                     <div class="settings-row">
                         <div class="settings-row-label">
                             <iconify-icon icon="solar:user-plus-linear" aria-hidden="true"></iconify-icon>
-                            <span data-i18n="settings.demoMode">합성 직원 표시</span>
+                            <span data-i18n="settings.demoMode">예시 직원 표시</span>
                         </div>
                         <label class="settings-switch">
                             <input id="settings-demo" type="checkbox" onchange="settingsToggleDemo(this.checked)">
                             <span></span>
                         </label>
                     </div>
-                    <p class="settings-help" data-i18n="settings.demoModeHelp">실제 에이전트가 없을 때 가상의 직원으로 작업실을 시연합니다 (마케팅 · 스크린샷용).</p>
+                    <p class="settings-help" data-i18n="settings.demoModeHelp">AI 도구를 켜지 않아도 예시 직원들과 먼저 둘러볼 수 있어요.</p>
                     <div class="settings-row">
                         <div class="settings-row-label">
                             <iconify-icon icon="solar:sun-2-linear" aria-hidden="true"></iconify-icon>
@@ -894,7 +928,7 @@
                 <section class="shortcuts-group">
                     <h3 class="shortcuts-group-title" data-i18n="shortcuts.navGroup">탐색</h3>
                     <ul class="shortcuts-list">
-                        <li><span class="shortcuts-keys"><kbd>/</kbd></span><span data-i18n="shortcuts.searchFocus">에이전트 검색 포커스</span></li>
+                        <li><span class="shortcuts-keys"><kbd>/</kbd></span><span data-i18n="shortcuts.searchFocus">에이전트 검색 직원 보기</span></li>
                         <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>K</kbd></span><span data-i18n="shortcuts.cmdPalette">명령 팔레트 (Cmd+K)</span></li>
                         <li><span class="shortcuts-keys"><kbd>Esc</kbd></span><span data-i18n="shortcuts.escClose">검색·모달 닫기</span></li>
                         <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>/</kbd></span><span data-i18n="shortcuts.helpAlt">단축키 도움말 (대체)</span></li>
@@ -905,17 +939,17 @@
                     <h3 class="shortcuts-group-title" data-i18n="shortcuts.screenGroup">화면</h3>
                     <ul class="shortcuts-list">
                         <li><span class="shortcuts-keys"><kbd>D</kbd></span><span data-i18n="shortcuts.darkToggle">다크 모드 전환</span></li>
-                        <li><span class="shortcuts-keys"><kbd>F</kbd></span><span data-i18n="shortcuts.focusActive">가장 활발한 직원 포커스</span></li>
+                        <li><span class="shortcuts-keys"><kbd>F</kbd></span><span data-i18n="shortcuts.focusActive">가장 활발한 직원 직원 보기</span></li>
                         <li><span class="shortcuts-keys"><kbd>J</kbd> / <kbd>K</kbd></span><span data-i18n="shortcuts.cycleAgents">다음 / 이전 직원</span></li>
                         <li><span class="shortcuts-keys"><kbd>Shift</kbd>+<kbd>Click</kbd></span><span data-i18n="shortcuts.pinShift">카드 Shift+클릭으로 핀 토글</span></li>
-                        <li><span class="shortcuts-keys"><kbd>N</kbd></span><span data-i18n="shortcuts.noteFocus">선택된 에이전트의 메모로 포커스</span></li>
+                        <li><span class="shortcuts-keys"><kbd>N</kbd></span><span data-i18n="shortcuts.noteFocus">선택된 에이전트의 메모로 직원 보기</span></li>
                         <li><span class="shortcuts-keys"><kbd>H</kbd></span><span data-i18n="shortcuts.resetView">전체 보기로 리셋</span></li>
                         <li><span class="shortcuts-keys"><kbd>?</kbd></span><span data-i18n="shortcuts.help">이 도움말 열기</span></li>
-                        <li><span class="shortcuts-keys"><kbd>I</kbd></span><span data-i18n="shortcuts.insights">인사이트 열기</span></li>
-                        <li><span class="shortcuts-keys"><kbd>M</kbd></span><span data-i18n="shortcuts.muteSound">사운드 음소거 토글</span></li>
-                        <li><span class="shortcuts-keys"><kbd>Z</kbd></span><span data-i18n="shortcuts.cinema">시네마 모드 (오버레이 숨김)</span></li>
+                        <li><span class="shortcuts-keys"><kbd>I</kbd></span><span data-i18n="shortcuts.insights">작업 통계 열기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>M</kbd></span><span data-i18n="shortcuts.muteSound">소리 끄기 / 켜기</span></li>
+                        <li><span class="shortcuts-keys"><kbd>Z</kbd></span><span data-i18n="shortcuts.cinema">회사만 크게 보기</span></li>
                         <li><span class="shortcuts-keys"><kbd>,</kbd></span><span data-i18n="shortcuts.settings">설정 열기</span></li>
-                        <li><span class="shortcuts-keys"><kbd>P</kbd></span><span data-i18n="shortcuts.snapshot">스냅샷 저장</span></li>
+                        <li><span class="shortcuts-keys"><kbd>P</kbd></span><span data-i18n="shortcuts.snapshot">화면 저장</span></li>
                         <li><span class="shortcuts-keys"><kbd>Shift</kbd>+<kbd>P</kbd></span><span data-i18n="shortcuts.privacy">프라이버시 모드 토글</span></li>
                         <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd></span><span data-i18n="shortcuts.perfHud">성능 오버레이</span></li>
                     </ul>
@@ -924,16 +958,16 @@
                     <h3 class="shortcuts-group-title" data-i18n="shortcuts.canvasGroup">캔버스</h3>
                     <ul class="shortcuts-list">
                         <li><span class="shortcuts-keys"><kbd>+</kbd>/<kbd>-</kbd></span><span data-i18n="shortcuts.zoom">줌 인 / 아웃</span></li>
-                        <li><span class="shortcuts-keys"><kbd>0</kbd></span><span data-i18n="shortcuts.zoomReset">줌 리셋</span></li>
+                        <li><span class="shortcuts-keys"><kbd>0</kbd></span><span data-i18n="shortcuts.zoomReset">전체 보기</span></li>
                         <li><span class="shortcuts-keys"><kbd>드래그</kbd></span><span data-i18n="shortcuts.panning">패닝</span></li>
-                        <li><span class="shortcuts-keys"><kbd>더블클릭</kbd></span><span data-i18n="shortcuts.dblZoom">줌 리셋</span></li>
+                        <li><span class="shortcuts-keys"><kbd>더블클릭</kbd></span><span data-i18n="shortcuts.dblZoom">전체 보기</span></li>
                     </ul>
                 </section>
                 <section class="shortcuts-group">
                     <h3 class="shortcuts-group-title" data-i18n="shortcuts.notesGroup">메모</h3>
                     <ul class="shortcuts-list">
                         <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>S</kbd></span><span data-i18n="shortcuts.noteSave">메모 즉시 저장</span></li>
-                        <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>Enter</kbd></span><span data-i18n="shortcuts.noteSaveClose">저장 + 디테일 패널 닫기</span></li>
+                        <li><span class="shortcuts-keys"><kbd data-mod-key>Ctrl</kbd>+<kbd>Enter</kbd></span><span data-i18n="shortcuts.noteSaveClose">저장 + 직원 상세 화면 닫기</span></li>
                         <li><span class="shortcuts-keys"><kbd>#</kbd>+타이핑</span><span data-i18n="shortcuts.noteHashtag">메모에 #태그 입력 시 기존 태그 자동완성 (↑↓ 선택, Enter/Tab 삽입)</span></li>
                         <li><span class="shortcuts-keys"><kbd>Esc</kbd></span><span data-i18n="shortcuts.noteEscape">자동완성 닫기</span></li>
                     </ul>
@@ -948,24 +982,11 @@
             <button id="welcome-close" type="button" class="welcome-close" onclick="dismissWelcome(false)" aria-label="닫기">
                 <iconify-icon icon="solar:close-circle-linear" aria-hidden="true"></iconify-icon>
             </button>
-            <div class="welcome-art" aria-hidden="true">
-                <div class="welcome-window">
-                    <div class="welcome-sky"></div>
-                    <div class="welcome-sun"></div>
-                </div>
-                <div class="welcome-desks">
-                    <div class="welcome-desk"><div class="welcome-monitor"></div><div class="welcome-chair"></div></div>
-                    <div class="welcome-desk"><div class="welcome-monitor"></div><div class="welcome-chair"></div></div>
-                    <div class="welcome-desk"><div class="welcome-monitor"></div><div class="welcome-chair"></div></div>
-                </div>
-                <div class="welcome-character welcome-character-1" style="--char-color:#86EFAC"></div>
-                <div class="welcome-character welcome-character-2" style="--char-color:#FFB3C6"></div>
-                <div class="welcome-character welcome-character-3" style="--char-color:#93C5FD"></div>
-            </div>
+            <div class="welcome-cast" id="welcome-cast" aria-hidden="true"></div>
             <div class="welcome-body">
                 <div class="welcome-kicker" data-i18n="welcome.kicker">처음 오셨군요</div>
-                <h2 id="welcome-title" class="welcome-title" data-i18n="welcome.title">AI Tycoon에 오신 걸 환영합니다</h2>
-                <p id="welcome-desc" class="welcome-desc" data-i18n="welcome.desc">내 컴퓨터에서 동작 중인 AI 에이전트들의 작업 상태를 픽셀 아트 오피스로 한눈에 확인해 보세요.</p>
+                <h2 id="welcome-title" class="welcome-title" data-i18n="welcome.title">AI들이 일하는 작은 회사</h2>
+                <p id="welcome-desc" class="welcome-desc" data-i18n="welcome.desc">터미널을 오가지 않아도 누가 무슨 일을 하는지 볼 수 있어요.</p>
                 <ul class="welcome-list">
                     <li>
                         <iconify-icon icon="solar:user-plus-rounded-linear" aria-hidden="true"></iconify-icon>
@@ -973,7 +994,7 @@
                     </li>
                     <li>
                         <iconify-icon icon="solar:pulse-2-linear" aria-hidden="true"></iconify-icon>
-                        <span data-i18n="welcome.feat2" data-i18n-mode="html">코딩 · 생각 · 검색 · 리뷰 상태가 <strong>실시간</strong>으로 표시됩니다.</span>
+                        <span data-i18n="welcome.feat2" data-i18n-mode="html">직원을 누르면 <strong>지금 하는 일과 작업 기록</strong>을 볼 수 있어요.</span>
                     </li>
                     <li>
                         <iconify-icon icon="solar:sun-2-linear" aria-hidden="true"></iconify-icon>
@@ -981,7 +1002,7 @@
                     </li>
                     <li>
                         <iconify-icon icon="solar:tuning-square-linear" aria-hidden="true"></iconify-icon>
-                        <span data-i18n="welcome.feat4" data-i18n-mode="html">헤더의 <strong>시각 밀도</strong>·<strong>다크모드</strong>·<strong>디렉터 모드</strong>로 보기를 바꿔보세요.</span>
+                        <span data-i18n="welcome.feat4" data-i18n-mode="html">화면 아래 <strong>라디오</strong>를 켜면 작업실에 음악이 흐릅니다.</span>
                     </li>
                 </ul>
                 <div class="welcome-actions">
@@ -990,7 +1011,7 @@
                         <span data-i18n="welcome.primary">작업실 둘러보기</span>
                     </button>
                     <button type="button" class="welcome-secondary" onclick="dismissWelcome(false)" data-i18n="welcome.secondary">
-                        다음에 다시 보지 않기
+                        바로 시작하기
                     </button>
                 </div>
             </div>
@@ -1003,12 +1024,13 @@
         document.body.classList.toggle("dark", isDark);
         const icon = document.getElementById("dark-icon");
         if (icon) icon.setAttribute("icon", isDark ? "solar:sun-linear" : "solar:moon-linear");
+        window.aiTycoonForceRepaint?.();
     }
     function toggleDarkMode() {
         const isDark = !document.body.classList.contains("dark");
         localStorage.setItem("ai-tycoon-dark", isDark); // explicit user choice
         applyDark(isDark);
-        if (window.aiTycoonAchievements?.check) {
+        if (window.aiTycoonAchievements?.check && !window.aiTycoonDemo?.isEnabled?.()) {
             // Mark the dark toggle counter via internal flag
             try {
                 const raw = localStorage.getItem("ai-tycoon-achievements-v1");
@@ -1057,6 +1079,7 @@
         if (localStorage.getItem(WELCOME_KEY) === "true") return;
         overlay.hidden = false;
         overlay.classList.add("is-visible");
+        overlay.addEventListener("keydown", trapModalTab);
         const primary = overlay.querySelector(".welcome-primary");
         primary?.focus({ preventScroll: true });
     }
@@ -1064,10 +1087,12 @@
         const overlay = document.getElementById("welcome-overlay");
         if (!overlay) return;
         overlay.classList.remove("is-visible");
+        overlay.removeEventListener("keydown", trapModalTab);
         const isFirstRun = localStorage.getItem(WELCOME_KEY) !== "true";
         localStorage.setItem(WELCOME_KEY, "true");
         setTimeout(() => {
             overlay.hidden = true;
+            document.getElementById("settings-toggle")?.focus({ preventScroll: true });
             // Trigger the onboarding tour once the welcome card has slid away
             if (isFirstRun && rememberStart && window.aiTycoonTour && !window.aiTycoonTour.isDone()) {
                 setTimeout(() => window.aiTycoonTour.start(), 200);
@@ -1080,7 +1105,7 @@
             window.aiTycoonI18n.toggleLang();
             const label = document.getElementById("lang-label");
             if (label) label.textContent = window.aiTycoonI18n.getLang().toUpperCase();
-            if (window.aiTycoonAchievements?.check) {
+            if (window.aiTycoonAchievements?.check && !window.aiTycoonDemo?.isEnabled?.()) {
                 try {
                     const raw = localStorage.getItem("ai-tycoon-achievements-v1");
                     const blob = raw ? JSON.parse(raw) : { unlocked: {}, counters: {} };
@@ -1109,7 +1134,7 @@
     document.addEventListener("DOMContentLoaded", () => setTimeout(syncSoundIcon, 100));
     // ── Generic modal open/close (insights + shortcuts) ──
     // 키보드/스크린리더 사용자를 위해: 열릴 때 트리거를 기억해 두고 닫힐 때
-    // 그 자리로 포커스를 돌려준다. Tab 은 모달 안에서만 순환 (focus trap).
+    // 그 자리로 직원 보기를 돌려준다. Tab 은 모달 안에서만 순환 (focus trap).
     let modalReturnFocusEl = null;
     function trapModalTab(e) {
         if (e.key !== "Tab") return;
@@ -1145,21 +1170,12 @@
     // Hand-maintained: keep in sync with the top of CHANGELOG.md so users
     // can see recent improvements without leaving the app.
     const WHATSNEW_ENTRIES = [
-        { ko: "백그라운드 탭으로 열어도 바로 연결 (rAF 부팅 의존 제거)", en: "Boots & connects even in a background tab (no more rAF-gated startup)", icon: "solar:bolt-bold", tone: "stable" },
-        { ko: "포트가 이미 사용 중이면 크래시 대신 친절한 안내", en: "Friendly message instead of a crash when the port is taken", icon: "solar:shield-warning-bold", tone: "stable" },
-        { ko: "모달 Tab 포커스 순환 + 닫을 때 제자리 복귀", en: "Modal focus trap + focus restore on close", icon: "solar:keyboard-bold", tone: "design" },
-        { ko: "Smoke 테스트가 /api/health · /api/agents JSON 계약까지 검증", en: "Smoke tests now validate /api/health & /api/agents JSON shape", icon: "solar:test-tube-bold", tone: "ok" },
-        { ko: "명령 팔레트 검색바 힌트 + 투어 안내로 발견성 ↑", en: "Cmd palette discoverability via search-bar chip + tour", icon: "solar:command-square-bold", tone: "feature" },
-        { ko: "메모리 추세 화살표 ▲ / ▼ (30초 비교)", en: "Memory trend arrows on agent cards (30 s window)", icon: "solar:arrow-up-linear", tone: "feature" },
-        { ko: "명령 팔레트 22종 명령 (테마·필터·언어 등)", en: "Command palette expanded to 22 commands", icon: "solar:command-bold", tone: "feature" },
-        { ko: "프라이버시 모드 (Shift+P) — 화면 공유용 블러", en: "Privacy mode (Shift+P) — blur sensitive text", icon: "solar:eye-closed-bold", tone: "feature" },
-        { ko: "명령 팔레트 (Ctrl/Cmd+K) — VS Code 스타일 빠른 이동", en: "Command palette (Ctrl/Cmd+K)", icon: "solar:command-bold", tone: "highlight" },
-        { ko: "프로젝트별 일관된 색상 닷 (같은 프로젝트끼리 시각 그룹)", en: "Per-project color dots — visual grouping", icon: "solar:palette-bold", tone: "design" },
-        { ko: "사이드 패널 상단 상태별 요약 칩", en: "Status summary chips above the agent list", icon: "solar:chart-bold", tone: "design" },
-        { ko: "신규 출근 에이전트 NEW 펄스 (60초)", en: "NEW pulse on freshly joined agents (60 s)", icon: "solar:user-plus-bold", tone: "design" },
-        { ko: "Insights 모달에 '오늘의 MVP' 카드", en: "'Today's MVP' card in the Insights modal", icon: "solar:cup-star-bold", tone: "feature" },
-        { ko: "탭 복귀 시 '자리 비운 사이' 요약 토스트", en: "'While you were away' summary on tab return", icon: "solar:bell-bold", tone: "feature" },
-        { ko: "서버 graceful shutdown — WS 클라이언트 작별 인사", en: "Server graceful shutdown with farewell to WS clients", icon: "solar:server-bold", tone: "stable" },
+        { ko: "직원마다 다른 얼굴과 네 방향 걷기, 작업에 맞는 손동작", en: "Distinct pixel characters with directional walking and work poses", icon: "solar:users-group-rounded-linear", tone: "design" },
+        { ko: "휴대폰에서 회사·직원·기록을 오가는 하단 메뉴", en: "Mobile navigation for office, team and activity", icon: "solar:smartphone-linear", tone: "feature" },
+        { ko: "긴 작업명은 끝까지 읽을 수 있도록 줄바꿈", en: "Wrapping project and task names", icon: "solar:list-linear", tone: "design" },
+        { ko: "낮과 밤에 어울리는 배경음악과 상황별 알림음", en: "Original day and night music with contextual cues", icon: "solar:volume-loud-linear", tone: "feature" },
+        { ko: "인터넷 연결 없이도 표시되는 글꼴·아이콘·화면 효과", en: "Bundled fonts, icons and rendering library", icon: "solar:box-linear", tone: "stable" },
+        { ko: "체험 모드의 기록이 실제 통계와 업적에 섞이지 않도록 수정", en: "Demo data stays separate from live statistics and achievements", icon: "solar:shield-check-linear", tone: "stable" },
     ];
     // 브라우저 localStorage 안에 ai-tycoon-* 로 시작하는 키들의 합산 바이트 + 개수 표시
     // 파워 유저가 "백업 / 초기화 누르기 전에 얼마나 쌓였지?" 가늠하는 용도.
@@ -1433,7 +1449,7 @@
         const input = actions.querySelector(".settings-tag-rename-input");
         const saveBtn = actions.querySelector(".settings-tag-rename-save");
         const cancelBtn = actions.querySelector(".settings-tag-rename-cancel");
-        // 포커스 + 텍스트 전체 선택 — 사용자가 바로 새 이름 타이핑 가능
+        // 직원 보기 + 텍스트 전체 선택 — 사용자가 바로 새 이름 타이핑 가능
         input.focus({ preventScroll: true });
         input.select();
         const restore = () => { actions.innerHTML = original; renderTagsManager(); };
@@ -1507,7 +1523,7 @@
         `;
         const yesBtn = actions.querySelector(".settings-tag-delete-yes");
         const noBtn = actions.querySelector(".settings-tag-delete-no");
-        // 기본 포커스를 '아니오' 에 두어 키 Enter 로 실수로 삭제하지 않게
+        // 기본 직원 보기를 '아니오' 에 두어 키 Enter 로 실수로 삭제하지 않게
         noBtn.focus({ preventScroll: true });
         const restore = () => { actions.innerHTML = original; renderTagsManager(); };
         yesBtn.addEventListener("click", () => applyTagDelete(tag));
@@ -1675,13 +1691,14 @@
             : "Agent";
         window.aiTycoonToasts?.show?.("info",
             label,
-            `${nextIdx + 1} / ${ids.length} · ${lang === "en" ? "agent focused" : "에이전트 포커스"}`);
+            `${nextIdx + 1} / ${ids.length} · ${lang === "en" ? "agent focused" : "에이전트 직원 보기"}`);
     }
-    // 디테일 패널의 ‹ / › 버튼이나 다른 모듈에서 호출할 수 있게 노출.
+    // 직원 상세 화면의 ‹ / › 버튼이나 다른 모듈에서 호출할 수 있게 노출.
     if (typeof window !== "undefined") window.cycleAgentFocus = cycleAgentFocus;
     function toggleCinemaMode() {
         _cinemaMode = !_cinemaMode;
         document.body.classList.toggle("cinema-mode", _cinemaMode);
+        window.dispatchEvent(new Event("resize"));
         const lang = window.aiTycoonI18n?.getLang?.() || "ko";
         window.aiTycoonToasts?.show?.("info",
             _cinemaMode
@@ -1712,7 +1729,7 @@
             const firstCard = document.querySelector("#agents-list .agent-card");
             if (firstCard) {
                 firstCard.click();
-                // 사이드바에서 캔버스/디테일 패널로 자연스럽게 시선 이동
+                // 사이드바에서 캔버스/직원 상세 화면로 자연스럽게 시선 이동
                 input.blur();
             }
         }
@@ -1847,7 +1864,7 @@
         const icon = document.getElementById("settings-time-icon");
         if (icon) {
             const ic = hh < 5 ? "solar:moon-stars-linear"
-                : hh < 7 ? "solar:cloudy-sun-linear"
+                : hh < 7 ? "solar:cloud-sun-linear"
                 : hh < 11 ? "solar:sun-2-linear"
                 : hh < 17 ? "solar:sun-linear"
                 : hh < 20 ? "solar:sunset-linear"
@@ -1890,7 +1907,7 @@
         }
         if (hudTitle) {
             const lang = window.aiTycoonI18n?.getLang?.() || "ko";
-            const base = lang === "en" ? "Live workspace" : "실시간 작업실";
+            const base = lang === "en" ? "Live workspace" : "내 AI 회사";
             hudTitle.textContent = name || base;
         }
     }
@@ -1941,7 +1958,7 @@
         }
         window.__aiTycoonStuckAgents = stuckAgents;
     }
-    // 헤더 칩 클릭 시 가장 오래 멈춰있던 친구로 포커스 이동
+    // 헤더 칩 클릭 시 가장 오래 멈춰있던 친구로 직원 보기 이동
     function focusFirstStuckAgent() {
         const list = window.__aiTycoonStuckAgents || [];
         if (list.length === 0) return;
@@ -2248,15 +2265,15 @@
         const k = event.key;
         if (k === "?" || (event.shiftKey && k === "/")) { event.preventDefault(); openShortcuts(); }
         else if (k === ",") { event.preventDefault(); openSettings(); }
-        else if (k === "p" || k === "P") { event.preventDefault(); takeOfficeSnapshot(); }
+        else if ((k === "p" || k === "P") && !event.shiftKey) { event.preventDefault(); takeOfficeSnapshot(); }
         else if (k === "i" || k === "I") { event.preventDefault(); openInsights(); }
         else if (k === "m" || k === "M") {
             event.preventDefault();
             if (window.aiTycoonSound) {
-                window.aiTycoonSound.toggle();
+                const muted = window.aiTycoonSound.toggleMasterMute();
                 if (typeof syncSoundIcon === "function") syncSoundIcon();
                 const lang = window.aiTycoonI18n?.getLang?.() || "ko";
-                const on = window.aiTycoonSound.isEnabled();
+                const on = !muted;
                 window.aiTycoonToasts?.show?.("info",
                     on ? (lang === "en" ? "Sound on" : "사운드 켜짐")
                        : (lang === "en" ? "Muted" : "음소거"));
@@ -2281,8 +2298,8 @@
             event.preventDefault();
             if (typeof window.resetCameraView === "function") window.resetCameraView();
         }
-        // 'N' = 선택된 에이전트의 메모 textarea 로 빠르게 포커스 (편집 시작).
-        // 디테일 패널이 열려있지 않으면 짧은 토스트로 안내.
+        // 'N' = 선택된 에이전트의 메모 textarea 로 빠르게 직원 보기 (편집 시작).
+        // 직원 상세 화면이 열려있지 않으면 짧은 토스트로 안내.
         else if (k === "n" || k === "N") {
             event.preventDefault();
             const input = document.getElementById("detail-note-input");
@@ -2292,7 +2309,7 @@
             } else {
                 const lang = window.aiTycoonI18n?.getLang?.() || "ko";
                 window.aiTycoonToasts?.show?.("info",
-                    lang === "en" ? "Select an agent first" : "에이전트를 먼저 선택해 주세요",
+                    lang === "en" ? "Select an agent first" : "직원을 먼저 선택해 주세요",
                     lang === "en" ? "Open a card to edit its note." : "카드를 열면 메모를 바로 편집할 수 있어요.");
             }
         }
@@ -2429,7 +2446,10 @@
         if (!splash || splash.dataset.hidden) return;
         splash.dataset.hidden = "true";
         splash.classList.add("is-leaving");
-        setTimeout(() => { splash.style.display = "none"; }, 480);
+        setTimeout(() => {
+            splash.style.display = "none";
+            if (!new URLSearchParams(location.search).has("action")) showWelcomeIfNeeded();
+        }, 480);
     }
     function waitForBoot() {
         // Boot is considered ready when main.js has exposed its helpers

@@ -4,6 +4,7 @@
 
 import { generateDeskSpots, MAX_PARTICLES, MAX_HEARTS, AGENT_THEMES } from "./constants.js";
 import { recordEvent } from "./stats.js";
+import { queueWorkCue } from "./sound.js";
 
 function readStoredStringArray(key) {
     try {
@@ -26,6 +27,7 @@ export const S = {
     offsetX: 0,
     offsetY: 0,
     animFrame: 0,
+    reducedMotion: window.matchMedia?.("(prefers-reduced-motion: reduce)").matches === true,
     particles: [],
     heartParticles: [],
     ws: null,
@@ -91,7 +93,9 @@ export function resolveAgentTheme(agent, fallbackIndex) {
         idx = S.liveAgents.findIndex(a => String(a.pid) === String(agent.pid));
     }
     if (idx < 0) idx = 0;
-    return AGENT_THEMES[idx % AGENT_THEMES.length] || AGENT_THEMES[0];
+    // Alternate silhouettes across the first rows, then use the whole cast.
+    const order = [0, 10, 2, 15, 4, 17, 6, 11, 8, 19, 1, 12, 3, 13, 5, 14, 7, 16, 9, 18];
+    return AGENT_THEMES[order[idx % order.length]] || AGENT_THEMES[0];
 }
 
 export function esc(str) {
@@ -99,7 +103,11 @@ export function esc(str) {
 }
 
 /** Get display text for what agent is currently working on */
-export function getWorkText(agent) {
+export function getWorkText(agent, maxLength = 25) {
+    const shorten = text => {
+        const chars = Array.from(String(text || "").trim());
+        return chars.length > maxLength ? chars.slice(0, maxLength - 1).join("") + "…" : chars.join("");
+    };
     // Priority 1: currentWork from history (real-time prompt)
     if (agent.currentWork && agent.currentWork.prompt) {
         const prompt = agent.currentWork.prompt;
@@ -108,12 +116,12 @@ export function getWorkText(agent) {
         if (cleaned.length > 3) {
             // Take first meaningful line
             const firstLine = cleaned.split("\n")[0].trim();
-            return firstLine.substring(0, 25);
+            return shorten(firstLine);
         }
     }
     // Priority 2: currentTask subject
     if (agent.currentTask) {
-        return agent.currentTask.subject.substring(0, 25);
+        return shorten(agent.currentTask.subject);
     }
     return null;
 }
@@ -174,6 +182,10 @@ export function addWorkEvent(event) {
         ts: event.ts || now,
     });
     if (S.workEvents.length > 28) S.workEvents.length = 28;
+    if (!S.suppressInitialAlerts) {
+        queueWorkCue(event);
+        window.dispatchEvent(new CustomEvent("tycoon:work-event", { detail: S.workEvents[0] }));
+    }
     try { recordEvent(); } catch (err) { /* persistence is non-fatal */ void err; }
 }
 
@@ -199,6 +211,7 @@ export function bossQueueResolve(pid, result) {
 
 // ── Particles ──
 export function spawnParticles(x, y, color, n) {
+    if (S.reducedMotion) return;
     while (S.particles.length > MAX_PARTICLES - n) S.particles.shift();
     for (let i = 0; i < n; i++) {
         S.particles.push({
@@ -212,6 +225,7 @@ export function spawnParticles(x, y, color, n) {
 }
 
 export function spawnHearts(x, y, n) {
+    if (S.reducedMotion) return;
     while (S.heartParticles.length > MAX_HEARTS - n) S.heartParticles.shift();
     const emojis = ["♥", "★", "♪", "✿"];
     for (let i = 0; i < n; i++) {

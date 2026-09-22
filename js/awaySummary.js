@@ -54,7 +54,7 @@ function formatSummary(d, lang) {
     if (d.join)        pieces.push(ko ? `출근 ${d.join}` : `${d.join} joined`);
     if (d["task-done"]) pieces.push(ko ? `완료 ${d["task-done"]}` : `${d["task-done"]} done`);
     if (d.review)      pieces.push(ko ? `검토 요청 ${d.review}` : `${d.review} review${d.review > 1 ? "s" : ""}`);
-    if (d["task-start"]) pieces.push(ko ? `태스크 시작 ${d["task-start"]}` : `${d["task-start"]} started`);
+    if (d["task-start"]) pieces.push(ko ? `작업 시작 ${d["task-start"]}` : `${d["task-start"]} started`);
     if (d.leave)       pieces.push(ko ? `퇴근 ${d.leave}` : `${d.leave} left`);
     if (d.work && pieces.length === 0) pieces.push(ko ? `새 작업 ${d.work}` : `${d.work} new prompt${d.work > 1 ? "s" : ""}`);
     return pieces.join(" · ");

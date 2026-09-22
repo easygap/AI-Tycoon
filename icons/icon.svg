@@ -1,11 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">AI Tycoon</title>
-  <desc id="desc">A person at a desk inside a small studio doorway</desc>
-  <rect x="12" y="12" width="488" height="488" rx="108" fill="#F5F7F2" stroke="#25272F" stroke-width="24"/>
-  <path fill="#25272F" d="M94 426V218c0-81.74 66.26-148 148-148h164v356H94Z"/>
-  <path fill="#F5F7F2" d="M154 426V226c0-52.47 42.53-95 95-95h97v295H154Z"/>
-  <circle cx="245" cy="255" r="37" fill="#45D6A4"/>
-  <rect x="180" y="302" width="190" height="54" rx="19" fill="#FF705F"/>
-  <path fill="#FF705F" d="M254 346h54v80h-54z"/>
-  <rect x="356" y="102" width="78" height="96" rx="22" fill="#F2D05E" stroke="#25272F" stroke-width="16"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title"><title id="title">AI Tycoon</title><rect width="512" height="512" rx="108" fill="#f0f1f4"/><g transform="translate(64 48) scale(6)" shape-rendering="crispEdges"><path fill="#42394f" d="M10 16h4v-4h36v4h4v42H10z"/>
+  <path fill="#bf3b55" d="M14 16h36v38H14z"/>
+  <path fill="#e97d90" d="M14 16h36v4H14zM14 20h4v34h-4z"/>
+  <path fill="#eaf0f8" d="M22 24h8v8h-8zM36 24h8v8h-8zM22 38h8v8h-8z"/>
+  <path fill="#9aabc6" d="M22 30h8v2h-8zM36 30h8v2h-8zM22 44h8v2h-8z"/>
+  <path fill="#42394f" d="M36 40h8v18h-8zM6 58h52v4H6z"/>
+  <path fill="#f4c268" d="M39 45h2v2h-2zM42 6h8v6h-8z"/></g></svg>

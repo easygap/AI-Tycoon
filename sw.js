@@ -2,7 +2,7 @@
 // Caches the static shell so the dashboard still opens offline,
 // then falls back to network for everything else.
 
-const VERSION = "ai-tycoon-shell-v54";
+const VERSION = "ai-tycoon-shell-v59";
 const SHELL_ASSETS = [
     "/",
     "/index.html",
@@ -10,6 +10,11 @@ const SHELL_ASSETS = [
     "/css/tailwind.generated.css",
     "/css/studio-2026.css",
     "/assets/fonts/SUIT-Variable.woff2",
+    "/assets/fonts/Galmuri11.woff2",
+    "/assets/fonts/WantedSansVariable.woff2",
+    "/assets/vendor/iconify-icon.min.js",
+    "/assets/vendor/solar-icons.js",
+    "/assets/vendor/pixi.min.js",
     "/manifest.webmanifest",
     "/icons/icon.png",
     "/icons/icon.ico",
@@ -21,6 +26,7 @@ const SHELL_ASSETS = [
     "/js/constants.js",
     "/js/ws.js",
     "/js/renderer.js",
+    "/js/characters.js",
     "/js/panel.js",
     "/js/pixiOverlay.js",
     "/js/agentPriority.js",
@@ -28,6 +34,8 @@ const SHELL_ASSETS = [
     "/js/i18n.js",
     "/js/stats.js",
     "/js/sound.js",
+    "/js/soundScore.js",
+    "/js/atmosphere.js",
     "/js/notifications.js",
     "/js/achievements.js",
     "/js/demoMode.js",
@@ -50,19 +58,16 @@ const SHELL_ASSETS = [
 ];
 
 self.addEventListener("install", (event) => {
-    self.skipWaiting();
     event.waitUntil(
-        caches.open(VERSION).then((cache) =>
-            // Use addAll w/ catch so a single asset miss doesn't fail the whole install
-            Promise.allSettled(SHELL_ASSETS.map(p => cache.add(p).catch(() => null)))
-        )
+        // A partial shell must not replace a working installation.
+        caches.open(VERSION).then(cache => cache.addAll(SHELL_ASSETS)).then(() => self.skipWaiting())
     );
 });
 
 self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches.keys().then((keys) =>
-            Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)))
+            Promise.all(keys.filter(k => k.startsWith("ai-tycoon-shell-") && k !== VERSION).map(k => caches.delete(k)))
         ).then(() => self.clients.claim())
     );
 });
@@ -75,6 +80,14 @@ self.addEventListener("fetch", (event) => {
     if (req.url.startsWith("ws://") || req.url.startsWith("wss://")) return;
 
     const url = new URL(req.url);
+    if (url.origin !== self.location.origin) return;
+    if (url.pathname.startsWith("/api/")) {
+        // Live session data belongs to the server, never the static asset cache.
+        event.respondWith(fetch(req).catch(() => new Response(JSON.stringify({ ok: false, error: "offline" }), {
+            status: 503, headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+        })));
+        return;
+    }
     // Same-origin shell: cache-first
     if (url.origin === self.location.origin && SHELL_ASSETS.some(p => url.pathname === p)) {
         event.respondWith(
@@ -84,20 +97,11 @@ self.addEventListener("fetch", (event) => {
                     caches.open(VERSION).then(c => c.put(req, copy)).catch(() => {});
                 }
                 return resp;
-            }).catch(() => caches.match("/index.html")))
+            }).catch(() => req.mode === "navigate" ? caches.match("/index.html") : Response.error()))
         );
         return;
     }
 
-    // Network-first for everything else, fall back to cache then offline page
-    event.respondWith(
-        fetch(req).then(resp => {
-            // Cache static cross-origin (Pretendard / Iconify / Pixi) GETs
-            if (resp && resp.status === 200 && resp.type === "basic") {
-                const copy = resp.clone();
-                caches.open(VERSION).then(c => c.put(req, copy)).catch(() => {});
-            }
-            return resp;
-        }).catch(() => caches.match(req).then(c => c || caches.match("/index.html")))
-    );
+    // Only navigations get an HTML fallback; missing scripts never receive HTML.
+    if (req.mode === "navigate") event.respondWith(fetch(req).catch(() => caches.match("/index.html")));
 });
