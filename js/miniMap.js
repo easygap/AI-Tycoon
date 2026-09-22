@@ -7,7 +7,7 @@
 // past ~1.1x.  Clicking on the map pans the camera to that point.
 
 import { S } from "./state.js";
-import { TILE, COLS, ROWS, OFFICE_MAP, PAL } from "./constants.js";
+import { TILE, COLS, ROWS, OFFICE_MAP, PAL, POI } from "./constants.js";
 
 const MAP_W = 140;
 const MAP_H = Math.round(MAP_W * ROWS / COLS);
@@ -51,22 +51,7 @@ function worldFromMap(mx, my) {
 
 function onMapClick(e) {
     const w = worldFromMap(e.clientX, e.clientY);
-    // Re-center camera: convert world coords to pan offsets
-    const cw = S.canvasW, ch = S.canvasH;
-    const targetScreenX = cw / 2;
-    const targetScreenY = ch / 2;
-    const baseOffsetX = (cw - COLS * TILE * S.scale) / 2;
-    const baseOffsetY = (ch - ROWS * TILE * S.scale) / 2 * 0.7; // mild vertical bias
-    const targetOffsetX = targetScreenX - w.x * S.scale;
-    const targetOffsetY = targetScreenY - w.y * S.scale;
-    S.panX = targetOffsetX - baseOffsetX;
-    S.panY = targetOffsetY - baseOffsetY;
-    S.offsetX = targetOffsetX;
-    S.offsetY = targetOffsetY;
-    // Defer to existing recalcOffsets path on next frame if exposed
-    if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
-        window.dispatchEvent(new Event("resize")); // forces resize() in main.js to clamp pans
-    }
+    window.centerOfficePoint?.(w.x, w.y);
 }
 
 function onMapHover(e) {
@@ -75,7 +60,7 @@ function onMapHover(e) {
 }
 
 function shouldShow() {
-    return (S.zoomLevel || 1) >= SHOW_AT_ZOOM;
+    return (S.zoomLevel || 1) >= SHOW_AT_ZOOM && (!S.mapArea || S.mapArea === 'all') && window.innerHeight > 650;
 }
 
 function loop() {
@@ -95,13 +80,16 @@ function draw() {
     const sy = H / (ROWS * TILE);
 
     // Background
-    ctx.fillStyle = PAL.floor1 || "#F0E8D8";
+    ctx.fillStyle = document.body.classList.contains('dark') ? '#242B3C' : '#DCE2EC';
     ctx.fillRect(0, 0, W, H);
 
     // Walls + zones
     for (let y = 0; y < ROWS; y++) {
         for (let x = 0; x < COLS; x++) {
             const t = OFFICE_MAP[y]?.[x] || "W";
+            if (t === 'X') continue;
+            ctx.fillStyle = t === 'T' ? '#B68C86' : t === 'H' ? '#8CA8C7' : t === 'Q' ? '#B96686' : PAL.floor1;
+            ctx.fillRect(x * TILE * sx, y * TILE * sy, TILE * sx + 1, TILE * sy + 1);
             if (t === "W") {
                 ctx.fillStyle = PAL.wall || "#D4C4A8";
                 ctx.fillRect(x * TILE * sx, y * TILE * sy, TILE * sx + 1, TILE * sy + 1);
@@ -136,14 +124,14 @@ function draw() {
     // Boss desk marker
     ctx.fillStyle = "#facc15";
     ctx.beginPath();
-    ctx.arc(10 * TILE * sx, 15 * TILE * sy, 2.4, 0, Math.PI * 2);
+    ctx.arc(POI.boss.x * sx, POI.boss.y * sy, 2.4, 0, Math.PI * 2);
     ctx.fill();
 
     // Camera view rectangle: derive from offsetX/scale
-    const viewX = -S.offsetX / S.scale;
-    const viewY = -S.offsetY / S.scale;
-    const viewW = S.canvasW / S.scale;
-    const viewH = S.canvasH / S.scale;
+    const viewX = ((S.sceneClip?.x || 0) - S.offsetX) / S.scale;
+    const viewY = ((S.sceneClip?.y || 0) - S.offsetY) / S.scale;
+    const viewW = (S.sceneClip?.w || S.canvasW) / S.scale;
+    const viewH = (S.sceneClip?.h || S.canvasH) / S.scale;
     ctx.strokeStyle = "rgba(255,255,255,0.95)";
     ctx.lineWidth = 1.2;
     ctx.strokeRect(viewX * sx, viewY * sy, viewW * sx, viewH * sy);

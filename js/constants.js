@@ -2,9 +2,7 @@
 //  AI TYCOON — Constants & Pure Data
 // ============================================================
 
-export const TILE = 32;
-export const COLS = 24;
-export const ROWS = 18;
+export { TILE, COLS, ROWS, OFFICE_MAP, generateDeskSpots, POI, BOSS_ACTIVE_SPOT, BOSS_WAIT_SPOTS } from './officeLayout.js';
 export const WS_URL = `${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host || "localhost:3777"}`;
 export const RECONNECT_BASE = 3000;
 export const RECONNECT_MAX = 30000;
@@ -488,61 +486,6 @@ export const CHAT_TEMPLATES = {
     ],
 };
 
-// Map: W=Wall B=Board S=Server C=Coffee D=Desk P=Plant R=Rug M=Meeting
-//       L=Lounge K=Bookshelf V=Vending A=Aquarium (space)=Glass partition
-// LEFT = 업무 공간 (cols 0-12)  |  RIGHT = 휴게실/탕비실 (cols 14-23)
-export const OFFICE_MAP = [
-    "WWWWWWWWWWWWWWWWWWWWWWWW", // 0
-    "WBBFFSSSFFFFW CCPFFAAFFW", // 1  업무: 보드,서버 | 휴게: 커피,수족관
-    "WFFFFFFPFFFFW FFFFFFRRRW", // 2  | 휴게 러그 시작
-    "WFDDFFDDFFFFW FLLFFFRRRW", // 3  데스크1 | 소파
-    "WFDDFFDDFFFFW FLLFFFRRRW", // 4         | 소파
-    "WFFFFFFPFFFFW FFFFFFFPFW", // 5  복도   | 식물
-    "WFDDFFDDFFFFW FVFKKKFFFW", // 6  데스크2 | 자판기,책장
-    "WFDDFFDDFFFFW FFFFFFFPFW", // 7
-    "WFFFFFFPFFFFW FLLFFFFFFW", // 8  복도   | 소파2
-    "WFDDFFDDFFFFW FLLFFFFFFW", // 9  데스크3 | 소파2
-    "WFDDFFDDFFFFW FFFFFFFPFW", // 10
-    "WFFFFFFPFFFFW FFFFFFFFFW", // 11 복도
-    "WFDDFFDDFFFFW FRRRMFFFFW", // 12 데스크4 | 미팅룸
-    "WFDDFFDDFFFFW FRRRMFFFFW", // 13
-    "WFFFFFFPFFFFW FFFFFFFFFW", // 14
-    "WFFPFFFFFFPFW FFFFFFFPFW", // 15 식물
-    "WFFFFFFFFFFF  FFFFFFFFFW", // 16 입구
-    "WWWWWWWWWWWWWWWWWWWWWWWW", // 17
-];
-
-// Dynamic desk grid: fills work area (cols 1-11, rows 2-15) in pairs
-// Generates as many desks as needed, never hardcoded
-export function generateDeskSpots(count) {
-    const spots = [];
-    const colPairs = [[2, 6], [2, 6], [2, 6], [2, 6], [9, 9], [9, 9]]; // x positions
-    const rowStart = 3, rowGap = 3; // y positions: 3, 6, 9, 12...
-    for (let i = 0; i < count; i++) {
-        const row = Math.floor(i / 2);
-        const col = i % 2;
-        const y = rowStart + row * rowGap;
-        if (y > 15) {
-            // Overflow: use right work area (cols 9-11)
-            const overIdx = i - (Math.floor(13 / rowGap) + 1) * 2;
-            spots.push({ x: 9 + (overIdx % 2) * 2, y: rowStart + Math.floor(overIdx / 2) * rowGap });
-        } else {
-            spots.push({ x: col === 0 ? 2 : 6, y });
-        }
-    }
-    return spots;
-}
-
-// Boss review area: active spot + up to 5 waiting spots (no overlap)
-export const BOSS_ACTIVE_SPOT = { x: 10 * TILE, y: 13.5 * TILE }; // directly in front of boss
-export const BOSS_WAIT_SPOTS = [
-    { x: 7.5 * TILE,  y: 13 * TILE },
-    { x: 6 * TILE,    y: 13.5 * TILE },
-    { x: 7.5 * TILE,  y: 14.5 * TILE },
-    { x: 6 * TILE,    y: 14.5 * TILE },
-    { x: 5 * TILE,    y: 14 * TILE },
-];
-
 export const BOSS_WAIT_SPEECH = [
     "곧 차례겠지...", "메모 다시 확인 중...", "발표 준비 중...",
     "긴장되네 ㅎㅎ", "어떻게 말하지...", "자료 정리 중...",
@@ -555,21 +498,6 @@ export const BOSS_YES_REACTIONS = [
 export const BOSS_NO_REACTIONS = [
     "네, 수정할게요!", "다시 검토해볼게요", "알겠습니다, 보완하겠습니다", "피드백 감사합니다!",
 ];
-
-export const POI = {
-    // 업무 공간 (왼쪽)
-    whiteboard:{ x: 1.5 * TILE,  y: 1.5 * TILE },
-    server:    { x: 5 * TILE,    y: 1.5 * TILE },
-    boss:      { x: 10 * TILE,   y: 15 * TILE },  // 보스(유저) 자리 — 하단 중앙
-    // 휴게실 (오른쪽)
-    coffee:    { x: 14.5 * TILE, y: 1.5 * TILE },
-    aquarium:  { x: 20.5 * TILE, y: 1.5 * TILE },
-    lounge:    { x: 15 * TILE,   y: 3.5 * TILE },
-    lounge2:   { x: 15 * TILE,   y: 8.5 * TILE },
-    vending:   { x: 15 * TILE,   y: 6.5 * TILE },
-    bookshelf: { x: 17 * TILE,   y: 6.5 * TILE },
-    meeting:   { x: 16 * TILE,   y: 12.5 * TILE },
-};
 
 export const ZOOM_MIN = 0.6;
 export const ZOOM_MAX = 3.0;

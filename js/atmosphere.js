@@ -44,6 +44,9 @@ export function updateAtmosphere() {
     setSoundScene({ hour, active: agents.length, working: working.length, review });
     document.querySelector(".stage-shell").dataset.scene = review ? "review" : working.length ? "working" : "quiet";
     const en = getLang() === "en", demo = window.aiTycoonDemo?.isEnabled();
+    const area = $("scene-area");
+    area.setAttribute('aria-label', en ? 'Explore the map' : '맵 둘러보기');
+    [...area.options].forEach((o, i) => { o.textContent = (en ? ['Whole map', 'Studio', 'Meeting', 'Library', 'Terrace'] : ['전체 맵', '작업실', '회의 자리', '자료실', '테라스'])[i]; });
     $("scene-caption").textContent = en
         ? `${demo ? "Demo office. " : ""}${agents.length ? `${agents.length} agents here. ${working.length} making things happen.` : "A little room for your next big idea."}`
         : `${demo ? "예시 직원으로 체험 중이에요." : agents.length ? "직원을 눌러 지금 하는 일을 확인해 보세요." : "AI 도구에서 일을 시작하면 직원이 나타나요."}`;
@@ -76,6 +79,7 @@ export function initAtmosphere() {
     $("radio-volume").addEventListener("input", e => setMusicVolume(Number(e.target.value) / 100));
     $("radio-fx").addEventListener("change", e => { setSoundEnabled(e.target.checked); if (e.target.checked) sfxClick(); window.syncSoundIcon?.(); });
     $("scene-reset").addEventListener("click", () => window.resetCameraView?.());
+    $("scene-area").addEventListener("change", e => window.focusOfficeArea?.(e.target.value));
     $("scene-zoom-in").addEventListener("click", () => window.zoomOffice?.(.35));
     $("scene-zoom-out").addEventListener("click", () => window.zoomOffice?.(-.35));
     $("scene-cinema").addEventListener("click", () => { window.toggleCinemaMode?.(); updateAtmosphere(); });

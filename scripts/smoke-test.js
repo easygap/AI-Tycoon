@@ -39,6 +39,8 @@ const SHELL = [
     { url: "/js/sound.js", contains: "sfxJoin", label: "sound.js" },
     { url: "/js/soundScore.js", contains: "sceneFor", label: "original sound score" },
     { url: "/js/atmosphere.js", contains: "initAtmosphere", label: "office atmosphere" },
+    { url: "/js/officeLayout.js", contains: "findOfficePath", label: "office geometry and routes" },
+    { url: "/js/officeScene.js", contains: "drawOfficeScene", label: "studio architecture" },
     { url: "/assets/vendor/pixi.min.js", contains: "PixiJS", label: "local PixiJS" },
     { url: "/assets/vendor/iconify-icon.min.js", contains: "Iconify", label: "local Iconify" },
     { url: "/assets/vendor/solar-icons.js", contains: "addCollection", label: "local icon collection" },

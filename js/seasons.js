@@ -91,8 +91,8 @@ function drawPetals(ctx, animFrame) {
 
 function drawChristmasTree(ctx, animFrame) {
     // Near the entrance, lower-right of work area
-    const tx = 13.2 * TILE;
-    const ty = 13.5 * TILE;
+    const tx = 14.9 * TILE;
+    const ty = 15 * TILE;
     // Trunk
     ctx.fillStyle = "#6F4A33";
     ctx.fillRect(tx - 2, ty + 12, 4, 4);

@@ -369,12 +369,14 @@ export function handleState(state) {
         S.DESK_SPOTS = generateDeskSpots(S.liveAgents.length);
     }
 
+    const occupiedSeats = new Set(S.liveAgents.map(a => S.visualAgents[a.pid]).filter(Boolean).map(v => `${v.homeX},${v.homeY}`));
     S.liveAgents.forEach((agent, idx) => {
         if (!S.visualAgents[agent.pid]) {
-            const desk = S.DESK_SPOTS[idx] || { x: 2 + (idx % 4) * 3, y: 3 + Math.floor(idx / 4) * 3 };
+            const desk = S.DESK_SPOTS.find(d => !occupiedSeats.has(`${d.x * TILE + TILE / 2},${d.y * TILE + TILE / 2}`)) || S.DESK_SPOTS[0];
             const theme = resolveAgentTheme(agent, idx);
             const dx = desk.x * TILE + TILE / 2;
             const dy = desk.y * TILE + TILE / 2;
+            occupiedSeats.add(`${dx},${dy}`);
             S.visualAgents[agent.pid] = {
                 x: dx, y: dy, homeX: dx, homeY: dy,
                 theme, animTick: Math.floor(Math.random() * 100),

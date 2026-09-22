@@ -9,29 +9,14 @@
 // All draw onto the same Canvas 2D context as the office renderer,
 // after furniture and before agent sprites.
 
-import { TILE, COLS, ROWS, OFFICE_MAP } from "./constants.js";
+import { TILE, COLS, ROWS } from "./constants.js";
+import { PATROLS, findOfficePath, ENTRY, isWalkable } from './officeLayout.js';
 import { getSkyPalette } from "./timeOfDay.js";
 
 // ── Cleaning robot ──────────────────────────────────────────
 // Path: loops counter-clockwise around the work-area corridors.
 // All coordinates in tile units.
-const ROBOT_PATH = [
-    { x: 1.5, y: 14.5 },
-    { x: 11, y: 14.5 },
-    { x: 11, y: 11.5 },
-    { x: 1.5, y: 11.5 },
-    { x: 1.5, y: 8.5 },
-    { x: 11, y: 8.5 },
-    { x: 11, y: 5.5 },
-    { x: 1.5, y: 5.5 },
-    { x: 1.5, y: 2.5 },
-    { x: 11, y: 2.5 },
-    { x: 11, y: 5.5 },   // start coming back
-    { x: 1.5, y: 8.5 },
-    { x: 1.5, y: 11.5 },
-    { x: 11, y: 11.5 },
-    { x: 11, y: 14.5 },
-];
+const ROBOT_PATH = PATROLS.robot;
 
 const robot = {
     idx: 0,
@@ -52,16 +37,7 @@ const airplane = {
 // ── Office dog ───────────────────────────────────────────
 // Wanders the lounge area between sofas and the aquarium, sits and
 // wags occasionally, with rare little barks.
-const DOG_WAYPOINTS = [
-    { x: 16.5, y: 7.5 },   // near vending
-    { x: 19, y: 7 },       // mid-lounge
-    { x: 21, y: 4.5 },     // toward aquarium
-    { x: 17, y: 4.5 },     // near sofa 1
-    { x: 16, y: 9.5 },     // sofa 2 area
-    { x: 19, y: 10.5 },    // near plant
-    { x: 21, y: 14 },      // meeting room corner
-    { x: 17.5, y: 14 },    // return through center
-];
+const DOG_WAYPOINTS = PATROLS.dog;
 const dog = {
     idx: 0,
     progress: 0,
@@ -180,20 +156,7 @@ function drawDog(ctx, animFrame) {
 
 // ── Night security guard ─────────────────────────────────
 // Patrols a perimeter route, with a torch beam, only at night.
-const GUARD_PATH = [
-    { x: 2, y: 15.5 },
-    { x: 11, y: 15.5 },
-    { x: 11, y: 11 },
-    { x: 2, y: 11 },
-    { x: 2, y: 5 },
-    { x: 11, y: 5 },
-    { x: 11, y: 1.5 },
-    { x: 15, y: 1.5 },
-    { x: 21, y: 1.5 },
-    { x: 21, y: 15.5 },
-    { x: 15, y: 15.5 },
-    { x: 13.5, y: 16.5 },   // pass through entrance
-];
+const GUARD_PATH = PATROLS.guard;
 const guard = {
     idx: 0,
     progress: 0,
@@ -307,8 +270,7 @@ const delivery = {
 const DELIVERY_DROP_FRAMES = 90;
 
 function tileWalkable(tx, ty) {
-    const ch = OFFICE_MAP[ty]?.[tx];
-    return ch === "F" || ch === "R" || ch === " ";
+    return isWalkable(tx, ty);
 }
 
 function moveAlongPath(animFrame) {
@@ -466,8 +428,8 @@ function drawAirplane(ctx, animFrame) {
 // ── Sleeping cat in second lounge (mostly stationary, occasional purr) ──
 function drawLoungeCat(ctx, animFrame) {
     // Lounge2 is at roughly tx=15.5, ty=8.5
-    const px = 15.5 * TILE + 4;
-    const py = 9 * TILE + 12;
+    const px = 21 * TILE + 4;
+    const py = 14 * TILE + 7;
     // Body
     ctx.fillStyle = "#3D2A20";
     ctx.fillRect(px, py, 10, 5);
@@ -497,37 +459,30 @@ function drawLoungeCat(ctx, animFrame) {
 
 // ── Delivery person rendering ──
 function deliveryCurrentPos() {
-    // Entrance is at row 16, between cols 12-13.
-    const entranceX = 12.5;
-    const entranceY = 16.5;
-    if (delivery.phase === "entering") {
-        // Walk from entrance up to target tile
-        const t = Math.max(0, Math.min(1, delivery.phaseT / 200));
-        const ease = 1 - Math.pow(1 - t, 2);
-        const tx = entranceX + (delivery.targetTx - entranceX) * ease;
-        const ty = entranceY + (delivery.targetTy - entranceY) * ease;
-        return { tx, ty, moving: t < 1 };
+    if (delivery.phase === 'idle' || !delivery.route?.length) return null;
+    if (delivery.phase === 'dropping') return { tx: delivery.targetTx, ty: delivery.targetTy, moving: false };
+    let t = Math.min(1, delivery.phaseT / 200);
+    if (delivery.phase === 'leaving') t = 1 - t;
+    const lengths = delivery.route.slice(1).map((p, i) => Math.hypot(p.x - delivery.route[i].x, p.y - delivery.route[i].y));
+    let distance = t * lengths.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < lengths.length; i++) {
+        if (distance <= lengths[i] || i === lengths.length - 1) {
+            const a = delivery.route[i], b = delivery.route[i + 1], f = lengths[i] ? distance / lengths[i] : 0;
+            delivery.facingRight = b.x >= a.x;
+            return { tx: (a.x + (b.x - a.x) * f) / TILE, ty: (a.y + (b.y - a.y) * f) / TILE, moving: true, exiting: delivery.phase === 'leaving' };
+        }
+        distance -= lengths[i];
     }
-    if (delivery.phase === "dropping") {
-        return { tx: delivery.targetTx, ty: delivery.targetTy, moving: false };
-    }
-    if (delivery.phase === "leaving") {
-        const t = Math.max(0, Math.min(1, delivery.phaseT / 200));
-        const ease = t * t;
-        const tx = delivery.targetTx + (entranceX - delivery.targetTx) * ease;
-        const ty = delivery.targetTy + (entranceY - delivery.targetTy) * ease;
-        return { tx, ty, moving: t < 1, exiting: true };
-    }
-    return null;
+    return { tx: ENTRY.x / TILE, ty: ENTRY.y / TILE, moving: false };
 }
 
 function updateDelivery(animFrame) {
     if (delivery.phase === "idle") {
         if (animFrame >= delivery.nextSpawn) {
             // Pick a random corridor tile in work area (col 1-11, even rows)
-            delivery.targetTx = 1 + Math.floor(Math.random() * 10);
-            const corridorRows = [2, 5, 8, 11, 14];
-            delivery.targetTy = corridorRows[Math.floor(Math.random() * corridorRows.length)];
+            delivery.targetTx = 8.5;
+            delivery.targetTy = [5.5, 11.5, 14.5][Math.floor(Math.random() * 3)];
+            delivery.route = findOfficePath(ENTRY, { x: delivery.targetTx * TILE, y: delivery.targetTy * TILE });
             delivery.phase = "entering";
             delivery.phaseT = 0;
             delivery.facingRight = delivery.targetTx > 12.5 ? false : true;
@@ -628,11 +583,13 @@ function drawDelivery(ctx, animFrame) {
 
 // ── Public render entry ──
 export function drawNPCs(ctx, animFrame) {
-    moveAlongPath(animFrame);
-    maybeSpawnAirplane(animFrame);
-    updateDelivery(animFrame);
-    updateGuard();
-    updateDog();
+    if (animFrame > 0) {
+        moveAlongPath(animFrame);
+        maybeSpawnAirplane(animFrame);
+        updateDelivery(animFrame);
+        updateGuard();
+        updateDog();
+    }
     drawCleaningRobot(ctx, animFrame);
     drawLoungeCat(ctx, animFrame);
     drawDog(ctx, animFrame);

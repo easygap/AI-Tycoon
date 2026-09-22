@@ -1,3 +1,4 @@
+import { findOfficePath, MAP_AREAS } from './officeLayout.js';
 // ============================================================
 //  AI TYCOON — Entry Point (init, loop, input, visual AI)
 // ============================================================
@@ -309,7 +310,14 @@ function init() {
     initAtmosphere();
     window.matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", event => {
         S.reducedMotion = event.matches;
-        if (event.matches) { S.particles = []; S.heartParticles = []; }
+        if (event.matches) {
+            S.particles = []; S.heartParticles = [];
+            for (const v of Object.values(S.visualAgents)) {
+                const end = v.walkPath?.at(-1);
+                if (end) { v.x = end.x; v.y = end.y; }
+                v.moving = false; v.walkPath = []; v.walkIndex = 0;
+            }
+        }
     });
     S.canvas = document.getElementById("office-canvas");
     S.ctx = S.canvas.getContext("2d");
@@ -322,8 +330,24 @@ function init() {
         else setSidePanelView(view, { open: true, focus: true });
     };
     window.zoomOffice = delta => {
+        S.mapAreaNeedsFrame = false;
         S.zoomLevel = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, S.zoomLevel + delta));
         resize();
+    };
+    window.focusOfficeArea = id => {
+        if (!MAP_AREAS[id]) { window.resetCameraView?.(); return; }
+        S.directorMode = false; S.directorFocusPid = null;
+        localStorage.setItem('ai-tycoon-director', 'false');
+        S.mapArea = id; S.mapAreaNeedsFrame = true;
+        resize(); updateLiveHud();
+    };
+    window.centerOfficePoint = (x, y) => {
+        S.mapArea = 'all'; S.directorMode = false;
+        document.getElementById('scene-area').value = 'all';
+        const frame = cameraFrame();
+        S.panX = S.canvasW / 2 - x * S.scale - getBaseOffsetX();
+        S.panY = frame.top + (S.canvasH - frame.top - frame.bottom) / 2 - y * S.scale - getBaseOffsetY();
+        recalcOffsets();
     };
     const storedPanelView = localStorage.getItem(SIDE_PANEL_VIEW_KEY) || "operate";
     setSidePanelView(storedPanelView);
@@ -349,7 +373,7 @@ function init() {
     S.canvas.addEventListener("mouseup", onPanEnd);
     S.canvas.addEventListener("mouseleave", onPanEnd);
     S.canvas.addEventListener("contextmenu", e => e.preventDefault());
-    S.canvas.addEventListener("dblclick", () => { S.zoomLevel = 1.0; S.panX = 0; S.panY = 0; resize(); });
+    S.canvas.addEventListener("dblclick", () => window.resetCameraView?.());
     document.addEventListener("keydown", trapSidePanelFocus);
     document.addEventListener("keydown", handleGlobalShortcuts, true);
     document.addEventListener("keydown", onPixiDensityMenuKeydown);
@@ -644,6 +668,8 @@ function init() {
         updateCanvasAccessibility(true);
     };
     window.resetCameraView = () => {
+        S.mapArea = 'all'; S.mapAreaNeedsFrame = false;
+        document.getElementById('scene-area').value = 'all';
         S.directorMode = false;
         S.directorFocusPid = null;
         localStorage.setItem("ai-tycoon-director", "false");
@@ -715,6 +741,7 @@ function resize() {
         delete side.dataset.userToggled;
     }
     syncSidePanelState();
+    const oldWidth = S.canvasW, oldHeight = S.canvasH;
     S.canvasW = isMobileOverlay ? main.clientWidth : main.clientWidth - side.offsetWidth;
     S.canvasH = main.clientHeight;
     // 고해상도(Retina/4K) 디스플레이에서 픽셀아트가 흐릿해지지 않도록 백버퍼를
@@ -733,7 +760,22 @@ function resize() {
     const sy = Math.max(120, S.canvasH - frame.top - frame.bottom) / (ROWS * TILE);
     const baseScale = Math.min(sx, sy);
     S.scale = baseScale * S.zoomLevel;
+    const area = MAP_AREAS[S.mapArea];
+    if (area && (S.mapAreaNeedsFrame || oldWidth !== S.canvasW || oldHeight !== S.canvasH)) {
+        const availableWidth = S.canvasW - frame.x * 2, availableHeight = S.canvasH - frame.top - frame.bottom;
+        const areaScale = Math.min(availableWidth / (area.w * TILE), availableHeight / (area.h * TILE));
+        S.zoomLevel = Math.max(1, Math.min(ZOOM_MAX, areaScale / baseScale));
+        S.scale = baseScale * S.zoomLevel;
+        S.panX = S.canvasW / 2 - (area.x + area.w / 2) * TILE * S.scale - getBaseOffsetX();
+        S.panY = frame.top + availableHeight / 2 - (area.y + area.h / 2) * TILE * S.scale - getBaseOffsetY();
+        S.mapAreaNeedsFrame = false;
+    }
     recalcOffsets();
+    S.sceneClip = S.zoomLevel > 1.05 && !document.body.classList.contains('cinema-mode')
+        ? { x: 16, y: frame.top, w: S.canvasW - 32, h: Math.max(80, S.canvasH - frame.top - frame.bottom) } : null;
+    const clip = S.sceneClip;
+    document.getElementById('pixi-layer').style.clipPath = clip
+        ? `inset(${clip.y}px 16px ${S.canvasH - clip.y - clip.h}px 16px)` : '';
 }
 
 function recalcOffsets() {
@@ -753,7 +795,7 @@ function getBaseOffsetY() {
 function cameraFrame() {
     if (document.body.classList.contains("cinema-mode")) return { x: 24, top: 24, bottom: 24 };
     if (window.innerHeight <= 650) return { x: 20, top: 90, bottom: 100 };
-    return S.canvasW < 600 ? { x: 20, top: 146, bottom: 176 } : { x: 68, top: 140, bottom: 172 };
+    return S.canvasW < 600 ? { x: 20, top: 202, bottom: 212 } : { x: 68, top: 140, bottom: 172 };
 }
 
 // ── Game Loop ──
@@ -854,9 +896,10 @@ function timestampValue(agent) {
 function focusAgent(pid, instant = false) {
     const v = S.visualAgents[pid];
     if (!v) return false;
-
+    S.mapArea = 'all'; document.getElementById('scene-area').value = 'all';
+    const frame = cameraFrame();
     const targetPanX = S.canvasW * 0.5 - v.x * S.scale - getBaseOffsetX();
-    const targetPanY = S.canvasH * 0.46 - v.y * S.scale - getBaseOffsetY();
+    const targetPanY = frame.top + (S.canvasH - frame.top - frame.bottom) / 2 - v.y * S.scale - getBaseOffsetY();
     if (instant || S.reducedMotion) {
         S.panX = targetPanX;
         S.panY = targetPanY;
@@ -1310,13 +1353,14 @@ function triggerAgentChat() {
 }
 
 function walkTo(v, tx, ty) {
+    const route = findOfficePath(v, { x: tx, y: ty });
+    if (!route.length) { v.moving = false; v.walkPath = []; return; }
     if (S.reducedMotion) {
-        v.x = tx; v.y = ty; v.moving = false; v.walkPath = []; v.walkIndex = 0;
+        const end = route.at(-1); v.x = end.x; v.y = end.y;
+        v.moving = false; v.walkPath = []; v.walkIndex = 0;
         return;
     }
-    v.walkPath = [{ x: tx, y: v.y }, { x: tx, y: ty }];
-    v.walkIndex = 0;
-    v.moving = true;
+    v.walkPath = route; v.walkIndex = 0; v.moving = true;
 }
 
 /** Walk to a named POI and say a location-appropriate line */
@@ -1360,6 +1404,8 @@ function onCanvasClick(e) {
     if (e.button && e.button !== 0) return; // only left click
 
     const rect = S.canvas.getBoundingClientRect();
+    const clip = S.sceneClip, screenX = e.clientX - rect.left, screenY = e.clientY - rect.top;
+    if (clip && (screenX < clip.x || screenX > clip.x + clip.w || screenY < clip.y || screenY > clip.y + clip.h)) return;
     const mx = (e.clientX - rect.left - S.offsetX) / S.scale;
     const my = (e.clientY - rect.top - S.offsetY) / S.scale;
 

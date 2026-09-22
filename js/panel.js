@@ -2749,6 +2749,11 @@ export function updateDetailPanel() {
 // ── Tooltip (mouse hover on canvas) ──
 export function onMouseMove(e) {
     const rect = S.canvas.getBoundingClientRect();
+    const clip = S.sceneClip, screenX = e.clientX - rect.left, screenY = e.clientY - rect.top;
+    if (clip && (screenX < clip.x || screenX > clip.x + clip.w || screenY < clip.y || screenY > clip.y + clip.h)) {
+        document.getElementById('tooltip').classList.remove('is-visible');
+        S.canvas.style.cursor = 'default'; return;
+    }
     const mx = (e.clientX - rect.left - S.offsetX) / S.scale;
     const my = (e.clientY - rect.top - S.offsetY) / S.scale;
 
