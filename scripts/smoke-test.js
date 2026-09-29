@@ -21,7 +21,6 @@ const SHELL = [
     { url: "/icons/brand-symbol.svg", contains: "viewBox=\"0 0 64 64\"", label: "brand symbol" },
     { url: "/style.css", contains: ".welcome-overlay", label: "style.css welcome rule" },
     { url: "/css/studio-2026.css", contains: "--studio-coral", label: "Studio 2026 design system" },
-    { url: "/assets/fonts/SUIT-Variable.woff2", label: "SUIT variable font" },
     { url: "/assets/fonts/WantedSansVariable.woff2", label: "Wanted Korean UI font" },
     { url: "/assets/fonts/Galmuri11.woff2", label: "Galmuri pixel font" },
     { url: "/js/characters.js", contains: "characterFrame", label: "pixel character artwork" },
