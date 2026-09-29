@@ -18,6 +18,5 @@ Solar는 앱에서 사용하는 아이콘만 추려 JSON 형식으로 담았습�
 | --- | --- | --- |
 | `WantedSansVariable.woff2` | [원티드랩 Wanted Sans 1.0.3](https://github.com/wanteddev/wanted-sans) | SIL OFL 1.1 · [원문](../fonts/WANTED-LICENSE.txt) |
 | `Galmuri11.woff2` | [quiple Galmuri 2.40.3](https://github.com/quiple/galmuri) | SIL OFL 1.1 · [원문](../fonts/GALMURI-LICENSE.md) |
-| `SUIT-Variable.woff2` | [sun-typeface SUIT](https://github.com/sun-typeface/SUIT) | SIL OFL 1.1 · 기존 테마 호환용 |
 
 아이콘·픽셀 캐릭터·방과 가구는 프로젝트의 SVG 및 Canvas 코드로 그립니다. 게임의 그래픽 자산은 포함하지 않습니다.
